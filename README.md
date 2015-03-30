@@ -1,1 +1,1 @@
-# scikit.sketch
+# datasketch
