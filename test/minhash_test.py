@@ -1,5 +1,6 @@
 import unittest
 import struct
+import pickle
 from hashlib import sha1
 from datasketch import minhash
 
@@ -10,7 +11,7 @@ class TestMinHash(unittest.TestCase):
         m2 = minhash.MinHash(1, 4)
         for i in range(4):
             self.assertEqual(m1.hashvalues[i], m2.hashvalues[i])
-            self.assertEqual((m1.permutations[i])(i), (m2.permutations[i])(i))
+            self.assertEqual((m1.permutations[i]), (m2.permutations[i]))
 
     def test_digest(self):
         m1 = minhash.MinHash(1, 4)
@@ -76,6 +77,14 @@ class TestMinHash(unittest.TestCase):
         self.assertTrue(all(hvd == hv for hv, hvd in zip(m1.hashvalues,
                 m1d.hashvalues)))
 
+    def test_pickle(self):
+        m = minhash.MinHash(1, 4)
+        m.digest(sha1(bytes(123)))
+        m.digest(sha1(bytes(45)))
+        p = pickle.loads(pickle.dumps(m))
+        self.assertEqual(p.seed, m.seed)
+        self.assertEqual(p.hashvalues, m.hashvalues)
+        self.assertEqual(p.permutations, m.permutations)
 
 if __name__ == "__main__":
     unittest.main()

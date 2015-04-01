@@ -16,13 +16,16 @@ _hash_range = (1 << 32)
 
 def _create_permutation():
     '''
-    Create a random bijective permutation function that maps a 32-bit
-    hash value to another 32-bit hash value.
+    Create parameters for a random bijective permutation function
+    that maps a 32-bit hash value to another 32-bit hash value.
     http://en.wikipedia.org/wiki/Universal_hashing
     '''
     a = random.randint(1, _max_hash)
     b = random.randint(0, _max_hash)
-    return lambda x : ((a * x + b) % _mersenne_prime) % _hash_range
+    return (a, b)
+
+
+_permutation_func = lambda x, a, b: ((a * x + b) % _mersenne_prime) % _hash_range
 
 
 class MinHash(object):
@@ -53,8 +56,8 @@ class MinHash(object):
         '''
         # Digest the hash object to get the hash value
         hv = int(hashobj.hexdigest()[:8], 16)
-        for i, p in enumerate(self.permutations):
-            phv = p(hv)
+        for i, (a, b) in enumerate(self.permutations):
+            phv = _permutation_func(hv, a, b)
             if phv < self.hashvalues[i]:
                 self.hashvalues[i] = phv
 
@@ -91,8 +94,6 @@ class MinHash(object):
         '''
         Serializes this MinHash object into bytes, store in `buffer`
         starting at `offset` position.
-        The size of `buffer` must equal to the size returned by
-        the `bytesize` method.
         '''
         if len(buffer) - offset < self.bytesize():
             raise MinHashException("The buffer does not have enough space\
@@ -113,6 +114,14 @@ class MinHash(object):
             mh.hashvalues[i] = struct.unpack_from('I', buffer, offset)[0]
             offset += struct.calcsize('I')
         return mh
+
+    # Implement the following 2 methods to make pickling happy in python 2
+    def __getstate__(self):
+        return dict([x, getattr(self, x)] for x in self.__slots__)
+
+    def __setstate__(self, d):
+        for key in d:
+            setattr(self, key, d[key])
 
 
 def jaccard(mhs):
