@@ -42,34 +42,23 @@ class TestMinHash(unittest.TestCase):
 
     def test_serialize(self):
         m1 = minhash.MinHash(1, 2)
-        m2 = minhash.MinHash(1, 2)
-        buf = bytearray(m1.bytesize()*2)
-        m1.serialize(buf, 0)
-        self.assertTrue(all(0 == i for i in buf[m1.bytesize():]))
-        m2.serialize(buf, m1.bytesize())
-        self.assertTrue(any(0 != i for i in buf[m1.bytesize():]))
+        buf = bytearray(m1.bytesize())
+        # Only test for syntax
+        m1.serialize(buf)
 
     def test_deserialize(self):
         m1 = minhash.MinHash(1, 10)
-        m2 = minhash.MinHash(1, 10)
         m1.digest(sha1(bytes(123)))
-        m2.digest(sha1(bytes(45)))
-        buf = bytearray(m1.bytesize()*2)
-        m1.serialize(buf, 0)
-        m2.serialize(buf, m1.bytesize())
+        buf = bytearray(m1.bytesize())
+        m1.serialize(buf)
 
         # Test if we get back the exact same MinHash objects after
         # deserializing from bytes
-        m1d = minhash.MinHash.deserialize(buf, 0)
-        m2d = minhash.MinHash.deserialize(buf, m1.bytesize())
+        m1d = minhash.MinHash.deserialize(buf)
         self.assertEqual(m1d.seed, m1.seed)
-        self.assertEqual(m2d.seed, m2.seed)
         self.assertEqual(len(m1d.hashvalues), len(m1.hashvalues))
-        self.assertEqual(len(m2d.hashvalues), len(m2.hashvalues))
         self.assertTrue(all(hvd == hv for hv, hvd in zip(m1.hashvalues,
                 m1d.hashvalues)))
-        self.assertTrue(all(hvd == hv for hv, hvd in zip(m2.hashvalues,
-                m2d.hashvalues)))
 
         # Test if the permutation functions are the same
         m1.digest(sha1(bytes(34)))

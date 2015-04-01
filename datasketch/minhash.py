@@ -90,26 +90,25 @@ class MinHash(object):
         return seed_size + length_size + len(self.hashvalues) * hashvalue_size
 
 
-    def serialize(self, buffer, offset):
+    def serialize(self, buffer):
         '''
-        Serializes this MinHash object into bytes, store in `buffer`
-        starting at `offset` position.
+        Serializes this MinHash object into bytes, store in `buffer`.
         '''
-        if len(buffer) - offset < self.bytesize():
+        if len(buffer) < self.bytesize():
             raise MinHashException("The buffer does not have enough space\
                     for holding this MinHash object.")
         fmt = "qi%dI" % len(self.hashvalues)
-        struct.pack_into(fmt, buffer, offset,
+        struct.pack_into(fmt, buffer, 0,
                 self.seed, len(self.hashvalues), *self.hashvalues)
 
     @classmethod
-    def deserialize(cls, buffer, offset):
+    def deserialize(cls, buffer):
         '''
-        Reconstruct a MinHash object from a byte buffer starting at `offset`.
+        Reconstruct a MinHash object from a byte buffer.
         '''
-        seed, num_perm = struct.unpack_from('qi', buffer, offset)
+        seed, num_perm = struct.unpack_from('qi', buffer, 0)
         mh = cls(seed, num_perm)
-        offset = offset + struct.calcsize('qi')
+        offset = struct.calcsize('qi')
         for i in range(num_perm):
             mh.hashvalues[i] = struct.unpack_from('I', buffer, offset)[0]
             offset += struct.calcsize('I')
