@@ -1,4 +1,0 @@
-datasketch
-==========
-
-Work in progres.
