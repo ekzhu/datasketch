@@ -1,6 +1,12 @@
 '''
 This module implements the HyperLogLog data sketch for estimating
 cardinality of very large dataset in a single pass.
+
+The original HyperLogLog is described here:
+http://algo.inria.fr/flajolet/Publications/FlFuGaMe07.pdf
+
+This HyperLogLog is based on the modified version called HyperLogLog++
+http://research.google.com/pubs/pub40671.html
 '''
 
 import struct, math
