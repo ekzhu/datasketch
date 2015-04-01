@@ -1,7 +1,12 @@
 # datasketch
 
-datasketch is a Python module for processing vary large amount of data with
-little loss of accuracy.
+[![Build Status](https://travis-ci.org/ekzhu/datasketch.svg?branch=master)]
+(https://travis-ci.org/ekzhu/datasketch)
+
+datasketch gives you probabilistic data structures that can process
+vary large amount of data super fast, with little loss of accuracy.
+
+datasketch must be used with Python 2.7 or above.
 
 ## Install
 
