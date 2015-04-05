@@ -184,7 +184,7 @@ class HyperLogLog(object):
         '''
         Estimate the cardinality of the data seen so far.
         '''
-        num_zero = self.reg.count(0)
+        num_zero = sum(1 for v in self.reg if v == 0)
         if num_zero > 0:
             # linear counting
             lc = self.m * math.log(self.m / float(num_zero))
