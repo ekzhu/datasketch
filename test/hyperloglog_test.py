@@ -23,13 +23,18 @@ class FakeHash(object):
         return hex(self.h)[2:]
 
 
-class TestMinHash(unittest.TestCase):
+class TestHyperLogLog(unittest.TestCase):
 
     def test_init(self):
         h = HyperLogLog(4)
         self.assertEqual(h.m, 1 << 4)
         self.assertEqual(len(h.reg), h.m)
         self.assertTrue(all(0 == i for i in h.reg))
+
+    def test_init_from_reg(self):
+        reg = [1 for _ in range(1 << 4)]
+        h = HyperLogLog(4, reg=reg)
+        self.assertEqual(h.p, 4)
 
     def test_digest(self):
         h = HyperLogLog(4)
@@ -58,6 +63,67 @@ class TestMinHash(unittest.TestCase):
         # no syntax error
         # See benchmarks for the accuracy of the cardinality estimation.
         h.count()
+
+    def test_union_count(self):
+        h1 = HyperLogLog(4)
+        h1.digest(FakeHash(0b0001111))
+        h1.digest(FakeHash(0xfffffffffffffff1))
+        h1.digest(FakeHash(0xfffffff5))
+        h2 = HyperLogLog(4)
+        self.assertEqual(h1.count(), h1.union_count(h2))
+
+        h2.digest(FakeHash(0b0001111))
+        h2.digest(FakeHash(0xfffffffffffffff1))
+        h2.digest(FakeHash(0xfffffff5))
+        self.assertEqual(h1.count(), h1.union_count(h2))
+
+        h2.digest(FakeHash(0xfffffff6))
+        self.assertNotEqual(h1.count(), h1.union_count(h2))
+
+    def test_intersection_count(self):
+        h1 = HyperLogLog(4)
+        h1.digest(FakeHash(0b0001111))
+        h1.digest(FakeHash(0xfffffffffffffff1))
+        h1.digest(FakeHash(0xfffffff5))
+        h2 = HyperLogLog(4)
+        self.assertEqual(h1.intersection_count(h2), 0)
+
+        h2.digest(FakeHash(0b0001111))
+        h2.digest(FakeHash(0xfffffffffffffff1))
+        h2.digest(FakeHash(0xfffffff5))
+        self.assertEqual(int(h1.intersection_count(h2)), 3)
+
+    def test_jaccard(self):
+        h1 = HyperLogLog(4)
+        h1.digest(FakeHash(0b0001111))
+        h1.digest(FakeHash(0xfffffffffffffff1))
+        h1.digest(FakeHash(0xfffffff5))
+        h2 = HyperLogLog(4)
+        self.assertEqual(h1.jaccard(h2), 0)
+
+        h2.digest(FakeHash(0b0001111))
+        h2.digest(FakeHash(0xfffffffffffffff1))
+        h2.digest(FakeHash(0xfffffff5))
+        self.assertEqual(int(h1.jaccard(h2)), 1)
+
+        h2.digest(FakeHash(0xfffffff6))
+        self.assertNotEqual(h1.jaccard(h2), 1)
+
+    def test_inclusion(self):
+        h1 = HyperLogLog(4)
+        h1.digest(FakeHash(0b0001111))
+        h1.digest(FakeHash(0xfffffffffffffff1))
+        h1.digest(FakeHash(0xfffffff5))
+        h2 = HyperLogLog(4)
+        self.assertEqual(h1.inclusion(h2), 0)
+
+        h2.digest(FakeHash(0b0001111))
+        h2.digest(FakeHash(0xfffffffffffffff1))
+        h2.digest(FakeHash(0xfffffff5))
+        self.assertEqual(int(h1.inclusion(h2)), 1)
+
+        h2.digest(FakeHash(0xfffffff6))
+        self.assertEqual(int(h1.inclusion(h2)), 1)
 
     def test_serialize(self):
         h = HyperLogLog(4)

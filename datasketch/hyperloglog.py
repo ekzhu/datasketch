@@ -132,14 +132,25 @@ class HyperLogLog(object):
 
     __slots__ = ('p', 'm', 'reg', 'alpha')
 
-    def __init__(self, p):
+    def __init__(self, p, reg=None):
         '''
-        Create a HyperLogLog with precision parameter `p`.
+        Create a HyperLogLog with precision parameter `p` and (optionally) a
+        register vector `reg`. If `reg` is specified, the constructor will
+        use it as the underlying regiser, instead of creating a new one.
         '''
         self.p = p
         self.m = 1 << p
         self.alpha = _get_alpha(self.p)
-        self.reg = [0 for _ in range(self.m)]
+        if reg is None:
+            self.reg = [0 for _ in range(self.m)]
+        else:
+            # We have to check if the imported register has the correct length.
+            if len(reg) != self.m:
+                raise HyperLogLogException("The imported register has \
+                    incorrect size, expected %d" % self.m)
+            # Generally we trust the user to import register that contains
+            # reasonable counter values, so we don't check for every values.
+            self.reg = reg
 
     def digest(self, hashobj):
         '''
@@ -182,6 +193,59 @@ class HyperLogLog(object):
             return e - _estimate_bias(e, self.p)
         else:
             return e
+
+    def union_count(self, other):
+        '''
+        Estimate the cardinality of the union of this and the other HyperLogLogs.
+        '''
+        if self.p != other.p:
+            raise HyperLogLogException("Cannot union HyperLogLogs with different\
+                    precisions.")
+        num_zero = sum(1 for v1, v2 in zip(self.reg, other.reg)
+                if v1 == 0 and v2 == 0)
+        if num_zero > 0:
+            # linear counting
+            lc = self.m * math.log(self.m / float(num_zero))
+            if lc <= _get_threshold(self.p):
+                return lc
+        # Use HyperLogLog estimation function
+        e = self.alpha * float(self.m ** 2) / sum(math.pow(2.0, -max(v1, v2))
+                for v1, v2 in zip(self.reg, other.reg))
+        # Fix bias as in HyperLogLog++
+        if e <= 5 * self.m:
+            return e - _estimate_bias(e, self.p)
+        else:
+            return e
+
+    def intersection_count(self, other):
+        '''
+        Estimate the cardinality of the intersection of this and the other
+        HyperLogLogs. The value may be negative due to estimation error.
+        '''
+        uc = self.union_count(other)
+        return self.count() + other.count() - uc
+
+    def jaccard(self, other):
+        '''
+        Estimate the Jaccard similarity between the multiset counted by this
+        HyperLogLog and the multiset counted by the other HyperLogLog.
+        The value may be negative due to estimation error.
+        '''
+        uc = self.union_count(other)
+        ic = self.count() + other.count() - uc
+        return ic / uc
+
+    def inclusion(self, other):
+        '''
+        Estimate the inclusion of this HyperLogLog against the other.
+        It measures the fraction of the multiset counted by this HyperLogLog
+        overlapping with the multiset counted by the other HyperLogLog.
+        The value may be negative due to estimation error.
+        '''
+        uc = self.union_count(other)
+        c = self.count()
+        ic = c + other.count() - uc
+        return ic / c
 
     def bytesize(self):
         '''
