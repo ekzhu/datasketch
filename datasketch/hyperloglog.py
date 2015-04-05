@@ -132,25 +132,29 @@ class HyperLogLog(object):
 
     __slots__ = ('p', 'm', 'reg', 'alpha')
 
-    def __init__(self, p, reg=None):
+    def __init__(self, p=8, reg=None):
         '''
         Create a HyperLogLog with precision parameter `p` and (optionally) a
         register vector `reg`. If `reg` is specified, the constructor will
-        use it as the underlying regiser, instead of creating a new one.
+        use it as the underlying regiser, instead of creating a new one, and
+        the `p` parameter value is ignored.
         '''
-        self.p = p
-        self.m = 1 << p
-        self.alpha = _get_alpha(self.p)
         if reg is None:
+            self.p = p
+            self.m = 1 << p
+            self.alpha = _get_alpha(self.p)
             self.reg = [0 for _ in range(self.m)]
         else:
             # We have to check if the imported register has the correct length.
-            if len(reg) != self.m:
+            self.m = len(reg)
+            self.p = _bit_length(self.m) - 1
+            if 1 << self.p != self.m:
                 raise HyperLogLogException("The imported register has \
-                    incorrect size, expected %d" % self.m)
+                    incorrect size. Expect a power of 2.")
             # Generally we trust the user to import register that contains
             # reasonable counter values, so we don't check for every values.
             self.reg = reg
+            self.alpha = _get_alpha(self.p)
 
     def digest(self, hashobj):
         '''

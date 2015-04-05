@@ -33,8 +33,10 @@ class TestHyperLogLog(unittest.TestCase):
 
     def test_init_from_reg(self):
         reg = [1 for _ in range(1 << 4)]
-        h = HyperLogLog(4, reg=reg)
+        h = HyperLogLog(reg=reg)
         self.assertEqual(h.p, 4)
+        h2 = HyperLogLog(p=4)
+        self.assertEqual(h.p, h2.p)
 
     def test_digest(self):
         h = HyperLogLog(4)
