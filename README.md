@@ -57,6 +57,8 @@ for every hash digested and 2) more hash values to be stored.
 The speed and memory usage of MinHash are both linearly proportional
 to the number of permutation functions used.
 
+![MinHash Benchmark](https://github.com/ekzhu/datasketch/blob/master/minhash_benchmark.png)
+
 You can union two MinHash object using the `merge` function.
 This makes MinHash useful in parallel MapReduce style data analysis.
 
@@ -111,6 +113,8 @@ h = HyperLogLog(p=12)
 
 Interestingly, there is no speed penalty for using higher p value.
 However the memory usage is exponential to the p value.
+
+![HyperLogLog Benchmark](https://github.com/ekzhu/datasketch/blob/master/hyperloglog_benchmark.png)
 
 As in MinHash, you can also merge two HyperLogLogs to create a union HyperLogLog.
 
