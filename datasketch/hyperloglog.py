@@ -7,6 +7,10 @@ http://algo.inria.fr/flajolet/Publications/FlFuGaMe07.pdf
 
 This HyperLogLog is based on the modified version called HyperLogLog++
 http://research.google.com/pubs/pub40671.html
+
+This HyperLogLog implementation is based on:
+https://github.com/svpcom/hyperloglog
+with enhanced functionalities for serialization and similarities.
 '''
 
 import struct, math
