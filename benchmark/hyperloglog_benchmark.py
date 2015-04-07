@@ -38,11 +38,11 @@ ps = range(4, 17)
 output = "hyperloglog_benchmark.png"
 
 logging.info("> Running performance tests")
-card = 500000
+card = 5000
 run_times = [run_perf(card, p) for p in ps]
 
 logging.info("> Running accuracy tests")
-size = 500000
+size = 5000
 errs = [run_acc(size, 1, p) for p in ps]
 
 logging.info("> Plotting result")
