@@ -35,7 +35,14 @@ class MinHash(object):
 
     __slots__ = ('permutations', 'hashvalues', 'seed')
 
-    def __init__(self, seed, num_perm):
+    def __init__(self, num_perm=128, seed=1):
+        '''
+        Create a MinHash object with `num_perm` number of random
+        permutation functions.
+        The `seed` parameter controls the set of random permutation functions
+        generated for this MinHash object.
+        Different seed will generate different sets of permutaiton functions.
+        '''
         if num_perm <= 0:
             raise MinHashException("Cannot have non-positive number of\
                     permutation functions")
@@ -107,7 +114,7 @@ class MinHash(object):
         Reconstruct a MinHash object from a byte buffer.
         '''
         seed, num_perm = struct.unpack_from('qi', buffer, 0)
-        mh = cls(seed, num_perm)
+        mh = cls(num_perm=num_perm, seed=seed)
         offset = struct.calcsize('qi')
         for i in range(num_perm):
             mh.hashvalues[i] = struct.unpack_from('I', buffer, offset)[0]

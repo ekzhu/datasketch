@@ -7,22 +7,22 @@ from datasketch import minhash
 class TestMinHash(unittest.TestCase):
 
     def test_init(self):
-        m1 = minhash.MinHash(1, 4)
-        m2 = minhash.MinHash(1, 4)
+        m1 = minhash.MinHash(4, 1)
+        m2 = minhash.MinHash(4, 1)
         for i in range(4):
             self.assertEqual(m1.hashvalues[i], m2.hashvalues[i])
             self.assertEqual((m1.permutations[i]), (m2.permutations[i]))
 
     def test_digest(self):
-        m1 = minhash.MinHash(1, 4)
-        m2 = minhash.MinHash(1, 4)
+        m1 = minhash.MinHash(4, 1)
+        m2 = minhash.MinHash(4, 1)
         m1.digest(sha1(bytes(12)))
         for i in range(4):
             self.assertTrue(m1.hashvalues[i] < m2.hashvalues[i])
 
     def test_jaccard(self):
-        m1 = minhash.MinHash(1, 4)
-        m2 = minhash.MinHash(1, 4)
+        m1 = minhash.MinHash(4, 1)
+        m2 = minhash.MinHash(4, 1)
         self.assertTrue(minhash.jaccard([m1, m2]) == 1.0)
         m2.digest(sha1(bytes(12)))
         self.assertTrue(minhash.jaccard([m1, m2]) == 0.0)
@@ -30,24 +30,24 @@ class TestMinHash(unittest.TestCase):
         self.assertTrue(minhash.jaccard([m1, m2]) < 1.0)
 
     def test_merge(self):
-        m1 = minhash.MinHash(1, 4)
-        m2 = minhash.MinHash(1, 4)
+        m1 = minhash.MinHash(4, 1)
+        m2 = minhash.MinHash(4, 1)
         m2.digest(sha1(bytes(12)))
         m1.merge(m2)
         self.assertTrue(minhash.jaccard([m1, m2]) == 1.0)
 
     def test_bytesize(self):
-        m1 = minhash.MinHash(1, 4)
+        m1 = minhash.MinHash(4, 1)
         self.assertTrue(m1.bytesize() == (4*4)+4+8)
 
     def test_serialize(self):
-        m1 = minhash.MinHash(1, 2)
+        m1 = minhash.MinHash(2, 1)
         buf = bytearray(m1.bytesize())
         # Only test for syntax
         m1.serialize(buf)
 
     def test_deserialize(self):
-        m1 = minhash.MinHash(1, 10)
+        m1 = minhash.MinHash(10, 1)
         m1.digest(sha1(bytes(123)))
         buf = bytearray(m1.bytesize())
         m1.serialize(buf)
@@ -67,7 +67,7 @@ class TestMinHash(unittest.TestCase):
                 m1d.hashvalues)))
 
     def test_pickle(self):
-        m = minhash.MinHash(1, 4)
+        m = minhash.MinHash(4, 1)
         m.digest(sha1(bytes(123)))
         m.digest(sha1(bytes(45)))
         p = pickle.loads(pickle.dumps(m))
