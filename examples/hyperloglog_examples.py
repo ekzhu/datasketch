@@ -9,13 +9,13 @@ data1 = ['hyperloglog', 'is', 'a', 'probabilistic', 'data', 'structure', 'for',
         'estimating', 'the', 'cardinality', 'of', 'dataset', 'dataset', 'a']
 
 def eg1():
-    h = HyperLogLog(16)
+    h = HyperLogLog()
     for d in data1:
         h.digest(sha1(d.encode('utf8')))
     print("Estimated cardinality is", h.count())
 
     s1 = set(data1)
-    print("The actual cardinality is", len(s1))
+    print("Actual cardinality is", len(s1))
 
 if __name__ == "__main__":
     eg1()
