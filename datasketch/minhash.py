@@ -96,10 +96,10 @@ class MinHash(object):
         hashvalue_size = struct.calcsize('I')
         return seed_size + length_size + len(self.hashvalues) * hashvalue_size
 
-
     def serialize(self, buffer):
         '''
         Serializes this MinHash object into bytes, store in `buffer`.
+        This is more efficient than using pickle.dumps on the object.
         '''
         if len(buffer) < self.bytesize():
             raise MinHashException("The buffer does not have enough space\
@@ -112,6 +112,8 @@ class MinHash(object):
     def deserialize(cls, buffer):
         '''
         Reconstruct a MinHash object from a byte buffer.
+        This is more efficient than using the pickle.loads on the pickled
+        bytes.
         '''
         seed, num_perm = struct.unpack_from('qi', buffer, 0)
         mh = cls(num_perm=num_perm, seed=seed)
@@ -121,13 +123,30 @@ class MinHash(object):
             offset += struct.calcsize('I')
         return mh
 
-    # Implement the following 2 methods to make pickling happy in python 2
     def __getstate__(self):
-        return dict([x, getattr(self, x)] for x in self.__slots__)
+        '''
+        This function is called when pickling the MinHash object.
+        Returns a bytearray which will then be pickled.
+        Note that the bytes returned by the Python pickle.dumps is not
+        the same as the buffer returned by this function.
+        '''
+        buffer = bytearray(self.bytesize())
+        self.serialize(buffer)
+        return buffer
 
-    def __setstate__(self, d):
-        for key in d:
-            setattr(self, key, d[key])
+    def __setstate__(self, buffer):
+        '''
+        This function is called when unpickling the MinHash object.
+        Initialize the object with data in the buffer.
+        Note that the input buffer is not the same as the input to the
+        Python pickle.loads function.
+        '''
+        seed, num_perm = struct.unpack_from('qi', buffer, 0)
+        self.__init__(num_perm=num_perm, seed=seed)
+        offset = struct.calcsize('qi')
+        for i in range(num_perm):
+            self.hashvalues[i] = struct.unpack_from('I', buffer, offset)[0]
+            offset += struct.calcsize('I')
 
 
 def jaccard(mhs):
