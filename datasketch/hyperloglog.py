@@ -163,17 +163,17 @@ class HyperLogLog(object):
     def digest(self, hashobj):
         '''
         Digest a hash object that implemented `digest` as in hashlib.
-        The `digest` function of the hashobj must return at least 8 bytes.
+        The `digest` function of the hashobj must return at least 4 bytes.
         '''
-        # Digest the hash object to get the hash value of 64 bits
-        hv = struct.unpack('<Q', hashobj.digest()[:8])[0]
+        # Digest the hash object to get the hash value of 32 bits
+        hv = struct.unpack('<I', hashobj.digest()[:4])[0]
         # Get the index of the register using the first p bits of the hash
         reg_index = hv & (self.m - 1)
         # Get the rest of the hash
         bits = hv >> self.p
         # Update the register
         self.reg[reg_index] = max(self.reg[reg_index],
-                _get_rank(bits, 64 - self.p))
+                _get_rank(bits, 32 - self.p))
 
     def merge(self, other):
         '''
