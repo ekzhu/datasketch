@@ -4,6 +4,24 @@ import pickle
 from hashlib import sha1
 from datasketch import minhash
 
+class FakeHash(object):
+    '''
+    Implmenets the hexdigest required by HyperLogLog.
+    '''
+
+    def __init__(self, h):
+        '''
+        Initialize with an integer
+        '''
+        self.h = h
+
+    def digest(self):
+        '''
+        Return the bytes representation of the integer
+        '''
+        return struct.pack('<Q', self.h)
+
+
 class TestMinHash(unittest.TestCase):
 
     def test_init(self):
@@ -16,7 +34,7 @@ class TestMinHash(unittest.TestCase):
     def test_digest(self):
         m1 = minhash.MinHash(4, 1)
         m2 = minhash.MinHash(4, 1)
-        m1.digest(sha1(bytes(12)))
+        m1.digest(FakeHash(12))
         for i in range(4):
             self.assertTrue(m1.hashvalues[i] < m2.hashvalues[i])
 
@@ -24,15 +42,15 @@ class TestMinHash(unittest.TestCase):
         m1 = minhash.MinHash(4, 1)
         m2 = minhash.MinHash(4, 1)
         self.assertTrue(minhash.jaccard([m1, m2]) == 1.0)
-        m2.digest(sha1(bytes(12)))
+        m2.digest(FakeHash(12))
         self.assertTrue(minhash.jaccard([m1, m2]) == 0.0)
-        m1.digest(sha1(bytes(13)))
+        m1.digest(FakeHash(13))
         self.assertTrue(minhash.jaccard([m1, m2]) < 1.0)
 
     def test_merge(self):
         m1 = minhash.MinHash(4, 1)
         m2 = minhash.MinHash(4, 1)
-        m2.digest(sha1(bytes(12)))
+        m2.digest(FakeHash(12))
         m1.merge(m2)
         self.assertTrue(minhash.jaccard([m1, m2]) == 1.0)
 
@@ -48,7 +66,7 @@ class TestMinHash(unittest.TestCase):
 
     def test_deserialize(self):
         m1 = minhash.MinHash(10, 1)
-        m1.digest(sha1(bytes(123)))
+        m1.digest(FakeHash(123))
         buf = bytearray(m1.bytesize())
         m1.serialize(buf)
 
@@ -61,15 +79,15 @@ class TestMinHash(unittest.TestCase):
                 m1d.hashvalues)))
 
         # Test if the permutation functions are the same
-        m1.digest(sha1(bytes(34)))
-        m1d.digest(sha1(bytes(34)))
+        m1.digest(FakeHash(34))
+        m1d.digest(FakeHash(34))
         self.assertTrue(all(hvd == hv for hv, hvd in zip(m1.hashvalues,
                 m1d.hashvalues)))
 
     def test_pickle(self):
         m = minhash.MinHash(4, 1)
-        m.digest(sha1(bytes(123)))
-        m.digest(sha1(bytes(45)))
+        m.digest(FakeHash(123))
+        m.digest(FakeHash(45))
         p = pickle.loads(pickle.dumps(m))
         self.assertEqual(p.seed, m.seed)
         self.assertEqual(p.hashvalues, m.hashvalues)

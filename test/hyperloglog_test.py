@@ -16,11 +16,11 @@ class FakeHash(object):
         '''
         self.h = h
 
-    def hexdigest(self):
+    def digest(self):
         '''
-        Return the hex string of the integer
+        Return the bytes representation of the integer
         '''
-        return hex(self.h)[2:]
+        return struct.pack('<Q', self.h)
 
 
 class TestHyperLogLog(unittest.TestCase):

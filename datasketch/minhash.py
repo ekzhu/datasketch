@@ -58,11 +58,11 @@ class MinHash(object):
 
     def digest(self, hashobj):
         '''
-        Digest a hash object that implemented `hexdigest` as in hashlib,
+        Digest a hash object that implemented `digest` as in hashlib,
         and has size at least 4 bytes.
         '''
         # Digest the hash object to get the hash value
-        hv = int(hashobj.hexdigest()[:8], 16)
+        hv = struct.unpack('<I', hashobj.digest()[:4])[0]
         for i, (a, b) in enumerate(self.permutations):
             phv = _permutation_func(hv, a, b)
             if phv < self.hashvalues[i]:

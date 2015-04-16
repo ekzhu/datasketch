@@ -162,10 +162,11 @@ class HyperLogLog(object):
 
     def digest(self, hashobj):
         '''
-        Digest a hash object that implemented `hexdigest` as in hashlib.
+        Digest a hash object that implemented `digest` as in hashlib.
+        The `digest` function of the hashobj must return at least 8 bytes.
         '''
         # Digest the hash object to get the hash value of 64 bits
-        hv = int(hashobj.hexdigest()[:16], 16)
+        hv = struct.unpack('<Q', hashobj.digest()[:8])[0]
         # Get the index of the register using the first p bits of the hash
         reg_index = hv & (self.m - 1)
         # Get the rest of the hash
