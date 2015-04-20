@@ -76,6 +76,8 @@ def plot_hist(ax, est_sims, bins, title, exact_sim):
 
 
 def plot(result, p_list, num_perm_list, exact_sim, bins, save):
+    import matplotlib
+    matplotlib.use('Agg')
     import matplotlib.pyplot as plt
     num_row = 2
     num_col = len(result)
@@ -94,7 +96,7 @@ if __name__ == "__main__":
     data = _gen_data(5000)
     A = (1, 80)
     B = (40, 100)
-    exps = [4, 7, 10]
+    exps = [6, 8, 10]
     p_list = exps
     num_perm_list = list([2**i for i in exps])
     n = 100

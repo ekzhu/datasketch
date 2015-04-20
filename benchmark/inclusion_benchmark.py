@@ -26,8 +26,7 @@ def _get_exact(A, B):
     overlap = min(a_end, b_end) - max(a_start, b_start)
     if overlap < 0:
         overlap = 0
-    union = max(a_end, b_end) - min(a_start, b_start)
-    return float(overlap) / union
+    return float(overlap) / abs(a_start - a_end) 
 
 
 def _run_hyperloglog(A, B, data, seed, p):
@@ -62,6 +61,8 @@ def plot_hist(ax, est_sims, bins, title, exact_sim):
 
 
 def plot(result, p_list, exact_sim, bins, save):
+    import matplotlib
+    matplotlib.use('Agg')
     import matplotlib.pyplot as plt
     num_row = 1
     num_col = len(result)
@@ -76,9 +77,9 @@ def plot(result, p_list, exact_sim, bins, save):
 
 if __name__ == "__main__":
     data = _gen_data(5000)
-    A = (1, 80)
-    B = (40, 100)
-    exps = list(range(4,17,2))
+    A = (1, 50)
+    B = (25, 100)
+    exps = [6, 8, 10]
     p_list = exps
     n = 100
     save = "inclusion_benchmark.png"
