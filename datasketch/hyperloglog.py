@@ -318,7 +318,26 @@ class HyperLogLog(object):
         for i in range(self.m):
             self.reg[i] = struct.unpack_from('B', buffer, offset)[0]
             offset += size
+    
+    @classmethod
+    def union(cls, *hyperloglogs):
+        '''
+        Return the union of all given HyperLogLogs
+        '''
+        if len(hyperloglogs) < 2:
+            raise HyperLogLogException("Cannot union less than 2 HyperLogLog\
+                    sketches")
+        m = hyperloglogs[0].m
+        if not all(h.m == m for h in hyperloglogs):
+            raise HyperLogLogException("Cannot union HyperLogLog sketches with\
+                    different precisions")
+        reg = [max(*vs) for vs in zip(*[h.reg for h in hyperloglogs])]
+        h = cls(reg=reg)
+        return h
 
 
 class HyperLogLogException(Exception):
     pass
+
+
+
