@@ -41,18 +41,25 @@ class TestMinHash(unittest.TestCase):
     def test_jaccard(self):
         m1 = minhash.MinHash(4, 1)
         m2 = minhash.MinHash(4, 1)
-        self.assertTrue(minhash.jaccard([m1, m2]) == 1.0)
+        self.assertTrue(minhash.jaccard(m1, m2) == 1.0)
         m2.digest(FakeHash(12))
-        self.assertTrue(minhash.jaccard([m1, m2]) == 0.0)
+        self.assertTrue(minhash.jaccard(m1, m2) == 0.0)
         m1.digest(FakeHash(13))
-        self.assertTrue(minhash.jaccard([m1, m2]) < 1.0)
+        self.assertTrue(minhash.jaccard(m1, m2) < 1.0)
 
     def test_merge(self):
         m1 = minhash.MinHash(4, 1)
         m2 = minhash.MinHash(4, 1)
         m2.digest(FakeHash(12))
         m1.merge(m2)
-        self.assertTrue(minhash.jaccard([m1, m2]) == 1.0)
+        self.assertTrue(minhash.jaccard(m1, m2) == 1.0)
+
+    def test_union(self):
+        m1 = minhash.MinHash(4, 1)
+        m2 = minhash.MinHash(4, 1)
+        m2.digest(FakeHash(12))
+        u = minhash.MinHash.union(m1, m2)
+        self.assertTrue(minhash.jaccard(u, m2) == 1.0)
 
     def test_bytesize(self):
         m1 = minhash.MinHash(4, 1)

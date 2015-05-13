@@ -148,10 +148,27 @@ class MinHash(object):
             self.hashvalues[i] = struct.unpack_from('I', buffer, offset)[0]
             offset += struct.calcsize('I')
 
+    @classmethod
+    def union(cls, *mhs):
+        '''
+        Return the union MinHash of multiple MinHash objects
+        '''
+        if len(mhs) < 2:
+            raise MinHashException("Cannot union less than 2 MinHash sketches")
+        num_perm = len(mhs[0].permutations)
+        seed = mhs[0].seed
+        if any(seed != m.seed for m in mhs) or \
+                any(num_perm != len(m.permutations) for m in mhs):
+            raise MinHashException("The unioning MinHash objects must have the\
+                    same seed and number of permutation functions")
+        mh = cls(num_perm=num_perm, seed=seed)
+        mh.hashvalues = [min(*vs) for vs in zip(*[m.hashvalues for m in mhs])]
+        return mh
 
-def jaccard(mhs):
+
+def jaccard(*mhs):
     '''
-    Compute Jaccard similarity measure for a list of MinHash objects.
+    Compute Jaccard similarity measure for multiple of MinHash objects.
     '''
     if len(mhs) < 2:
         raise MinHashException("Less than 2 MinHash objects were given")
