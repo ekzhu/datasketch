@@ -94,8 +94,8 @@ def plot(result, p_list, num_perm_list, exact_sim, bins, save):
 
 if __name__ == "__main__":
     data = _gen_data(5000)
-    A = (1, 80)
-    B = (40, 100)
+    A = (0, 4000)
+    B = (2000, 5000)
     exps = [6, 8, 10]
     p_list = exps
     num_perm_list = list([2**i for i in exps])
