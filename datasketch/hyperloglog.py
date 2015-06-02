@@ -335,6 +335,18 @@ class HyperLogLog(object):
         h = cls(reg=reg)
         return h
 
+    def __eq__(self, other):
+        '''
+        Check equivalence between two HyperLogLogs
+        '''
+        if self.p != other.p:
+            return False
+        if self.m != other.m:
+            return False
+        if any(v1 != v2 for v1, v2 in zip(self.reg, other.reg)):
+            return False
+        return True
+
 
 class HyperLogLogException(Exception):
     pass

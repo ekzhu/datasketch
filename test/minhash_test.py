@@ -100,5 +100,26 @@ class TestMinHash(unittest.TestCase):
         self.assertEqual(p.hashvalues, m.hashvalues)
         self.assertEqual(p.permutations, m.permutations)
 
+    def test_eq(self):
+        m1 = minhash.MinHash(4, 1)
+        m2 = minhash.MinHash(4, 1)
+        m3 = minhash.MinHash(4, 2)
+        m4 = minhash.MinHash(8, 1)
+        m5 = minhash.MinHash(4, 1)
+        m1.digest(FakeHash(11))
+        m2.digest(FakeHash(12))
+        m3.digest(FakeHash(11))
+        m4.digest(FakeHash(11))
+        m5.digest(FakeHash(11))
+        self.assertNotEqual(m1, m2)
+        self.assertNotEqual(m1, m3)
+        self.assertNotEqual(m1, m4)
+        self.assertEqual(m1, m5)
+        
+        m1.digest(FakeHash(12))
+        m2.digest(FakeHash(11))
+        self.assertEqual(m1, m2)
+
+
 if __name__ == "__main__":
     unittest.main()

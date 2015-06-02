@@ -165,6 +165,21 @@ class MinHash(object):
         mh.hashvalues = [min(*vs) for vs in zip(*[m.hashvalues for m in mhs])]
         return mh
 
+    def __eq__(self, other):
+        '''
+        Check equivalence between MinHash objects
+        '''
+        if self.seed != other.seed:
+            return False
+        if len(self.permutations) != len(other.permutations) or\
+                len(self.hashvalues) != len(other.hashvalues):
+            return False
+        if any(t1 != t2 for t1, t2 in zip(self.permutations, other.permutations)):
+            return False
+        if any(v1 != v2 for v1, v2 in zip(self.hashvalues, other.hashvalues)):
+            return False
+        return True
+
 
 def jaccard(*mhs):
     '''

@@ -169,6 +169,19 @@ class TestHyperLogLog(unittest.TestCase):
         self.assertEqual(h.reg[1], 1)
         self.assertEqual(h.reg[5], 32 - 4 - 3)
 
+    def test_eq(self):
+        h1 = HyperLogLog(4)
+        h2 = HyperLogLog(4)
+        h3 = HyperLogLog(4)
+        h4 = HyperLogLog(8)
+        h1.digest(FakeHash(0b00011111))
+        h2.digest(FakeHash(0xfffffff1))
+        h3.digest(FakeHash(0b00011111))
+        h4.digest(FakeHash(0b00011111))
+        self.assertNotEqual(h1, h2)
+        self.assertEqual(h1, h3)
+        self.assertNotEqual(h1, h4)
+
 
 if __name__ == "__main__":
     unittest.main()
