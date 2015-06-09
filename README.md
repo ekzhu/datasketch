@@ -78,6 +78,15 @@ m.serialize(buf)
 n = MinHash.deserialize(buf)
 ```
 
+MinHash can be used for estimating the number of distinct elements, or cardinality.
+The analysis is presented in [Cohen 1994](http://ieeexplore.ieee.org/stamp/stamp.jsp?arnumber=365694).
+
+```python
+# Returns the estimation of the cardinality of
+# all elements digested so far.
+m.count()
+```
+
 ## HyperLogLog
 
 HyperLogLog is capable of estimating the cardinality (the number of
