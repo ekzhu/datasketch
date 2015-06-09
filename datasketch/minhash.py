@@ -6,7 +6,7 @@ The original MinHash paper:
 http://cs.brown.edu/courses/cs253/papers/nearduplicate.pdf
 '''
 
-import random, struct
+import random, struct, math
 
 # http://en.wikipedia.org/wiki/Mersenne_prime
 _mersenne_prime = (1 << 61) - 1
@@ -82,6 +82,14 @@ class MinHash(object):
         for i, v in enumerate(other.hashvalues):
             if v < self.hashvalues[i]:
                 self.hashvalues[i] = v
+
+    def count(self):
+        '''
+        Estimate the cardinality count.
+        See: http://ieeexplore.ieee.org/stamp/stamp.jsp?arnumber=365694 
+        '''
+        k = len(self.hashvalues)
+        return float(k) / sum(float(v)/float(_max_hash) for v in self.hashvalues) - 1.0
 
     def bytesize(self):
         '''

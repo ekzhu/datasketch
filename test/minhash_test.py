@@ -120,6 +120,16 @@ class TestMinHash(unittest.TestCase):
         m2.digest(FakeHash(11))
         self.assertEqual(m1, m2)
 
+    def test_count(self):
+        m = minhash.MinHash()
+        m.digest(FakeHash(11))
+        m.digest(FakeHash(123))
+        m.digest(FakeHash(92))
+        m.digest(FakeHash(98))
+        m.digest(FakeHash(123218))
+        m.digest(FakeHash(32))
+        c = m.count()
+        print c
 
 if __name__ == "__main__":
     unittest.main()
