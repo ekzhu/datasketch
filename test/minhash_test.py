@@ -129,7 +129,7 @@ class TestMinHash(unittest.TestCase):
         m.digest(FakeHash(123218))
         m.digest(FakeHash(32))
         c = m.count()
-        print c
+        self.assertGreaterEqual(c, 0)
 
 if __name__ == "__main__":
     unittest.main()
