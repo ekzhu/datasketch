@@ -160,6 +160,15 @@ class HyperLogLog(object):
             self.reg = reg
             self.alpha = _get_alpha(self.p)
 
+    def is_empty(self):
+        '''
+        Check if the current HyperLogLog is empty - at the state of just
+        initialized.
+        '''
+        if any(v != 0 for v in self.reg):
+            return False
+        return True
+
     def digest(self, hashobj):
         '''
         Digest a hash object that implemented `digest` as in hashlib.

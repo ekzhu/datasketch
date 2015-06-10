@@ -55,6 +55,15 @@ class MinHash(object):
         self.seed = seed
         random.seed(self.seed)
         self.permutations = [_create_permutation() for _ in range(num_perm)]
+    
+    def is_empty(self):
+        '''
+        Check if the current MinHash object is empty - at the state of just
+        initialized.
+        '''
+        if any(v != _max_hash for v in self.hashvalues):
+            return False
+        return True
 
     def digest(self, hashobj):
         '''

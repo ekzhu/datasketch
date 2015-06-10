@@ -38,6 +38,10 @@ class TestHyperLogLog(unittest.TestCase):
         h2 = HyperLogLog(p=4)
         self.assertEqual(h.p, h2.p)
 
+    def test_is_empty(self):
+        h = HyperLogLog()
+        self.assertTrue(h.is_empty())
+
     def test_digest(self):
         h = HyperLogLog(4)
         h.digest(FakeHash(0b00011111))

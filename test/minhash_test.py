@@ -30,6 +30,10 @@ class TestMinHash(unittest.TestCase):
         for i in range(4):
             self.assertEqual(m1.hashvalues[i], m2.hashvalues[i])
             self.assertEqual((m1.permutations[i]), (m2.permutations[i]))
+    
+    def test_is_empty(self):
+        m = minhash.MinHash()
+        self.assertTrue(m.is_empty())
 
     def test_digest(self):
         m1 = minhash.MinHash(4, 1)
