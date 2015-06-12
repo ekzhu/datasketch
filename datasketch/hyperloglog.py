@@ -126,7 +126,7 @@ class HyperLogLog(object):
         Estimate the cardinality of the data seen so far.
         '''
         # Use HyperLogLog estimation function
-        e = self.alpha * float(self.m ** 2) / sum(1.0/(1 << v) for v in self.reg)
+        e = self.alpha * float(self.m ** 2) / sum(1.0/(1 << int(v)) for v in self.reg)
         # Small range correction
         if e <= (5.0 / 2.0) * self.m:
             num_zero = sum(1 for v in self.reg if v == 0)
@@ -146,7 +146,7 @@ class HyperLogLog(object):
                     precisions.")
 
         # Use HyperLogLog estimation function
-        e = self.alpha * float(self.m ** 2) / sum(1.0/(1<<max(v1, v2))
+        e = self.alpha * float(self.m ** 2) / sum(1.0/(1<<int(max(v1, v2)))
                 for v1, v2 in zip(self.reg, other.reg))
         # Small range correction
         if e <= (5.0 / 2.0) * self.m:
@@ -324,7 +324,7 @@ class HyperLogLogPlusPlus(HyperLogLog):
             if lc <= self._get_threshold(self.p):
                 return lc
         # Use HyperLogLog estimation function
-        e = self.alpha * float(self.m ** 2) / sum(1.0/(1<<v) for v in self.reg)
+        e = self.alpha * float(self.m ** 2) / sum(1.0/(1<<int(v)) for v in self.reg)
         if e <= 5 * self.m:
             return e - self._estimate_bias(e, self.p)
         else:
@@ -342,7 +342,7 @@ class HyperLogLogPlusPlus(HyperLogLog):
             if lc <= self._get_threshold(self.p):
                 return lc
         # Use HyperLogLog estimation function
-        e = self.alpha * float(self.m ** 2) / sum(1.0/(1<<max(v1, v2))
+        e = self.alpha * float(self.m ** 2) / sum(1.0/(1<<int(max(v1, v2)))
                 for v1, v2 in zip(self.reg, other.reg))
         if e <= 5 * self.m:
             return e - self._estimate_bias(e, self.p)
