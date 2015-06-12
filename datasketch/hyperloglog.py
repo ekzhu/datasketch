@@ -11,7 +11,11 @@ with enhanced functionalities for serialization and similarities.
 '''
 
 import struct, math
-from hyperloglog_const import _thresholds, _raw_estimate, _bias
+try:
+    from .hyperloglog_const import _thresholds, _raw_estimate, _bias
+except ImportError:
+    # For Python 2
+    from hyperloglog_const import _thresholds, _raw_estimate, _bias
 
 
 # Get the number of bits starting from the first non-zero bit to the right
