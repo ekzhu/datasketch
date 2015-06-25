@@ -5,13 +5,15 @@
 datasketch gives you probabilistic data structures that can process
 vary large amount of data super fast, with little loss of accuracy.
 
-datasketch must be used with Python 2.7 or above.
+datasketch must be used with Python 2.7 or above and NumPy.
 
 ## Install
 
 To install datasketch using `pip`:
 
     pip install datasketch -U
+
+This will also install NumPy as dependency.
 
 ## MinHash
 

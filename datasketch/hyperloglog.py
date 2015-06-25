@@ -10,7 +10,8 @@ https://github.com/svpcom/hyperloglog
 with enhanced functionalities for serialization and similarities.
 '''
 
-import struct, math
+import struct
+import numpy as np
 try:
     from .hyperloglog_const import _thresholds, _raw_estimate, _bias
 except ImportError:
@@ -58,10 +59,14 @@ class HyperLogLog(object):
         if reg is None:
             self.p = p
             self.m = 1 << p
-            self.reg = [0 for _ in range(self.m)]
+            self.reg = np.zeros((self.m,), dtype=np.int8)
         else:
+            # Check if the register has the correct type
+            if not isinstance(reg, np.ndarray) or reg.dtype != np.int8:
+                raise ValueError("The imported register must be a \
+                        numpy.ndarray with dtype int8.")
             # We have to check if the imported register has the correct length.
-            self.m = len(reg)
+            self.m = reg.size
             self.p = _bit_length(self.m) - 1
             if 1 << self.p != self.m:
                 raise ValueError("The imported register has \
@@ -78,7 +83,7 @@ class HyperLogLog(object):
         Check if the current HyperLogLog is empty - at the state of just
         initialized.
         '''
-        if any(v != 0 for v in self.reg):
+        if np.any(self.reg):
             return False
         return True
 
@@ -113,86 +118,57 @@ class HyperLogLog(object):
         if self.m != other.m or self.p != other.p:
             raise ValueError("Cannot merge HyperLogLog with different\
                     precisions.")
-        self.reg = [max(*vs) for vs in zip(self.reg, other.reg)]
+        self.reg = np.maximum(self.reg, other.reg)
 
     def _linearcounting(self, num_zero):
-        return self.m * math.log(self.m / float(num_zero))
+        return self.m * np.log(self.m / float(num_zero))
 
     def _largerange_correction(self, e):
-        return - (1 << 32) * math.log((1.0 - e / (1 << 32)), 2)
+        return - (1 << 32) * np.log(1.0 - e / (1 << 32))
 
     def count(self):
         '''
         Estimate the cardinality of the data seen so far.
         '''
         # Use HyperLogLog estimation function
-        e = self.alpha * float(self.m ** 2) / sum(1.0/(1 << int(v)) for v in self.reg)
+        e = self.alpha * float(self.m ** 2) / np.sum(2.0**(-self.reg))
         # Small range correction
         if e <= (5.0 / 2.0) * self.m:
-            num_zero = sum(1 for v in self.reg if v == 0)
+            num_zero = self.m - np.count_nonzero(self.reg)
             return self._linearcounting(num_zero)
         # Normal range, no correction
         if e <= (1.0 / 30.0) * (1 << 32):
             return e
         # Large range correction
         return self._largerange_correction(e)
-
-    def union_count(self, other):
+    
+    @classmethod
+    def union(cls, *hyperloglogs):
         '''
-        Estimate the cardinality of the union of this and the other HyperLogLogs.
+        Return the union of all given HyperLogLogs
+        '''
+        if len(hyperloglogs) < 2:
+            raise ValueError("Cannot union less than 2 HyperLogLog\
+                    sketches")
+        m = hyperloglogs[0].m
+        if not all(h.m == m for h in hyperloglogs):
+            raise ValueError("Cannot union HyperLogLog sketches with\
+                    different precisions")
+        reg = np.maximum.reduce([h.reg for h in hyperloglogs])
+        h = cls(reg=reg)
+        return h
+
+    def __eq__(self, other):
+        '''
+        Check equivalence between two HyperLogLogs
         '''
         if self.p != other.p:
-            raise ValueError("Cannot union HyperLogLogs with different\
-                    precisions.")
-
-        # Use HyperLogLog estimation function
-        e = self.alpha * float(self.m ** 2) / sum(1.0/(1<<int(max(v1, v2)))
-                for v1, v2 in zip(self.reg, other.reg))
-        # Small range correction
-        if e <= (5.0 / 2.0) * self.m:
-            num_zero = sum(1 for v1, v2 in zip(self.reg, other.reg)
-                    if v1 == 0 and v2 == 0)
-            return self._linearcounting(num_zero)
-        # Normal range, no correction
-        if e <= (1.0 / 30.0) * (1 << 32):
-            return e
-        # Large range correction
-        return self._largerange_correction(e)
-
-    def intersection_count(self, other):
-        '''
-        Estimate the cardinality of the intersection of this and the other
-        HyperLogLogs. The value may be negative due to estimation error.
-        '''
-        uc = self.union_count(other)
-        return self.count() + other.count() - uc
-
-    def jaccard(self, other):
-        '''
-        Estimate the Jaccard similarity between the multiset counted by this
-        HyperLogLog and the multiset counted by the other HyperLogLog.
-        The value may be negative due to estimation error.
-        '''
-        uc = self.union_count(other)
-        if uc == 0.0:
-            return 1.0
-        ic = self.count() + other.count() - uc
-        return ic / uc
-
-    def inclusion(self, other):
-        '''
-        Estimate the inclusion of this HyperLogLog against the other.
-        It measures the fraction of the multiset counted by this HyperLogLog
-        overlapping with the multiset counted by the other HyperLogLog.
-        The value may be negative due to estimation error.
-        '''
-        # Use inclusion-exclusion principle to compute the intersection size
-        c = self.count()
-        if c == 0.0:
-            return 1.0
-        uc = self.union_count(other)
-        ic = c + other.count() - uc
-        return ic / c
+            return False
+        if self.m != other.m:
+            return False
+        if not np.array_equal(self.reg, other.reg):
+            return False
+        return True
 
     def bytesize(self):
         '''
@@ -258,34 +234,6 @@ class HyperLogLog(object):
         for i in range(self.m):
             self.reg[i] = struct.unpack_from('B', buffer, offset)[0]
             offset += size
-    
-    @classmethod
-    def union(cls, *hyperloglogs):
-        '''
-        Return the union of all given HyperLogLogs
-        '''
-        if len(hyperloglogs) < 2:
-            raise ValueError("Cannot union less than 2 HyperLogLog\
-                    sketches")
-        m = hyperloglogs[0].m
-        if not all(h.m == m for h in hyperloglogs):
-            raise ValueError("Cannot union HyperLogLog sketches with\
-                    different precisions")
-        reg = [max(*vs) for vs in zip(*[h.reg for h in hyperloglogs])]
-        h = cls(reg=reg)
-        return h
-
-    def __eq__(self, other):
-        '''
-        Check equivalence between two HyperLogLogs
-        '''
-        if self.p != other.p:
-            return False
-        if self.m != other.m:
-            return False
-        if any(v1 != v2 for v1, v2 in zip(self.reg, other.reg)):
-            return False
-        return True
 
 
 class HyperLogLogPlusPlus(HyperLogLog):
@@ -317,33 +265,14 @@ class HyperLogLogPlusPlus(HyperLogLog):
                 len(nearest_neighbors)
 
     def count(self):
-        num_zero = sum(1 for v in self.reg if v == 0)
+        num_zero = self.m - np.count_nonzero(self.reg)
         if num_zero > 0:
             # linear counting
-            lc = self.m * math.log(self.m / float(num_zero))
+            lc = self._linearcounting(num_zero)
             if lc <= self._get_threshold(self.p):
                 return lc
         # Use HyperLogLog estimation function
-        e = self.alpha * float(self.m ** 2) / sum(1.0/(1<<int(v)) for v in self.reg)
-        if e <= 5 * self.m:
-            return e - self._estimate_bias(e, self.p)
-        else:
-            return e
-
-    def union_count(self, other):
-        if self.p != other.p:
-            raise ValueError("Cannot union HyperLogLogs with different\
-                    precisions.")
-        num_zero = sum(1 for v1, v2 in zip(self.reg, other.reg)
-                if v1 == 0 and v2 == 0)
-        if num_zero > 0:
-            # linear counting
-            lc = self.m * math.log(self.m / float(num_zero))
-            if lc <= self._get_threshold(self.p):
-                return lc
-        # Use HyperLogLog estimation function
-        e = self.alpha * float(self.m ** 2) / sum(1.0/(1<<int(max(v1, v2)))
-                for v1, v2 in zip(self.reg, other.reg))
+        e = self.alpha * float(self.m ** 2) / np.sum(1.0 / (1 << self.reg))
         if e <= 5 * self.m:
             return e - self._estimate_bias(e, self.p)
         else:

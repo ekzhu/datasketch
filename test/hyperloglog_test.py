@@ -3,6 +3,7 @@ import struct
 import pickle
 from hashlib import sha1
 from mock import patch
+import numpy as np
 from datasketch.hyperloglog import HyperLogLog, HyperLogLogPlusPlus
 
 
@@ -35,7 +36,7 @@ class TestHyperLogLog(unittest.TestCase):
         self.assertTrue(all(0 == i for i in h.reg))
 
     def test_init_from_reg(self):
-        reg = [1 for _ in range(1 << 4)]
+        reg = np.array([1 for _ in range(1 << 4)], dtype=np.int8)
         h = self._class(reg=reg)
         self.assertEqual(h.p, 4)
         h2 = self._class(p=4)
@@ -73,67 +74,6 @@ class TestHyperLogLog(unittest.TestCase):
         # See benchmarks for the accuracy of the cardinality estimation.
         h.count()
 
-    def test_union_count(self):
-        h1 = self._class(4)
-        h1.digest(FakeHash(0b00011111))
-        h1.digest(FakeHash(0xfffffff1))
-        h1.digest(FakeHash(0xfffffff5))
-        h2 = self._class(4)
-        self.assertEqual(h1.count(), h1.union_count(h2))
-
-        h2.digest(FakeHash(0b00011111))
-        h2.digest(FakeHash(0xfffffff1))
-        h2.digest(FakeHash(0xfffffff5))
-        self.assertEqual(h1.count(), h1.union_count(h2))
-
-        h2.digest(FakeHash(0xfffffff6))
-        self.assertNotEqual(h1.count(), h1.union_count(h2))
-
-    def test_intersection_count(self):
-        h1 = self._class(4)
-        h1.digest(FakeHash(0b00011111))
-        h1.digest(FakeHash(0xfffffff1))
-        h1.digest(FakeHash(0xfffffff5))
-        h2 = self._class(4)
-        self.assertEqual(h1.intersection_count(h2), 0)
-
-        h2.digest(FakeHash(0b00011111))
-        h2.digest(FakeHash(0xfffffff1))
-        h2.digest(FakeHash(0xfffffff5))
-        self.assertEqual(int(h1.intersection_count(h2)), 3)
-
-    def test_jaccard(self):
-        h1 = self._class(4)
-        h1.digest(FakeHash(0b00011111))
-        h1.digest(FakeHash(0xfffffff1))
-        h1.digest(FakeHash(0xfffffff5))
-        h2 = self._class(4)
-        self.assertEqual(h1.jaccard(h2), 0)
-
-        h2.digest(FakeHash(0b00011111))
-        h2.digest(FakeHash(0xfffffff1))
-        h2.digest(FakeHash(0xfffffff5))
-        self.assertEqual(int(h1.jaccard(h2)), 1)
-
-        h2.digest(FakeHash(0xfffffff6))
-        self.assertNotEqual(h1.jaccard(h2), 1)
-
-    def test_inclusion(self):
-        h1 = self._class(4)
-        h1.digest(FakeHash(0b00011111))
-        h1.digest(FakeHash(0xfffffff1))
-        h1.digest(FakeHash(0xfffffff5))
-        h2 = self._class(4)
-        self.assertEqual(h1.inclusion(h2), 0)
-
-        h2.digest(FakeHash(0b00011111))
-        h2.digest(FakeHash(0xfffffff1))
-        h2.digest(FakeHash(0xfffffff5))
-        self.assertEqual(int(h1.inclusion(h2)), 1)
-
-        h2.digest(FakeHash(0xfffffff6))
-        self.assertEqual(int(h1.inclusion(h2)), 1)
-
     def test_serialize(self):
         h = self._class(4)
         buf = bytearray(h.bytesize())
@@ -162,7 +102,7 @@ class TestHyperLogLog(unittest.TestCase):
         p = pickle.loads(pickle.dumps(h))
         self.assertEqual(p.m, h.m)
         self.assertEqual(p.p, h.p)
-        self.assertEqual(p.reg, h.reg)
+        self.assertTrue(np.array_equal(p.reg, h.reg))
 
     def test_union(self):
         h1 = self._class(4)
@@ -193,39 +133,19 @@ class TestHyperLogLog(unittest.TestCase):
 class TestHyperLogLogSpecific(unittest.TestCase):
 
     def test_hyperloglog_large_card_est(self):
-        reg = [27 for i in range(1 << 4)]
+        reg = np.array([27 for i in range(1 << 4)], dtype=np.int8)
         with patch.object(HyperLogLog, '_largerange_correction') as mock_method:
             mock_method.return_value = 0
             h = HyperLogLog(reg=reg)
             h.count()
-        self.assertTrue(mock_method.called)
-
-        # Test union
-        r1 = [13 for i in range(1 << 4)]
-        r2 = [27 for i in range(1 << 4)]
-        with patch.object(HyperLogLog, '_largerange_correction') as mock_method:
-            mock_method.return_value = 0
-            h1 = HyperLogLog(reg=r1)
-            h2 = HyperLogLog(reg=r2)
-            h1.union_count(h2)
         self.assertTrue(mock_method.called)
 
     def test_hyperloglog_small_card_est(self):
-        reg = [1 for i in range(1 << 4)]
+        reg = np.array([1 for i in range(1 << 4)], dtype=np.int8)
         with patch.object(HyperLogLog, '_linearcounting') as mock_method:
             mock_method.return_value = 0
             h = HyperLogLog(reg=reg)
             h.count()
-        self.assertTrue(mock_method.called)
-
-        # Test union count
-        r1 = [0 for i in range(1 << 4)]
-        r2 = [1 for i in range(1 << 4)]
-        with patch.object(HyperLogLog, '_linearcounting') as mock_method:
-            mock_method.return_value = 0
-            h1 = HyperLogLog(reg=r1)
-            h2 = HyperLogLog(reg=r2)
-            h1.union_count(h2)
         self.assertTrue(mock_method.called)
 
 
