@@ -62,9 +62,8 @@ class HyperLogLog(object):
             self.reg = np.zeros((self.m,), dtype=np.int8)
         else:
             # Check if the register has the correct type
-            if not isinstance(reg, np.ndarray) or reg.dtype != np.int8:
-                raise ValueError("The imported register must be a \
-                        numpy.ndarray with dtype int8.")
+            if not isinstance(reg, np.ndarray):
+                raise ValueError("The imported register must be a numpy.ndarray.")
             # We have to check if the imported register has the correct length.
             self.m = reg.size
             self.p = _bit_length(self.m) - 1
