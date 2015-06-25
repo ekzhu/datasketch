@@ -253,16 +253,11 @@ class HyperLogLogPlusPlus(HyperLogLog):
     def _get_threshold(self, p):
         return _thresholds[p - 4]
 
-    def _get_nearest_neighbors(self, e, estimate_vector):
-        distance_map = [((e - float(v)) ** 2, i) for i, v in enumerate(estimate_vector)]
-        distance_map.sort()
-        return [idx for dist, idx in distance_map[:6]]
-
     def _estimate_bias(self, e, p):
         bias_vector = _bias[p - 4]
-        nearest_neighbors = self._get_nearest_neighbors(e, _raw_estimate[p - 4])
-        return sum([float(bias_vector[i]) for i in nearest_neighbors]) /\
-                len(nearest_neighbors)
+        estimate_vector = _raw_estimate[p - 4]
+        nearest_neighbors = np.argsort((e - estimate_vector)**2)[:6]
+        return np.mean(bias_vector[nearest_neighbors])
 
     def count(self):
         num_zero = self.m - np.count_nonzero(self.reg)
@@ -272,7 +267,7 @@ class HyperLogLogPlusPlus(HyperLogLog):
             if lc <= self._get_threshold(self.p):
                 return lc
         # Use HyperLogLog estimation function
-        e = self.alpha * float(self.m ** 2) / np.sum(1.0 / (1 << self.reg))
+        e = self.alpha * float(self.m ** 2) / np.sum(2.0**(-self.reg))
         if e <= 5 * self.m:
             return e - self._estimate_bias(e, self.p)
         else:

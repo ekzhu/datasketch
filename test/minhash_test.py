@@ -2,6 +2,7 @@ import unittest
 import struct
 import pickle
 from hashlib import sha1
+import numpy as np
 from datasketch import minhash
 
 class FakeHash(object):
@@ -27,9 +28,8 @@ class TestMinHash(unittest.TestCase):
     def test_init(self):
         m1 = minhash.MinHash(4, 1)
         m2 = minhash.MinHash(4, 1)
-        for i in range(4):
-            self.assertEqual(m1.hashvalues[i], m2.hashvalues[i])
-            self.assertEqual((m1.permutations[i]), (m2.permutations[i]))
+        self.assertTrue(np.array_equal(m1.hashvalues, m2.hashvalues))
+        self.assertTrue(np.array_equal(m1.permutations, m2.permutations))
     
     def test_is_empty(self):
         m = minhash.MinHash()
@@ -101,8 +101,8 @@ class TestMinHash(unittest.TestCase):
         m.digest(FakeHash(45))
         p = pickle.loads(pickle.dumps(m))
         self.assertEqual(p.seed, m.seed)
-        self.assertEqual(p.hashvalues, m.hashvalues)
-        self.assertEqual(p.permutations, m.permutations)
+        self.assertTrue(np.array_equal(p.hashvalues, m.hashvalues))
+        self.assertTrue(np.array_equal(p.permutations, m.permutations))
 
     def test_eq(self):
         m1 = minhash.MinHash(4, 1)

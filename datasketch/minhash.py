@@ -6,7 +6,8 @@ The original MinHash paper:
 http://cs.brown.edu/courses/cs253/papers/nearduplicate.pdf
 '''
 
-import random, struct, math
+import random, struct
+import numpy as np
 
 # http://en.wikipedia.org/wiki/Mersenne_prime
 _mersenne_prime = (1 << 61) - 1
@@ -25,9 +26,6 @@ def _create_permutation():
     return (a, b)
 
 
-_permutation_func = lambda x, a, b: ((a * x + b) % _mersenne_prime) % _hash_range
-
-
 class MinHash(object):
     '''
     The MinHash object.
@@ -44,24 +42,25 @@ class MinHash(object):
         Different seed will generate different sets of permutaiton functions.
         '''
         if num_perm <= 0:
-            raise MinHashException("Cannot have non-positive number of\
+            raise ValueError("Cannot have non-positive number of\
                     permutation functions")
         if num_perm > _hash_range:
             # Because 1) we don't want the size to be too large, and
             # 2) we are using 4 bytes to store the size value
-            raise MinHashException("Cannot have more than %d number of\
+            raise ValueError("Cannot have more than %d number of\
                     permutation functions" % _hash_range)
-        self.hashvalues = [_max_hash for _ in range(num_perm)]
+        self.hashvalues = np.array([_max_hash for _ in range(num_perm)])
         self.seed = seed
         random.seed(self.seed)
-        self.permutations = [_create_permutation() for _ in range(num_perm)]
+        self.permutations = np.array([_create_permutation() 
+            for _ in range(num_perm)]).T
     
     def is_empty(self):
         '''
         Check if the current MinHash object is empty - at the state of just
         initialized.
         '''
-        if any(v != _max_hash for v in self.hashvalues):
+        if np.any(self.hashvalues != _max_hash):
             return False
         return True
 
@@ -72,10 +71,9 @@ class MinHash(object):
         '''
         # Digest the hash object to get the hash value
         hv = struct.unpack('<I', hashobj.digest()[:4])[0]
-        for i, (a, b) in enumerate(self.permutations):
-            phv = _permutation_func(hv, a, b)
-            if phv < self.hashvalues[i]:
-                self.hashvalues[i] = phv
+        a, b = self.permutations
+        phv = ((a * hv + b) % _mersenne_prime) % _hash_range
+        self.hashvalues = np.minimum(phv, self.hashvalues)
 
     def merge(self, other):
         '''
@@ -83,22 +81,20 @@ class MinHash(object):
         of both.
         '''
         if other.seed != self.seed:
-            raise MinHashException("Cannot merge MinHash objects with\
+            raise ValueError("Cannot merge MinHash objects with\
                     different seeds")
-        if len(other.permutations) != len(self.permutations):
-            raise MinHashException("Cannot merge MinHash objects with\
+        if self.hashvalues.size != other.hashvalues.size:
+            raise ValueError("Cannot merge MinHash objects with\
                     different numbers of permutation functions")
-        for i, v in enumerate(other.hashvalues):
-            if v < self.hashvalues[i]:
-                self.hashvalues[i] = v
+        self.hashvalues = np.minimum(other.hashvalues, self.hashvalues)
 
     def count(self):
         '''
         Estimate the cardinality count.
         See: http://ieeexplore.ieee.org/stamp/stamp.jsp?arnumber=365694 
         '''
-        k = len(self.hashvalues)
-        return float(k) / sum(float(v)/float(_max_hash) for v in self.hashvalues) - 1.0
+        k = self.hashvalues.size
+        return np.float(k) / np.sum(self.hashvalues / np.float(_max_hash)) - 1.0
 
     def bytesize(self):
         '''
@@ -119,7 +115,7 @@ class MinHash(object):
         This is more efficient than using pickle.dumps on the object.
         '''
         if len(buffer) < self.bytesize():
-            raise MinHashException("The buffer does not have enough space\
+            raise ValueError("The buffer does not have enough space\
                     for holding this MinHash object.")
         fmt = "qi%dI" % len(self.hashvalues)
         struct.pack_into(fmt, buffer, 0,
@@ -171,31 +167,23 @@ class MinHash(object):
         Return the union MinHash of multiple MinHash objects
         '''
         if len(mhs) < 2:
-            raise MinHashException("Cannot union less than 2 MinHash sketches")
-        num_perm = len(mhs[0].permutations)
+            raise ValueError("Cannot union less than 2 MinHash sketches")
+        num_perm = mhs[0].hashvalues.size
         seed = mhs[0].seed
         if any(seed != m.seed for m in mhs) or \
-                any(num_perm != len(m.permutations) for m in mhs):
-            raise MinHashException("The unioning MinHash objects must have the\
+                any(num_perm != m.hashvalues.size for m in mhs):
+            raise ValueError("The unioning MinHash objects must have the\
                     same seed and number of permutation functions")
         mh = cls(num_perm=num_perm, seed=seed)
-        mh.hashvalues = [min(*vs) for vs in zip(*[m.hashvalues for m in mhs])]
+        mh.hashvalues = np.minimum.reduce([m.hashvalues for m in mhs])
         return mh
 
     def __eq__(self, other):
         '''
         Check equivalence between MinHash objects
         '''
-        if self.seed != other.seed:
-            return False
-        if len(self.permutations) != len(other.permutations) or\
-                len(self.hashvalues) != len(other.hashvalues):
-            return False
-        if any(t1 != t2 for t1, t2 in zip(self.permutations, other.permutations)):
-            return False
-        if any(v1 != v2 for v1, v2 in zip(self.hashvalues, other.hashvalues)):
-            return False
-        return True
+        return self.seed == other.seed and \
+                np.array_equal(self.hashvalues, other.hashvalues)
 
 
 def jaccard(*mhs):
@@ -203,22 +191,23 @@ def jaccard(*mhs):
     Compute Jaccard similarity measure for multiple of MinHash objects.
     '''
     if len(mhs) < 2:
-        raise MinHashException("Less than 2 MinHash objects were given")
+        raise ValueError("Less than 2 MinHash objects were given")
     seed = mhs[0].seed
     if any(seed != m.seed for m in mhs):
-        raise MinHashException("Cannot compare MinHash objects with\
+        raise ValueError("Cannot compare MinHash objects with\
                 different seeds")
-    num_perm = len(mhs[0].permutations)
-    if any(num_perm != len(m.permutations) for m in mhs):
-        raise MinHashException("Cannot compare MinHash objects with\
+    num_perm = mhs[0].hashvalues.size
+    if any(num_perm != m.hashvalues.size for m in mhs):
+        raise ValueError("Cannot compare MinHash objects with\
                 different numbers of permutation functions")
+    if len(mhs) == 2:
+        m1, m2 = mhs
+        return np.float(np.count_nonzero(m1.hashvalues == m2.hashvalues)) /\
+                np.float(m1.hashvalues.size)
+    # TODO: find a way to compute intersection for more than 2 using numpy
     intersection = 0
     for i in range(num_perm):
         phv = mhs[0].hashvalues[i]
         if all(phv == m.hashvalues[i] for m in mhs):
             intersection += 1
     return float(intersection) / float(num_perm)
-
-
-class MinHashException(Exception):
-    pass

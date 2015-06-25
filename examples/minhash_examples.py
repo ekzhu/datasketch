@@ -17,7 +17,7 @@ def eg1():
         m1.digest(sha1(d.encode('utf8')))
     for d in data2:
         m2.digest(sha1(d.encode('utf8')))
-    print("Estimated Jaccard for data1 and data2 is", jaccard([m1, m2]))
+    print("Estimated Jaccard for data1 and data2 is", jaccard(m1, m2))
 
     s1 = set(data1)
     s2 = set(data2)

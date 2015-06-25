@@ -33,13 +33,20 @@ def _get_exact(A, B):
         overlap = 0
     return float(overlap) / abs(a_start - a_end) 
 
-def _minhash_inclusion(m1, m2, A, B):
-    (a_start, a_end) = A
-    (b_start, b_end) = B
-    a = abs(a_start - a_end)
-    b = abs(b_start - b_end)
+def _minhash_inclusion(m1, m2):
+    c1 = m1.count()
+    c2 = m2.count()
     j = jaccard(m1, m2)
-    return (j / (j + 1.0)) * (1.0 + float(b) / float(a))
+    return (j / (j + 1.0)) * (1.0 + float(c2) / float(c1))
+
+def _hyperloglog_inclusion(h1, h2):
+    c1 = h1.count()
+    if c1 == 0.0:
+        return 1.0
+    c2 = h2.count()
+    uc = HyperLogLog.union(h1, h2).count()
+    ic = c1 + c2 - uc
+    return ic / c1
 
 def _run_hyperloglog(A, B, data, seed, p):
     (a_start, a_end), (b_start, b_end) = A, B
@@ -50,7 +57,7 @@ def _run_hyperloglog(A, B, data, seed, p):
         h1.digest(Hash(hasher(data[i], seed=seed)))
     for i in xrange(b_start, b_end):
         h2.digest(Hash(hasher(data[i], seed=seed)))
-    return h1.inclusion(h2)
+    return _hyperloglog_inclusion(h1, h2)
 
 def _run_minhash(A, B, data, seed, p):
     (a_start, a_end), (b_start, b_end) = A, B
@@ -61,7 +68,7 @@ def _run_minhash(A, B, data, seed, p):
         m1.digest(Hash(hasher(data[i], seed=seed)))
     for i in xrange(b_start, b_end):
         m2.digest(Hash(hasher(data[i], seed=seed)))
-    return _minhash_inclusion(m1, m2, A, B)
+    return _minhash_inclusion(m1, m2)
 
 def _run_test(A, B, data, n, p):
     logging.info("Running HyperLogLog with p = %d" % p)

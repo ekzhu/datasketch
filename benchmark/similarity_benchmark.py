@@ -30,6 +30,15 @@ def _get_exact(A, B):
     union = max(a_end, b_end) - min(a_start, b_start)
     return float(overlap) / union
 
+def _hyperloglog_jaccard(h1, h2):
+    c1 = h1.count()
+    c2 = h2.count()
+    uc = HyperLogLog.union(h1, h2).count()
+    if uc == 0.0:
+        return 1.0
+    ic = c1 + c2 - uc
+    return ic / uc
+
 def _run_minhash(A, B, data, seed, num_perm):
     (a_start, a_end), (b_start, b_end) = A, B
     hasher = pyhash.murmur3_32()
@@ -39,7 +48,7 @@ def _run_minhash(A, B, data, seed, num_perm):
         m1.digest(Hash(hasher(data[i], seed=seed)))
     for i in xrange(b_start, b_end):
         m2.digest(Hash(hasher(data[i], seed=seed)))
-    return jaccard([m1, m2])
+    return jaccard(m1, m2)
 
 def _run_hyperloglog(A, B, data, seed, p):
     (a_start, a_end), (b_start, b_end) = A, B
@@ -50,8 +59,7 @@ def _run_hyperloglog(A, B, data, seed, p):
         h1.digest(Hash(hasher(data[i], seed=seed)))
     for i in xrange(b_start, b_end):
         h2.digest(Hash(hasher(data[i], seed=seed)))
-    return h1.jaccard(h2)
-
+    return _hyperloglog_jaccard(h1, h2)
 
 def _run_test(A, B, data, n, p, num_perm):
     logging.info("Running MinHash with num_perm = %d" % num_perm)

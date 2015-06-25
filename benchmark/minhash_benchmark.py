@@ -3,6 +3,8 @@ Benchmarking the performance and accuracy of MinHash.
 '''
 import time, logging, random
 from hashlib import sha1
+import matplotlib
+matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 from datasketch.minhash import MinHash, jaccard
 
@@ -37,7 +39,7 @@ def run_acc(size, num_perm):
     m1, s1 = _run_acc(size, 1, num_perm)
     m2, s2 = _run_acc(size, 4, num_perm)
     j = float(len(s1.intersection(s2)))/float(len(s1.union(s2)))
-    j_e = jaccard([m1, m2])
+    j_e = jaccard(m1, m2)
     err = abs(j - j_e)
     return err
 

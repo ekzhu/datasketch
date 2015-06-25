@@ -3,7 +3,6 @@ Performance and accuracy of HyperLogLog
 '''
 import time, logging, random
 from hashlib import sha1
-import matplotlib.pyplot as plt
 from datasketch.hyperloglog import HyperLogLog
 
 logging.basicConfig(level=logging.INFO)
@@ -46,6 +45,9 @@ size = 5000
 errs = [run_acc(size, 1, p) for p in ps]
 
 logging.info("> Plotting result")
+import matplotlib
+matplotlib.use('Agg')
+import matplotlib.pyplot as plt
 fig, axe = plt.subplots(1, 2, sharex=True, figsize=(10, 4))
 ax = axe[1]
 ax.plot(ps, run_times, marker='+')
