@@ -96,6 +96,20 @@ class MinHash(object):
         k = self.hashvalues.size
         return np.float(k) / np.sum(self.hashvalues / np.float(_max_hash)) - 1.0
 
+    def jaccard(self, other):
+        '''
+        Estimate the Jaccard similarity (resemblance) between this Minhash
+        and the other.
+        '''
+        if other.seed != self.seed:
+            raise ValueError("Cannot compute Jaccard given MinHash objects with\
+                    different seeds")
+        if self.hashvalues.size != other.hashvalues.size:
+            raise ValueError("Cannot compute Jaccard given MinHash objects with\
+                    different numbers of permutation functions")
+        return np.float(np.count_nonzero(self.hashvalues==other.hashvalues)) /\
+                np.float(self.hashvalues.size)
+
     def bytesize(self):
         '''
         Returns the size of this MinHash object in bytes.
