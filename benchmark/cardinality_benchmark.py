@@ -46,7 +46,9 @@ def run_full_tests(data, n, p_list):
 
 def plot_hist(ax, est_cards, bins, title, exact_card):
     errors = [float(exact_card - c)/float(exact_card) for c in est_cards]
-    ax.hist(errors, bins, histtype='stepfilled', facecolor='g', alpha=0.75)
+    errors.sort()
+    ax.plot(errors, 'g.', markersize=12)
+    # ax.hist(errors, histtype='stepfilled', facecolor='g', alpha=0.75)
     ax.set_title(title)
 
 
@@ -58,12 +60,14 @@ def plot(result, p_list, exact_card, bins, save):
     num_col = len(result)
     basesize = 5
     size = (basesize*num_col, basesize*num_row)
-    fig, axes = plt.subplots(num_row, num_col, sharex=True, figsize=size)
+    fig, axes = plt.subplots(num_row, num_col, sharex=True, sharey=True,
+            figsize=size)
     for i, (hll, minhash) in enumerate(result):
         title = "HyperLogLog Error Rate p = " + r"$2^{%d}$" % p_list[i]
         plot_hist(axes[0][i], hll, bins, title, exact_card)
         title = "MinHash Error Rate num_perm = " + r"$2^{%d}$" % p_list[i]
         plot_hist(axes[1][i], minhash, bins, title, exact_card)
+    fig.suptitle("Exact cardinality = %d" % exact_card)
     fig.savefig(save)
 
 

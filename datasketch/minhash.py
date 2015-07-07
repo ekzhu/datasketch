@@ -72,7 +72,7 @@ class MinHash(object):
         # Digest the hash object to get the hash value
         hv = struct.unpack('<I', hashobj.digest()[:4])[0]
         a, b = self.permutations
-        phv = ((a * hv + b) % _mersenne_prime) % _hash_range
+        phv = np.bitwise_and(((a * hv + b) % _mersenne_prime), _max_hash)
         self.hashvalues = np.minimum(phv, self.hashvalues)
 
     def merge(self, other):
