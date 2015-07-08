@@ -54,6 +54,9 @@ def plot(result, bs, exact_sims, num_perm, bins, save):
         ax.axhline(exact_sim, color='black', linestyle='--', label='Exact')
         ax.set_title("%d perm funcs, exact = %.2f" % (num_perm, exact_sim))
         ax.grid()
+        ax.set_xlabel("Runs with random hash functions")
+        if i == 0:
+            ax.set_ylabel('Jaccard')
         if i == num_col - 1:
             ax.legend(loc='lower right')
     fig.savefig(save)

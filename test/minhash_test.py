@@ -201,7 +201,7 @@ class TestbBitMinHash(unittest.TestCase):
     
     def test_bytesize(self):
         s = bBitMinHash(self.m).bytesize()
-        self.assertGreaterEqual(s, 8+4+1+self.m.hashvalues.size/64)
+        self.assertGreaterEqual(s, 8*2+4+1+self.m.hashvalues.size/64)
 
     def test_pickle(self):
         for b in [1, 2, 3, 9, 27, 32]:
