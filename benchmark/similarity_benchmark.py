@@ -4,8 +4,10 @@ Must be using Python 2 as pyhash does not support Python 3
 '''
 import time, logging, random, struct
 import pyhash
+import numpy as np
 from datasketch.hyperloglog import HyperLogLog
 from datasketch.minhash import MinHash, jaccard
+from datasketch.b_bit_minhash import bBitMinHash
 
 logging.basicConfig(level=logging.INFO)
 
@@ -39,7 +41,10 @@ def _hyperloglog_jaccard(h1, h2):
     ic = c1 + c2 - uc
     return ic / uc
 
-def _run_minhash(A, B, data, seed, num_perm):
+def _b_bit_minhash_jaccard(m1, m2, b):
+    return bBitMinHash(m1, b).jaccard(bBitMinHash(m2, b))
+
+def _run_minhash(A, B, data, seed, num_perm, b):
     (a_start, a_end), (b_start, b_end) = A, B
     hasher = pyhash.murmur3_32()
     m1 = MinHash(num_perm=num_perm)
@@ -48,7 +53,7 @@ def _run_minhash(A, B, data, seed, num_perm):
         m1.digest(Hash(hasher(data[i], seed=seed)))
     for i in xrange(b_start, b_end):
         m2.digest(Hash(hasher(data[i], seed=seed)))
-    return jaccard(m1, m2)
+    return [m1.jaccard(m2), _b_bit_minhash_jaccard(m1, m2, b)]
 
 def _run_hyperloglog(A, B, data, seed, p):
     (a_start, a_end), (b_start, b_end) = A, B
@@ -61,18 +66,20 @@ def _run_hyperloglog(A, B, data, seed, p):
         h2.digest(Hash(hasher(data[i], seed=seed)))
     return _hyperloglog_jaccard(h1, h2)
 
-def _run_test(A, B, data, n, p, num_perm):
+def _run_test(A, B, data, n, p, num_perm, b):
     logging.info("Running MinHash with num_perm = %d" % num_perm)
-    minhash_runs = [_run_minhash(A, B, data, i, num_perm) for i in xrange(n)]
+    minhash_runs, bbit_runs = np.array([_run_minhash(A, B, data, 
+            i, num_perm, b) 
+        for i in xrange(n)]).T
     logging.info("Running HyperLogLog with p = %d" % p)
     hll_runs = [_run_hyperloglog(A, B, data, i, p) for i in xrange(n)]
-    return (minhash_runs, hll_runs)
+    return (minhash_runs, bbit_runs, hll_runs)
 
 
-def run_full_tests(A, B, data, n, p_list, num_perm_list):
+def run_full_tests(A, B, data, n, p_list, num_perm_list, b):
     logging.info("Run tests with A = (%d, %d), B = (%d, %d), n = %d"
             % (A[0], A[1], B[0], B[1], n))
-    return [_run_test(A, B, data, n, p, num_perm) 
+    return [_run_test(A, B, data, n, p, num_perm, b) 
             for p, num_perm in zip(p_list, num_perm_list)]
 
 
@@ -83,33 +90,37 @@ def plot_hist(ax, est_sims, bins, title, exact_sim):
     ax.set_xlabel("Estimation (Actual = %.4f)" % exact_sim)
 
 
-def plot(result, p_list, num_perm_list, exact_sim, bins, save):
+def plot(result, p_list, num_perm_list, exact_sim, bins, save, b):
     import matplotlib
     matplotlib.use('Agg')
     import matplotlib.pyplot as plt
-    num_row = 2
+    num_row = 3
     num_col = len(result)
     basesize = 5
     size = (basesize*num_col, basesize*num_row)
-    fig, axes = plt.subplots(num_row, num_col, sharex=True, figsize=size)
-    for i, (minhash, hll) in enumerate(result):
+    fig, axes = plt.subplots(num_row, num_col, sharey=True, 
+            sharex=True, figsize=size)
+    for i, (minhash, bbit, hll) in enumerate(result):
         title = "MinHash %d perm funcs" % num_perm_list[i]
         plot_hist(axes[0][i], minhash, bins, title, exact_sim)
+        title = "%d-bit MinHash %d perm funcs" % (b, num_perm_list[i])
+        plot_hist(axes[1][i], bbit, bins, title, exact_sim)
         title = "HyperLogLog p = " + r"$2^{%d}$" % p_list[i]
-        plot_hist(axes[1][i], hll, bins, title, exact_sim)
+        plot_hist(axes[2][i], hll, bins, title, exact_sim)
     fig.savefig(save)
 
 
 if __name__ == "__main__":
     data = _gen_data(5000)
-    A = (0, 4000)
-    B = (2000, 5000)
+    A = (0, 3550)
+    B = (1450, 5000)
     exps = [6, 8, 10]
     p_list = exps
     num_perm_list = list([2**i for i in exps])
+    b = 1
     n = 100
     save = "similarity_benchmark.png"
     bins = [i*0.02 for i in range(50)]
     exact_sim = _get_exact(A, B)
-    result = run_full_tests(A, B, data, n, p_list, num_perm_list)
-    plot(result, p_list, num_perm_list, exact_sim, bins, save)
+    result = run_full_tests(A, B, data, n, p_list, num_perm_list, b)
+    plot(result, p_list, num_perm_list, exact_sim, bins, save, b)

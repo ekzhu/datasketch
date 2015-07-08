@@ -53,7 +53,7 @@ class bBitMinHash(object):
             raise ValueError("Cannot compare two b-bit MinHashes with different\
                     set of permutations")
         intersection = np.count_nonzero(self.hashvalues==other.hashvalues)
-        return float(intersection) / float(self.hashvalues.size)
+        return 2.0 * (float(intersection) / float(self.hashvalues.size) - 0.5)
 
     def bytesize(self):
         '''
