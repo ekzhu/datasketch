@@ -2,57 +2,73 @@
 Benchmarking the performance and accuracy of b-bi MinHash.
 '''
 import time, logging, random
-from hashlib import sha1
+logging.basicConfig(level=logging.INFO)
+import pyhash
 import numpy as np
-import matplotlib
-matplotlib.use('Agg')
-import matplotlib.pyplot as plt
 from datasketch.minhash import MinHash, jaccard
 from datasketch.b_bit_minhash import bBitMinHash
+from similarity_benchmark import _get_exact, _gen_data,\
+        Hash, _b_bit_minhash_jaccard
 
-logging.basicConfig(level=logging.INFO)
+def _run_minhash(A, B, data, seed, bs, num_perm):
+    (a_start, a_end), (b_start, b_end) = A, B
+    hasher = pyhash.murmur3_32()
+    m1 = MinHash(num_perm=num_perm)
+    m2 = MinHash(num_perm=num_perm)
+    for i in xrange(a_start, a_end):
+        m1.digest(Hash(hasher(data[i], seed=seed)))
+    for i in xrange(b_start, b_end):
+        m2.digest(Hash(hasher(data[i], seed=seed)))
+    return [m1.jaccard(m2)] + \
+            [_b_bit_minhash_jaccard(m1, m2, b) for b in bs]
 
-# Produce some bytes
-int_bytes = lambda x : ("a-%d-%d" % (x, x)).encode('utf-8')
+def _run_test(A, B, data, n, bs, num_perm):
+    logging.info("Run tests with A = (%d, %d), B = (%d, %d), n = %d"
+            % (A[0], A[1], B[0], B[1], n))
+    runs = np.array([_run_minhash(A, B, data, i, bs, num_perm) 
+        for i in xrange(n)]).T
+    return runs
 
-def _run_acc(size, seed, num_perm):
-    m = MinHash(num_perm=num_perm)
-    s = set()
-    random.seed(seed)
-    for i in range(size):
-        v = int_bytes(random.randint(1, size))
-        m.digest(sha1(v))
-        s.add(v)
-    return (m, s)
+def run_full_tests(attr_pairs, data, n, bs, num_perm):
+    return [_run_test(A, B, data, n, bs, num_perm)
+            for A, B in attr_pairs]
 
-def run_acc(size, num_perm, bs):
-    logging.info("MinHash using %d permutation functions" % num_perm)
-    m1, s1 = _run_acc(size, 1, num_perm)
-    m2, s2 = _run_acc(size, 4, num_perm)
-    j = float(len(s1.intersection(s2)))/float(len(s1.union(s2)))
-    j_e = np.array([bBitMinHash(m1, b).jaccard(bBitMinHash(m2, b))
-        for b in bs])
-    err = np.abs(j_e - j)
-    return err
+def plot(result, bs, exact_sims, num_perm, bins, save):
+    import matplotlib
+    matplotlib.use('Agg')
+    import matplotlib.pyplot as plt
+    num_row = 1
+    num_col = len(result)
+    basesize = 5
+    size = (basesize*num_col, basesize*num_row)
+    fig, axes = plt.subplots(num_row, num_col, sharey=True, 
+            sharex=True, figsize=size)
+    for i, runs in enumerate(result):
+        minhash = sorted(runs[0])
+        bbits = [sorted(r) for r in runs[1:]]
+        exact_sim = exact_sims[i]
+        ax = axes[i]
+        l = ax.plot(minhash, label='MinHash')
+        for b, run in zip(bs, bbits):
+            l = ax.plot(run, label='%d-bit' % b)
+        ax.axhline(exact_sim, color='black', linestyle='--', label='Exact')
+        ax.set_title("%d perm funcs, exact = %.2f" % (num_perm, exact_sim))
+        ax.grid()
+        if i == num_col - 1:
+            ax.legend(loc='lower right')
+    fig.savefig(save)
 
-num_perms = range(10, 1024, 10)
-bs = [1, 2, 4]
-output = "b_bit_minhash_benchmark.png"
 
-logging.info("> Running accuracy tests")
-size = 5000
-errs = np.array([run_acc(size, n, bs) for n in num_perms]).T
-
-logging.info("> Plotting result")
-fig, axe = plt.subplots(1, 1)
-ax = axe
-for b, err in zip(bs, errs):
-    ax.plot(num_perms, err, label='b = %d' % b)
-ax.set_xlabel("Number of permutation functions")
-ax.set_ylabel("Absolute error in Jaccard estimation")
-ax.set_title("b-bit MinHash accuracy")
-ax.legend()
-ax.grid()
-
-fig.savefig(output)
-logging.info("Plot saved to %s" % output)
+if __name__ == "__main__":
+    data = _gen_data(5000)
+    attr_pairs = [((0, 3000), (2000, 5000)),
+                  ((0, 3500), (1500, 5000)),
+                  ((0, 4500), (500, 5000))]
+    num_perm = 128 
+    bs = [1, 2, 3]
+    n = 100
+    save = "b_bit_minhash_benchmark.png"
+    bins = [i*0.02 for i in range(51)]
+    exact_sims = [_get_exact(A, B) for A, B in attr_pairs]
+    result = run_full_tests(attr_pairs, data, n, bs, num_perm)
+    plot(result, bs, exact_sims, num_perm, bins, save)
