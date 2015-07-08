@@ -6,5 +6,6 @@ datasketch is a Python module integrating various data sketch
 algorithms. It aims to provide efficient approximation alternatives
 to exact solutions to data mining and data integration problems.
 """
-from hyperloglog import HyperLogLog, HyperLogLogPlusPlus
-from minhash import MinHash
+from datasketch.hyperloglog import HyperLogLog, HyperLogLogPlusPlus
+from datasketch.minhash import MinHash
+from datasketch.b_bit_minhash import bBitMinHash

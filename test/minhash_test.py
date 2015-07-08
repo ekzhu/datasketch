@@ -4,6 +4,7 @@ import pickle
 from hashlib import sha1
 import numpy as np
 from datasketch import minhash
+from datasketch.b_bit_minhash import bBitMinHash
 
 class FakeHash(object):
     '''
@@ -137,6 +138,77 @@ class TestMinHash(unittest.TestCase):
         m.digest(FakeHash(32))
         c = m.count()
         self.assertGreaterEqual(c, 0)
+
+
+class TestbBitMinHash(unittest.TestCase):
+
+    def setUp(self):
+        self.m = minhash.MinHash()
+        self.m.digest(FakeHash(11))
+        self.m.digest(FakeHash(123))
+        self.m.digest(FakeHash(92))
+        self.m.digest(FakeHash(98))
+        self.m.digest(FakeHash(123218))
+        self.m.digest(FakeHash(32))
+
+    def test_init(self):
+        bm = bBitMinHash(self.m, 1)
+        bm = bBitMinHash(self.m, 2)
+        bm = bBitMinHash(self.m, 3)
+        bm = bBitMinHash(self.m, 4)
+        bm = bBitMinHash(self.m, 5)
+        bm = bBitMinHash(self.m, 8)
+        bm = bBitMinHash(self.m, 12)
+        bm = bBitMinHash(self.m, 16)
+        bm = bBitMinHash(self.m, 27)
+        bm = bBitMinHash(self.m, 32)
+
+    def test_eq(self):
+        m1 = minhash.MinHash(4, 1)
+        m2 = minhash.MinHash(4, 1)
+        m3 = minhash.MinHash(4, 2)
+        m4 = minhash.MinHash(8, 1)
+        m5 = minhash.MinHash(4, 1)
+        m1.digest(FakeHash(11))
+        m2.digest(FakeHash(12))
+        m3.digest(FakeHash(11))
+        m4.digest(FakeHash(11))
+        m5.digest(FakeHash(11))
+        m1 = bBitMinHash(m1)
+        m2 = bBitMinHash(m2)
+        m3 = bBitMinHash(m3)
+        m4 = bBitMinHash(m4)
+        m5 = bBitMinHash(m5)
+        self.assertNotEqual(m1, m2)
+        self.assertNotEqual(m1, m3)
+        self.assertNotEqual(m1, m4)
+        self.assertEqual(m1, m5)
+
+    def test_jaccard(self):
+        m1 = minhash.MinHash(4, 1)
+        m2 = minhash.MinHash(4, 1)
+        bm1 = bBitMinHash(m1)
+        bm2 = bBitMinHash(m2)
+        self.assertTrue(bm1.jaccard(bm2) == 1.0)
+
+        m2.digest(FakeHash(12))
+        bm2 = bBitMinHash(m2)
+        self.assertTrue(bm1.jaccard(bm2) < 1.0)
+
+        m1.digest(FakeHash(13))
+        bm1 = bBitMinHash(m1)
+        self.assertTrue(bm1.jaccard(bm2) < 1.0)
+    
+    def test_bytesize(self):
+        s = bBitMinHash(self.m).bytesize()
+        self.assertGreaterEqual(s, 8+4+1+self.m.hashvalues.size/64)
+
+    def test_pickle(self):
+        for b in [1, 2, 3, 9, 27, 32]:
+            bm = bBitMinHash(self.m, b)
+            bm2 = pickle.loads(pickle.dumps(bm))
+            self.assertEqual(bm, bm2)
+
 
 if __name__ == "__main__":
     unittest.main()
