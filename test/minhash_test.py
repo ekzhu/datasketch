@@ -204,10 +204,18 @@ class TestbBitMinHash(unittest.TestCase):
         self.assertGreaterEqual(s, 8*2+4+1+self.m.hashvalues.size/64)
 
     def test_pickle(self):
-        for b in [1, 2, 3, 9, 27, 32]:
-            bm = bBitMinHash(self.m, b)
-            bm2 = pickle.loads(pickle.dumps(bm))
-            self.assertEqual(bm, bm2)
+        for num_perm in [1 << i for i in range(4, 10)]:
+            m = minhash.MinHash(num_perm=num_perm)
+            m.digest(FakeHash(11))
+            m.digest(FakeHash(123))
+            m.digest(FakeHash(92))
+            m.digest(FakeHash(98))
+            m.digest(FakeHash(123218))
+            m.digest(FakeHash(32))
+            for b in [1, 2, 3, 9, 27, 32]:
+                bm = bBitMinHash(m, b)
+                bm2 = pickle.loads(pickle.dumps(bm))
+                self.assertEqual(bm, bm2)
 
 
 if __name__ == "__main__":
