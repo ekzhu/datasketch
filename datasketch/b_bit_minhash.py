@@ -109,7 +109,6 @@ class bBitMinHash(object):
         slot_size, n, num_blocks, total = self._bytesize()
         fmt = "%d%s" % (num_blocks, self._serial_fmt_block)
         blocks = struct.unpack_from(fmt, buffer, offset)
-        print(blocks, len(blocks), num_blocks, n)
         mask = (1 << slot_size) - 1
         for i in range(num_blocks):
             start = i * n
