@@ -21,8 +21,8 @@ def _create_permutation():
     that maps a 32-bit hash value to another 32-bit hash value.
     http://en.wikipedia.org/wiki/Universal_hashing
     '''
-    a = random.randint(1, _max_hash)
-    b = random.randint(0, _max_hash)
+    a = random.randint(1, _mersenne_prime)
+    b = random.randint(0, _mersenne_prime)
     return (a, b)
 
 
@@ -72,7 +72,7 @@ class MinHash(object):
         # Digest the hash object to get the hash value
         hv = struct.unpack('<I', hashobj.digest()[:4])[0]
         a, b = self.permutations
-        phv = np.bitwise_and(((a * hv + b) % _mersenne_prime), _max_hash)
+        phv = np.bitwise_and((a * hv + b) % _mersenne_prime, _max_hash)
         self.hashvalues = np.minimum(phv, self.hashvalues)
 
     def merge(self, other):
