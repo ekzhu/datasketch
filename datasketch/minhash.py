@@ -15,17 +15,6 @@ _max_hash = (1 << 32) - 1
 _hash_range = (1 << 32)
 
 
-def _create_permutation():
-    '''
-    Create parameters for a random bijective permutation function
-    that maps a 32-bit hash value to another 32-bit hash value.
-    http://en.wikipedia.org/wiki/Universal_hashing
-    '''
-    a = random.randint(1, _mersenne_prime)
-    b = random.randint(0, _mersenne_prime)
-    return (a, b)
-
-
 class MinHash(object):
     '''
     The MinHash object.
@@ -51,9 +40,14 @@ class MinHash(object):
                     permutation functions" % _hash_range)
         self.hashvalues = np.array([_max_hash for _ in range(num_perm)])
         self.seed = seed
-        random.seed(self.seed)
-        self.permutations = np.array([_create_permutation() 
-            for _ in range(num_perm)]).T
+        generator = random.Random()
+        generator.seed(self.seed)
+        # Create parameters for a random bijective permutation function
+        # that maps a 32-bit hash value to another 32-bit hash value.
+        # http://en.wikipedia.org/wiki/Universal_hashing
+        self.permutations = np.array([(generator.randint(1, _mersenne_prime),
+                                       generator.randint(0, _mersenne_prime)) 
+                                      for _ in range(num_perm)]).T
     
     def is_empty(self):
         '''
