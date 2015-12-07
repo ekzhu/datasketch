@@ -14,6 +14,13 @@ This package contains the following data sketches:
 | HyperLogLog   | estimate cardinality                 |
 | HyperLogLog++ | estimate cardinality                 |
 
+The following indexes for data sketches are provided to support 
+sub-linear query time:
+
+| Index         | For Data Sketch  | Supported Query Type |
+|---------------|------------------|----------------------|
+| LSH           | MinHash          | Radius (Threshold)   |
+
 datasketch must be used with Python 2.7 or above and NumPy.
 
 ## Install
@@ -87,6 +94,75 @@ The analysis is presented in [Cohen 1994](http://ieeexplore.ieee.org/stamp/stamp
 # Returns the estimation of the cardinality of
 # all elements digested so far.
 m.count()
+```
+
+## MinHash LSH
+
+Locality Sensitive Hashing (LSH) can be used to index MinHash for approximate
+neighbour retrieval in sub-linear time.
+See [Chapter 3](http://infolab.stanford.edu/~ullman/mmds/ch3.pdf),
+Mining of Massive Datasets for the algorithm details.
+This package includes the classic version of MinHash LSH, that supports
+Jaccard threshold query.
+
+```python
+from hashlib import sha1
+from datasketch import MinHash, LSH
+
+data1 = ['minhash', 'is', 'a', 'probabilistic', 'data', 'structure', 'for',
+        'estimating', 'the', 'similarity', 'between', 'datasets']
+data2 = ['minhash', 'is', 'a', 'probability', 'data', 'structure', 'for',
+        'estimating', 'the', 'similarity', 'between', 'documents']
+data3 = ['minhash', 'is', 'probability', 'data', 'structure', 'for',
+        'estimating', 'the', 'similarity', 'between', 'documents']
+
+# Create MinHash objects
+m1 = MinHash(num_perm=128)
+m2 = MinHash(num_perm=128)
+m3 = MinHash(num_perm=128)
+for d in data1:
+m1.digest(sha1(d.encode('utf8')))
+for d in data2:
+m2.digest(sha1(d.encode('utf8')))
+for d in data3:
+m3.digest(sha1(d.encode('utf8')))
+
+# Create an LSH index optimized for Jaccard threshold 0.5, 
+# that accepts MinHash objects with 128 permutations functions
+lsh = LSH(threshold=0.5, num_perm=128)
+
+# Insert m2 and m3 into the index 
+lsh.insert("m2", m2)
+lsh.insert("m3", m3)
+
+# Use m1 as the query, retrieve keys of the approximate neighbours
+result = lsh.query(m1)
+print("Approximate neighbours with Jaccard similarity > 0.5", result)
+```
+
+The Jaccard similarity threshold must be set at initialization, and cannot
+be changed. So does the `num_perm` parameter.
+There are other optional parameters that be used to tune the index:
+
+```python
+# Use defaults: threshold=0.5, num_perm=128, weights=(0.5, 0.5), precision=0.01
+lsh = LSH()
+
+# `weights` controls the relative importance between minizing false positive
+# and minizing false negative when building the LSH.
+# It must be sum to 1.0,
+# and the format is (false positive weight, false negative weight).
+# For example, if minizing false negative (or maintaining high recall) is more
+# important, assign more weight toward false negative: weights=(0.4, 0.6).
+# Note: try to live with a small difference between weights (i.e. < 0.5).
+lsh = LSH(weights=(0.4, 0.6))
+
+# `precision` controls the step size used in integration when solving the
+# optimization problem during LSH initialization. Smaller `precision`
+# results in better optimization accuracy, while increasing the time cost.
+# Note: avoid using a value smaller than 0.001, which is unlikely to 
+# improve the accuracy any further.
+lsh = LSH(precision=0.001)
 ```
 
 ## b-Bit MinHash

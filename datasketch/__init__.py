@@ -9,3 +9,4 @@ to exact solutions to data mining and data integration problems.
 from datasketch.hyperloglog import HyperLogLog, HyperLogLogPlusPlus
 from datasketch.minhash import MinHash
 from datasketch.b_bit_minhash import bBitMinHash
+from datasketch.lsh import LSH
