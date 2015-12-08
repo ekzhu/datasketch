@@ -45,7 +45,7 @@ def _optimal_param(threshold, num_perm, false_positive_weight,
     min_error = float("inf")
     opt = (0, 0)
     for b in range(1, num_perm+1):
-        max_r = num_perm / b
+        max_r = int(num_perm / b)
         for r in range(1, max_r+1):
             fp = _false_positive_probability(threshold, b, r, precision)
             fn = _false_negative_probability(threshold, b, r, precision)

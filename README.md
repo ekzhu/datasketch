@@ -98,12 +98,36 @@ m.count()
 
 ## MinHash LSH
 
-Locality Sensitive Hashing (LSH) can be used to index MinHash for approximate
-neighbour retrieval in sub-linear time.
-See [Chapter 3](http://infolab.stanford.edu/~ullman/mmds/ch3.pdf),
-Mining of Massive Datasets for the algorithm details.
-This package includes the classic version of MinHash LSH, that supports
-Jaccard threshold query.
+Suppose you have a very large collection of datasets. Giving a query, which
+is also a dataset, you want to find datasets in your collection 
+that have 
+Jaccard similarities above certain threshold, 
+and you want to do it with many other queries. 
+To do this efficiently, you can create a MinHash for every dataset,
+and when a query comes, you
+compute the Jaccard similarities between the query MinHash and all the
+MinHash of your collection, and return the datasets that
+satisfy your threshold.
+
+The said approach is still an O(n) algorithm, meaning the query cost 
+increases linearly with respect to the number of datasets.
+A popular alternative is to use Locality Sensitive Hashing (LSH) index.
+LSH can be used with MinHash to achieve sub-linear query cost - that is
+a huge improvement.
+The details of the algorithm can be found in 
+[Chapter 3, Mining of Massive Datasets](http://infolab.stanford.edu/~ullman/mmds/ch3.pdf),
+
+This package includes the classic version of MinHash LSH.
+It is important to note that the query does not give you the exact result,
+due to the use of MinHash and LSH. There will be false positives - datasets
+that do not satisfy your threshold but returned, and false negatives - 
+qualifying datasets that are not returned.
+However, the property of LSH assures that datasets with higher Jaccard
+similarities always have higher probabilities to get returned than datasets
+with lower similarities.
+Moreover, LSH can be optimized so that there can be a "jump"
+in probability right at the threshold, making the qualifying datasets much
+more likely to get returned than the rest.
 
 ```python
 from hashlib import sha1
@@ -121,11 +145,11 @@ m1 = MinHash(num_perm=128)
 m2 = MinHash(num_perm=128)
 m3 = MinHash(num_perm=128)
 for d in data1:
-m1.digest(sha1(d.encode('utf8')))
+	m1.digest(sha1(d.encode('utf8')))
 for d in data2:
-m2.digest(sha1(d.encode('utf8')))
+	m2.digest(sha1(d.encode('utf8')))
 for d in data3:
-m3.digest(sha1(d.encode('utf8')))
+	m3.digest(sha1(d.encode('utf8')))
 
 # Create an LSH index optimized for Jaccard threshold 0.5, 
 # that accepts MinHash objects with 128 permutations functions
@@ -135,9 +159,9 @@ lsh = LSH(threshold=0.5, num_perm=128)
 lsh.insert("m2", m2)
 lsh.insert("m3", m3)
 
-# Use m1 as the query, retrieve keys of the approximate neighbours
+# Using m1 as the query, retrieve the keys of the qualifying datasets
 result = lsh.query(m1)
-print("Approximate neighbours with Jaccard similarity > 0.5", result)
+print("Candidates with Jaccard similarity > 0.5", result)
 ```
 
 The Jaccard similarity threshold must be set at initialization, and cannot
@@ -150,8 +174,8 @@ lsh = LSH()
 
 # `weights` controls the relative importance between minizing false positive
 # and minizing false negative when building the LSH.
-# It must be sum to 1.0,
-# and the format is (false positive weight, false negative weight).
+# `weights` must sum to 1.0, and the format is 
+# (false positive weight, false negative weight).
 # For example, if minizing false negative (or maintaining high recall) is more
 # important, assign more weight toward false negative: weights=(0.4, 0.6).
 # Note: try to live with a small difference between weights (i.e. < 0.5).
@@ -160,8 +184,8 @@ lsh = LSH(weights=(0.4, 0.6))
 # `precision` controls the step size used in integration when solving the
 # optimization problem during LSH initialization. Smaller `precision`
 # results in better optimization accuracy, while increasing the time cost.
-# Note: avoid using a value smaller than 0.001, which is unlikely to 
-# improve the accuracy any further.
+# Note: using a value smaller than 0.001 is unlikely to improve the accuracy 
+# any further.
 lsh = LSH(precision=0.001)
 ```
 
