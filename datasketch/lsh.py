@@ -106,6 +106,9 @@ class LSH(object):
         '''
         if not isinstance(minhash, MinHash):
             raise ValueError("minhash must be of MinHash class")
+        if len(minhash.hashvalues) != self.num_perm:
+            raise ValueError("Expecting minhash with %d permutation functions, got %d"
+                    % (self.num_perm, len(minhash.hashvalues)))
         for (start, end), hashtable in zip(self.hashranges, self.hashtables):
             H = "".join("%x" % h for h in minhash.hashvalues[start:end])
             if H not in hashtable:
@@ -120,6 +123,9 @@ class LSH(object):
         '''
         if not isinstance(minhash, MinHash):
             raise ValueError("minhash must be of MinHash class")
+        if len(minhash.hashvalues) != self.num_perm:
+            raise ValueError("Expecting minhash with %d permutation functions, got %d"
+                    % (self.num_perm, len(minhash.hashvalues)))
         candidates = set()
         for (start, end), hashtable in zip(self.hashranges, self.hashtables):
             H = "".join("%x" % h for h in minhash.hashvalues[start:end])

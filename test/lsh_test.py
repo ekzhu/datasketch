@@ -31,6 +31,9 @@ class TestLSH(unittest.TestCase):
             self.assertTrue("a" in items)
             self.assertTrue("b" in items)
 
+        m3 = MinHash(18)
+        self.assertRaises(ValueError, lsh.insert, "c", m3)
+
     def test_query(self):
         lsh = LSH(threshold=0.5, num_perm=16)
         m1 = MinHash(16)
@@ -43,6 +46,9 @@ class TestLSH(unittest.TestCase):
         self.assertTrue("a" in result)
         result = lsh.query(m2)
         self.assertTrue("b" in result)
+        
+        m3 = MinHash(18)
+        self.assertRaises(ValueError, lsh.query, m3)
 
     def test_pickle(self):
         lsh = LSH(threshold=0.5, num_perm=16)
