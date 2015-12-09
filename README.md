@@ -176,7 +176,8 @@ I experimented with the
 [20 News Group Dataset](http://scikit-learn.org/stable/datasets/twenty_newsgroups.html),
 which has an average cardinality of 193 (3-shingles). 
 The average recall, average precision, and 90 percentile query time vs.
-`num_perm` are plotted below.
+`num_perm` are plotted below. See the `benchmark` directory for the experiment and
+plotting code.
 
 ![LSH Benchmark](https://github.com/ekzhu/datasketch/blob/master/lsh_benchmark.png)
 
