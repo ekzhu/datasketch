@@ -166,6 +166,16 @@ print("Candidates with Jaccard similarity > 0.5", result)
 
 The Jaccard similarity threshold must be set at initialization, and cannot
 be changed. So does the `num_perm` parameter.
+Similar to MinHash, higher `num_perm` can improve the accuracy LSH but increase 
+query cost, as the MinHash gets bigger, more processing is required.
+Unlike MinHash, the benefit of higher `num_perm` seems to be limited for LSH - 
+it looks like when `num_perm` becomes greater than the dataset cardinality,
+both precision and recall starts decrease.
+I experimented with the [20 News Group Dataset](http://scikit-learn.org/stable/datasets/twenty_newsgroups.html),
+which has an average cardinality of 193 (3-shingles), and the result is below. 
+
+![LSH Benchmark](https://github.com/ekzhu/datasketch/blob/master/lsh_benchmark.png)
+
 There are other optional parameters that be used to tune the index:
 
 ```python
