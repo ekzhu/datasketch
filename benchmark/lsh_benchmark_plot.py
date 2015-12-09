@@ -60,13 +60,13 @@ if __name__ == "__main__":
     # Plot query precision vs. num perm
     axes[0].plot(num_perms, linearscan_precisions, marker="+", label="Linearscan")
     axes[0].plot(num_perms, lsh_precisions, marker="+", label="LSH")
-    axes[0].set_ylabel("Precision")
+    axes[0].set_ylabel("Average Precision")
     axes[0].set_xlabel("# of Permmutation Functions")
     axes[0].grid()
     # Plot query recall vs. num perm
     axes[1].plot(num_perms, linearscan_precisions, marker="+", label="Linearscan")
     axes[1].plot(num_perms, lsh_recalls, marker="+", label="LSH")
-    axes[1].set_ylabel("Recall")
+    axes[1].set_ylabel("Average Recall")
     axes[1].set_xlabel("# of Permmutation Functions")
     axes[1].grid()
     # Plot query time vs. num perm
