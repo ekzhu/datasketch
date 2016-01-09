@@ -22,6 +22,7 @@ sub-linear query time:
 | LSH           | MinHash          | Radius (Threshold)   |
 
 datasketch must be used with Python 2.7 or above and NumPy.
+Scipy is optional, but with it the LSH initialization can be much faster.
 
 ## Install
 

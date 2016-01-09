@@ -15,25 +15,32 @@ except ImportError:
 
 
 _integration_precision = 0.001
-
-
-def _integration(a, b, f, p):
+def _integration(f, a, b):
+    p = _integration_precision
     area = 0.0
     x = a
     while x < b:
         area += f(x+0.5*p)*p
         x += p
-    return area
+    return area, None
+
+try:
+    from scipy.integrate import quad as integrate
+except ImportError:
+    # For when no scipy installed
+    integrate = _integration
 
 
-def _false_positive_probability(threshold, b, r, precision):
+def _false_positive_probability(threshold, b, r):
     _probability = lambda s : 1 - (1 - s**float(r))**float(b)
-    return _integration(0.0, threshold, _probability, precision) 
+    a, err = integrate(_probability, 0.0, threshold) 
+    return a
 
 
-def _false_negative_probability(threshold, b, r, precision):
+def _false_negative_probability(threshold, b, r):
     _probability = lambda s : 1 - (1 - (1 - s**float(r))**float(b))
-    return _integration(threshold, 1.0, _probability, precision)
+    a, err = integrate(_probability, threshold, 1.0)
+    return a
 
 
 def _optimal_param(threshold, num_perm, false_positive_weight,
@@ -47,8 +54,8 @@ def _optimal_param(threshold, num_perm, false_positive_weight,
     for b in range(1, num_perm+1):
         max_r = int(num_perm / b)
         for r in range(1, max_r+1):
-            fp = _false_positive_probability(threshold, b, r, precision)
-            fn = _false_negative_probability(threshold, b, r, precision)
+            fp = _false_positive_probability(threshold, b, r)
+            fn = _false_negative_probability(threshold, b, r)
             error = fp*false_positive_weight + fn*false_negative_weight
             if error < min_error:
                 min_error = error
