@@ -106,6 +106,9 @@ class LSH(object):
     def is_empty(self):
         return any(len(t) == 0 for t in self.hashtables)
 
+    def _H(self, hs):
+        return "".join("%.8x" % h for h in hs)
+
     def insert(self, key, minhash):
         '''
         Insert a `key` to the index, together
@@ -117,7 +120,7 @@ class LSH(object):
             raise ValueError("Expecting minhash with %d permutation functions, got %d"
                     % (self.num_perm, len(minhash.hashvalues)))
         for (start, end), hashtable in zip(self.hashranges, self.hashtables):
-            H = "".join("%x" % h for h in minhash.hashvalues[start:end])
+            H = self._H(minhash.hashvalues[start:end])
             if H not in hashtable:
                 hashtable[H] = []
             hashtable[H].append(key)
@@ -135,7 +138,7 @@ class LSH(object):
                     % (self.num_perm, len(minhash.hashvalues)))
         candidates = set()
         for (start, end), hashtable in zip(self.hashranges, self.hashtables):
-            H = "".join("%x" % h for h in minhash.hashvalues[start:end])
+            H = self._H(minhash.hashvalues[start:end])
             if H in hashtable:
                 for key in hashtable[H]:
                     candidates.add(key)
