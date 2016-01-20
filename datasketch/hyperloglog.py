@@ -200,12 +200,18 @@ class HyperLogLog(object):
         bytes.
         '''
         size = struct.calcsize('B')
-        p = struct.unpack_from('B', buffer(buf), 0)[0]
+        try:
+            p = struct.unpack_from('B', buf, 0)[0]
+        except TypeError:
+            p = struct.unpack_from('B', buffer(buf), 0)[0]
         h = cls(p)
         offset = size
-        for i in range(h.m):
-            h.reg[i] = struct.unpack_from('B', buffer(buf), offset)[0]
-            offset += size
+        try:
+            h.reg = np.array(struct.unpack_from('%dB' % h.m, 
+                buf, offset), dtype=np.int8)
+        except TypeError:
+            h.reg = np.array(struct.unpack_from('%dB' % h.m, 
+                buffer(buf), offset), dtype=np.int8)
         return h
 
     def __getstate__(self):
@@ -227,12 +233,18 @@ class HyperLogLog(object):
         Python pickle.loads function.
         '''
         size = struct.calcsize('B')
-        p = struct.unpack_from('B', buffer(buf), 0)[0]
+        try:
+            p = struct.unpack_from('B', buf, 0)[0]
+        except TypeError:
+            p = struct.unpack_from('B', buffer(buf), 0)[0]
         self.__init__(p=p)
         offset = size
-        for i in range(self.m):
-            self.reg[i] = struct.unpack_from('B', buffer(buf), offset)[0]
-            offset += size
+        try:
+            self.reg = np.array(struct.unpack_from('%dB' % self.m, 
+                buf, offset), dtype=np.int8)
+        except TypeError:
+            self.reg = np.array(struct.unpack_from('%dB' % self.m, 
+                buffer(buf), offset), dtype=np.int8)
 
 
 class HyperLogLogPlusPlus(HyperLogLog):

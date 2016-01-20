@@ -136,12 +136,18 @@ class MinHash(object):
         This is more efficient than using the pickle.loads on the pickled
         bytes.
         '''
-        seed, num_perm = struct.unpack_from('qi', buffer(buf), 0)
+        try:
+            seed, num_perm = struct.unpack_from('qi', buf, 0)
+        except TypeError:
+            seed, num_perm = struct.unpack_from('qi', buffer(buf), 0)
         mh = cls(num_perm=num_perm, seed=seed)
         offset = struct.calcsize('qi')
-        for i in range(num_perm):
-            mh.hashvalues[i] = struct.unpack_from('I', buffer(buf), offset)[0]
-            offset += struct.calcsize('I')
+        try:
+            mh.hashvalues = np.array(struct.unpack_from('%dI' % num_perm,
+                buf, offset))
+        except TypeError:
+            mh.hashvalues = np.array(struct.unpack_from('%dI' % num_perm,
+                buffer(buf), offset))
         return mh
 
     def __getstate__(self):
@@ -162,12 +168,18 @@ class MinHash(object):
         Note that the input buffer is not the same as the input to the
         Python pickle.loads function.
         '''
-        seed, num_perm = struct.unpack_from('qi', buffer(buf), 0)
+        try:
+            seed, num_perm = struct.unpack_from('qi', buf, 0)
+        except TypeError:
+            seed, num_perm = struct.unpack_from('qi', buffer(buf), 0)
         self.__init__(num_perm=num_perm, seed=seed)
         offset = struct.calcsize('qi')
-        for i in range(num_perm):
-            self.hashvalues[i] = struct.unpack_from('I', buffer(buf), offset)[0]
-            offset += struct.calcsize('I')
+        try:
+            self.hashvalues = np.array(struct.unpack_from('%dI' % num_perm,
+                buf, offset))
+        except TypeError:
+            self.hashvalues = np.array(struct.unpack_from('%dI' % num_perm,
+                buffer(buf), offset))
 
     @classmethod
     def union(cls, *mhs):
