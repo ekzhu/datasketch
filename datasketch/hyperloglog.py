@@ -181,30 +181,30 @@ class HyperLogLog(object):
         reg_val_size = struct.calcsize('B')
         return p_size + reg_val_size * self.m
 
-    def serialize(self, buffer):
+    def serialize(self, buf):
         '''
-        Serialize this HyperLogLog into bytes, store in the `buffer`.
+        Serialize this HyperLogLog into bytes, store in the `buf`.
         This is more efficient than using pickle.dumps on the object.
         '''
-        if len(buffer) < self.bytesize():
+        if len(buf) < self.bytesize():
             raise ValueError("The buffer does not have enough space\
                     for holding this HyperLogLog.")
         fmt = 'B%dB' % self.m
-        struct.pack_into(fmt, buffer, 0, self.p, *self.reg)
+        struct.pack_into(fmt, buf, 0, self.p, *self.reg)
 
     @classmethod
-    def deserialize(cls, buffer):
+    def deserialize(cls, buf):
         '''
-        Reconstruct a HyperLogLog from bytes in `buffer`.
+        Reconstruct a HyperLogLog from bytes in `buf`.
         This is more efficient than using the pickle.loads on the pickled
         bytes.
         '''
         size = struct.calcsize('B')
-        p = struct.unpack_from('B', buffer, 0)[0]
+        p = struct.unpack_from('B', buffer(buf), 0)[0]
         h = cls(p)
         offset = size
         for i in range(h.m):
-            h.reg[i] = struct.unpack_from('B', buffer, offset)[0]
+            h.reg[i] = struct.unpack_from('B', buffer(buf), offset)[0]
             offset += size
         return h
 
@@ -215,11 +215,11 @@ class HyperLogLog(object):
         Note that the bytes returned by the Python pickle.dumps is not
         the same as the buffer returned by this function.
         '''
-        buffer = bytearray(self.bytesize())
-        self.serialize(buffer)
-        return buffer
+        buf = bytearray(self.bytesize())
+        self.serialize(buf)
+        return buf
 
-    def __setstate__(self, buffer):
+    def __setstate__(self, buf):
         '''
         This function is called when unpickling the HyperLogLog object.
         Initialize the object with data in the buffer.
@@ -227,11 +227,11 @@ class HyperLogLog(object):
         Python pickle.loads function.
         '''
         size = struct.calcsize('B')
-        p = struct.unpack_from('B', buffer, 0)[0]
+        p = struct.unpack_from('B', buffer(buf), 0)[0]
         self.__init__(p=p)
         offset = size
         for i in range(self.m):
-            self.reg[i] = struct.unpack_from('B', buffer, offset)[0]
+            self.reg[i] = struct.unpack_from('B', buffer(buf), offset)[0]
             offset += size
 
 
