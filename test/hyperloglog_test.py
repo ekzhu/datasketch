@@ -78,7 +78,7 @@ class TestHyperLogLog(unittest.TestCase):
         h = self._class(4)
         buf = bytearray(h.bytesize())
         h.serialize(buf)
-        self.assertEqual(h.p, struct.unpack_from('B', buf, 0)[0])
+        self.assertEqual(h.p, struct.unpack_from('B', bytes(buf), 0)[0])
 
     def test_deserialize(self):
         h = self._class(4)
