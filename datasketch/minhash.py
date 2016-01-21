@@ -117,31 +117,37 @@ class MinHash(object):
         hashvalue_size = struct.calcsize('I')
         return seed_size + length_size + len(self.hashvalues) * hashvalue_size
 
-    def serialize(self, buffer):
+    def serialize(self, buf):
         '''
-        Serializes this MinHash object into bytes, store in `buffer`.
+        Serializes this MinHash object into bytes, store in `buf`.
         This is more efficient than using pickle.dumps on the object.
         '''
-        if len(buffer) < self.bytesize():
+        if len(buf) < self.bytesize():
             raise ValueError("The buffer does not have enough space\
                     for holding this MinHash object.")
         fmt = "qi%dI" % len(self.hashvalues)
-        struct.pack_into(fmt, buffer, 0,
+        struct.pack_into(fmt, buf, 0,
                 self.seed, len(self.hashvalues), *self.hashvalues)
 
     @classmethod
-    def deserialize(cls, buffer):
+    def deserialize(cls, buf):
         '''
         Reconstruct a MinHash object from a byte buffer.
         This is more efficient than using the pickle.loads on the pickled
         bytes.
         '''
-        seed, num_perm = struct.unpack_from('qi', buffer, 0)
+        try:
+            seed, num_perm = struct.unpack_from('qi', buf, 0)
+        except TypeError:
+            seed, num_perm = struct.unpack_from('qi', buffer(buf), 0)
         mh = cls(num_perm=num_perm, seed=seed)
         offset = struct.calcsize('qi')
-        for i in range(num_perm):
-            mh.hashvalues[i] = struct.unpack_from('I', buffer, offset)[0]
-            offset += struct.calcsize('I')
+        try:
+            mh.hashvalues = np.array(struct.unpack_from('%dI' % num_perm,
+                buf, offset))
+        except TypeError:
+            mh.hashvalues = np.array(struct.unpack_from('%dI' % num_perm,
+                buffer(buf), offset))
         return mh
 
     def __getstate__(self):
@@ -151,23 +157,29 @@ class MinHash(object):
         Note that the bytes returned by the Python pickle.dumps is not
         the same as the buffer returned by this function.
         '''
-        buffer = bytearray(self.bytesize())
-        self.serialize(buffer)
-        return buffer
+        buf = bytearray(self.bytesize())
+        self.serialize(buf)
+        return buf
 
-    def __setstate__(self, buffer):
+    def __setstate__(self, buf):
         '''
         This function is called when unpickling the MinHash object.
         Initialize the object with data in the buffer.
         Note that the input buffer is not the same as the input to the
         Python pickle.loads function.
         '''
-        seed, num_perm = struct.unpack_from('qi', buffer, 0)
+        try:
+            seed, num_perm = struct.unpack_from('qi', buf, 0)
+        except TypeError:
+            seed, num_perm = struct.unpack_from('qi', buffer(buf), 0)
         self.__init__(num_perm=num_perm, seed=seed)
         offset = struct.calcsize('qi')
-        for i in range(num_perm):
-            self.hashvalues[i] = struct.unpack_from('I', buffer, offset)[0]
-            offset += struct.calcsize('I')
+        try:
+            self.hashvalues = np.array(struct.unpack_from('%dI' % num_perm,
+                buf, offset))
+        except TypeError:
+            self.hashvalues = np.array(struct.unpack_from('%dI' % num_perm,
+                buffer(buf), offset))
 
     @classmethod
     def union(cls, *mhs):
