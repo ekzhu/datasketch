@@ -185,7 +185,7 @@ plotting code.
 There are other optional parameters that be used to tune the index:
 
 ```python
-# Use defaults: threshold=0.5, num_perm=128, weights=(0.5, 0.5), precision=0.01
+# Use defaults: threshold=0.5, num_perm=128, weights=(0.5, 0.5)
 lsh = LSH()
 
 # `weights` controls the relative importance between minizing false positive
@@ -196,13 +196,6 @@ lsh = LSH()
 # important, assign more weight toward false negative: weights=(0.4, 0.6).
 # Note: try to live with a small difference between weights (i.e. < 0.5).
 lsh = LSH(weights=(0.4, 0.6))
-
-# `precision` controls the step size used in integration when solving the
-# optimization problem during LSH initialization. Smaller `precision`
-# results in better optimization accuracy, while increasing the time cost.
-# Note: using a value smaller than 0.001 is unlikely to improve the accuracy 
-# any further.
-lsh = LSH(precision=0.001)
 ```
 
 ## b-Bit MinHash

@@ -44,7 +44,7 @@ def _false_negative_probability(threshold, b, r):
 
 
 def _optimal_param(threshold, num_perm, false_positive_weight,
-        false_negative_weight, precision):
+        false_negative_weight):
     '''
     Compute the optimal LSH parameter that minimizes the weighted sum
     of probabilities of false positive and false negative.
@@ -68,8 +68,7 @@ class LSH(object):
     The classic MinHash LSH
     '''
 
-    def __init__(self, threshold=0.9, num_perm=128, weights=(0.5,0.5),
-            precision=0.01):
+    def __init__(self, threshold=0.9, num_perm=128, weights=(0.5,0.5)):
         '''
         Create an empty LSH index that accepts MinHash objects
         with `num_perm` permutation functions and query
@@ -81,9 +80,7 @@ class LSH(object):
         minizing false positive and false negative when optimizing 
         for the Jaccard similarity threshold.
         `weights` is a tuple in the format of 
-        (false_negative_weight, false_negative_weight).
-        Use `precision` to control the size of step in the numerical 
-        integration for optimization.
+        (false_negative_weight, false_negat.
         '''
         if threshold > 1.0 or threshold < 0.0:
             raise ValueError("threshold must be in [0.0, 1.0]") 
@@ -93,13 +90,11 @@ class LSH(object):
             raise ValueError("Weight must be in [0.0, 1.0]")
         if sum(weights) != 1.0:
             raise ValueError("Weights must sum to 1.0")
-        if precision > 0.1 or precision < 0.0:
-            raise ValueError("Precision must be in [0.0, 0.1]")
         self.threshold = threshold
         self.num_perm = num_perm
         false_positive_weight, false_negative_weight = weights
         self.b, self.r = _optimal_param(threshold, num_perm,
-                false_positive_weight, false_negative_weight, precision)
+                false_positive_weight, false_negative_weight)
         self.hashtables = [dict() for _ in range(self.b)]
         self.hashranges = [(i*self.r, (i+1)*self.r) for i in range(self.b)]
 
