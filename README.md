@@ -80,7 +80,7 @@ for every hash digested and 2) more hash values to be stored.
 The speed and memory usage of MinHash are both linearly proportional
 to the number of permutation functions used.
 
-![MinHash Benchmark](https://github.com/ekzhu/datasketch/blob/master/minhash_benchmark.png)
+![MinHash Benchmark](https://github.com/ekzhu/datasketch/blob/master/plots/minhash_benchmark.png)
 
 You can union two MinHash object using the `merge` function.
 This makes MinHash useful in parallel MapReduce style data analysis.
@@ -182,7 +182,7 @@ The average recall, average precision, and 90 percentile query time vs.
 `num_perm` are plotted below. See the `benchmark` directory for the experiment and
 plotting code.
 
-![LSH Benchmark](https://github.com/ekzhu/datasketch/blob/master/lsh_benchmark.png)
+![LSH Benchmark](https://github.com/ekzhu/datasketch/blob/master/plots/lsh_benchmark.png)
 
 There are other optional parameters that be used to tune the index:
 
@@ -210,8 +210,8 @@ by expanding each item (or dimension) by its weight.
 However this approach does not support real number weights, and 
 doing so can be very expensive if the weights are very large.
 [Weighted MinHash](http://static.googleusercontent.com/media/research.google.com/en//pubs/archive/36928.pdf)
-is created by Sergey Ioffe, and its performance does not depend on the weights
-- as long as the universe of all possible items (or dimension for vectors) is known.
+is created by Sergey Ioffe, and its performance does not depend on the weights - as 
+long as the universe of all possible items (or dimension for vectors) is known.
 This makes it unsuitable for stream processing, when the knowledge of unseen 
 items cannot be assumed.
 
@@ -243,7 +243,6 @@ wmg = WeightedMinHashGenerator(len(v1))
 wm1 = wmg.minhash(v1) # wm1 is of the type WeightedMinHash
 wm2 = wmg.minhash(v2)
 print("Estimated Jaccard is", wm1.jaccard(wm2))
-print("True Jaccard is", true_jaccard)
 ```
 
 It is possible to make `WeightedMinHash` have a `digest` interface
@@ -256,7 +255,7 @@ Weighted MinHash as similar accuracy and performance profiles as MinHash.
 As you increase the number of samples, you get better accuracy, at the expense
 of slower speed.
 
-![Weighted MinHash Benchmark](https://github.com/ekzhu/datasketch/raw/master/weighted_minhash_benchmark.png)
+![Weighted MinHash Benchmark](https://github.com/ekzhu/datasketch/raw/master/plots/weighted_minhash_benchmark.png)
 
 
 ## b-Bit MinHash
@@ -273,7 +272,7 @@ comparing to the original MinHash.
 On the other hand, when the actual Jaccard is small, b-Bit MinHash gives
 bad estimation for Jaccard, and it tends to over-estimate.
 
-![b-Bit MinHash Benchmark](https://github.com/ekzhu/datasketch/blob/master/b_bit_minhash_benchmark.png)
+![b-Bit MinHash Benchmark](https://github.com/ekzhu/datasketch/blob/master/plots/b_bit_minhash_benchmark.png)
 
 To create a b-Bit MinHash object from an existing MinHash object:
 
@@ -349,7 +348,7 @@ h = HyperLogLog(p=12)
 Interestingly, there is no speed penalty for using higher p value.
 However the memory usage is exponential to the p value.
 
-![HyperLogLog Benchmark](https://github.com/ekzhu/datasketch/blob/master/hyperloglog_benchmark.png)
+![HyperLogLog Benchmark](https://github.com/ekzhu/datasketch/blob/master/plots/hyperloglog_benchmark.png)
 
 As in MinHash, you can also merge two HyperLogLogs to create a union HyperLogLog.
 
