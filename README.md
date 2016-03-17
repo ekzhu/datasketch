@@ -7,12 +7,13 @@ vary large amount of data super fast, with little loss of accuracy.
 
 This package contains the following data sketches:
 
-| Data Sketch   | Usage                                |
-|---------------|--------------------------------------|
-| MinHash       | estimate resemblance and cardinality |
-| b-Bit MinHash | estimate resemblance                 |
-| HyperLogLog   | estimate cardinality                 |
-| HyperLogLog++ | estimate cardinality                 |
+| Data Sketch      | Usage                                       |
+|------------------|---------------------------------------------|
+| MinHash          | estimate Jaccard similarity and cardinality |
+| b-Bit MinHash    | estimate Jaccard similarity                 |
+| Weighted MinHash | estimate weighted Jaccard similarity        |
+| HyperLogLog      | estimate cardinality                        |
+| HyperLogLog++    | estimate cardinality                        |
 
 The following indexes for data sketches are provided to support 
 sub-linear query time:
@@ -34,9 +35,10 @@ This will also install NumPy as dependency.
 
 ## MinHash
 
-MinHash lets you estimate the Jaccard similarity
+MinHash lets you estimate the 
+[Jaccard similarity](https://en.wikipedia.org/wiki/Jaccard_index)
 (resemblance)
-between datasets of
+between sets of
 arbitrary sizes in linear time using a small and fixed memory space.
 It can also be used to compute Jaccard similarity between data streams.
 MinHash is introduced by Andrei Z. Broder in this
@@ -197,6 +199,65 @@ lsh = LSH()
 # Note: try to live with a small difference between weights (i.e. < 0.5).
 lsh = LSH(weights=(0.4, 0.6))
 ```
+
+## Weighted MinHash
+
+MinHash can be used to compress unweighted set or binary vector, and estimate
+unweighted Jaccard similarity.
+It is possible to modify MinHash for
+[weighted Jaccard](https://en.wikipedia.org/wiki/Jaccard_index#Generalized_Jaccard_similarity_and_distance)
+by expanding each item (or dimension) by its weight. 
+However this approach does not support real number weights, and 
+doing so can be very expensive if the weights are very large.
+[Weighted MinHash](http://static.googleusercontent.com/media/research.google.com/en//pubs/archive/36928.pdf)
+is created by Sergey Ioffe, and its performance does not depend on the weights
+- as long as the universe of all possible items (or dimension for vectors) is known.
+This makes it unsuitable for stream processing, when the knowledge of unseen 
+items cannot be assumed.
+
+In this library, `WeightedMinHash` objects can only be created from vectors using 
+`WeightedMinHashGenerator`, which takes the dimension as a required parameter. 
+
+```python
+# Using default sample_size 256 and seed 1
+wmg = WeightedMinHashGenerator(1000)
+```
+
+You can specify the number of samples (similar to number of permutation functions in
+MinHash) and the random seed.
+
+```python
+wmg = WeightedMinHashGenerator(1000, sample_size=512, seed=12)
+```
+
+Here is a usage example.
+
+```python
+from datasketch import WeightedMinHashGenerator
+
+v1 = [1, 3, 4, 5, 6, 7, 8, 9, 10, 4]
+v2 = [2, 4, 3, 8, 4, 7, 10, 9, 0, 0]
+
+# WeightedMinHashGenerator requires dimension as the first argument
+wmg = WeightedMinHashGenerator(len(v1))
+wm1 = wmg.minhash(v1) # wm1 is of the type WeightedMinHash
+wm2 = wmg.minhash(v2)
+print("Estimated Jaccard is", wm1.jaccard(wm2))
+print("True Jaccard is", true_jaccard)
+```
+
+It is possible to make `WeightedMinHash` have a `digest` interface
+similar to `MinHash` and use it for stream data processing.
+However, this makes the cost of `digest` increase linearly with respect to the
+weight.
+Thus, `digest` is not implemented for `WeightedMinHash` in this library.
+
+Weighted MinHash as similar accuracy and performance profiles as MinHash.
+As you increase the number of samples, you get better accuracy, at the expense
+of slower speed.
+
+![Weighted MinHash Benchmark](https://github.com/ekzhu/datasketch/raw/master/weighted_minhash_benchmark.png)
+
 
 ## b-Bit MinHash
 
