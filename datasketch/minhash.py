@@ -48,6 +48,19 @@ class MinHash(object):
         self.permutations = np.array([(generator.randint(1, _mersenne_prime),
                                        generator.randint(0, _mersenne_prime)) 
                                       for _ in range(num_perm)]).T
+
+    def __len__(self):
+        '''
+        Return the size of the MinHash object
+        '''
+        return len(self.hashvalues)
+
+    def __eq__(self, other):
+        '''
+        Check equivalence between MinHash objects
+        '''
+        return self.seed == other.seed and \
+                np.array_equal(self.hashvalues, other.hashvalues)
     
     def is_empty(self):
         '''
@@ -115,7 +128,7 @@ class MinHash(object):
         length_size = struct.calcsize('i')
         # Use 4 bytes to store each hash value as we are using 32 bit
         hashvalue_size = struct.calcsize('I')
-        return seed_size + length_size + len(self.hashvalues) * hashvalue_size
+        return seed_size + length_size + len(self) * hashvalue_size
 
     def serialize(self, buf):
         '''
@@ -125,9 +138,9 @@ class MinHash(object):
         if len(buf) < self.bytesize():
             raise ValueError("The buffer does not have enough space\
                     for holding this MinHash object.")
-        fmt = "qi%dI" % len(self.hashvalues)
+        fmt = "qi%dI" % len(self)
         struct.pack_into(fmt, buf, 0,
-                self.seed, len(self.hashvalues), *self.hashvalues)
+                self.seed, len(self), *self.hashvalues)
 
     @classmethod
     def deserialize(cls, buf):
@@ -197,13 +210,6 @@ class MinHash(object):
         mh = cls(num_perm=num_perm, seed=seed)
         mh.hashvalues = np.minimum.reduce([m.hashvalues for m in mhs])
         return mh
-
-    def __eq__(self, other):
-        '''
-        Check equivalence between MinHash objects
-        '''
-        return self.seed == other.seed and \
-                np.array_equal(self.hashvalues, other.hashvalues)
 
 
 def jaccard(*mhs):

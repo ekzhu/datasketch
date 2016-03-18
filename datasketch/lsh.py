@@ -1,17 +1,11 @@
 '''
 This module implements the Locality Sensitive Hashing index 
-with MinHash (MinHash LSH). MinHash LSH index supports query
-with Jaccard similarity threshold.
+with MinHash (MinHash LSH) and Weighted MinHash (Weighted MinHash LSH)
+Both indexes supports query with Jaccard similarity threshold.
 
 Reference: Chapter 3, Mining of Massive Datasets 
 (http://www.mmds.org/)
 '''
-
-try:
-    from .minhash import MinHash
-except ImportError:
-    # For Python 2
-    from minhash import MinHash
 
 
 _integration_precision = 0.001
@@ -46,7 +40,7 @@ def _false_negative_probability(threshold, b, r):
 def _optimal_param(threshold, num_perm, false_positive_weight,
         false_negative_weight):
     '''
-    Compute the optimal LSH parameter that minimizes the weighted sum
+    Compute the optimal `MinHashLSH` parameter that minimizes the weighted sum
     of probabilities of false positive and false negative.
     '''
     min_error = float("inf")
@@ -63,24 +57,24 @@ def _optimal_param(threshold, num_perm, false_positive_weight,
     return opt
 
 
-class LSH(object):
+class MinHashLSH(object):
     '''
     The classic MinHash LSH
     '''
 
     def __init__(self, threshold=0.9, num_perm=128, weights=(0.5,0.5)):
         '''
-        Create an empty LSH index that accepts MinHash objects
+        Create an empty `MinHashLSH` index that accepts MinHash objects
         with `num_perm` permutation functions and query
         Jaccard similarity threshold `threshold`.
-        The initialized LSH will be optimized for the threshold by
+        The initialized `MinHashLSH` will be optimized for the threshold by
         minizing the false positive and false negative.
 
         Use `weights` to adjust the relative importance of 
         minizing false positive and false negative when optimizing 
         for the Jaccard similarity threshold.
         `weights` is a tuple in the format of 
-        (false_negative_weight, false_negat.
+        (false_positive_weight, false_negative_weight).
         '''
         if threshold > 1.0 or threshold < 0.0:
             raise ValueError("threshold must be in [0.0, 1.0]") 
@@ -91,7 +85,7 @@ class LSH(object):
         if sum(weights) != 1.0:
             raise ValueError("Weights must sum to 1.0")
         self.threshold = threshold
-        self.num_perm = num_perm
+        self.h = num_perm
         false_positive_weight, false_negative_weight = weights
         self.b, self.r = _optimal_param(threshold, num_perm,
                 false_positive_weight, false_negative_weight)
@@ -109,11 +103,9 @@ class LSH(object):
         Insert a `key` to the index, together
         with a `minhash` of the data referenced by the `key`.
         '''
-        if not isinstance(minhash, MinHash):
-            raise ValueError("minhash must be of MinHash class")
-        if len(minhash.hashvalues) != self.num_perm:
-            raise ValueError("Expecting minhash with %d permutation functions, got %d"
-                    % (self.num_perm, len(minhash.hashvalues)))
+        if len(minhash) != self.h:
+            raise ValueError("Expecting minhash with length %d, got %d"
+                    % (self.h, len(minhash)))
         for (start, end), hashtable in zip(self.hashranges, self.hashtables):
             H = self._H(minhash.hashvalues[start:end])
             if H not in hashtable:
@@ -126,11 +118,9 @@ class LSH(object):
         the keys that references datasets with Jaccard
         similarities greater than the threshold set by the index.
         '''
-        if not isinstance(minhash, MinHash):
-            raise ValueError("minhash must be of MinHash class")
-        if len(minhash.hashvalues) != self.num_perm:
-            raise ValueError("Expecting minhash with %d permutation functions, got %d"
-                    % (self.num_perm, len(minhash.hashvalues)))
+        if len(minhash) != self.h:
+            raise ValueError("Expecting minhash with length %d, got %d"
+                    % (self.h, len(minhash)))
         candidates = set()
         for (start, end), hashtable in zip(self.hashranges, self.hashtables):
             H = self._H(minhash.hashvalues[start:end])
@@ -138,4 +128,30 @@ class LSH(object):
                 for key in hashtable[H]:
                     candidates.add(key)
         return list(candidates)
+
+
+class WeightedMinHashLSH(MinHashLSH):
+    '''
+    The classic MinHash LSH adapted for Weighted MinHash
+    '''
+
+    def __init__(self, threshold=0.9, sample_size=128, weights=(0.5,0.5)):
+        '''
+        Create an empty `WeightedMinHashLSH` index that accepts 
+        WeightedMinHash objects
+        with `sample_size` samples and query
+        Jaccard similarity threshold `threshold`.
+        The initialized `WeightedMinHashLSH` will be optimized for the threshold by
+        minizing the false positive and false negative.
+
+        Use `weights` to adjust the relative importance of 
+        minizing false positive and false negative when optimizing 
+        for the Jaccard similarity threshold.
+        `weights` is a tuple in the format of 
+        (false_positive_weight, false_negative_weight).
+        '''
+        super(WeightedMinHashLSH, self).__init__(threshold, sample_size, weights)
+
+    def _H(self, hs):
+        return "".join("%.4x-%.4x" % (k, t) for (k, t) in hs)
 

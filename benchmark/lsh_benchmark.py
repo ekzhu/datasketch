@@ -2,7 +2,7 @@ import time, argparse, sys, json
 from hashlib import sha1
 from sklearn.datasets import fetch_20newsgroups
 import numpy as np
-from datasketch import LSH, MinHash
+from datasketch import MinHashLSH, MinHash
 
 
 def get_ngrams(text, n=3):
@@ -35,7 +35,7 @@ def get_newsgroup_data(num_perm, subset):
 def benchmark_lsh(threshold, index_data, query_data):
     print("Building LSH index")
     num_perm = len(index_data.minhashes[0].hashvalues)
-    lsh = LSH(threshold, num_perm)
+    lsh = MinHashLSH(threshold, num_perm)
     for key, minhash in zip(index_data.filenames, index_data.minhashes):
         lsh.insert(key, minhash)
     print("Querying")

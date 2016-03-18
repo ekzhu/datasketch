@@ -18,9 +18,10 @@ This package contains the following data sketches:
 The following indexes for data sketches are provided to support 
 sub-linear query time:
 
-| Index         | For Data Sketch  | Supported Query Type |
-|---------------|------------------|----------------------|
-| LSH           | MinHash          | Radius (Threshold)   |
+| Index                  | For Data Sketch  | Supported Query Type |
+|------------------------|------------------|----------------------|
+| MinHash LSH            | MinHash          | Radius (Threshold)   |
+| Weighted MinHash LSH   | Weighted MinHash | Radius (Threshold)   |
 
 datasketch must be used with Python 2.7 or above and NumPy.
 Scipy is optional, but with it the LSH initialization can be much faster.
@@ -32,6 +33,13 @@ To install datasketch using `pip`:
     pip install datasketch -U
 
 This will also install NumPy as dependency.
+
+## Change Log
+
+Version 0.2.0
+- Add Weighted MinHash data sketch
+- Add Weighted MinHash LSH index
+- Performance and accuracy benchmark for Weighted MinHash
 
 ## MinHash
 
@@ -134,7 +142,7 @@ more likely to get returned than the rest.
 
 ```python
 from hashlib import sha1
-from datasketch import MinHash, LSH
+from datasketch import MinHash, MinHashLSH
 
 data1 = ['minhash', 'is', 'a', 'probabilistic', 'data', 'structure', 'for',
         'estimating', 'the', 'similarity', 'between', 'datasets']
@@ -154,9 +162,9 @@ for d in data2:
 for d in data3:
 	m3.digest(sha1(d.encode('utf8')))
 
-# Create an LSH index optimized for Jaccard threshold 0.5, 
+# Create an MinHashLSH index optimized for Jaccard threshold 0.5, 
 # that accepts MinHash objects with 128 permutations functions
-lsh = LSH(threshold=0.5, num_perm=128)
+lsh = MinHashLSH(threshold=0.5, num_perm=128)
 
 # Insert m2 and m3 into the index 
 lsh.insert("m2", m2)
@@ -169,10 +177,10 @@ print("Candidates with Jaccard similarity > 0.5", result)
 
 The Jaccard similarity threshold must be set at initialization, and cannot
 be changed. So does the `num_perm` parameter.
-Similar to MinHash, higher `num_perm` can improve the accuracy of LSH,
+Similar to MinHash, higher `num_perm` can improve the accuracy of `MinHashLSH`,
 but increase 
 query cost, since more processing is required as the MinHash gets bigger.
-Unlike MinHash, the benefit of higher `num_perm` seems to be limited for LSH - 
+Unlike MinHash, the benefit of higher `num_perm` seems to be limited for `MinHashLSH` - 
 it looks like when `num_perm` becomes greater than the dataset cardinality,
 both precision and recall starts to decrease.
 I experimented with the 
@@ -182,22 +190,22 @@ The average recall, average precision, and 90 percentile query time vs.
 `num_perm` are plotted below. See the `benchmark` directory for the experiment and
 plotting code.
 
-![LSH Benchmark](https://github.com/ekzhu/datasketch/blob/master/plots/lsh_benchmark.png)
+![MinHashLSH Benchmark](https://github.com/ekzhu/datasketch/blob/master/plots/lsh_benchmark.png)
 
 There are other optional parameters that be used to tune the index:
 
 ```python
 # Use defaults: threshold=0.5, num_perm=128, weights=(0.5, 0.5)
-lsh = LSH()
+lsh = MinHashLSH()
 
 # `weights` controls the relative importance between minizing false positive
-# and minizing false negative when building the LSH.
+# and minizing false negative when building the `MinHashLSH`.
 # `weights` must sum to 1.0, and the format is 
 # (false positive weight, false negative weight).
 # For example, if minizing false negative (or maintaining high recall) is more
 # important, assign more weight toward false negative: weights=(0.4, 0.6).
 # Note: try to live with a small difference between weights (i.e. < 0.5).
-lsh = LSH(weights=(0.4, 0.6))
+lsh = MinHashLSH(weights=(0.4, 0.6))
 ```
 
 ## Weighted MinHash
@@ -256,6 +264,44 @@ As you increase the number of samples, you get better accuracy, at the expense
 of slower speed.
 
 ![Weighted MinHash Benchmark](https://github.com/ekzhu/datasketch/raw/master/plots/weighted_minhash_benchmark.png)
+
+
+## Weighted MinHash LSH
+
+The `WeightedMinHashLSH` index can be used to index `WeightedMinHash`.
+It has the same `insert` and `query` interface as `MinHashLSH`.
+
+```python
+import numpy as np
+from datasketch.weighted_minhash import WeightedMinHashGenerator
+from datasketch.lsh import WeightedMinHashLSH
+
+v1 = np.random.uniform(1, 10, 10)
+v2 = np.random.uniform(1, 10, 10)
+v3 = np.random.uniform(1, 10, 10)
+mg = WeightedMinHashGenerator(10, 5)
+m1 = mg.minhash(v1)
+m2 = mg.minhash(v2)
+m3 = mg.minhash(v3)
+
+# Create weighted MinHash LSH index
+lsh = WeightedMinHashLSH(threshold=0.1, sample_size=5)
+lsh.insert("m2", m2)
+lsh.insert("m3", m3)
+result = lsh.query(m1)
+print("Approximate neighbours with weighted Jaccard similarity > 0.1", result)
+```
+
+The constractor of `WeightMinHashLSH` also accepts the `weights` argument
+for fine-tuning.
+
+```python
+# Use defaults: threshold=0.5, sample_size=128, weights=(0.5, 0.5)
+lsh = WeightedMinHashLSH()
+
+# Fine-tuning the weights for false positives and negatives
+lsh = WeightedMinHashLSH(weights=(0.4, 0.6))
+```
 
 
 ## b-Bit MinHash

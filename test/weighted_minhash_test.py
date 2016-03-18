@@ -10,7 +10,7 @@ class TestWeightedMinHash(unittest.TestCase):
         m = mg.minhash([1,2,3,4])
         p = pickle.loads(pickle.dumps(m))
         self.assertEqual(p.seed, m.seed)
-        self.assertTrue(np.array_equal(p.hashes, m.hashes))
+        self.assertTrue(np.array_equal(p.hashvalues, m.hashvalues))
 
 class TestWeightedMinHashGenerator(unittest.TestCase):
 
@@ -26,7 +26,7 @@ class TestWeightedMinHashGenerator(unittest.TestCase):
         mg = WeightedMinHashGenerator(2, 4, 1)
         m = mg.minhash([1,3])
         self.assertIsInstance(m, WeightedMinHash) 
-        self.assertEqual(len(m.hashes), 4)
+        self.assertEqual(len(m.hashvalues), 4)
         self.assertEqual(len(m), 4)
 
 if __name__ == "__main__":

@@ -8,20 +8,23 @@ import numpy as np
 
 
 class WeightedMinHash(object):
+    '''
+    The weighted MinHash.
+    '''
 
-    def __init__(self, hashes, seed):
+    def __init__(self, hashvalues, seed):
         '''
-        Create a WeightedMinHash object given the hashes and the seed
-        used to generate it.
+        Create a WeightedMinHash object given the hash values and the seed
+        that was used to generate it.
         '''
-        self.hashes = hashes
+        self.hashvalues = hashvalues
         self.seed = seed
     
     def __len__(self):
         '''
-        Return the number of hashes as the size
+        Return the number of hash values as the size
         '''
-        return len(self.hashes)
+        return len(self.hashvalues)
 
     def jaccard(self, other):
         '''
@@ -33,10 +36,10 @@ class WeightedMinHash(object):
                     different seeds")
         if len(self) != len(other):
             raise ValueError("Cannot compute Jaccard given WeightedMinHash objects with\
-                    different numbers hashes")
-        # Check how many pairs of (k, t) hashes are equal
+                    different numbers of hash values")
+        # Check how many pairs of (k, t) hashvalues are equal
         intersection = 0
-        for this, that in zip(self.hashes, other.hashes):
+        for this, that in zip(self.hashvalues, other.hashvalues):
             if np.array_equal(this, that):
                 intersection += 1
         return float(intersection) / float(len(self))
@@ -44,7 +47,7 @@ class WeightedMinHash(object):
 
 class WeightedMinHashGenerator(object):
 
-    def __init__(self, dim, sample_size=256, seed=1):
+    def __init__(self, dim, sample_size=128, seed=1):
         '''
         Initialize the generator with the number of dimensions of input 
         vectors, number of samples, and the seed for creating random parameters.
@@ -68,12 +71,12 @@ class WeightedMinHashGenerator(object):
             raise ValueError("Input dimension mismatch, expecting %d" % self.dim)
         if not isinstance(v, np.ndarray):
             v = np.array(v)
-        hashes = np.zeros((self.sample_size, 2))
+        hashvalues = np.zeros((self.sample_size, 2))
         for i in range(self.sample_size):
             t = np.floor((np.log(v) / self.rs[i]) + self.betas[i])
             ln_y = (t - self.betas[i]) * self.rs[i]
             ln_a = self.ln_cs[i] - ln_y - self.rs[i]
             k = np.argmin(ln_a)
-            hashes[i][0], hashes[i][1] = k, int(t[k])
-        return WeightedMinHash(hashes, self.seed)
+            hashvalues[i][0], hashvalues[i][1] = k, int(t[k])
+        return WeightedMinHash(hashvalues, self.seed)
 
