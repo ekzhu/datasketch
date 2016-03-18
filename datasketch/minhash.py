@@ -48,7 +48,7 @@ class MinHash(object):
         if hashvalues is not None:
             self.hashvalues = hashvalues
         else:
-            self.hashvalues = np.array([_max_hash for _ in range(num_perm)])
+            self.hashvalues = np.array([_max_hash for _ in range(num_perm)], dtype=np.int)
         # Initalize permutation function parameters
         if permutations is not None:
             self.permutations = permutations
@@ -88,7 +88,7 @@ class MinHash(object):
         '''
         Clear the current state of the Minhash.
         '''
-        self.hashvalues = np.array([_max_hash for _ in range(num_perm)])
+        self.hashvalues = np.array([_max_hash for _ in range(num_perm)], dtype=np.int)
 
     def copy(self):
         '''

@@ -28,6 +28,7 @@ class TestWeightedMinHashGenerator(unittest.TestCase):
         self.assertIsInstance(m, WeightedMinHash)
         self.assertEqual(len(m.hashvalues), 4)
         self.assertEqual(len(m), 4)
+        self.assertTrue(m.hashvalues.dtype == np.int)
 
 if __name__ == "__main__":
     unittest.main()

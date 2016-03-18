@@ -87,7 +87,7 @@ class WeightedMinHashGenerator(object):
             raise ValueError("Input dimension mismatch, expecting %d" % self.dim)
         if not isinstance(v, np.ndarray):
             v = np.array(v)
-        hashvalues = np.zeros((self.sample_size, 2))
+        hashvalues = np.zeros((self.sample_size, 2), dtype=np.int)
         for i in range(self.sample_size):
             t = np.floor((np.log(v) / self.rs[i]) + self.betas[i])
             ln_y = (t - self.betas[i]) * self.rs[i]
