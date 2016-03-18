@@ -42,6 +42,7 @@ Version 0.2.0
 - Performance and accuracy benchmark for Weighted MinHash
 - Rename `digest` to `update` for `MinHash` and `HyperLogLog`, and use bytes
 as input argument.
+- Make `hashobj` customizable through constractors
 - Added new methods for data sketches
 
 ## MinHash
@@ -56,7 +57,6 @@ MinHash is introduced by Andrei Z. Broder in this
 [paper](http://cs.brown.edu/courses/cs253/papers/nearduplicate.pdf)
 
 ```python
-from hashlib import sha1
 from datasketch import MinHash
 
 data1 = ['minhash', 'is', 'a', 'probabilistic', 'data', 'structure', 'for',
@@ -66,9 +66,9 @@ data2 = ['minhash', 'is', 'a', 'probability', 'data', 'structure', 'for',
 
 m1, m2 = MinHash(), MinHash()
 for d in data1:
-	m1.digest(sha1(d.encode('utf8')))
+	m1.update(d.encode('utf8'))
 for d in data2:
-	m2.digest(sha1(d.encode('utf8')))
+	m2.update(d.encode('utf8'))
 print("Estimated Jaccard for data1 and data2 is", m1.jaccard(m2))
 
 s1 = set(data1)
@@ -87,7 +87,7 @@ m = MinHash(num_perm=256)
 
 The trade-off for better accuracy is slower speed and higher memory usage.
 Because using more permutation functions means 1) more CPU instructions
-for every hash digested and 2) more hash values to be stored.
+for every data value hashed and 2) more hash values to be stored.
 The speed and memory usage of MinHash are both linearly proportional
 to the number of permutation functions used.
 
@@ -106,7 +106,7 @@ The analysis is presented in [Cohen 1994](http://ieeexplore.ieee.org/stamp/stamp
 
 ```python
 # Returns the estimation of the cardinality of
-# all elements digested so far.
+# all data values seen so far.
 m.count()
 ```
 
@@ -144,7 +144,6 @@ in probability right at the threshold, making the qualifying datasets much
 more likely to get returned than the rest.
 
 ```python
-from hashlib import sha1
 from datasketch import MinHash, MinHashLSH
 
 data1 = ['minhash', 'is', 'a', 'probabilistic', 'data', 'structure', 'for',
@@ -159,11 +158,11 @@ m1 = MinHash(num_perm=128)
 m2 = MinHash(num_perm=128)
 m3 = MinHash(num_perm=128)
 for d in data1:
-	m1.digest(sha1(d.encode('utf8')))
+	m1.update(d.encode('utf8'))
 for d in data2:
-	m2.digest(sha1(d.encode('utf8')))
+	m2.update(d.encode('utf8'))
 for d in data3:
-	m3.digest(sha1(d.encode('utf8')))
+	m3.update(d.encode('utf8'))
 
 # Create an MinHashLSH index optimized for Jaccard threshold 0.5,
 # that accepts MinHash objects with 128 permutations functions
@@ -256,11 +255,11 @@ wm2 = wmg.minhash(v2)
 print("Estimated Jaccard is", wm1.jaccard(wm2))
 ```
 
-It is possible to make `WeightedMinHash` have a `digest` interface
+It is possible to make `WeightedMinHash` have a `update` interface
 similar to `MinHash` and use it for stream data processing.
-However, this makes the cost of `digest` increase linearly with respect to the
+However, this makes the cost of `update` increase linearly with respect to the
 weight.
-Thus, `digest` is not implemented for `WeightedMinHash` in this library.
+Thus, `update` is not implemented for `WeightedMinHash` in this library.
 
 Weighted MinHash as similar accuracy and performance profiles as MinHash.
 As you increase the number of samples, you get better accuracy, at the expense
@@ -371,7 +370,6 @@ HyperLogLog is first introduced in this
 by Philippe Flajolet, Éric Fusy, Olivier Gandouet and Frédéric Meunier.
 
 ```python
-from hashlib import sha1
 from datasketch import HyperLogLog
 
 data1 = ['hyperloglog', 'is', 'a', 'probabilistic', 'data', 'structure', 'for',
@@ -379,7 +377,7 @@ data1 = ['hyperloglog', 'is', 'a', 'probabilistic', 'data', 'structure', 'for',
 
 h = HyperLogLog()
 for d in data1:
-  h.digest(sha1(d.encode('utf8')))
+  h.update(d.encode('utf8'))
 print("Estimated cardinality is", h.count())
 
 s1 = set(data1)
@@ -404,7 +402,7 @@ As in MinHash, you can also merge two HyperLogLogs to create a union HyperLogLog
 ```python
 h1 = HyperLogLog()
 h2 = HyperLogLog()
-h1.digest(sha1('test'.encode('utf8')))
+h1.update('test'.encode('utf8'))
 # The makes h1 the union of h2 and the original h1.
 h1.merge(h2)
 # This will return the cardinality of the union
