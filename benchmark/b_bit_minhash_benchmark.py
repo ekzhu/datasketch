@@ -5,7 +5,7 @@ import time, logging, random
 logging.basicConfig(level=logging.INFO)
 import pyhash
 import numpy as np
-from datasketch.minhash import MinHash, jaccard
+from datasketch.minhash import MinHash
 from datasketch.b_bit_minhash import bBitMinHash
 from similarity_benchmark import _get_exact, _gen_data,\
         Hash, _b_bit_minhash_jaccard

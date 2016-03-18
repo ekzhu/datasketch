@@ -27,7 +27,7 @@ def run_acc(size, seed, p):
     random.seed(seed)
     for i in range(size):
         v = int_bytes(random.randint(1, size))
-        h.digest(sha1(v))
+        h.update(v)
         s.add(v)
     perr = abs(float(len(s)) - h.count()) / float(len(s))
     return perr

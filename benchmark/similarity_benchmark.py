@@ -6,7 +6,7 @@ import time, logging, random, struct
 import pyhash
 import numpy as np
 from datasketch.hyperloglog import HyperLogLog
-from datasketch.minhash import MinHash, jaccard
+from datasketch.minhash import MinHash
 from datasketch.b_bit_minhash import bBitMinHash
 
 logging.basicConfig(level=logging.INFO)
