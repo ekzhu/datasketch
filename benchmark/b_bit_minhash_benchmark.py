@@ -13,19 +13,19 @@ from similarity_benchmark import _get_exact, _gen_data,\
 def _run_minhash(A, B, data, seed, bs, num_perm):
     (a_start, a_end), (b_start, b_end) = A, B
     hasher = pyhash.murmur3_32()
-    m1 = MinHash(num_perm=num_perm)
-    m2 = MinHash(num_perm=num_perm)
+    m1 = MinHash(num_perm=num_perm, hashobj=Hash)
+    m2 = MinHash(num_perm=num_perm, hashobj=Hash)
     for i in xrange(a_start, a_end):
-        m1.digest(Hash(hasher(data[i], seed=seed)))
+        m1.update(hasher(data[i], seed=seed))
     for i in xrange(b_start, b_end):
-        m2.digest(Hash(hasher(data[i], seed=seed)))
+        m2.update(hasher(data[i], seed=seed))
     return [m1.jaccard(m2)] + \
             [_b_bit_minhash_jaccard(m1, m2, b) for b in bs]
 
 def _run_test(A, B, data, n, bs, num_perm):
     logging.info("Run tests with A = (%d, %d), B = (%d, %d), n = %d"
             % (A[0], A[1], B[0], B[1], n))
-    runs = np.array([_run_minhash(A, B, data, i, bs, num_perm) 
+    runs = np.array([_run_minhash(A, B, data, i, bs, num_perm)
         for i in xrange(n)]).T
     return runs
 
@@ -41,7 +41,7 @@ def plot(result, bs, exact_sims, num_perm, bins, save):
     num_col = len(result)
     basesize = 5
     size = (basesize*num_col, basesize*num_row)
-    fig, axes = plt.subplots(num_row, num_col, sharey=True, 
+    fig, axes = plt.subplots(num_row, num_col, sharey=True,
             sharex=True, figsize=size)
     for i, runs in enumerate(result):
         minhash = sorted(runs[0])
@@ -67,7 +67,7 @@ if __name__ == "__main__":
     attr_pairs = [((0, 3000), (2000, 5000)),
                   ((0, 3500), (1500, 5000)),
                   ((0, 4500), (500, 5000))]
-    num_perm = 128 
+    num_perm = 128
     bs = [1, 2, 3]
     n = 100
     save = "b_bit_minhash_benchmark.png"

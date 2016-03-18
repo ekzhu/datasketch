@@ -8,23 +8,39 @@ import numpy as np
 
 
 class WeightedMinHash(object):
-    '''
-    The weighted MinHash.
-    '''
 
-    def __init__(self, hashvalues, seed):
+    def __init__(self, seed, hashvalues):
         '''
-        Create a WeightedMinHash object given the hash values and the seed
-        that was used to generate it.
+        Create a WeightedMinHash object given the seed
+        that was used to generate it and the hash values.
         '''
-        self.hashvalues = hashvalues
         self.seed = seed
+        self.hashvalues = hashvalues
     
     def __len__(self):
         '''
         Return the number of hash values as the size
         '''
         return len(self.hashvalues)
+
+    def __eq__(self, other):
+        '''
+        Check equivalence between WeightedMinHash
+        '''
+        return self.seed == other.seed and \
+                np.array_equal(self.hashvalues, other.hashvalues)
+    
+    def copy(self):
+        '''
+        Create a copy of this WeightedMinHash by exporting its state.
+        '''
+        return WeightedMinHash(self.seed, self.digest())
+    
+    def digest(self):
+        '''
+        Returns the hash values.
+        '''
+        return copy.copy(self.hashvalues)
 
     def jaccard(self, other):
         '''
@@ -78,5 +94,5 @@ class WeightedMinHashGenerator(object):
             ln_a = self.ln_cs[i] - ln_y - self.rs[i]
             k = np.argmin(ln_a)
             hashvalues[i][0], hashvalues[i][1] = k, int(t[k])
-        return WeightedMinHash(hashvalues, self.seed)
+        return WeightedMinHash(self.seed, hashvalues)
 

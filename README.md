@@ -15,7 +15,7 @@ This package contains the following data sketches:
 | HyperLogLog      | estimate cardinality                        |
 | HyperLogLog++    | estimate cardinality                        |
 
-The following indexes for data sketches are provided to support 
+The following indexes for data sketches are provided to support
 sub-linear query time:
 
 | Index                  | For Data Sketch  | Supported Query Type |
@@ -40,10 +40,13 @@ Version 0.2.0
 - Add Weighted MinHash data sketch
 - Add Weighted MinHash LSH index
 - Performance and accuracy benchmark for Weighted MinHash
+- Rename `digest` to `update` for `MinHash` and `HyperLogLog`, and use bytes
+as input argument.
+- Added new methods for data sketches
 
 ## MinHash
 
-MinHash lets you estimate the 
+MinHash lets you estimate the
 [Jaccard similarity](https://en.wikipedia.org/wiki/Jaccard_index)
 (resemblance)
 between sets of
@@ -110,28 +113,28 @@ m.count()
 ## MinHash LSH
 
 Suppose you have a very large collection of datasets. Giving a query, which
-is also a dataset, you want to find datasets in your collection 
-that have 
-Jaccard similarities above certain threshold, 
-and you want to do it with many other queries. 
+is also a dataset, you want to find datasets in your collection
+that have
+Jaccard similarities above certain threshold,
+and you want to do it with many other queries.
 To do this efficiently, you can create a MinHash for every dataset,
 and when a query comes, you
 compute the Jaccard similarities between the query MinHash and all the
 MinHash of your collection, and return the datasets that
 satisfy your threshold.
 
-The said approach is still an O(n) algorithm, meaning the query cost 
+The said approach is still an O(n) algorithm, meaning the query cost
 increases linearly with respect to the number of datasets.
 A popular alternative is to use Locality Sensitive Hashing (LSH) index.
 LSH can be used with MinHash to achieve sub-linear query cost - that is
 a huge improvement.
-The details of the algorithm can be found in 
+The details of the algorithm can be found in
 [Chapter 3, Mining of Massive Datasets](http://infolab.stanford.edu/~ullman/mmds/ch3.pdf),
 
 This package includes the classic version of MinHash LSH.
 It is important to note that the query does not give you the exact result,
 due to the use of MinHash and LSH. There will be false positives - datasets
-that do not satisfy your threshold but returned, and false negatives - 
+that do not satisfy your threshold but returned, and false negatives -
 qualifying datasets that are not returned.
 However, the property of LSH assures that datasets with higher Jaccard
 similarities always have higher probabilities to get returned than datasets
@@ -162,11 +165,11 @@ for d in data2:
 for d in data3:
 	m3.digest(sha1(d.encode('utf8')))
 
-# Create an MinHashLSH index optimized for Jaccard threshold 0.5, 
+# Create an MinHashLSH index optimized for Jaccard threshold 0.5,
 # that accepts MinHash objects with 128 permutations functions
 lsh = MinHashLSH(threshold=0.5, num_perm=128)
 
-# Insert m2 and m3 into the index 
+# Insert m2 and m3 into the index
 lsh.insert("m2", m2)
 lsh.insert("m3", m3)
 
@@ -178,14 +181,14 @@ print("Candidates with Jaccard similarity > 0.5", result)
 The Jaccard similarity threshold must be set at initialization, and cannot
 be changed. So does the `num_perm` parameter.
 Similar to MinHash, higher `num_perm` can improve the accuracy of `MinHashLSH`,
-but increase 
+but increase
 query cost, since more processing is required as the MinHash gets bigger.
-Unlike MinHash, the benefit of higher `num_perm` seems to be limited for `MinHashLSH` - 
+Unlike MinHash, the benefit of higher `num_perm` seems to be limited for `MinHashLSH` -
 it looks like when `num_perm` becomes greater than the dataset cardinality,
 both precision and recall starts to decrease.
-I experimented with the 
+I experimented with the
 [20 News Group Dataset](http://scikit-learn.org/stable/datasets/twenty_newsgroups.html),
-which has an average cardinality of 193 (3-shingles). 
+which has an average cardinality of 193 (3-shingles).
 The average recall, average precision, and 90 percentile query time vs.
 `num_perm` are plotted below. See the `benchmark` directory for the experiment and
 plotting code.
@@ -200,7 +203,7 @@ lsh = MinHashLSH()
 
 # `weights` controls the relative importance between minizing false positive
 # and minizing false negative when building the `MinHashLSH`.
-# `weights` must sum to 1.0, and the format is 
+# `weights` must sum to 1.0, and the format is
 # (false positive weight, false negative weight).
 # For example, if minizing false negative (or maintaining high recall) is more
 # important, assign more weight toward false negative: weights=(0.4, 0.6).
@@ -214,17 +217,17 @@ MinHash can be used to compress unweighted set or binary vector, and estimate
 unweighted Jaccard similarity.
 It is possible to modify MinHash for
 [weighted Jaccard](https://en.wikipedia.org/wiki/Jaccard_index#Generalized_Jaccard_similarity_and_distance)
-by expanding each item (or dimension) by its weight. 
-However this approach does not support real number weights, and 
+by expanding each item (or dimension) by its weight.
+However this approach does not support real number weights, and
 doing so can be very expensive if the weights are very large.
 [Weighted MinHash](http://static.googleusercontent.com/media/research.google.com/en//pubs/archive/36928.pdf)
-is created by Sergey Ioffe, and its performance does not depend on the weights - as 
+is created by Sergey Ioffe, and its performance does not depend on the weights - as
 long as the universe of all possible items (or dimension for vectors) is known.
-This makes it unsuitable for stream processing, when the knowledge of unseen 
+This makes it unsuitable for stream processing, when the knowledge of unseen
 items cannot be assumed.
 
-In this library, `WeightedMinHash` objects can only be created from vectors using 
-`WeightedMinHashGenerator`, which takes the dimension as a required parameter. 
+In this library, `WeightedMinHash` objects can only be created from vectors using
+`WeightedMinHashGenerator`, which takes the dimension as a required parameter.
 
 ```python
 # Using default sample_size 256 and seed 1
@@ -445,12 +448,4 @@ bytes = pickle.dumps(m1)
 m2 = pickle.loads(bytes)
 # m1 and m2 should be equal
 print(m1 == m2)
-```
-
-Additionally, you can check the byte size of any data sketch using the
-`bytesize` function.
-
-```python
-# Print out the serialized size of m1 in number of bytes.
-print(m1.bytesize())
 ```

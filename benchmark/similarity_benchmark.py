@@ -47,29 +47,29 @@ def _b_bit_minhash_jaccard(m1, m2, b):
 def _run_minhash(A, B, data, seed, num_perm, b):
     (a_start, a_end), (b_start, b_end) = A, B
     hasher = pyhash.murmur3_32()
-    m1 = MinHash(num_perm=num_perm)
-    m2 = MinHash(num_perm=num_perm)
+    m1 = MinHash(num_perm=num_perm, hashobj=Hash)
+    m2 = MinHash(num_perm=num_perm, hashobj=Hash)
     for i in xrange(a_start, a_end):
-        m1.digest(Hash(hasher(data[i], seed=seed)))
+        m1.update(hasher(data[i], seed=seed))
     for i in xrange(b_start, b_end):
-        m2.digest(Hash(hasher(data[i], seed=seed)))
+        m2.update(hasher(data[i], seed=seed))
     return [m1.jaccard(m2), _b_bit_minhash_jaccard(m1, m2, b)]
 
 def _run_hyperloglog(A, B, data, seed, p):
     (a_start, a_end), (b_start, b_end) = A, B
     hasher = pyhash.murmur3_32()
-    h1 = HyperLogLog(p=p)
-    h2 = HyperLogLog(p=p)
+    h1 = HyperLogLog(p=p, hashobj=Hash)
+    h2 = HyperLogLog(p=p, hashobj=Hash)
     for i in xrange(a_start, a_end):
-        h1.digest(Hash(hasher(data[i], seed=seed)))
+        h1.update(hasher(data[i], seed=seed))
     for i in xrange(b_start, b_end):
-        h2.digest(Hash(hasher(data[i], seed=seed)))
+        h2.update(hasher(data[i], seed=seed))
     return _hyperloglog_jaccard(h1, h2)
 
 def _run_test(A, B, data, n, p, num_perm, b):
     logging.info("Running MinHash with num_perm = %d" % num_perm)
-    minhash_runs, bbit_runs = np.array([_run_minhash(A, B, data, 
-            i, num_perm, b) 
+    minhash_runs, bbit_runs = np.array([_run_minhash(A, B, data,
+            i, num_perm, b)
         for i in xrange(n)]).T
     logging.info("Running HyperLogLog with p = %d" % p)
     hll_runs = [_run_hyperloglog(A, B, data, i, p) for i in xrange(n)]
@@ -79,7 +79,7 @@ def _run_test(A, B, data, n, p, num_perm, b):
 def run_full_tests(A, B, data, n, p_list, num_perm_list, b):
     logging.info("Run tests with A = (%d, %d), B = (%d, %d), n = %d"
             % (A[0], A[1], B[0], B[1], n))
-    return [_run_test(A, B, data, n, p, num_perm, b) 
+    return [_run_test(A, B, data, n, p, num_perm, b)
             for p, num_perm in zip(p_list, num_perm_list)]
 
 
@@ -98,7 +98,7 @@ def plot(result, p_list, num_perm_list, exact_sim, bins, save, b):
     num_col = len(result)
     basesize = 5
     size = (basesize*num_col, basesize*num_row)
-    fig, axes = plt.subplots(num_row, num_col, sharey=True, 
+    fig, axes = plt.subplots(num_row, num_col, sharey=True,
             sharex=True, figsize=size)
     for i, (minhash, bbit, hll) in enumerate(result):
         title = "MinHash %d perm funcs" % num_perm_list[i]

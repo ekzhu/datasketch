@@ -2,7 +2,6 @@
 Performance and accuracy of HyperLogLog
 '''
 import time, logging, random
-from hashlib import sha1
 from datasketch.hyperloglog import HyperLogLog
 
 logging.basicConfig(level=logging.INFO)
@@ -15,8 +14,8 @@ def run_perf(card, p):
     logging.info("HyperLogLog using p = %d " % p)
     start = time.clock()
     for i in range(card):
-        h.digest(sha1(int_bytes(i)))
-    duration = time.clock() - start 
+        h.update(int_bytes(i))
+    duration = time.clock() - start
     logging.info("Digested %d hashes in %.4f sec" % (card, duration))
     return duration
 
@@ -65,5 +64,3 @@ ax.grid()
 
 fig.savefig(output)
 logging.info("Plot saved to %s" % output)
-
-

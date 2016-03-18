@@ -24,11 +24,11 @@ def eg1():
     m2 = MinHash()
     m3 = MinHash()
     for d in data1:
-        m1.digest(sha1(d.encode('utf8')))
+        m1.update(d.encode('utf8'))
     for d in data2:
-        m2.digest(sha1(d.encode('utf8')))
+        m2.update(d.encode('utf8'))
     for d in data3:
-        m3.digest(sha1(d.encode('utf8')))
+        m3.update(d.encode('utf8'))
 
     # Create LSH index
     lsh = MinHashLSH(threshold=0.5)

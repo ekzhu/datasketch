@@ -26,7 +26,7 @@ def get_newsgroup_data(num_perm, subset):
         minhashes[i] = MinHash(num_perm)
         shingles[i] = set(get_ngrams(text))
         for ngram in shingles[i]:
-            minhashes[i].digest(sha1(ngram.encode("utf8")))
+            minhashes[i].update(ngram.encode("utf8"))
     newsgroup.minhashes = minhashes
     newsgroup.shingles = shingles
     return newsgroup
@@ -88,14 +88,14 @@ def benchmark_groud_truth(threshold, index_data, query_data):
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("--output", type=str, default="lsh_benchmark.json")
-    args = parser.parse_args(sys.argv[1:]) 
+    args = parser.parse_args(sys.argv[1:])
 
     num_perms = [32, 64, 96, 128, 160, 192, 224, 256]
-    output = {"num_perms" : num_perms, 
+    output = {"num_perms" : num_perms,
               "lsh_times" : [], "lsh_results" : [],
               "linearscan_times" : [], "linearscan_results" : [],
               "ground_truth_times" : None, "ground_truth_results" : None}
-    
+
     for num_perm in num_perms:
         print("Use num_perm = %d" % num_perm)
         index_data = get_newsgroup_data(num_perm, "train")
@@ -109,14 +109,14 @@ if __name__ == "__main__":
         output["lsh_results"].append(lsh_results)
         output["linearscan_times"].append(linearscan_times)
         output["linearscan_results"].append(linearscan_results)
-    
+
     print("Running ground truth benchmark")
     output["ground_truth_times"], output["ground_truth_results"] =\
             benchmark_groud_truth(0.5, index_data, query_data)
-    
+
     average_cardinality = np.mean([len(s) for s in
         index_data.shingles + query_data.shingles])
-    print("Average cardinality is", average_cardinality) 
+    print("Average cardinality is", average_cardinality)
 
     with open(args.output, 'w') as f:
         json.dump(output, f)

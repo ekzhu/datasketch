@@ -6,7 +6,7 @@ from hashlib import sha1
 import matplotlib
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
-from datasketch.minhash import MinHash, jaccard
+from datasketch.minhash import MinHash
 
 logging.basicConfig(level=logging.INFO)
 
@@ -18,8 +18,8 @@ def run_perf(card, num_perm):
     logging.info("MinHash using %d permutation functions" % num_perm)
     start = time.clock()
     for i in range(card):
-        m.digest(sha1(int_bytes(i)))
-    duration = time.clock() - start 
+        m.update(int_bytes(i))
+    duration = time.clock() - start
     logging.info("Digested %d hashes in %.4f sec" % (card, duration))
     return duration
 
@@ -30,7 +30,7 @@ def _run_acc(size, seed, num_perm):
     random.seed(seed)
     for i in range(size):
         v = int_bytes(random.randint(1, size))
-        m.digest(sha1(v))
+        m.update(v)
         s.add(v)
     return (m, s)
 
@@ -39,7 +39,7 @@ def run_acc(size, num_perm):
     m1, s1 = _run_acc(size, 1, num_perm)
     m2, s2 = _run_acc(size, 4, num_perm)
     j = float(len(s1.intersection(s2)))/float(len(s1.union(s2)))
-    j_e = jaccard(m1, m2)
+    j_e = m1.jaccard(m2)
     err = abs(j - j_e)
     return err
 
@@ -71,5 +71,3 @@ ax.grid()
 
 fig.savefig(output)
 logging.info("Plot saved to %s" % output)
-
-

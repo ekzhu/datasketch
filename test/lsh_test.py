@@ -8,7 +8,7 @@ from datasketch.weighted_minhash import WeightedMinHashGenerator
 
 
 class TestMinHashLSH(unittest.TestCase):
-    
+
     def test_init(self):
         lsh = MinHashLSH(threshold=0.8)
         self.assertTrue(lsh.is_empty())
@@ -21,9 +21,9 @@ class TestMinHashLSH(unittest.TestCase):
     def test_insert(self):
         lsh = MinHashLSH(threshold=0.5, num_perm=16)
         m1 = MinHash(16)
-        m1.digest(sha1("a".encode("utf8")))
+        m1.update("a".encode("utf8"))
         m2 = MinHash(16)
-        m2.digest(sha1("b".encode("utf8")))
+        m2.update("b".encode("utf8"))
         lsh.insert("a", m1)
         lsh.insert("b", m2)
         for t in lsh.hashtables:
@@ -40,25 +40,25 @@ class TestMinHashLSH(unittest.TestCase):
     def test_query(self):
         lsh = MinHashLSH(threshold=0.5, num_perm=16)
         m1 = MinHash(16)
-        m1.digest(sha1("a".encode("utf8")))
+        m1.update("a".encode("utf8"))
         m2 = MinHash(16)
-        m2.digest(sha1("b".encode("utf8")))
+        m2.update("b".encode("utf8"))
         lsh.insert("a", m1)
         lsh.insert("b", m2)
         result = lsh.query(m1)
         self.assertTrue("a" in result)
         result = lsh.query(m2)
         self.assertTrue("b" in result)
-        
+
         m3 = MinHash(18)
         self.assertRaises(ValueError, lsh.query, m3)
 
     def test_pickle(self):
         lsh = MinHashLSH(threshold=0.5, num_perm=16)
         m1 = MinHash(16)
-        m1.digest(sha1("a".encode("utf8")))
+        m1.update("a".encode("utf8"))
         m2 = MinHash(16)
-        m2.digest(sha1("b".encode("utf8")))
+        m2.update("b".encode("utf8"))
         lsh.insert("a", m1)
         lsh.insert("b", m2)
         lsh2 = pickle.loads(pickle.dumps(lsh))
@@ -69,7 +69,7 @@ class TestMinHashLSH(unittest.TestCase):
 
 
 class TestWeightedMinHashLSH(unittest.TestCase):
-    
+
     def test_init(self):
         lsh = WeightedMinHashLSH(threshold=0.8)
         self.assertTrue(lsh.is_empty())
@@ -109,7 +109,7 @@ class TestWeightedMinHashLSH(unittest.TestCase):
         self.assertTrue("a" in result)
         result = lsh.query(m2)
         self.assertTrue("b" in result)
-        
+
         mg = WeightedMinHashGenerator(10, 5)
         m3 = mg.minhash(np.random.uniform(1, 10, 10))
         self.assertRaises(ValueError, lsh.query, m3)
@@ -127,3 +127,5 @@ class TestWeightedMinHashLSH(unittest.TestCase):
         result = lsh.query(m2)
         self.assertTrue("b" in result)
 
+if __name__ == "__main__":
+    unittest.main()

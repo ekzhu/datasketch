@@ -25,7 +25,7 @@ class TestWeightedMinHashGenerator(unittest.TestCase):
     def test_minhash(self):
         mg = WeightedMinHashGenerator(2, 4, 1)
         m = mg.minhash([1,3])
-        self.assertIsInstance(m, WeightedMinHash) 
+        self.assertIsInstance(m, WeightedMinHash)
         self.assertEqual(len(m.hashvalues), 4)
         self.assertEqual(len(m), 4)
 

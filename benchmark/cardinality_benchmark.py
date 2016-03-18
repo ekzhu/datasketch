@@ -1,7 +1,7 @@
 import time, logging, random, struct
 import pyhash
 from datasketch.hyperloglog import HyperLogLog
-from datasketch.minhash import MinHash, jaccard
+from datasketch.minhash import MinHash
 
 logging.basicConfig(level=logging.INFO)
 
@@ -19,16 +19,16 @@ def _gen_data(size):
 
 def _run_hyperloglog(data, seed, p):
     hasher = pyhash.murmur3_32()
-    h = HyperLogLog(p=p)
+    h = HyperLogLog(p=p, hashobj=Hash)
     for d in data:
-        h.digest(Hash(hasher(d, seed=seed)))
+        h.update(hasher(d, seed=seed))
     return h.count()
 
 def _run_minhash(data, seed, p):
     hasher = pyhash.murmur3_32()
-    m = MinHash(num_perm=2**p)
+    m = MinHash(num_perm=2**p, hashobj=Hash)
     for d in data:
-        m.digest(Hash(hasher(d, seed=seed)))
+        m.update(hasher(d, seed=seed))
     return m.count()
 
 def _run_test(data, n, p):

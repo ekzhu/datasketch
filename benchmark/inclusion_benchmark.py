@@ -9,7 +9,7 @@ inclusion-exclusion principle, and the exact cardinality.
 import time, logging, random, struct
 import pyhash
 from datasketch.hyperloglog import HyperLogLog
-from datasketch.minhash import MinHash, jaccard
+from datasketch.minhash import MinHash
 
 logging.basicConfig(level=logging.INFO)
 
@@ -31,12 +31,12 @@ def _get_exact(A, B):
     overlap = min(a_end, b_end) - max(a_start, b_start)
     if overlap < 0:
         overlap = 0
-    return float(overlap) / abs(a_start - a_end) 
+    return float(overlap) / abs(a_start - a_end)
 
 def _minhash_inclusion(m1, m2):
     c1 = m1.count()
     c2 = m2.count()
-    j = jaccard(m1, m2)
+    j = m1.jaccard(m2)
     return (j / (j + 1.0)) * (1.0 + float(c2) / float(c1))
 
 def _hyperloglog_inclusion(h1, h2):
@@ -51,23 +51,23 @@ def _hyperloglog_inclusion(h1, h2):
 def _run_hyperloglog(A, B, data, seed, p):
     (a_start, a_end), (b_start, b_end) = A, B
     hasher = pyhash.murmur3_32()
-    h1 = HyperLogLog(p=p)
-    h2 = HyperLogLog(p=p)
+    h1 = HyperLogLog(p=p, hashobj=Hash)
+    h2 = HyperLogLog(p=p, hashobj=Hash)
     for i in xrange(a_start, a_end):
-        h1.digest(Hash(hasher(data[i], seed=seed)))
+        h1.update(hasher(data[i], seed=seed))
     for i in xrange(b_start, b_end):
-        h2.digest(Hash(hasher(data[i], seed=seed)))
+        h2.update(hasher(data[i], seed=seed))
     return _hyperloglog_inclusion(h1, h2)
 
 def _run_minhash(A, B, data, seed, p):
     (a_start, a_end), (b_start, b_end) = A, B
     hasher = pyhash.murmur3_32()
-    m1 = MinHash(num_perm=2**p)
-    m2 = MinHash(num_perm=2**p)
+    m1 = MinHash(num_perm=2**p, hashobj=Hash)
+    m2 = MinHash(num_perm=2**p, hashobj=Hash)
     for i in xrange(a_start, a_end):
-        m1.digest(Hash(hasher(data[i], seed=seed)))
+        m1.update(hasher(data[i], seed=seed))
     for i in xrange(b_start, b_end):
-        m2.digest(Hash(hasher(data[i], seed=seed)))
+        m2.update(hasher(data[i], seed=seed))
     return _minhash_inclusion(m1, m2)
 
 def _run_test(A, B, data, n, p):

@@ -10,7 +10,8 @@ https://github.com/svpcom/hyperloglog
 with enhanced functionalities for serialization and similarities.
 '''
 
-import struct
+import struct, copy
+from hashlib import sha1
 import numpy as np
 try:
     from .hyperloglog_const import _thresholds, _raw_estimate, _bias
@@ -31,7 +32,7 @@ class HyperLogLog(object):
     The HyperLogLog class.
     '''
 
-    __slots__ = ('p', 'm', 'reg', 'alpha', 'max_rank')
+    __slots__ = ('p', 'm', 'reg', 'alpha', 'max_rank', 'hashobj')
 
     # The range of the hash values used for HyperLogLog
     _hash_range_bit = 32
@@ -49,7 +50,7 @@ class HyperLogLog(object):
             return 0.709
         return 0.7213 / (1.0 + 1.079 / (1 << p))
 
-    def __init__(self, p=8, reg=None):
+    def __init__(self, p=8, reg=None, hashobj=sha1):
         '''
         Create a HyperLogLog with precision parameter `p` and (optionally) a
         register vector `reg`. If `reg` is specified, the constructor will
@@ -74,8 +75,27 @@ class HyperLogLog(object):
             # reasonable counter values, so we don't check for every values.
             self.reg = reg
         # Common settings
+        self.hashobj = hashobj
         self.alpha = self._get_alpha(self.p)
         self.max_rank = self._hash_range_bit - self.p
+
+    def __len__(self):
+        '''
+        Get the size of the HyperLogLog.
+        '''
+        return len(self.reg)
+
+    def __eq__(self, other):
+        '''
+        Check equivalence between two HyperLogLogs
+        '''
+        if self.p != other.p:
+            return False
+        if self.m != other.m:
+            return False
+        if not np.array_equal(self.reg, other.reg):
+            return False
+        return True
 
     def is_empty(self):
         '''
@@ -86,6 +106,18 @@ class HyperLogLog(object):
             return False
         return True
 
+    def clear(self):
+        '''
+        Reset the current HyperLogLog.
+        '''
+        self.reg = np.zeros((self.m,), dtype=np.int8)
+
+    def copy(self):
+        '''
+        Create a copy of the current HyperLogLog by exporting its state.
+        '''
+        return HyperLogLog(reg=self.digest())
+
     def _get_rank(self, bits):
         rank = self.max_rank - _bit_length(bits) + 1
         if rank <= 0:
@@ -93,21 +125,25 @@ class HyperLogLog(object):
                     bits" % self.max_rank)
         return rank
 
-    def digest(self, hashobj):
+    def update(self, b):
         '''
-        Digest a hash object that implemented `digest` as in hashlib.
-        The `digest` function of the hashobj must return at least same
-        number of bytes as the hash range (in bytes).
+        Update the HyperLogLog with a new data value in bytes.
         '''
         # Digest the hash object to get the hash value
-        hv = struct.unpack(self._struct_fmt_str, 
-                hashobj.digest()[:self._hash_range_byte])[0]
+        hv = struct.unpack(self._struct_fmt_str,
+                self.hashobj(b).digest()[:self._hash_range_byte])[0]
         # Get the index of the register using the first p bits of the hash
         reg_index = hv & (self.m - 1)
         # Get the rest of the hash
         bits = hv >> self.p
         # Update the register
         self.reg[reg_index] = max(self.reg[reg_index], self._get_rank(bits))
+
+    def digest(self, hashobj):
+        '''
+        Return the current register.
+        '''
+        return copy.copy(self.reg)
 
     def merge(self, other):
         '''
@@ -140,7 +176,7 @@ class HyperLogLog(object):
             return e
         # Large range correction
         return self._largerange_correction(e)
-    
+
     @classmethod
     def union(cls, *hyperloglogs):
         '''
@@ -156,18 +192,6 @@ class HyperLogLog(object):
         reg = np.maximum.reduce([h.reg for h in hyperloglogs])
         h = cls(reg=reg)
         return h
-
-    def __eq__(self, other):
-        '''
-        Check equivalence between two HyperLogLogs
-        '''
-        if self.p != other.p:
-            return False
-        if self.m != other.m:
-            return False
-        if not np.array_equal(self.reg, other.reg):
-            return False
-        return True
 
     def bytesize(self):
         '''
@@ -207,10 +231,10 @@ class HyperLogLog(object):
         h = cls(p)
         offset = size
         try:
-            h.reg = np.array(struct.unpack_from('%dB' % h.m, 
+            h.reg = np.array(struct.unpack_from('%dB' % h.m,
                 buf, offset), dtype=np.int8)
         except TypeError:
-            h.reg = np.array(struct.unpack_from('%dB' % h.m, 
+            h.reg = np.array(struct.unpack_from('%dB' % h.m,
                 buffer(buf), offset), dtype=np.int8)
         return h
 
@@ -240,10 +264,10 @@ class HyperLogLog(object):
         self.__init__(p=p)
         offset = size
         try:
-            self.reg = np.array(struct.unpack_from('%dB' % self.m, 
+            self.reg = np.array(struct.unpack_from('%dB' % self.m,
                 buf, offset), dtype=np.int8)
         except TypeError:
-            self.reg = np.array(struct.unpack_from('%dB' % self.m, 
+            self.reg = np.array(struct.unpack_from('%dB' % self.m,
                 buffer(buf), offset), dtype=np.int8)
 
 
@@ -256,7 +280,7 @@ class HyperLogLogPlusPlus(HyperLogLog):
     2) A new small-cardinality estimation scheme
     3) Sparse representation (not implemented here)
     '''
-    
+
     _hash_range_bit = 64
     _hash_range_byte = 8
     _struct_fmt_str = '<Q'
