@@ -99,6 +99,12 @@ class MinHashLSH(object):
     def _H(self, hs):
         return "".join("%.8x" % h for h in hs)
 
+    def __contains__(self, key):
+        '''
+        Return True only if the key exists in the index.
+        '''
+        return key in self.keys
+
     def insert(self, key, minhash):
         '''
         Insert a unique `key` to the index, together
@@ -133,9 +139,9 @@ class MinHashLSH(object):
                     candidates.add(key)
         return list(candidates)
 
-    def delete(self, key):
+    def remove(self, key):
         '''
-        Delete the key from the index.
+        Remove the key from the index.
         '''
         if key not in self.keys:
             raise ValueError("The given key does not exist")

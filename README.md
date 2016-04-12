@@ -172,9 +172,16 @@ lsh = MinHashLSH(threshold=0.5, num_perm=128)
 lsh.insert("m2", m2)
 lsh.insert("m3", m3)
 
+# Check for membership using the key
+print("m2" in lsh)
+print("m3" in lsh)
+
 # Using m1 as the query, retrieve the keys of the qualifying datasets
 result = lsh.query(m1)
 print("Candidates with Jaccard similarity > 0.5", result)
+
+# Remove key from lsh
+lsh.remove("m2")
 ```
 
 The Jaccard similarity threshold must be set at initialization, and cannot
