@@ -91,6 +91,7 @@ class MinHashLSH(object):
                 false_positive_weight, false_negative_weight)
         self.hashtables = [dict() for _ in range(self.b)]
         self.hashranges = [(i*self.r, (i+1)*self.r) for i in range(self.b)]
+        self.keys = dict()
 
     def is_empty(self):
         return any(len(t) == 0 for t in self.hashtables)
@@ -100,14 +101,17 @@ class MinHashLSH(object):
 
     def insert(self, key, minhash):
         '''
-        Insert a `key` to the index, together
+        Insert a unique `key` to the index, together
         with a `minhash` of the data referenced by the `key`.
         '''
         if len(minhash) != self.h:
             raise ValueError("Expecting minhash with length %d, got %d"
                     % (self.h, len(minhash)))
-        for (start, end), hashtable in zip(self.hashranges, self.hashtables):
-            H = self._H(minhash.hashvalues[start:end])
+        if key in self.keys:
+            raise ValueError("The given key already exists")
+        self.keys[key] = [self._H(minhash.hashvalues[start:end]) 
+                for start, end in self.hashranges]
+        for H, hashtable in zip(self.keys[key], self.hashtables):
             if H not in hashtable:
                 hashtable[H] = []
             hashtable[H].append(key)
@@ -128,6 +132,18 @@ class MinHashLSH(object):
                 for key in hashtable[H]:
                     candidates.add(key)
         return list(candidates)
+
+    def delete(self, key):
+        '''
+        Delete the key from the index.
+        '''
+        if key not in self.keys:
+            raise ValueError("The given key does not exist")
+        for H, hashtable in zip(self.keys[key], self.hashtables):
+            hashtable[H].remove(key)
+            if len(hashtable[H]) == 0:
+                hashtable.pop(H)
+        self.keys.pop(key)
 
 
 class WeightedMinHashLSH(MinHashLSH):
