@@ -7,6 +7,7 @@ python:
   - "nightly"
 # command to install dependencies
 install:
+    - "pip install numpy==1.11.0"
     - "pip install ."
 # command to run tests
 script: nosetests
