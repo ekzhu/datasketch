@@ -43,7 +43,7 @@ def run_acc(size, num_perm):
     err = abs(j - j_e)
     return err
 
-num_perms = range(10, 160, 10)
+num_perms = range(10, 256, 20)
 output = "minhash_benchmark.png"
 
 logging.info("> Running performance tests")

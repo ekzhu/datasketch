@@ -15,7 +15,6 @@ _mersenne_prime = (1 << 61) - 1
 _max_hash = (1 << 32) - 1
 _hash_range = (1 << 32)
 
-
 class MinHash(object):
     '''
     The MinHash class.
@@ -46,21 +45,29 @@ class MinHash(object):
         self.hashobj = hashobj
         # Initialize hash values
         if hashvalues is not None:
-            self.hashvalues = hashvalues
+            self.hashvalues = self._parse_hashvalues(hashvalues)
         else:
-            self.hashvalues = np.array([_max_hash for _ in range(num_perm)], dtype=np.int)
+            self.hashvalues = self._init_hashvalues(num_perm)
         # Initalize permutation function parameters
         if permutations is not None:
             self.permutations = permutations
         else:
-            generator = np.random.RandomState(seed=self.seed)
+            generator = random.Random()
+            generator.seed(self.seed)
             # Create parameters for a random bijective permutation function
             # that maps a 32-bit hash value to another 32-bit hash value.
             # http://en.wikipedia.org/wiki/Universal_hashing
-            self.permutations = [generator.randint(1, _mersenne_prime, num_perm),
-                                 generator.randint(0, _mersenne_prime, num_perm)]
+            self.permutations = np.array([(generator.randint(1, _mersenne_prime),
+                                           generator.randint(0, _mersenne_prime))
+                                          for _ in range(num_perm)], dtype=np.uint64).T
         if len(self) != len(self.permutations[0]):
             raise ValueError("Numbers of hash values and permutations mismatch")
+
+    def _init_hashvalues(self, num_perm):
+        return np.ones(num_perm, dtype=np.uint64)*_max_hash
+
+    def _parse_hashvalues(self, hashvalues):
+        return np.array(hashvalues, dtype=np.uint64)
 
     def __len__(self):
         '''
@@ -88,7 +95,7 @@ class MinHash(object):
         '''
         Clear the current state of the Minhash.
         '''
-        self.hashvalues = np.array([_max_hash for _ in range(num_perm)], dtype=np.int)
+        self.hashvalues = self._init_hashvalues(len(self))
 
     def copy(self):
         '''
@@ -103,7 +110,7 @@ class MinHash(object):
         '''
         hv = struct.unpack('<I', self.hashobj(b).digest()[:4])[0]
         a, b = self.permutations
-        phv = np.bitwise_and((a * hv + b) % _mersenne_prime, _max_hash)
+        phv = np.bitwise_and((a * hv + b) % _mersenne_prime, np.uint64(_max_hash))
         self.hashvalues = np.minimum(phv, self.hashvalues)
 
     def digest(self):
@@ -156,7 +163,7 @@ class MinHash(object):
         seed_size = struct.calcsize('q')
         # Use 4 bytes to store the number of hash values
         length_size = struct.calcsize('i')
-        # Use 4 bytes to store each hash value as we are using 32 bit
+        # Use 4 bytes to store each hash value as we are using the lower 32 bit
         hashvalue_size = struct.calcsize('I')
         return seed_size + length_size + len(self) * hashvalue_size
 
@@ -185,11 +192,9 @@ class MinHash(object):
             seed, num_perm = struct.unpack_from('qi', buffer(buf), 0)
         offset = struct.calcsize('qi')
         try:
-            hashvalues = np.array(struct.unpack_from('%dI' % num_perm,
-                buf, offset))
+            hashvalues = struct.unpack_from('%dI' % num_perm, buf, offset)
         except TypeError:
-            hashvalues = np.array(struct.unpack_from('%dI' % num_perm,
-                buffer(buf), offset))
+            hashvalues = struct.unpack_from('%dI' % num_perm, buffer(buf), offset)
         return cls(num_perm=num_perm, seed=seed, hashvalues=hashvalues)
 
     def __getstate__(self):
@@ -218,11 +223,9 @@ class MinHash(object):
             seed, num_perm = struct.unpack_from('qi', buffer(buf), 0)
         offset = struct.calcsize('qi')
         try:
-            hashvalues = np.array(struct.unpack_from('%dI' % num_perm,
-                buf, offset))
+            hashvalues = struct.unpack_from('%dI' % num_perm, buf, offset)
         except TypeError:
-            hashvalues = np.array(struct.unpack_from('%dI' % num_perm,
-                buffer(buf), offset))
+            hashvalues = struct.unpack_from('%dI' % num_perm, buffer(buf), offset)
         self.__init__(num_perm=num_perm, seed=seed, hashvalues=hashvalues)
 
     @classmethod
