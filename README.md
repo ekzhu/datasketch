@@ -23,7 +23,7 @@ sub-linear query time:
 | MinHash LSH            | MinHash          | Radius (Threshold)   |
 | Weighted MinHash LSH   | Weighted MinHash | Radius (Threshold)   |
 
-datasketch must be used with Python 2.7 or above and NumPy.
+datasketch must be used with Python 2.7 or above and NumPy 1.11 or above.
 Scipy is optional, but with it the LSH initialization can be much faster.
 
 ## Install
@@ -33,17 +33,6 @@ To install datasketch using `pip`:
     pip install datasketch -U
 
 This will also install NumPy as dependency.
-
-## Change Log
-
-Version 0.2.0
-- Add Weighted MinHash data sketch
-- Add Weighted MinHash LSH index
-- Performance and accuracy benchmark for Weighted MinHash
-- Rename `digest` to `update` for `MinHash` and `HyperLogLog`, and use bytes
-as input argument.
-- Make `hashobj` customizable through constractors
-- Added new methods for data sketches
 
 ## MinHash
 
