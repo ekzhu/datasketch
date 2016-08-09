@@ -18,7 +18,7 @@ def get_newsgroup_data(num_perm, subset):
     print("Downloading 20 News Group Text Data...")
     newsgroup = fetch_20newsgroups(subset=subset,
             #categories=["sci.space"],
-            remove=("header", "footers", "quotes"))
+            remove=("headers", "footers", "quotes"))
     print("Finished download, creating MinHash...")
     minhashes = [None for _ in range(len(newsgroup.data))]
     shingles = [None for _ in range(len(newsgroup.data))]
@@ -66,7 +66,7 @@ def benchmark_linearscan(threshold, index_data, query_data):
     return times, results
 
 
-def benchmark_groud_truth(threshold, index_data, query_data):
+def benchmark_ground_truth(threshold, index_data, query_data):
     times = []
     results = []
     for q in query_data.shingles:
@@ -82,6 +82,7 @@ def benchmark_groud_truth(threshold, index_data, query_data):
                 result.append(key)
         duration = time.clock() - start
         results.append(result)
+        times.append(duration)
     return times, results
 
 
@@ -112,7 +113,7 @@ if __name__ == "__main__":
 
     print("Running ground truth benchmark")
     output["ground_truth_times"], output["ground_truth_results"] =\
-            benchmark_groud_truth(0.5, index_data, query_data)
+            benchmark_ground_truth(0.5, index_data, query_data)
 
     average_cardinality = np.mean([len(s) for s in
         index_data.shingles + query_data.shingles])
