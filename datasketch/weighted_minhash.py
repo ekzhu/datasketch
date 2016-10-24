@@ -88,8 +88,13 @@ class WeightedMinHashGenerator(object):
         if not isinstance(v, np.ndarray):
             v = np.array(v)
         hashvalues = np.zeros((self.sample_size, 2), dtype=np.int)
+        vzeros = (v == 0)
+        if vzeros.all():
+            raise ValueError("Input is all zeros")
+        v[vzeros] = np.nan
+        vlog = np.log(v)
         for i in range(self.sample_size):
-            t = np.floor((np.log(v) / self.rs[i]) + self.betas[i])
+            t = np.floor((vlog / self.rs[i]) + self.betas[i])
             ln_y = (t - self.betas[i]) * self.rs[i]
             ln_a = self.ln_cs[i] - ln_y - self.rs[i]
             k = np.argmin(ln_a)
