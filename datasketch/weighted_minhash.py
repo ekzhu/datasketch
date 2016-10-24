@@ -86,7 +86,9 @@ class WeightedMinHashGenerator(object):
         if not len(v) == self.dim:
             raise ValueError("Input dimension mismatch, expecting %d" % self.dim)
         if not isinstance(v, np.ndarray):
-            v = np.array(v)
+            v = np.array(v, dtype=np.float32)
+        elif v.dtype != np.float32:
+            v = v.astype(np.float32)
         hashvalues = np.zeros((self.sample_size, 2), dtype=np.int)
         vzeros = (v == 0)
         if vzeros.all():
