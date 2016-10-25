@@ -99,7 +99,7 @@ class WeightedMinHashGenerator(object):
             t = np.floor((vlog / self.rs[i]) + self.betas[i])
             ln_y = (t - self.betas[i]) * self.rs[i]
             ln_a = self.ln_cs[i] - ln_y - self.rs[i]
-            k = np.argmin(ln_a)
+            k = np.nanargmin(ln_a)
             hashvalues[i][0], hashvalues[i][1] = k, int(t[k])
         return WeightedMinHash(self.seed, hashvalues)
 
