@@ -97,7 +97,7 @@ class MinHashLSH(object):
         return any(len(t) == 0 for t in self.hashtables)
 
     def _H(self, hs):
-        return "".join("%.8x" % h for h in hs)
+        return bytes(hs.byteswap().data)
 
     def __contains__(self, key):
         '''
@@ -173,7 +173,3 @@ class WeightedMinHashLSH(MinHashLSH):
         (false_positive_weight, false_negative_weight).
         '''
         super(WeightedMinHashLSH, self).__init__(threshold, sample_size, weights)
-
-    def _H(self, hs):
-        return "".join("%.4x-%.4x" % (k, t) for (k, t) in hs)
-
