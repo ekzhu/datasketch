@@ -4,6 +4,7 @@ Improved Consistent Sampling, Weighted Minhash and L1 Sketching,
 http://static.googleusercontent.com/media/research.google.com/en//pubs/archive/36928.pdf
 '''
 import collections
+import copy
 import numpy as np
 
 
