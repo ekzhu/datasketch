@@ -73,9 +73,9 @@ class WeightedMinHashGenerator(object):
         self.sample_size = sample_size
         self.seed = seed
         generator = np.random.RandomState(seed=seed)
-        self.rs = generator.gamma(2, 1, (sample_size, dim))
-        self.ln_cs = np.log(generator.gamma(2, 1, (sample_size, dim)))
-        self.betas = generator.uniform(0, 1, (sample_size, dim))
+        self.rs = generator.gamma(2, 1, (sample_size, dim)).astype(np.float32)
+        self.ln_cs = np.log(generator.gamma(2, 1, (sample_size, dim))).astype(np.float32)
+        self.betas = generator.uniform(0, 1, (sample_size, dim)).astype(np.float32)
 
     def minhash(self, v):
         '''
