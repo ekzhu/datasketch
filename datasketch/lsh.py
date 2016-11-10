@@ -6,6 +6,7 @@ Both indexes supports query with Jaccard similarity threshold.
 Reference: Chapter 3, Mining of Massive Datasets 
 (http://www.mmds.org/)
 '''
+from collections import defaultdict
 
 
 _integration_precision = 0.001
@@ -89,7 +90,7 @@ class MinHashLSH(object):
         false_positive_weight, false_negative_weight = weights
         self.b, self.r = _optimal_param(threshold, num_perm,
                 false_positive_weight, false_negative_weight)
-        self.hashtables = [dict() for _ in range(self.b)]
+        self.hashtables = [defaultdict(list) for _ in range(self.b)]
         self.hashranges = [(i*self.r, (i+1)*self.r) for i in range(self.b)]
         self.keys = dict()
 
@@ -118,8 +119,6 @@ class MinHashLSH(object):
         self.keys[key] = [self._H(minhash.hashvalues[start:end]) 
                 for start, end in self.hashranges]
         for H, hashtable in zip(self.keys[key], self.hashtables):
-            if H not in hashtable:
-                hashtable[H] = []
             hashtable[H].append(key)
 
     def query(self, minhash):
@@ -147,8 +146,8 @@ class MinHashLSH(object):
             raise ValueError("The given key does not exist")
         for H, hashtable in zip(self.keys[key], self.hashtables):
             hashtable[H].remove(key)
-            if len(hashtable[H]) == 0:
-                hashtable.pop(H)
+            if not hashtable[H]:
+                del hashtable[H]
         self.keys.pop(key)
 
 
