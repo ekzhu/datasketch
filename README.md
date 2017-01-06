@@ -3,6 +3,7 @@
 [![Build Status](https://travis-ci.org/ekzhu/datasketch.svg?branch=master)](https://travis-ci.org/ekzhu/datasketch)
 
 datasketch gives you probabilistic data structures that can process
+and search
 vary large amount of data super fast, with little loss of accuracy.
 
 This package contains the following data sketches:
@@ -41,7 +42,7 @@ This will also install NumPy as dependency.
 MinHash lets you estimate the
 [Jaccard similarity](https://en.wikipedia.org/wiki/Jaccard_index)
 (resemblance)
-between sets of
+between [**sets**](https://en.wikipedia.org/wiki/Set_(mathematics)) of
 arbitrary sizes in linear time using a small and fixed memory space.
 It can also be used to compute Jaccard similarity between data streams.
 MinHash is introduced by Andrei Z. Broder in this
@@ -103,19 +104,20 @@ m.count()
 
 ## MinHash LSH
 
-Suppose you have a very large collection of datasets. Giving a query, which
-is also a dataset, you want to find datasets in your collection
+Suppose you have a very large collection of 
+[sets](https://en.wikipedia.org/wiki/Set_(mathematics)). Giving a query, which
+is also a set, you want to find sets in your collection
 that have
 Jaccard similarities above certain threshold,
 and you want to do it with many other queries.
-To do this efficiently, you can create a MinHash for every dataset,
+To do this efficiently, you can create a MinHash for every set,
 and when a query comes, you
 compute the Jaccard similarities between the query MinHash and all the
-MinHash of your collection, and return the datasets that
+MinHash of your collection, and return the sets that
 satisfy your threshold.
 
 The said approach is still an O(n) algorithm, meaning the query cost
-increases linearly with respect to the number of datasets.
+increases linearly with respect to the number of sets.
 A popular alternative is to use Locality Sensitive Hashing (LSH) index.
 LSH can be used with MinHash to achieve sub-linear query cost - that is
 a huge improvement.
@@ -124,14 +126,14 @@ The details of the algorithm can be found in
 
 This package includes the classic version of MinHash LSH.
 It is important to note that the query does not give you the exact result,
-due to the use of MinHash and LSH. There will be false positives - datasets
+due to the use of MinHash and LSH. There will be false positives - sets
 that do not satisfy your threshold but returned, and false negatives -
-qualifying datasets that are not returned.
-However, the property of LSH assures that datasets with higher Jaccard
-similarities always have higher probabilities to get returned than datasets
+qualifying sets that are not returned.
+However, the property of LSH assures that sets with higher Jaccard
+similarities always have higher probabilities to get returned than sets
 with lower similarities.
 Moreover, LSH can be optimized so that there can be a "jump"
-in probability right at the threshold, making the qualifying datasets much
+in probability right at the threshold, making the qualifying sets much
 more likely to get returned than the rest.
 
 ```python
@@ -286,11 +288,15 @@ forest = MinHashLSHForest(num_perm=250, l=10)
 
 ## Weighted MinHash
 
-MinHash can be used to compress unweighted set or binary vector, and estimate
-unweighted Jaccard similarity.
+MinHash can be used to compress unweighted 
+[set](https://en.wikipedia.org/wiki/Set_(mathematics)) 
+or binary vector, and estimate the
+[unweighted Jaccard similarity](https://en.wikipedia.org/wiki/Jaccard_index).
 It is possible to modify MinHash for
-[weighted Jaccard](https://en.wikipedia.org/wiki/Jaccard_index#Generalized_Jaccard_similarity_and_distance)
-by expanding each item (or dimension) by its weight.
+[weighted Jaccard](https://en.wikipedia.org/wiki/Jaccard_index#Generalized_Jaccard_similarity_and_distance) on 
+[**multisets**](https://en.wikipedia.org/wiki/Multiset)
+by expanding each item (or dimension) by its weight
+(usually its count in the multiset).
 However this approach does not support real number weights, and
 doing so can be very expensive if the weights are very large.
 [Weighted MinHash](http://static.googleusercontent.com/media/research.google.com/en//pubs/archive/36928.pdf)
