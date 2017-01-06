@@ -245,6 +245,7 @@ for d in data2:
 for d in data3:
 	m3.update(d.encode('utf8'))
 
+# Create a MinHash LSH Forest with the same num_perm parameter
 forest = MinHashLSHForest(num_perm=128)
 
 # Add m2 and m3 into the index
@@ -261,6 +262,26 @@ print("m3" in forest)
 # Using m1 as the query, retrieve top 2 keys that have the higest Jaccard
 result = forest.query(m1, 2)
 print("Top 2 candidates", result)
+```
+
+(Optional) If you have read the LSH Forest 
+[paper](http://ilpubs.stanford.edu:8090/678/1/2005-14.pdf),
+and understand the data structure, you may want to customize another 
+parameter for `MinHashLSHForest` - `l`, the number of prefix trees 
+(or "LSH Trees" as in the paper) in the LSH Forest index.
+Different from the paper, I choose to fix the number of LSH functions,
+in this case `num_perm`, and make the maximum depth of every prefix 
+tree dependent on `num_perm` and `l`:
+```python
+# The maximum depth of a prefix tree depends on num_perm and l
+k = int(num_perm / l)
+```
+This way the interface of the `MinHashLSHForest` is in coherent with
+the interface of `MinHash`.
+
+```python
+# There is another optional parameter l (default l=8).
+forest = MinHashLSHForest(num_perm=250, l=10)
 ```
 
 ## Weighted MinHash
@@ -360,6 +381,12 @@ lsh = WeightedMinHashLSH(weights=(0.4, 0.6))
 
 ## Weighted MinHash LSH Forest
 
+You can use the `WeightedMinHashLSHForest` exactly the same way as `MinHashLSHForest`.
+
+```python
+# Default parameters
+forest = WeightedMinHashLSHForest(num_perm=128, l=8)
+```
 
 ## b-Bit MinHash
 

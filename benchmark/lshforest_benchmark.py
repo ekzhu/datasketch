@@ -6,10 +6,10 @@ from datasketch import MinHashLSHForest, MinHash
 from lsh_benchmark import get_newsgroup_data 
 
 
-def benchmark_lshforest(r, k, index_data, query_data):
+def benchmark_lshforest(l, k, index_data, query_data):
     print("Building LSH Forest index")
     num_perm = len(index_data.minhashes[0].hashvalues)
-    forest = MinHashLSHForest(num_perm=num_perm, r=r)
+    forest = MinHashLSHForest(num_perm=num_perm, l=l)
     for key, minhash in zip(index_data.filenames, index_data.minhashes):
         forest.add(key, minhash)
     forest.index()
@@ -68,10 +68,10 @@ if __name__ == "__main__":
     args = parser.parse_args(sys.argv[1:])
 
     num_perms = [32, 64, 96, 128, 160, 192, 224, 256]
-    r = 4
+    l = 8
     k = 5
     output = {"num_perms" : num_perms,
-              "r" : r,
+              "l" : l,
               "k" : k,
               "lsh_times" : [], "lsh_results" : [],
               "linearscan_times" : [], "linearscan_results" : [],
@@ -82,10 +82,10 @@ if __name__ == "__main__":
         index_data = get_newsgroup_data(num_perm, "train")
         query_data = get_newsgroup_data(num_perm, "test")
         result = {}
+        print("Running LSH benchmark l = %d" % l)
+        lsh_times, lsh_results = benchmark_lshforest(l, k, index_data, query_data)
         print("Running linear scan benchmark")
         linearscan_times, linearscan_results = benchmark_linearscan(k, index_data, query_data)
-        print("Running LSH benchmark r = %d b = %d" % (r, b))
-        lsh_times, lsh_results = benchmark_lshforest(r, k, index_data, query_data)
         output["lsh_times"].append(lsh_times)
         output["lsh_results"].append(lsh_results)
         output["linearscan_times"].append(linearscan_times)

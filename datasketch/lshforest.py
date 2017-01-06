@@ -18,29 +18,25 @@ class MinHashLSHForest(object):
     Each hash table is a sorted array of the hash values.
     '''
 
-    def __init__(self, num_perm=128, r=4):
+    def __init__(self, num_perm=128, l=8):
         '''
         Creates an empty `MinHashLSHForest` object that accepts
-        MinHash objects with a`num_perm` number of permutation functions. 
-        `r` can be seen as a parameter for the relative importance of 
-        top-1 precision with respect to recall.
-        Increasing `r` will lead to increasing precision but decreasing recall 
-        especially for the top-k queries when k is small.
-        On the other hand decreasing `r` will lead to decreasing precision
-        but increasing recall.
+        MinHash objects with `num_perm` number of permutation functions. 
+        `l` is the number of prefix trees as described in the paper.
         '''
-        if r <= 0 or num_perm <= 0:
-            raise ValueError("num_perm and r must be positive")
-        if r > num_perm:
-            raise ValueError("r cannot be greater than num_perm")
-        self.r = r
-        self.b = int(num_perm / r)
-        self.hashtables = [defaultdict(list) for _ in range(self.b)]
-        self.hashranges = [(i*self.r, (i+1)*self.r) for i in range(self.b)]
+        if l <= 0 or num_perm <= 0:
+            raise ValueError("num_perm and l must be positive")
+        if l > num_perm:
+            raise ValueError("l cannot be greater than num_perm")
+        # Number of prefix trees
+        self.l = l
+        # Maximum depth of the prefix tree
+        self.k = int(num_perm / l)
+        self.hashtables = [defaultdict(list) for _ in range(self.l)]
+        self.hashranges = [(i*self.k, (i+1)*self.k) for i in range(self.l)]
         self.keys = dict()
-        # This is the all the sorted concatenated hash values (bands) for
-        # all bands.
-        self.sorted_hashtables = [[] for _ in range(self.b)]
+        # This is the sorted array implementation for the prefix trees
+        self.sorted_hashtables = [[] for _ in range(self.l)]
 
     def is_empty(self):
         '''
@@ -64,7 +60,7 @@ class MinHashLSHForest(object):
         with a `minhash` of the data referenced by the `key`.
         The key won't be searchbale until `index` method is called.
         '''
-        if len(minhash) < self.r*self.b:
+        if len(minhash) < self.k*self.l:
             raise ValueError("The num_perm of MinHash out of range")
         if key in self.keys:
             raise ValueError("The given key has already been added")
@@ -82,7 +78,7 @@ class MinHashLSHForest(object):
             self.sorted_hashtables[i].sort()
 
     def _query(self, minhash, r, b):
-        if r > self.r or r <=0 or b > self.b or b <= 0:
+        if r > self.k or r <=0 or b > self.l or b <= 0:
             raise ValueError("parameter outside range")
         # Generate prefixes of concatenated hash values
         hps = [self._H(minhash.hashvalues[start:start+r]) 
@@ -90,9 +86,9 @@ class MinHashLSHForest(object):
         # Caculate the string length of each original hash value
         prefix_size = hashvalue_byte_size * r
         for ht, hp, hashtable in zip(self.sorted_hashtables, hps, self.hashtables):
-            k = self._binary_search(len(ht), lambda x : ht[x][:prefix_size] >= hp)
-            if k < len(ht) and ht[k][:prefix_size] == hp:
-                j = k
+            i = self._binary_search(len(ht), lambda x : ht[x][:prefix_size] >= hp)
+            if i < len(ht) and ht[i][:prefix_size] == hp:
+                j = i
                 while j < len(ht) and ht[j][:prefix_size] == hp:
                     for key in hashtable[ht[j]]:
                         yield key
@@ -106,12 +102,12 @@ class MinHashLSHForest(object):
         '''
         if k <= 0:
             raise ValueError("k must be positive")
-        if len(minhash) < self.r*self.b:
+        if len(minhash) < self.k*self.l:
             raise ValueError("The num_perm of MinHash out of range")
         results = set()
-        r = self.r
+        r = self.k
         while r > 0: 
-            for key in self._query(minhash, r, self.b):
+            for key in self._query(minhash, r, self.l):
                 results.add(key)
                 if len(results) >= k:
                     break
@@ -138,5 +134,5 @@ class WeightedMinHashLSHForest(MinHashLSHForest):
     Each hash table is a sorted array of the hash values.
     '''
 
-    def __init__(self, num_perm=128, r=4):
-        super(WeightedMinHashLSHForest, self).__init__(num_perm, r) 
+    def __init__(self, num_perm=128, l=8):
+        super(WeightedMinHashLSHForest, self).__init__(num_perm, l) 
