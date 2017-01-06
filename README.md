@@ -276,7 +276,7 @@ tree dependent on `num_perm` and `l`:
 # The maximum depth of a prefix tree depends on num_perm and l
 k = int(num_perm / l)
 ```
-This way the interface of the `MinHashLSHForest` is in coherent with
+This way the interface of the `MinHashLSHForest` is in coherence with
 the interface of `MinHash`.
 
 ```python
