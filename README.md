@@ -18,10 +18,12 @@ This package contains the following data sketches:
 The following indexes for data sketches are provided to support
 sub-linear query time:
 
-| Index                  | For Data Sketch  | Supported Query Type |
-|------------------------|------------------|----------------------|
-| MinHash LSH            | MinHash          | Radius (Threshold)   |
-| Weighted MinHash LSH   | Weighted MinHash | Radius (Threshold)   |
+| Index                       | For Data Sketch  | Supported Query Type |
+|-----------------------------|------------------|----------------------|
+| MinHash LSH                 | MinHash          | Radius (Threshold)   |
+| Weighted MinHash LSH        | Weighted MinHash | Radius (Threshold)   |
+| MinHash LSH Forest          | MinHash          | Top-K                |
+| Weighted MinHash LSH Forest | Weighted MinHash | Top-K                |
 
 datasketch must be used with Python 2.7 or above and NumPy 1.11 or above.
 Scipy is optional, but with it the LSH initialization can be much faster.
@@ -206,6 +208,61 @@ lsh = MinHashLSH()
 lsh = MinHashLSH(weights=(0.4, 0.6))
 ```
 
+## MinHash LSH Forest 
+
+MinHash LSH is useful for radius (or threshold) queries. However, **top-k** queries
+are often more useful in some cases.
+[LSH Forest](http://ilpubs.stanford.edu:8090/678/1/2005-14.pdf)
+by Bawa et al. is a general LSH data structure that makes top-k query possible 
+for many different types of LSH indexes, which include MinHash LSH.
+I implemented the MinHash LSH Forest, which takes a MinHash data sketch of the query
+set,
+and returns the top-k matching sets that have the highest Jaccard similarities with the
+query set.
+
+The interface of `MinHashLSHForest` is similar to `MinHashLSH`, however, it is very
+important to call `index` method after adding the keys. Without calling the `index`
+method, the keys won't be searchable.
+
+```python
+from datasketch import MinHashLSHForest, MinHash
+
+data1 = ['minhash', 'is', 'a', 'probabilistic', 'data', 'structure', 'for',
+        'estimating', 'the', 'similarity', 'between', 'datasets']
+data2 = ['minhash', 'is', 'a', 'probability', 'data', 'structure', 'for',
+        'estimating', 'the', 'similarity', 'between', 'documents']
+data3 = ['minhash', 'is', 'probability', 'data', 'structure', 'for',
+        'estimating', 'the', 'similarity', 'between', 'documents']
+
+# Create MinHash objects
+m1 = MinHash(num_perm=128)
+m2 = MinHash(num_perm=128)
+m3 = MinHash(num_perm=128)
+for d in data1:
+	m1.update(d.encode('utf8'))
+for d in data2:
+	m2.update(d.encode('utf8'))
+for d in data3:
+	m3.update(d.encode('utf8'))
+
+forest = MinHashLSHForest(num_perm=128)
+
+# Add m2 and m3 into the index
+forest.add("m2", m2)
+forest.add("m3", m3)
+
+# IMPORTANT: must call index() otherwise the keys won't be searchable
+forest.index()
+
+# Check for membership using the key
+print("m2" in forest)
+print("m3" in forest)
+
+# Using m1 as the query, retrieve top 2 keys that have the higest Jaccard
+result = forest.query(m1, 2)
+print("Top 2 candidates", result)
+```
+
 ## Weighted MinHash
 
 MinHash can be used to compress unweighted set or binary vector, and estimate
@@ -264,7 +321,7 @@ of slower speed.
 ![Weighted MinHash Benchmark](https://github.com/ekzhu/datasketch/raw/master/plots/weighted_minhash_benchmark.png)
 
 
-## Weighted MinHash LSH
+## Weighted MinHash LSH 
 
 The `WeightedMinHashLSH` index can be used to index `WeightedMinHash`.
 It has the same `insert` and `query` interface as `MinHashLSH`.
@@ -300,6 +357,8 @@ lsh = WeightedMinHashLSH()
 # Fine-tuning the weights for false positives and negatives
 lsh = WeightedMinHashLSH(weights=(0.4, 0.6))
 ```
+
+## Weighted MinHash LSH Forest
 
 
 ## b-Bit MinHash

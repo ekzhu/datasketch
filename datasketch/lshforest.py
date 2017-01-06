@@ -18,19 +18,23 @@ class MinHashLSHForest(object):
     Each hash table is a sorted array of the hash values.
     '''
 
-    def __init__(self, r=4, b=32):
+    def __init__(self, num_perm=128, r=4):
         '''
         Creates an empty `MinHashLSHForest` object that accepts
-        two parameters `r` and `b`.
-        `b` is the number of bands used in LSH and `r` is the 
-        number of hash values concatenated to form a band.
-        The product ot `r` and `b` must equal to the `num_perm`
-        parameter of the `MinHash` objects used.
+        MinHash objects with a`num_perm` number of permutation functions. 
+        `r` can be seen as a parameter for the relative importance of 
+        top-1 precision with respect to recall.
+        Increasing `r` will lead to increasing precision but decreasing recall 
+        especially for the top-k queries when k is small.
+        On the other hand decreasing `r` will lead to decreasing precision
+        but increasing recall.
         '''
-        if r <= 0 or b <= 0:
-            raise ValueError("r and b must be positive")
+        if r <= 0 or num_perm <= 0:
+            raise ValueError("num_perm and r must be positive")
+        if r > num_perm:
+            raise ValueError("r cannot be greater than num_perm")
         self.r = r
-        self.b = b
+        self.b = int(num_perm / r)
         self.hashtables = [defaultdict(list) for _ in range(self.b)]
         self.hashranges = [(i*self.r, (i+1)*self.r) for i in range(self.b)]
         self.keys = dict()
@@ -60,8 +64,8 @@ class MinHashLSHForest(object):
         with a `minhash` of the data referenced by the `key`.
         The key won't be searchbale until `index` method is called.
         '''
-        if len(minhash) != self.r*self.b:
-            raise ValueError("The num_perm of MinHash must equal to the product of r and b")
+        if len(minhash) < self.r*self.b:
+            raise ValueError("The num_perm of MinHash out of range")
         if key in self.keys:
             raise ValueError("The given key has already been added")
         self.keys[key] = [self._H(minhash.hashvalues[start:end]) 
@@ -102,8 +106,8 @@ class MinHashLSHForest(object):
         '''
         if k <= 0:
             raise ValueError("k must be positive")
-        if len(minhash) != self.r*self.b:
-            raise ValueError("The num_perm of MinHash must equal to the product of r and b")
+        if len(minhash) < self.r*self.b:
+            raise ValueError("The num_perm of MinHash out of range")
         results = set()
         r = self.r
         while r > 0: 
@@ -120,9 +124,19 @@ class MinHashLSHForest(object):
         '''
         i, j = 0, n
         while i < j:
-            h = i + (j - i) / 2
+            h = int(i + (j - i) / 2)
             if not func(h):
                 i = h + 1
             else:
                 j = h
         return i
+
+
+class WeightedMinHashLSHForest(MinHashLSHForest):
+    '''
+    The LSH Forests for Weighted MinHash data sketch.
+    Each hash table is a sorted array of the hash values.
+    '''
+
+    def __init__(self, num_perm=128, r=4):
+        super(WeightedMinHashLSHForest, self).__init__(num_perm, r) 

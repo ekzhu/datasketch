@@ -6,10 +6,10 @@ from datasketch import MinHashLSHForest, MinHash
 from lsh_benchmark import get_newsgroup_data 
 
 
-def benchmark_lshforest(b, r, k, index_data, query_data):
+def benchmark_lshforest(r, k, index_data, query_data):
     print("Building LSH Forest index")
     num_perm = len(index_data.minhashes[0].hashvalues)
-    forest = MinHashLSHForest(r, b)
+    forest = MinHashLSHForest(num_perm=num_perm, r=r)
     for key, minhash in zip(index_data.filenames, index_data.minhashes):
         forest.add(key, minhash)
     forest.index()
@@ -84,14 +84,13 @@ if __name__ == "__main__":
         result = {}
         print("Running linear scan benchmark")
         linearscan_times, linearscan_results = benchmark_linearscan(k, index_data, query_data)
-        b = num_perm / r
         print("Running LSH benchmark r = %d b = %d" % (r, b))
-        lsh_times, lsh_results = benchmark_lshforest(r, b, k, index_data, query_data)
+        lsh_times, lsh_results = benchmark_lshforest(r, k, index_data, query_data)
         output["lsh_times"].append(lsh_times)
         output["lsh_results"].append(lsh_results)
         output["linearscan_times"].append(linearscan_times)
         output["linearscan_results"].append(linearscan_results)
-
+    
     print("Running ground truth benchmark")
     output["ground_truth_times"], output["ground_truth_results"] =\
             benchmark_ground_truth(k, index_data, query_data)
