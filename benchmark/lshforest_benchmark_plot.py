@@ -36,7 +36,7 @@ if __name__ == "__main__":
     # Plot query average MAP vs. num perm
     axes[0].plot(num_perms, linearscan_maps, marker="+", label="Linearscan")
     axes[0].plot(num_perms, lsh_maps, marker="+", label="LSH Forest")
-    axes[0].set_ylabel("Average MAP (k = %d)" % k)
+    axes[0].set_ylabel("MAP (k = %d)" % k)
     axes[0].set_xlabel("# of Permmutation Functions")
     axes[0].grid()
     # Plot query time vs. num perm
