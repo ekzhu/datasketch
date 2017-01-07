@@ -3,6 +3,7 @@
 [![Build Status](https://travis-ci.org/ekzhu/datasketch.svg?branch=master)](https://travis-ci.org/ekzhu/datasketch)
 
 datasketch gives you probabilistic data structures that can process
+and search
 vary large amount of data super fast, with little loss of accuracy.
 
 This package contains the following data sketches:
@@ -18,10 +19,12 @@ This package contains the following data sketches:
 The following indexes for data sketches are provided to support
 sub-linear query time:
 
-| Index                  | For Data Sketch  | Supported Query Type |
-|------------------------|------------------|----------------------|
-| MinHash LSH            | MinHash          | Radius (Threshold)   |
-| Weighted MinHash LSH   | Weighted MinHash | Radius (Threshold)   |
+| Index                       | For Data Sketch  | Supported Query Type |
+|-----------------------------|------------------|----------------------|
+| MinHash LSH                 | MinHash          | Radius (Threshold)   |
+| Weighted MinHash LSH        | Weighted MinHash | Radius (Threshold)   |
+| MinHash LSH Forest          | MinHash          | Top-K                |
+| Weighted MinHash LSH Forest | Weighted MinHash | Top-K                |
 
 datasketch must be used with Python 2.7 or above and NumPy 1.11 or above.
 Scipy is optional, but with it the LSH initialization can be much faster.
@@ -39,7 +42,7 @@ This will also install NumPy as dependency.
 MinHash lets you estimate the
 [Jaccard similarity](https://en.wikipedia.org/wiki/Jaccard_index)
 (resemblance)
-between sets of
+between [**sets**](https://en.wikipedia.org/wiki/Set_(mathematics)) of
 arbitrary sizes in linear time using a small and fixed memory space.
 It can also be used to compute Jaccard similarity between data streams.
 MinHash is introduced by Andrei Z. Broder in this
@@ -101,19 +104,20 @@ m.count()
 
 ## MinHash LSH
 
-Suppose you have a very large collection of datasets. Giving a query, which
-is also a dataset, you want to find datasets in your collection
+Suppose you have a very large collection of 
+[sets](https://en.wikipedia.org/wiki/Set_(mathematics)). Giving a query, which
+is also a set, you want to find sets in your collection
 that have
 Jaccard similarities above certain threshold,
 and you want to do it with many other queries.
-To do this efficiently, you can create a MinHash for every dataset,
+To do this efficiently, you can create a MinHash for every set,
 and when a query comes, you
 compute the Jaccard similarities between the query MinHash and all the
-MinHash of your collection, and return the datasets that
+MinHash of your collection, and return the sets that
 satisfy your threshold.
 
 The said approach is still an O(n) algorithm, meaning the query cost
-increases linearly with respect to the number of datasets.
+increases linearly with respect to the number of sets.
 A popular alternative is to use Locality Sensitive Hashing (LSH) index.
 LSH can be used with MinHash to achieve sub-linear query cost - that is
 a huge improvement.
@@ -122,14 +126,14 @@ The details of the algorithm can be found in
 
 This package includes the classic version of MinHash LSH.
 It is important to note that the query does not give you the exact result,
-due to the use of MinHash and LSH. There will be false positives - datasets
+due to the use of MinHash and LSH. There will be false positives - sets
 that do not satisfy your threshold but returned, and false negatives -
-qualifying datasets that are not returned.
-However, the property of LSH assures that datasets with higher Jaccard
-similarities always have higher probabilities to get returned than datasets
+qualifying sets that are not returned.
+However, the property of LSH assures that sets with higher Jaccard
+similarities always have higher probabilities to get returned than sets
 with lower similarities.
 Moreover, LSH can be optimized so that there can be a "jump"
-in probability right at the threshold, making the qualifying datasets much
+in probability right at the threshold, making the qualifying sets much
 more likely to get returned than the rest.
 
 ```python
@@ -206,13 +210,100 @@ lsh = MinHashLSH()
 lsh = MinHashLSH(weights=(0.4, 0.6))
 ```
 
+## MinHash LSH Forest 
+
+MinHash LSH is useful for radius (or threshold) queries. However, **top-k** queries
+are often more useful in some cases.
+[LSH Forest](http://ilpubs.stanford.edu:8090/678/1/2005-14.pdf)
+by Bawa et al. is a general LSH data structure that makes top-k query possible 
+for many different types of LSH indexes, which include MinHash LSH.
+I implemented the MinHash LSH Forest, which takes a MinHash data sketch of the query
+set,
+and returns the top-k matching sets that have the highest Jaccard similarities with the
+query set.
+
+The interface of `MinHashLSHForest` is similar to `MinHashLSH`, however, it is very
+important to call `index` method after adding the keys. Without calling the `index`
+method, the keys won't be searchable.
+
+```python
+from datasketch import MinHashLSHForest, MinHash
+
+data1 = ['minhash', 'is', 'a', 'probabilistic', 'data', 'structure', 'for',
+        'estimating', 'the', 'similarity', 'between', 'datasets']
+data2 = ['minhash', 'is', 'a', 'probability', 'data', 'structure', 'for',
+        'estimating', 'the', 'similarity', 'between', 'documents']
+data3 = ['minhash', 'is', 'probability', 'data', 'structure', 'for',
+        'estimating', 'the', 'similarity', 'between', 'documents']
+
+# Create MinHash objects
+m1 = MinHash(num_perm=128)
+m2 = MinHash(num_perm=128)
+m3 = MinHash(num_perm=128)
+for d in data1:
+	m1.update(d.encode('utf8'))
+for d in data2:
+	m2.update(d.encode('utf8'))
+for d in data3:
+	m3.update(d.encode('utf8'))
+
+# Create a MinHash LSH Forest with the same num_perm parameter
+forest = MinHashLSHForest(num_perm=128)
+
+# Add m2 and m3 into the index
+forest.add("m2", m2)
+forest.add("m3", m3)
+
+# IMPORTANT: must call index() otherwise the keys won't be searchable
+forest.index()
+
+# Check for membership using the key
+print("m2" in forest)
+print("m3" in forest)
+
+# Using m1 as the query, retrieve top 2 keys that have the higest Jaccard
+result = forest.query(m1, 2)
+print("Top 2 candidates", result)
+```
+
+The plot below shows the 
+[mean average precision (MAP)](https://www.kaggle.com/wiki/MeanAveragePrecision) 
+of linear scan with MinHash and MinHash LSH Forest.
+Synthetic data was used. See `benchmark/lshforest_benchmark.py` for details.
+
+![MinHashLSHForest Benchmark](https://github.com/ekzhu/datasketch/blob/master/plots/lshforest_benchmark.png)
+
+(Optional) If you have read the LSH Forest 
+[paper](http://ilpubs.stanford.edu:8090/678/1/2005-14.pdf),
+and understand the data structure, you may want to customize another 
+parameter for `MinHashLSHForest` - `l`, the number of prefix trees 
+(or "LSH Trees" as in the paper) in the LSH Forest index.
+Different from the paper, I choose to fix the number of LSH functions,
+in this case `num_perm`, and make the maximum depth of every prefix 
+tree dependent on `num_perm` and `l`:
+```python
+# The maximum depth of a prefix tree depends on num_perm and l
+k = int(num_perm / l)
+```
+This way the interface of the `MinHashLSHForest` is in coherence with
+the interface of `MinHash`.
+
+```python
+# There is another optional parameter l (default l=8).
+forest = MinHashLSHForest(num_perm=250, l=10)
+```
+
 ## Weighted MinHash
 
-MinHash can be used to compress unweighted set or binary vector, and estimate
-unweighted Jaccard similarity.
+MinHash can be used to compress unweighted 
+[set](https://en.wikipedia.org/wiki/Set_(mathematics)) 
+or binary vector, and estimate the
+[unweighted Jaccard similarity](https://en.wikipedia.org/wiki/Jaccard_index).
 It is possible to modify MinHash for
-[weighted Jaccard](https://en.wikipedia.org/wiki/Jaccard_index#Generalized_Jaccard_similarity_and_distance)
-by expanding each item (or dimension) by its weight.
+[weighted Jaccard](https://en.wikipedia.org/wiki/Jaccard_index#Generalized_Jaccard_similarity_and_distance) on 
+[**multisets**](https://en.wikipedia.org/wiki/Multiset)
+by expanding each item (or dimension) by its weight
+(usually its count in the multiset).
 However this approach does not support real number weights, and
 doing so can be very expensive if the weights are very large.
 [Weighted MinHash](http://static.googleusercontent.com/media/research.google.com/en//pubs/archive/36928.pdf)
@@ -264,7 +355,7 @@ of slower speed.
 ![Weighted MinHash Benchmark](https://github.com/ekzhu/datasketch/raw/master/plots/weighted_minhash_benchmark.png)
 
 
-## Weighted MinHash LSH
+## Weighted MinHash LSH 
 
 The `WeightedMinHashLSH` index can be used to index `WeightedMinHash`.
 It has the same `insert` and `query` interface as `MinHashLSH`.
@@ -301,6 +392,14 @@ lsh = WeightedMinHashLSH()
 lsh = WeightedMinHashLSH(weights=(0.4, 0.6))
 ```
 
+## Weighted MinHash LSH Forest
+
+You can use the `WeightedMinHashLSHForest` exactly the same way as `MinHashLSHForest`.
+
+```python
+# Default parameters
+forest = WeightedMinHashLSHForest(num_perm=128, l=8)
+```
 
 ## b-Bit MinHash
 

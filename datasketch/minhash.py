@@ -10,6 +10,9 @@ import random, copy, struct
 from hashlib import sha1
 import numpy as np
 
+# The size of a hash value in number of bytes
+hashvalue_byte_size = len(bytes(np.int64(42).data))
+
 # http://en.wikipedia.org/wiki/Mersenne_prime
 _mersenne_prime = (1 << 61) - 1
 _max_hash = (1 << 32) - 1
@@ -17,25 +20,22 @@ _hash_range = (1 << 32)
 
 class MinHash(object):
     '''
-    The MinHash class.
+    Create a MinHash with `num_perm` number of random permutation
+    functions.
+    The `seed` parameter controls the set of random permutation functions
+    generated for this MinHash.
+    Different seed will generate different sets of permutaiton functions.
+    The `hashobj` parameter specifies a hash used for generating
+    hash value. It must implements the `digest` interface similar to
+    hashlib hashes.
+    `hashvalues` and `permutations` can be specified for faster
+    initialization using existing state from another MinHash.
     '''
 
     __slots__ = ('permutations', 'hashvalues', 'seed', 'hashobj')
 
     def __init__(self, num_perm=128, seed=1, hashobj=sha1,
             hashvalues=None, permutations=None):
-        '''
-        Create a MinHash with `num_perm` number of random permutation
-        functions.
-        The `seed` parameter controls the set of random permutation functions
-        generated for this MinHash.
-        Different seed will generate different sets of permutaiton functions.
-        The `hashobj` parameter specifies a hash used for generating
-        hash value. It must implements the `digest` interface similar to
-        hashlib hashes.
-        `hashvalues` and `permutations` can be specified for faster
-        initialization using existing state from another MinHash.
-        '''
         if num_perm > _hash_range:
             # Because 1) we don't want the size to be too large, and
             # 2) we are using 4 bytes to store the size value
