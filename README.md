@@ -266,6 +266,13 @@ result = forest.query(m1, 2)
 print("Top 2 candidates", result)
 ```
 
+The plot below shows the 
+[mean average precision (MAP)](https://www.kaggle.com/wiki/MeanAveragePrecision) 
+of linear scan with MinHash and MinHash LSH Forest.
+Synthetic data was used. See `benchmark/lshforest_benchmark.py` for details.
+
+![MinHashLSHForest Benchmark](https://github.com/ekzhu/datasketch/blob/master/plots/lshforest_benchmark.png)
+
 (Optional) If you have read the LSH Forest 
 [paper](http://ilpubs.stanford.edu:8090/678/1/2005-14.pdf),
 and understand the data structure, you may want to customize another 
