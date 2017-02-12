@@ -1,6 +1,7 @@
 # datasketch
 
 [![Build Status](https://travis-ci.org/ekzhu/datasketch.svg?branch=master)](https://travis-ci.org/ekzhu/datasketch)
+[![DOI](https://zenodo.org/badge/32555448.svg)](https://zenodo.org/badge/latestdoi/32555448)
 
 datasketch gives you probabilistic data structures that can process
 and search
