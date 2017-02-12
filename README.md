@@ -1,6 +1,7 @@
 # datasketch
 
 [![Build Status](https://travis-ci.org/ekzhu/datasketch.svg?branch=master)](https://travis-ci.org/ekzhu/datasketch)
+[![DOI](https://zenodo.org/badge/32555448.svg)](https://zenodo.org/badge/latestdoi/32555448)
 
 datasketch gives you probabilistic data structures that can process
 and search
@@ -276,10 +277,10 @@ Synthetic data was used. See `benchmark/lshforest_benchmark.py` for details.
 (Optional) If you have read the LSH Forest 
 [paper](http://ilpubs.stanford.edu:8090/678/1/2005-14.pdf),
 and understand the data structure, you may want to customize another 
-parameter for `MinHashLSHForest` - `l`, the number of prefix trees 
+parameter for `MinHashLSHForest` -- `l`, the number of prefix trees 
 (or "LSH Trees" as in the paper) in the LSH Forest index.
-Different from the paper, I choose to fix the number of LSH functions,
-in this case `num_perm`, and make the maximum depth of every prefix 
+Different from the paper, this implementation fixes the number of LSH functions,
+in this case `num_perm`, and makes the maximum depth of every prefix 
 tree dependent on `num_perm` and `l`:
 ```python
 # The maximum depth of a prefix tree depends on num_perm and l
