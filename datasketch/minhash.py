@@ -197,37 +197,6 @@ class MinHash(object):
             hashvalues = struct.unpack_from('%dI' % num_perm, buffer(buf), offset)
         return cls(num_perm=num_perm, seed=seed, hashvalues=hashvalues)
 
-    def __getstate__(self):
-        '''
-        This function is called when pickling the MinHash.
-        Returns a bytearray which will then be pickled.
-        Note that the bytes returned by the Python pickle.dumps is not
-        the same as the buffer returned by this function.
-        '''
-        buf = bytearray(self.bytesize())
-        fmt = "qi%dI" % len(self)
-        struct.pack_into(fmt, buf, 0,
-                self.seed, len(self), *self.hashvalues)
-        return buf
-
-    def __setstate__(self, buf):
-        '''
-        This function is called when unpickling the MinHash.
-        Initialize the object with data in the buffer.
-        Note that the input buffer is not the same as the input to the
-        Python pickle.loads function.
-        '''
-        try:
-            seed, num_perm = struct.unpack_from('qi', buf, 0)
-        except TypeError:
-            seed, num_perm = struct.unpack_from('qi', buffer(buf), 0)
-        offset = struct.calcsize('qi')
-        try:
-            hashvalues = struct.unpack_from('%dI' % num_perm, buf, offset)
-        except TypeError:
-            hashvalues = struct.unpack_from('%dI' % num_perm, buffer(buf), offset)
-        self.__init__(num_perm=num_perm, seed=seed, hashvalues=hashvalues)
-
     @classmethod
     def union(cls, *mhs):
         '''
