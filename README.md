@@ -86,7 +86,7 @@ for every data value hashed and 2) more hash values to be stored.
 The speed and memory usage of MinHash are both linearly proportional
 to the number of permutation functions used.
 
-![MinHash Benchmark](https://github.com/ekzhu/datasketch/blob/master/plots/minhash_benchmark.png)
+![MinHash Benchmark](https://github.com/ekzhu/datasketch/raw/master/plots/minhash_benchmark.png)
 
 You can union two MinHash object using the `merge` function.
 This makes MinHash useful in parallel MapReduce style data analysis.
@@ -197,7 +197,7 @@ The average recall, average precision, and 90 percentile query time vs.
 `num_perm` are plotted below. See the `benchmark` directory for the experiment and
 plotting code.
 
-![MinHashLSH Benchmark](https://github.com/ekzhu/datasketch/blob/master/plots/lsh_benchmark.png)
+![MinHashLSH Benchmark](https://github.com/ekzhu/datasketch/raw/master/plots/lsh_benchmark.png)
 
 There are other optional parameters that be used to tune the index:
 
@@ -278,7 +278,7 @@ The plot below shows the
 of linear scan with MinHash and MinHash LSH Forest.
 Synthetic data was used. See `benchmark/lshforest_benchmark.py` for details.
 
-![MinHashLSHForest Benchmark](https://github.com/ekzhu/datasketch/blob/master/plots/lshforest_benchmark.png)
+![MinHashLSHForest Benchmark](https://github.com/ekzhu/datasketch/raw/master/plots/lshforest_benchmark.png)
 
 (Optional) If you have read the LSH Forest 
 [paper](http://ilpubs.stanford.edu:8090/678/1/2005-14.pdf),
@@ -400,7 +400,7 @@ comparing to the original MinHash.
 On the other hand, when the actual Jaccard is small, b-Bit MinHash gives
 bad estimation for Jaccard, and it tends to over-estimate.
 
-![b-Bit MinHash Benchmark](https://github.com/ekzhu/datasketch/blob/master/plots/b_bit_minhash_benchmark.png)
+![b-Bit MinHash Benchmark](https://github.com/ekzhu/datasketch/raw/master/plots/b_bit_minhash_benchmark.png)
 
 To create a b-Bit MinHash object from an existing MinHash object:
 
@@ -477,7 +477,7 @@ h = HyperLogLog(p=12)
 Interestingly, there is no speed penalty for using higher p value.
 However the memory usage is exponential to the p value.
 
-![HyperLogLog Benchmark](https://github.com/ekzhu/datasketch/blob/master/plots/hyperloglog_benchmark.png)
+![HyperLogLog Benchmark](https://github.com/ekzhu/datasketch/raw/master/plots/hyperloglog_benchmark.png)
 
 As in MinHash, you can also merge two HyperLogLogs to create a union HyperLogLog.
 

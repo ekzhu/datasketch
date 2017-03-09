@@ -100,7 +100,7 @@ instructions for every data value hashed and 2) more hash values to be
 stored. The speed and memory usage of MinHash are both linearly
 proportional to the number of permutation functions used.
 
-.. figure:: https://github.com/ekzhu/datasketch/blob/master/plots/minhash_benchmark.png
+.. figure:: https://github.com/ekzhu/datasketch/raw/master/plots/minhash_benchmark.png
    :alt: MinHash Benchmark
 
    MinHash Benchmark
@@ -211,7 +211,7 @@ recall, average precision, and 90 percentile query time vs. ``num_perm``
 are plotted below. See the ``benchmark`` directory for the experiment
 and plotting code.
 
-.. figure:: https://github.com/ekzhu/datasketch/blob/master/plots/lsh_benchmark.png
+.. figure:: https://github.com/ekzhu/datasketch/raw/master/plots/lsh_benchmark.png
    :alt: MinHashLSH Benchmark
 
    MinHashLSH Benchmark
@@ -296,7 +296,7 @@ The plot below shows the `mean average precision
 scan with MinHash and MinHash LSH Forest. Synthetic data was used. See
 ``benchmark/lshforest_benchmark.py`` for details.
 
-.. figure:: https://github.com/ekzhu/datasketch/blob/master/plots/lshforest_benchmark.png
+.. figure:: https://github.com/ekzhu/datasketch/raw/master/plots/lshforest_benchmark.png
    :alt: MinHashLSHForest Benchmark
 
    MinHashLSHForest Benchmark
@@ -429,7 +429,7 @@ comparing to the original MinHash. On the other hand, when the actual
 Jaccard is small, b-Bit MinHash gives bad estimation for Jaccard, and it
 tends to over-estimate.
 
-.. figure:: https://github.com/ekzhu/datasketch/blob/master/plots/b_bit_minhash_benchmark.png
+.. figure:: https://github.com/ekzhu/datasketch/raw/master/plots/b_bit_minhash_benchmark.png
    :alt: b-Bit MinHash Benchmark
 
    b-Bit MinHash Benchmark
@@ -508,7 +508,7 @@ changing the parameter p.
 Interestingly, there is no speed penalty for using higher p value.
 However the memory usage is exponential to the p value.
 
-.. figure:: https://github.com/ekzhu/datasketch/blob/master/plots/hyperloglog_benchmark.png
+.. figure:: https://github.com/ekzhu/datasketch/raw/master/plots/hyperloglog_benchmark.png
    :alt: HyperLogLog Benchmark
 
    HyperLogLog Benchmark
