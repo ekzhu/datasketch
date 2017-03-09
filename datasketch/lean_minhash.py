@@ -6,15 +6,14 @@ from datasketch import MinHash
 
 class LeanMinHash(MinHash):
 
-    __slots__ = ('seed', 'hashvalues', 'hashobj')
+    __slots__ = ('seed', 'hashvalues')
 
     def _initialize_slots(self, seed, hashvalues, hashobj):
         self.seed = seed
         self.hashvalues = self._parse_hashvalues(hashvalues)
-        self.hashobj = hashobj
 
     def __init__(self, minhash):
-        self._initialize_slots(minhash.seed, minhash.hashvalues, minhash.hashobj)
+        self._initialize_slots(minhash.seed, minhash.hashvalues)
 
     def copy(self):
         '''
@@ -44,7 +43,7 @@ class LeanMinHash(MinHash):
         except TypeError:
             hashvalues = struct.unpack_from('%dI' % num_perm, buffer(buf), offset)
         imh = object.__new__(LeanMinHash)
-        imh._initialize_slots(seed, hashvalues, sha1)
+        imh._initialize_slots(seed, hashvalues)
         return imh
 
     def __setstate__(self, buf):
@@ -63,7 +62,7 @@ class LeanMinHash(MinHash):
             hashvalues = struct.unpack_from('%dI' % num_perm, buf, offset)
         except TypeError:
             hashvalues = struct.unpack_from('%dI' % num_perm, buffer(buf), offset)
-        self._initialize_slots(seed, hashvalues, sha1)
+        self._initialize_slots(seed, hashvalues)
 
 
     @classmethod
@@ -75,12 +74,11 @@ class LeanMinHash(MinHash):
             raise ValueError("Cannot union less than 2 MinHash")
         num_perm = len(mhs[0])
         seed = mhs[0].seed
-        hashobj = mhs[0].hashobj
-        if any((seed, num_perm, hashobj) != (m.seed, len(m), m.hashobj) for m in mhs):
+        if any((seed, num_perm) != (m.seed, len(m)) for m in mhs):
             raise ValueError("The unioning MinHash must have the\
                     same seed, number of permutation functions and hashobj")
         hashvalues = np.minimum.reduce([m.hashvalues for m in mhs])
 
         imh = object.__new__(LeanMinHash)
-        imh._initialize_slots(seed, hashvalues, hashobj)
+        imh._initialize_slots(seed, hashvalues)
         return imh
