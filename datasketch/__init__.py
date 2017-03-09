@@ -12,3 +12,4 @@ from datasketch.b_bit_minhash import bBitMinHash
 from datasketch.lsh import MinHashLSH, WeightedMinHashLSH
 from datasketch.weighted_minhash import WeightedMinHash, WeightedMinHashGenerator
 from datasketch.lshforest import MinHashLSHForest, WeightedMinHashLSHForest
+from datasketch.lean_minhash import LeanMinHash

@@ -242,4 +242,6 @@ class MinHash(object):
             raise ValueError("The unioning MinHash must have the\
                     same seed and number of permutation functions")
         hashvalues = np.minimum.reduce([m.hashvalues for m in mhs])
-        return cls(num_perm=num_perm, seed=seed, hashvalues=hashvalues)
+        permutations = mhs[0].permutations
+        return cls(num_perm=num_perm, seed=seed, hashvalues=hashvalues,
+                permutations=permutations)
