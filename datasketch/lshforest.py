@@ -1,29 +1,28 @@
-'''
-This module implements the LSH Forests for MinHash data
-sketch. It supports top-k query.
-
-Instead of using prefix trees as the original paper
-(http://ilpubs.stanford.edu:8090/678/1/2005-14.pdf), 
-I use a sorted array to store the hash values in every
-hash table.
-'''
-
 from collections import deque, defaultdict
 from datasketch.minhash import hashvalue_byte_size
 
 
 class MinHashLSHForest(object):
     '''
-    The LSH Forests for MinHash data sketch.
-    Each hash table is a sorted array of the hash values.
+    The LSH Forest for MinHash. It supports top-k query.
+    Instead of using prefix trees as the `original paper
+    <http://ilpubs.stanford.edu:8090/678/1/2005-14.pdf>`_, 
+    I use a sorted array to store the hash values in every
+    hash table.
+    
+    Note:
+        The MinHash LSH Forest also works with weighted Jaccard similarity
+        and weighted MinHash without modification.
+
+    Args:
+        num_perm (int, optional): The number of permutation functions used
+            by the MinHash to be indexed. For weighted MinHash, this
+            is the number of samples (`num_sample`).
+        l (int, optional): The number of prefix trees as described in the
+            paper.
     '''
 
     def __init__(self, num_perm=128, l=8):
-        '''
-        Creates an empty `MinHashLSHForest` object that accepts
-        MinHash objects with `num_perm` number of permutation functions. 
-        `l` is the number of prefix trees as described in the paper.
-        '''
         if l <= 0 or num_perm <= 0:
             raise ValueError("num_perm and l must be positive")
         if l > num_perm:
@@ -38,27 +37,18 @@ class MinHashLSHForest(object):
         # This is the sorted array implementation for the prefix trees
         self.sorted_hashtables = [[] for _ in range(self.l)]
 
-    def is_empty(self):
-        '''
-        Check whether there is any searchable keys in the index.
-        Note that keys won't be searchable until `index` is called.
-        '''
-        return any(len(t) == 0 for t in self.sorted_hashtables)
-
-    def _H(self, hs):
-        return bytes(hs.byteswap().data)
-
-    def __contains__(self, key):
-        '''
-        Return True only if the key has been added to the index.
-        '''
-        return key in self.keys
-
     def add(self, key, minhash):
         '''
-        Add a unique `key`, together
-        with a `minhash` of the data referenced by the `key`.
-        The key won't be searchbale until `index` method is called.
+        Add a unique key, together
+        with a MinHash (or weighted MinHash) of the set referenced by the key.
+
+        Note:
+            The key won't be searchbale until the 
+            :func:`datasketch.MinHashLSHForest.index` method is called.
+
+        Args:
+            key (hashable): The unique identifier of the set. 
+            minhash (datasketch.MinHash): The MinHash of the set. 
         '''
         if len(minhash) < self.k*self.l:
             raise ValueError("The num_perm of MinHash out of range")
@@ -96,9 +86,15 @@ class MinHashLSHForest(object):
 
     def query(self, minhash, k):
         '''
-        Return the approximate top-`k` keys that have the highest 
-        Jaccard similarities to the query `minhash`.
-        This will return at most `k` keys as a list.
+        Return the approximate top-k keys that have the highest 
+        Jaccard similarities to the query set.
+
+        Args:
+            minhash (datasketch.MinHash): The MinHash of the query set.
+            k (int): The maximum number of keys to return.
+
+        Returns:
+            `list` of at most k keys.
         '''
         if k <= 0:
             raise ValueError("k must be positive")
@@ -127,12 +123,23 @@ class MinHashLSHForest(object):
                 j = h
         return i
 
+    def is_empty(self):
+        '''
+        Check whether there is any searchable keys in the index.
+        Note that keys won't be searchable until `index` is called.
 
-class WeightedMinHashLSHForest(MinHashLSHForest):
-    '''
-    The LSH Forests for Weighted MinHash data sketch.
-    Each hash table is a sorted array of the hash values.
-    '''
+        Returns:
+            bool: True if there is no searchable key in the index.
+        '''
+        return any(len(t) == 0 for t in self.sorted_hashtables)
 
-    def __init__(self, num_perm=128, l=8):
-        super(WeightedMinHashLSHForest, self).__init__(num_perm, l) 
+    def _H(self, hs):
+        return bytes(hs.byteswap().data)
+
+    def __contains__(self, key):
+        '''
+        Returns:
+            bool: True only if the key has been added to the index.
+        '''
+        return key in self.keys
+

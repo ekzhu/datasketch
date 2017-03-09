@@ -3,6 +3,8 @@
 [![Build Status](https://travis-ci.org/ekzhu/datasketch.svg?branch=master)](https://travis-ci.org/ekzhu/datasketch)
 [![DOI](https://zenodo.org/badge/32555448.svg)](https://zenodo.org/badge/latestdoi/32555448)
 
+[Documentation](https://ekzhu.github.io/datasketch/documentation.html)
+
 datasketch gives you probabilistic data structures that can process
 and search
 vary large amount of data super fast, with little loss of accuracy.
@@ -22,10 +24,8 @@ sub-linear query time:
 
 | Index                       | For Data Sketch  | Supported Query Type |
 |-----------------------------|------------------|----------------------|
-| MinHash LSH                 | MinHash          | Radius (Threshold)   |
-| Weighted MinHash LSH        | Weighted MinHash | Radius (Threshold)   |
-| MinHash LSH Forest          | MinHash          | Top-K                |
-| Weighted MinHash LSH Forest | Weighted MinHash | Top-K                |
+| MinHash LSH                 | MinHash, Weighted MinHash | Radius (Threshold)   |
+| MinHash LSH Forest          | MinHash, Weighted MinHash | Top-K                |
 
 datasketch must be used with Python 2.7 or above and NumPy 1.11 or above.
 Scipy is optional, but with it the LSH initialization can be much faster.
@@ -39,6 +39,8 @@ To install datasketch using `pip`:
 This will also install NumPy as dependency.
 
 ## MinHash
+
+[Documentation](https://ekzhu.github.io/datasketch/documentation.html#datasketch.MinHash)
 
 MinHash lets you estimate the
 [Jaccard similarity](https://en.wikipedia.org/wiki/Jaccard_index)
@@ -104,6 +106,8 @@ m.count()
 ```
 
 ## MinHash LSH
+
+[Documentation](https://ekzhu.github.io/datasketch/documentation.html#datasketch.MinHashLSH)
 
 Suppose you have a very large collection of 
 [sets](https://en.wikipedia.org/wiki/Set_(mathematics)). Giving a query, which
@@ -213,6 +217,8 @@ lsh = MinHashLSH(weights=(0.4, 0.6))
 
 ## MinHash LSH Forest 
 
+[Documentation](https://ekzhu.github.io/datasketch/documentation.html#datasketch.MinHashLSHForest)
+
 MinHash LSH is useful for radius (or threshold) queries. However, **top-k** queries
 are often more useful in some cases.
 [LSH Forest](http://ilpubs.stanford.edu:8090/678/1/2005-14.pdf)
@@ -296,6 +302,8 @@ forest = MinHashLSHForest(num_perm=250, l=10)
 
 ## Weighted MinHash
 
+[Documentation](https://ekzhu.github.io/datasketch/documentation.html#datasketch.WeightedMinHash)
+
 MinHash can be used to compress unweighted 
 [set](https://en.wikipedia.org/wiki/Set_(mathematics)) 
 or binary vector, and estimate the
@@ -355,16 +363,12 @@ of slower speed.
 
 ![Weighted MinHash Benchmark](https://github.com/ekzhu/datasketch/raw/master/plots/weighted_minhash_benchmark.png)
 
-
-## Weighted MinHash LSH 
-
-The `WeightedMinHashLSH` index can be used to index `WeightedMinHash`.
-It has the same `insert` and `query` interface as `MinHashLSH`.
+The `MinHashLSH` index can also be used to index `WeightedMinHash`.
 
 ```python
 import numpy as np
-from datasketch.weighted_minhash import WeightedMinHashGenerator
-from datasketch.lsh import WeightedMinHashLSH
+from datasketch import WeightedMinHashGenerator
+from datasketch import MinHashLSH
 
 v1 = np.random.uniform(1, 10, 10)
 v2 = np.random.uniform(1, 10, 10)
@@ -375,31 +379,11 @@ m2 = mg.minhash(v2)
 m3 = mg.minhash(v3)
 
 # Create weighted MinHash LSH index
-lsh = WeightedMinHashLSH(threshold=0.1, sample_size=5)
+lsh = MinHashLSH(threshold=0.1, sample_size=5)
 lsh.insert("m2", m2)
 lsh.insert("m3", m3)
 result = lsh.query(m1)
 print("Approximate neighbours with weighted Jaccard similarity > 0.1", result)
-```
-
-The constractor of `WeightMinHashLSH` also accepts the `weights` argument
-for fine-tuning.
-
-```python
-# Use defaults: threshold=0.5, sample_size=128, weights=(0.5, 0.5)
-lsh = WeightedMinHashLSH()
-
-# Fine-tuning the weights for false positives and negatives
-lsh = WeightedMinHashLSH(weights=(0.4, 0.6))
-```
-
-## Weighted MinHash LSH Forest
-
-You can use the `WeightedMinHashLSHForest` exactly the same way as `MinHashLSHForest`.
-
-```python
-# Default parameters
-forest = WeightedMinHashLSHForest(num_perm=128, l=8)
 ```
 
 ## b-Bit MinHash
@@ -458,6 +442,8 @@ Thus it has no `merge` function.
 
 ## HyperLogLog
 
+[Documentation](https://ekzhu.github.io/datasketch/documentation.html#datasketch.HyperLogLog)
+
 HyperLogLog is capable of estimating the cardinality (the number of
 distinct values) of dataset in a single pass, using a small and fixed
 memory space.
@@ -506,6 +492,8 @@ h1.count()
 ```
 
 ## HyperLogLog++
+
+[Documentation](https://ekzhu.github.io/datasketch/documentation.html#datasketch.HyperLogLogPlusPlus)
 
 [HyperLogLog++](http://research.google.com/pubs/pub40671.html)
 is an enhanced version of HyperLogLog by Google with the following
