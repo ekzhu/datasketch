@@ -1,11 +1,3 @@
-'''
-This module implements MinHash - a probabilistic data structure for computing
-Jaccard similarity between datasets.
-
-The original MinHash paper:
-http://cs.brown.edu/courses/cs253/papers/nearduplicate.pdf
-'''
-
 import random, copy, struct
 from hashlib import sha1
 import numpy as np
@@ -19,17 +11,26 @@ _max_hash = (1 << 32) - 1
 _hash_range = (1 << 32)
 
 class MinHash(object):
-    '''
-    Create a MinHash with `num_perm` number of random permutation
-    functions.
-    The `seed` parameter controls the set of random permutation functions
-    generated for this MinHash.
-    Different seed will generate different sets of permutaiton functions.
-    The `hashobj` parameter specifies a hash used for generating
-    hash value. It must implements the `digest` interface similar to
-    hashlib hashes.
-    `hashvalues` and `permutations` can be specified for faster
-    initialization using existing state from another MinHash.
+    '''MinHash is a probabilistic data structure for computing 
+    `Jaccard similarity`_ between sets.
+    
+    Args:
+        num_perm (int, optional): Number of random permutation functions.
+        seed (int, optional): The random seed controls the set of random 
+            permutation functions generated for this MinHash.
+        hashobj (optional): The hash function used by this MinHash. 
+            It must implements
+            the `digest()` method similar to hashlib_ hash functions, such
+            as `hashlib.sha1`.
+        hashvalues (optional): The hash values is the internal state of the MinHash.
+            It can be specified for faster initialization using the existing
+            state from another MinHash.
+        permutations (optional): The permutation function parameters. This argument
+            can be specified for faster initialization using the existing
+            state from another MinHash.
+
+    .. _`Jaccard similarity`: https://en.wikipedia.org/wiki/Jaccard_index
+    .. _hashlib: https://docs.python.org/3.5/library/hashlib.html
     '''
 
     __slots__ = ('permutations', 'hashvalues', 'seed', 'hashobj')
@@ -69,81 +70,33 @@ class MinHash(object):
     def _parse_hashvalues(self, hashvalues):
         return np.array(hashvalues, dtype=np.uint64)
 
-    def __len__(self):
-        '''
-        Return the size of the MinHash
-        '''
-        return len(self.hashvalues)
-
-    def __eq__(self, other):
-        '''
-        Check equivalence between MinHash
-        '''
-        return self.seed == other.seed and \
-                np.array_equal(self.hashvalues, other.hashvalues)
-
-    def is_empty(self):
-        '''
-        Check if the current MinHash is empty - at the state of just
-        initialized.
-        '''
-        if np.any(self.hashvalues != _max_hash):
-            return False
-        return True
-
-    def clear(self):
-        '''
-        Clear the current state of the Minhash.
-        '''
-        self.hashvalues = self._init_hashvalues(len(self))
-
-    def copy(self):
-        '''
-        Create a copy of this MinHash by exporting its state.
-        '''
-        return MinHash(seed=self.seed, hashvalues=self.digest(),
-                permutations=self.permutations)
-
     def update(self, b):
-        '''
-        Update the Minhash with a new data value in bytes.
+        '''Update this MinHash with a new value.
+
+        Args:
+            b (bytes): The value of type `bytes`.
+
+        Example:
+            To update with a new string value:
+
+            .. code-block:: python
+
+                minhash.update("new value".encode('utf-8'))
         '''
         hv = struct.unpack('<I', self.hashobj(b).digest()[:4])[0]
         a, b = self.permutations
         phv = np.bitwise_and((a * hv + b) % _mersenne_prime, np.uint64(_max_hash))
         self.hashvalues = np.minimum(phv, self.hashvalues)
 
-    def digest(self):
-        '''
-        Returns the hash values.
-        '''
-        return copy.copy(self.hashvalues)
-
-    def merge(self, other):
-        '''
-        Merge the other MinHash with this one, making this the union
-        of both.
-        '''
-        if other.seed != self.seed:
-            raise ValueError("Cannot merge MinHash with\
-                    different seeds")
-        if len(self) != len(other):
-            raise ValueError("Cannot merge MinHash with\
-                    different numbers of permutation functions")
-        self.hashvalues = np.minimum(other.hashvalues, self.hashvalues)
-
-    def count(self):
-        '''
-        Estimate the cardinality count.
-        See: http://ieeexplore.ieee.org/stamp/stamp.jsp?arnumber=365694
-        '''
-        k = len(self)
-        return np.float(k) / np.sum(self.hashvalues / np.float(_max_hash)) - 1.0
-
     def jaccard(self, other):
-        '''
-        Estimate the Jaccard similarity (resemblance) between this Minhash
-        and the other.
+        '''Estimate the `Jaccard similarity`_ (resemblance) between the sets
+        represented by this MinHash and the other.
+
+        Args:
+            other (datasketch.MinHash): The other MinHash.
+
+        Returns:
+            float: The Jaccard similarity, which is between 0.0 and 1.0.
         '''
         if other.seed != self.seed:
             raise ValueError("Cannot compute Jaccard given MinHash with\
@@ -153,6 +106,82 @@ class MinHash(object):
                     different numbers of permutation functions")
         return np.float(np.count_nonzero(self.hashvalues==other.hashvalues)) /\
                 np.float(len(self))
+
+    def count(self):
+        '''Estimate the cardinality count based on the technique described in
+        `this paper <http://ieeexplore.ieee.org/stamp/stamp.jsp?arnumber=365694>`_.
+
+        Returns:
+            int: The estimated cardinality of the set represented by this MinHash.
+        '''
+        k = len(self)
+        return np.float(k) / np.sum(self.hashvalues / np.float(_max_hash)) - 1.0
+
+    def merge(self, other):
+        '''Merge the other MinHash with this one, making this one the union
+        of both.
+
+        Args:
+            other (datasketch.MinHash): The other MinHash.
+        '''
+        if other.seed != self.seed:
+            raise ValueError("Cannot merge MinHash with\
+                    different seeds")
+        if len(self) != len(other):
+            raise ValueError("Cannot merge MinHash with\
+                    different numbers of permutation functions")
+        self.hashvalues = np.minimum(other.hashvalues, self.hashvalues)
+
+    def digest(self):
+        '''Export the hash values, which is the internal state of the
+        MinHash.
+
+        Returns:
+            numpy.array: The hash values which is a Numpy array.
+        '''
+        return copy.copy(self.hashvalues)
+
+    def is_empty(self):
+        '''
+        Returns: 
+            bool: If the current MinHash is empty - at the state of just
+            initialized.
+        '''
+        if np.any(self.hashvalues != _max_hash):
+            return False
+        return True
+
+    def clear(self):
+        '''
+        Clear the current state of the MinHash.
+        All hash values are reset.
+        '''
+        self.hashvalues = self._init_hashvalues(len(self))
+
+    def copy(self):
+        '''
+        Returns:
+            datasketch.MinHash: A copy of this MinHash by exporting its
+            state.
+        '''
+        return MinHash(seed=self.seed, hashvalues=self.digest(),
+                permutations=self.permutations)
+
+    def __len__(self):
+        '''
+        Returns:
+            int: The number of hash values.
+        '''
+        return len(self.hashvalues)
+
+    def __eq__(self, other):
+        '''
+        Returns:
+            bool: If their seeds and hash values are both equal then two
+            are equivalent.
+        '''
+        return self.seed == other.seed and \
+                np.array_equal(self.hashvalues, other.hashvalues)
 
     def bytesize(self):
         # Use 8 bytes to store the seed integer
@@ -205,9 +234,6 @@ class MinHash(object):
 
     @classmethod
     def union(cls, *mhs):
-        '''
-        Return the union MinHash of multiple MinHash
-        '''
         if len(mhs) < 2:
             raise ValueError("Cannot union less than 2 MinHash")
         num_perm = len(mhs[0])

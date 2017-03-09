@@ -1,15 +1,3 @@
-'''
-This module implements the HyperLogLog data sketch for estimating
-cardinality of very large dataset in a single pass.
-
-The original HyperLogLog is described here:
-http://algo.inria.fr/flajolet/Publications/FlFuGaMe07.pdf
-
-This HyperLogLog implementation is based on:
-https://github.com/svpcom/hyperloglog
-with enhanced functionalities for serialization and similarities.
-'''
-
 import struct, copy
 from hashlib import sha1
 import numpy as np
@@ -29,7 +17,24 @@ if not hasattr(int, 'bit_length'):
 
 class HyperLogLog(object):
     '''
-    The HyperLogLog class.
+    The HyperLogLog data sketch for estimating
+    cardinality of very large dataset in a single pass.
+    The original HyperLogLog is described `here
+    <http://algo.inria.fr/flajolet/Publications/FlFuGaMe07.pdf>`_.
+
+    This HyperLogLog implementation is based on:
+    https://github.com/svpcom/hyperloglog
+
+    Args:
+        p (int, optional): The precision parameter. It is ignored if
+            the `reg` is given.
+        reg (numpy.array, optional): The internal state.
+            This argument is for initializing the HyperLogLog from
+            an existing one.
+        hashobj (optional): The hash function used. 
+            It must implements
+            the `digest()` method similar to hashlib_ hash functions, such
+            as `hashlib.sha1`.
     '''
 
     __slots__ = ('p', 'm', 'reg', 'alpha', 'max_rank', 'hashobj')
@@ -51,12 +56,6 @@ class HyperLogLog(object):
         return 0.7213 / (1.0 + 1.079 / (1 << p))
 
     def __init__(self, p=8, reg=None, hashobj=sha1):
-        '''
-        Create a HyperLogLog with precision parameter `p` and (optionally) a
-        register vector `reg`. If `reg` is specified, the constructor will
-        use it as the underlying regiser, instead of creating a new one, and
-        the `p` parameter value is ignored.
-        '''
         if reg is None:
             self.p = p
             self.m = 1 << p
@@ -79,55 +78,19 @@ class HyperLogLog(object):
         self.alpha = self._get_alpha(self.p)
         self.max_rank = self._hash_range_bit - self.p
 
-    def __len__(self):
-        '''
-        Get the size of the HyperLogLog.
-        '''
-        return len(self.reg)
-
-    def __eq__(self, other):
-        '''
-        Check equivalence between two HyperLogLogs
-        '''
-        if self.p != other.p:
-            return False
-        if self.m != other.m:
-            return False
-        if not np.array_equal(self.reg, other.reg):
-            return False
-        return True
-
-    def is_empty(self):
-        '''
-        Check if the current HyperLogLog is empty - at the state of just
-        initialized.
-        '''
-        if np.any(self.reg):
-            return False
-        return True
-
-    def clear(self):
-        '''
-        Reset the current HyperLogLog.
-        '''
-        self.reg = np.zeros((self.m,), dtype=np.int8)
-
-    def copy(self):
-        '''
-        Create a copy of the current HyperLogLog by exporting its state.
-        '''
-        return HyperLogLog(reg=self.digest())
-
-    def _get_rank(self, bits):
-        rank = self.max_rank - _bit_length(bits) + 1
-        if rank <= 0:
-            raise ValueError("Hash value overflow, maximum size is %d\
-                    bits" % self.max_rank)
-        return rank
-
     def update(self, b):
         '''
         Update the HyperLogLog with a new data value in bytes.
+
+        Args:
+            b (bytes): A value of type `bytes`.
+
+        Example:
+            To update with a new string value:
+
+            .. code-block:: python
+
+                hyperloglog.update("new value".encode('utf-8'))
         '''
         # Digest the hash object to get the hash value
         hv = struct.unpack(self._struct_fmt_str,
@@ -139,31 +102,12 @@ class HyperLogLog(object):
         # Update the register
         self.reg[reg_index] = max(self.reg[reg_index], self._get_rank(bits))
 
-    def digest(self, hashobj):
-        '''
-        Return the current register.
-        '''
-        return copy.copy(self.reg)
-
-    def merge(self, other):
-        '''
-        Merge the other HyperLogLog with this one, making this the union of the
-        two.
-        '''
-        if self.m != other.m or self.p != other.p:
-            raise ValueError("Cannot merge HyperLogLog with different\
-                    precisions.")
-        self.reg = np.maximum(self.reg, other.reg)
-
-    def _linearcounting(self, num_zero):
-        return self.m * np.log(self.m / float(num_zero))
-
-    def _largerange_correction(self, e):
-        return - (1 << 32) * np.log(1.0 - e / (1 << 32))
-
     def count(self):
         '''
-        Estimate the cardinality of the data seen so far.
+        Estimate the cardinality of the data values seen so far.
+
+        Returns:
+            int: The estimated cardinality.
         '''
         # Use HyperLogLog estimation function
         e = self.alpha * float(self.m ** 2) / np.sum(2.0**(-self.reg))
@@ -177,11 +121,92 @@ class HyperLogLog(object):
         # Large range correction
         return self._largerange_correction(e)
 
+    def merge(self, other):
+        '''
+        Merge the other HyperLogLog with this one, making this the union of the
+        two.
+
+        Args:
+            other (datasketch.HyperLogLog):
+        '''
+        if self.m != other.m or self.p != other.p:
+            raise ValueError("Cannot merge HyperLogLog with different\
+                    precisions.")
+        self.reg = np.maximum(self.reg, other.reg)
+
+    def digest(self, hashobj):
+        '''
+        Returns:
+            numpy.array: The current internal state.
+        '''
+        return copy.copy(self.reg)
+
+    def copy(self):
+        '''
+        Create a copy of the current HyperLogLog by exporting its state.
+
+        Returns:
+            datasketch.HyperLogLog:
+        '''
+        return HyperLogLog(reg=self.digest())
+
+    def is_empty(self):
+        '''
+        Returns:
+            bool: True if the current HyperLogLog is empty - at the state of just
+            initialized.
+        '''
+        if np.any(self.reg):
+            return False
+        return True
+
+    def clear(self):
+        '''
+        Reset the current HyperLogLog to empty.
+        '''
+        self.reg = np.zeros((self.m,), dtype=np.int8)
+
+    def __len__(self):
+        '''
+        Returns:
+            int: Get the size of the HyperLogLog as the size of 
+                `reg`.
+        '''
+        return len(self.reg)
+
+    def __eq__(self, other):
+        '''
+        Check equivalence between two HyperLogLogs
+
+        Args:
+            other (datasketch.HyperLogLog): 
+
+        Returns:
+            bool: True if both have the same internal state.
+        '''
+        if self.p != other.p:
+            return False
+        if self.m != other.m:
+            return False
+        if not np.array_equal(self.reg, other.reg):
+            return False
+        return True
+
+    def _get_rank(self, bits):
+        rank = self.max_rank - _bit_length(bits) + 1
+        if rank <= 0:
+            raise ValueError("Hash value overflow, maximum size is %d\
+                    bits" % self.max_rank)
+        return rank
+
+    def _linearcounting(self, num_zero):
+        return self.m * np.log(self.m / float(num_zero))
+
+    def _largerange_correction(self, e):
+        return - (1 << 32) * np.log(1.0 - e / (1 << 32))
+
     @classmethod
     def union(cls, *hyperloglogs):
-        '''
-        Return the union of all given HyperLogLogs
-        '''
         if len(hyperloglogs) < 2:
             raise ValueError("Cannot union less than 2 HyperLogLog\
                     sketches")
@@ -249,12 +274,16 @@ class HyperLogLog(object):
 
 class HyperLogLogPlusPlus(HyperLogLog):
     '''
-    The HyperLogLog++, an enhanced HyperLogLog from Google.
-    http://research.google.com/pubs/pub40671.html
-    Main changes:
-    1) Use 64 bits instead of 32 bits for hash function
-    2) A new small-cardinality estimation scheme
-    3) Sparse representation (not implemented here)
+    HyperLogLog++ is an enhanced HyperLogLog `from Google
+    <http://research.google.com/pubs/pub40671.html>`_.
+    Main changes from the original HyperLogLog:
+
+    1. Use 64 bits instead of 32 bits for hash function
+    2. A new small-cardinality estimation scheme
+    3. Sparse representation (not implemented here)
+
+    This class has the same set of methods as 
+    :class:`datasketch.HyperLogLog`.
     '''
 
     _hash_range_bit = 64

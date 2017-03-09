@@ -1,11 +1,3 @@
-'''
-This module implements the Locality Sensitive Hashing index 
-with MinHash (MinHash LSH) and Weighted MinHash (Weighted MinHash LSH)
-Both indexes supports query with Jaccard similarity threshold.
-
-Reference: Chapter 3, Mining of Massive Datasets 
-(http://www.mmds.org/)
-'''
 from collections import defaultdict
 
 
@@ -60,23 +52,31 @@ def _optimal_param(threshold, num_perm, false_positive_weight,
 
 class MinHashLSH(object):
     '''
-    The classic MinHash LSH
+    The Locality Sensitive Hashing index 
+    with MinHash (MinHash LSH). 
+    It supports query with `Jaccard similarity`_ threshold.
+    Reference: `Chapter 3, Mining of Massive Datasets 
+    <http://www.mmds.org/>`_.
+
+    Note:
+        The MinHash LSH index also works with weighted Jaccard similarity
+        and weighted MinHash without modification.
+
+    Args:
+        threshold (float): The Jaccard similarity threshold between 0.0 and
+            1.0. The initialized MinHash LSH will be optimized for the threshold by
+            minizing the false positive and false negative.
+        num_perm (int, optional): The number of permutation functions used
+            by the MinHash to be indexed. For weighted MinHash, this
+            is the number of samples (`num_sample`).
+        weights (tuple, optional): Used to adjust the relative importance of 
+            minizing false positive and false negative when optimizing 
+            for the Jaccard similarity threshold.
+            `weights` is a tuple in the format of 
+            :code:`(false_positive_weight, false_negative_weight)`.
     '''
 
     def __init__(self, threshold=0.9, num_perm=128, weights=(0.5,0.5)):
-        '''
-        Create an empty `MinHashLSH` index that accepts MinHash objects
-        with `num_perm` permutation functions and query
-        Jaccard similarity threshold `threshold`.
-        The initialized `MinHashLSH` will be optimized for the threshold by
-        minizing the false positive and false negative.
-
-        Use `weights` to adjust the relative importance of 
-        minizing false positive and false negative when optimizing 
-        for the Jaccard similarity threshold.
-        `weights` is a tuple in the format of 
-        (false_positive_weight, false_negative_weight).
-        '''
         if threshold > 1.0 or threshold < 0.0:
             raise ValueError("threshold must be in [0.0, 1.0]") 
         if num_perm < 2:
@@ -94,22 +94,15 @@ class MinHashLSH(object):
         self.hashranges = [(i*self.r, (i+1)*self.r) for i in range(self.b)]
         self.keys = dict()
 
-    def is_empty(self):
-        return any(len(t) == 0 for t in self.hashtables)
-
-    def _H(self, hs):
-        return bytes(hs.byteswap().data)
-
-    def __contains__(self, key):
-        '''
-        Return True only if the key exists in the index.
-        '''
-        return key in self.keys
-
     def insert(self, key, minhash):
         '''
-        Insert a unique `key` to the index, together
-        with a `minhash` of the data referenced by the `key`.
+        Insert a unique key to the index, together
+        with a MinHash (or weighted MinHash) of the set referenced by 
+        the key.
+
+        Args:
+            key (hashable): The unique identifier of the set. 
+            minhash (datasketch.MinHash): The MinHash of the set. 
         '''
         if len(minhash) != self.h:
             raise ValueError("Expecting minhash with length %d, got %d"
@@ -123,9 +116,15 @@ class MinHashLSH(object):
 
     def query(self, minhash):
         '''
-        Giving the MinHash of the query dataset, retrieve 
-        the keys that references datasets with Jaccard
-        similarities greater than the threshold set by the index.
+        Giving the MinHash of the query set, retrieve 
+        the keys that references sets with Jaccard
+        similarities greater than the threshold.
+        
+        Args:
+            minhash (datasketch.MinHash): The MinHash of the query set. 
+
+        Returns:
+            `list` of keys.
         '''
         if len(minhash) != self.h:
             raise ValueError("Expecting minhash with length %d, got %d"
@@ -138,9 +137,22 @@ class MinHashLSH(object):
                     candidates.add(key)
         return list(candidates)
 
+    def __contains__(self, key):
+        '''
+        Args:
+            key (hashable): The unique identifier of a set.
+
+        Returns: 
+            bool: True only if the key exists in the index.
+        '''
+        return key in self.keys
+
     def remove(self, key):
         '''
         Remove the key from the index.
+
+        Args:
+            key (hashable): The unique identifier of a set.
         '''
         if key not in self.keys:
             raise ValueError("The given key does not exist")
@@ -149,6 +161,16 @@ class MinHashLSH(object):
             if not hashtable[H]:
                 del hashtable[H]
         self.keys.pop(key)
+
+    def is_empty(self):
+        '''
+        Returns:
+            bool: Check if the index is empty.
+        '''
+        return any(len(t) == 0 for t in self.hashtables)
+
+    def _H(self, hs):
+        return bytes(hs.byteswap().data)
 
 
 class WeightedMinHashLSH(MinHashLSH):

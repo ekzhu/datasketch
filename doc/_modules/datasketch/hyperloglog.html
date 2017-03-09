@@ -42,19 +42,7 @@
           <div class="body" role="main">
             
   <h1>Source code for datasketch.hyperloglog</h1><div class="highlight"><pre>
-<span></span><span class="sd">&#39;&#39;&#39;</span>
-<span class="sd">This module implements the HyperLogLog data sketch for estimating</span>
-<span class="sd">cardinality of very large dataset in a single pass.</span>
-
-<span class="sd">The original HyperLogLog is described here:</span>
-<span class="sd">http://algo.inria.fr/flajolet/Publications/FlFuGaMe07.pdf</span>
-
-<span class="sd">This HyperLogLog implementation is based on:</span>
-<span class="sd">https://github.com/svpcom/hyperloglog</span>
-<span class="sd">with enhanced functionalities for serialization and similarities.</span>
-<span class="sd">&#39;&#39;&#39;</span>
-
-<span class="kn">import</span> <span class="nn">struct</span><span class="o">,</span> <span class="nn">copy</span>
+<span></span><span class="kn">import</span> <span class="nn">struct</span><span class="o">,</span> <span class="nn">copy</span>
 <span class="kn">from</span> <span class="nn">hashlib</span> <span class="k">import</span> <span class="n">sha1</span>
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
 <span class="k">try</span><span class="p">:</span>
@@ -71,9 +59,26 @@
     <span class="n">_bit_length</span> <span class="o">=</span> <span class="k">lambda</span> <span class="n">bits</span> <span class="p">:</span> <span class="nb">len</span><span class="p">(</span><span class="nb">bin</span><span class="p">(</span><span class="n">bits</span><span class="p">))</span> <span class="o">-</span> <span class="mi">2</span> <span class="k">if</span> <span class="n">bits</span> <span class="o">&gt;</span> <span class="mi">0</span> <span class="k">else</span> <span class="mi">0</span>
 
 
-<div class="viewcode-block" id="HyperLogLog"><a class="viewcode-back" href="../../index.html#datasketch.HyperLogLog">[docs]</a><span class="k">class</span> <span class="nc">HyperLogLog</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+<div class="viewcode-block" id="HyperLogLog"><a class="viewcode-back" href="../../documentation.html#datasketch.HyperLogLog">[docs]</a><span class="k">class</span> <span class="nc">HyperLogLog</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
     <span class="sd">&#39;&#39;&#39;</span>
-<span class="sd">    The HyperLogLog class.</span>
+<span class="sd">    The HyperLogLog data sketch for estimating</span>
+<span class="sd">    cardinality of very large dataset in a single pass.</span>
+<span class="sd">    The original HyperLogLog is described `here</span>
+<span class="sd">    &lt;http://algo.inria.fr/flajolet/Publications/FlFuGaMe07.pdf&gt;`_.</span>
+
+<span class="sd">    This HyperLogLog implementation is based on:</span>
+<span class="sd">    https://github.com/svpcom/hyperloglog</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        p (int, optional): The precision parameter. It is ignored if</span>
+<span class="sd">            the `reg` is given.</span>
+<span class="sd">        reg (numpy.array, optional): The internal state.</span>
+<span class="sd">            This argument is for initializing the HyperLogLog from</span>
+<span class="sd">            an existing one.</span>
+<span class="sd">        hashobj (optional): The hash function used. </span>
+<span class="sd">            It must implements</span>
+<span class="sd">            the `digest()` method similar to hashlib_ hash functions, such</span>
+<span class="sd">            as `hashlib.sha1`.</span>
 <span class="sd">    &#39;&#39;&#39;</span>
 
     <span class="n">__slots__</span> <span class="o">=</span> <span class="p">(</span><span class="s1">&#39;p&#39;</span><span class="p">,</span> <span class="s1">&#39;m&#39;</span><span class="p">,</span> <span class="s1">&#39;reg&#39;</span><span class="p">,</span> <span class="s1">&#39;alpha&#39;</span><span class="p">,</span> <span class="s1">&#39;max_rank&#39;</span><span class="p">,</span> <span class="s1">&#39;hashobj&#39;</span><span class="p">)</span>
@@ -94,13 +99,7 @@
             <span class="k">return</span> <span class="mf">0.709</span>
         <span class="k">return</span> <span class="mf">0.7213</span> <span class="o">/</span> <span class="p">(</span><span class="mf">1.0</span> <span class="o">+</span> <span class="mf">1.079</span> <span class="o">/</span> <span class="p">(</span><span class="mi">1</span> <span class="o">&lt;&lt;</span> <span class="n">p</span><span class="p">))</span>
 
-<div class="viewcode-block" id="HyperLogLog.__init__"><a class="viewcode-back" href="../../index.html#datasketch.HyperLogLog.__init__">[docs]</a>    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">p</span><span class="o">=</span><span class="mi">8</span><span class="p">,</span> <span class="n">reg</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">hashobj</span><span class="o">=</span><span class="n">sha1</span><span class="p">):</span>
-        <span class="sd">&#39;&#39;&#39;</span>
-<span class="sd">        Create a HyperLogLog with precision parameter `p` and (optionally) a</span>
-<span class="sd">        register vector `reg`. If `reg` is specified, the constructor will</span>
-<span class="sd">        use it as the underlying regiser, instead of creating a new one, and</span>
-<span class="sd">        the `p` parameter value is ignored.</span>
-<span class="sd">        &#39;&#39;&#39;</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">p</span><span class="o">=</span><span class="mi">8</span><span class="p">,</span> <span class="n">reg</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">hashobj</span><span class="o">=</span><span class="n">sha1</span><span class="p">):</span>
         <span class="k">if</span> <span class="n">reg</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">p</span> <span class="o">=</span> <span class="n">p</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">m</span> <span class="o">=</span> <span class="mi">1</span> <span class="o">&lt;&lt;</span> <span class="n">p</span>
@@ -121,57 +120,21 @@
         <span class="c1"># Common settings</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">hashobj</span> <span class="o">=</span> <span class="n">hashobj</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">alpha</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_alpha</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">p</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">max_rank</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_hash_range_bit</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">p</span></div>
+        <span class="bp">self</span><span class="o">.</span><span class="n">max_rank</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_hash_range_bit</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">p</span>
 
-<div class="viewcode-block" id="HyperLogLog.__len__"><a class="viewcode-back" href="../../index.html#datasketch.HyperLogLog.__len__">[docs]</a>    <span class="k">def</span> <span class="nf">__len__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&#39;&#39;&#39;</span>
-<span class="sd">        Get the size of the HyperLogLog.</span>
-<span class="sd">        &#39;&#39;&#39;</span>
-        <span class="k">return</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">reg</span><span class="p">)</span></div>
-
-<div class="viewcode-block" id="HyperLogLog.__eq__"><a class="viewcode-back" href="../../index.html#datasketch.HyperLogLog.__eq__">[docs]</a>    <span class="k">def</span> <span class="nf">__eq__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
-        <span class="sd">&#39;&#39;&#39;</span>
-<span class="sd">        Check equivalence between two HyperLogLogs</span>
-<span class="sd">        &#39;&#39;&#39;</span>
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">p</span> <span class="o">!=</span> <span class="n">other</span><span class="o">.</span><span class="n">p</span><span class="p">:</span>
-            <span class="k">return</span> <span class="kc">False</span>
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">m</span> <span class="o">!=</span> <span class="n">other</span><span class="o">.</span><span class="n">m</span><span class="p">:</span>
-            <span class="k">return</span> <span class="kc">False</span>
-        <span class="k">if</span> <span class="ow">not</span> <span class="n">np</span><span class="o">.</span><span class="n">array_equal</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">reg</span><span class="p">,</span> <span class="n">other</span><span class="o">.</span><span class="n">reg</span><span class="p">):</span>
-            <span class="k">return</span> <span class="kc">False</span>
-        <span class="k">return</span> <span class="kc">True</span></div>
-
-<div class="viewcode-block" id="HyperLogLog.is_empty"><a class="viewcode-back" href="../../index.html#datasketch.HyperLogLog.is_empty">[docs]</a>    <span class="k">def</span> <span class="nf">is_empty</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&#39;&#39;&#39;</span>
-<span class="sd">        Check if the current HyperLogLog is empty - at the state of just</span>
-<span class="sd">        initialized.</span>
-<span class="sd">        &#39;&#39;&#39;</span>
-        <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">any</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">reg</span><span class="p">):</span>
-            <span class="k">return</span> <span class="kc">False</span>
-        <span class="k">return</span> <span class="kc">True</span></div>
-
-<div class="viewcode-block" id="HyperLogLog.clear"><a class="viewcode-back" href="../../index.html#datasketch.HyperLogLog.clear">[docs]</a>    <span class="k">def</span> <span class="nf">clear</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&#39;&#39;&#39;</span>
-<span class="sd">        Reset the current HyperLogLog.</span>
-<span class="sd">        &#39;&#39;&#39;</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">reg</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="bp">self</span><span class="o">.</span><span class="n">m</span><span class="p">,),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">int8</span><span class="p">)</span></div>
-
-<div class="viewcode-block" id="HyperLogLog.copy"><a class="viewcode-back" href="../../index.html#datasketch.HyperLogLog.copy">[docs]</a>    <span class="k">def</span> <span class="nf">copy</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&#39;&#39;&#39;</span>
-<span class="sd">        Create a copy of the current HyperLogLog by exporting its state.</span>
-<span class="sd">        &#39;&#39;&#39;</span>
-        <span class="k">return</span> <span class="n">HyperLogLog</span><span class="p">(</span><span class="n">reg</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">digest</span><span class="p">())</span></div>
-
-    <span class="k">def</span> <span class="nf">_get_rank</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">bits</span><span class="p">):</span>
-        <span class="n">rank</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">max_rank</span> <span class="o">-</span> <span class="n">_bit_length</span><span class="p">(</span><span class="n">bits</span><span class="p">)</span> <span class="o">+</span> <span class="mi">1</span>
-        <span class="k">if</span> <span class="n">rank</span> <span class="o">&lt;=</span> <span class="mi">0</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Hash value overflow, maximum size is </span><span class="si">%d</span><span class="se">\</span>
-<span class="s2">                    bits&quot;</span> <span class="o">%</span> <span class="bp">self</span><span class="o">.</span><span class="n">max_rank</span><span class="p">)</span>
-        <span class="k">return</span> <span class="n">rank</span>
-
-<div class="viewcode-block" id="HyperLogLog.update"><a class="viewcode-back" href="../../index.html#datasketch.HyperLogLog.update">[docs]</a>    <span class="k">def</span> <span class="nf">update</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">b</span><span class="p">):</span>
+<div class="viewcode-block" id="HyperLogLog.update"><a class="viewcode-back" href="../../documentation.html#datasketch.HyperLogLog.update">[docs]</a>    <span class="k">def</span> <span class="nf">update</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">b</span><span class="p">):</span>
         <span class="sd">&#39;&#39;&#39;</span>
 <span class="sd">        Update the HyperLogLog with a new data value in bytes.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            b (bytes): A value of type `bytes`.</span>
+
+<span class="sd">        Example:</span>
+<span class="sd">            To update with a new string value:</span>
+
+<span class="sd">            .. code-block:: python</span>
+
+<span class="sd">                hyperloglog.update(&quot;new value&quot;.encode(&#39;utf-8&#39;))</span>
 <span class="sd">        &#39;&#39;&#39;</span>
         <span class="c1"># Digest the hash object to get the hash value</span>
         <span class="n">hv</span> <span class="o">=</span> <span class="n">struct</span><span class="o">.</span><span class="n">unpack</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_struct_fmt_str</span><span class="p">,</span>
@@ -183,31 +146,12 @@
         <span class="c1"># Update the register</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">reg</span><span class="p">[</span><span class="n">reg_index</span><span class="p">]</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">reg</span><span class="p">[</span><span class="n">reg_index</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_rank</span><span class="p">(</span><span class="n">bits</span><span class="p">))</span></div>
 
-<div class="viewcode-block" id="HyperLogLog.digest"><a class="viewcode-back" href="../../index.html#datasketch.HyperLogLog.digest">[docs]</a>    <span class="k">def</span> <span class="nf">digest</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">hashobj</span><span class="p">):</span>
+<div class="viewcode-block" id="HyperLogLog.count"><a class="viewcode-back" href="../../documentation.html#datasketch.HyperLogLog.count">[docs]</a>    <span class="k">def</span> <span class="nf">count</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="sd">&#39;&#39;&#39;</span>
-<span class="sd">        Return the current register.</span>
-<span class="sd">        &#39;&#39;&#39;</span>
-        <span class="k">return</span> <span class="n">copy</span><span class="o">.</span><span class="n">copy</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">reg</span><span class="p">)</span></div>
+<span class="sd">        Estimate the cardinality of the data values seen so far.</span>
 
-<div class="viewcode-block" id="HyperLogLog.merge"><a class="viewcode-back" href="../../index.html#datasketch.HyperLogLog.merge">[docs]</a>    <span class="k">def</span> <span class="nf">merge</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
-        <span class="sd">&#39;&#39;&#39;</span>
-<span class="sd">        Merge the other HyperLogLog with this one, making this the union of the</span>
-<span class="sd">        two.</span>
-<span class="sd">        &#39;&#39;&#39;</span>
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">m</span> <span class="o">!=</span> <span class="n">other</span><span class="o">.</span><span class="n">m</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">p</span> <span class="o">!=</span> <span class="n">other</span><span class="o">.</span><span class="n">p</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Cannot merge HyperLogLog with different</span><span class="se">\</span>
-<span class="s2">                    precisions.&quot;</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">reg</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">maximum</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">reg</span><span class="p">,</span> <span class="n">other</span><span class="o">.</span><span class="n">reg</span><span class="p">)</span></div>
-
-    <span class="k">def</span> <span class="nf">_linearcounting</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">num_zero</span><span class="p">):</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">m</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">m</span> <span class="o">/</span> <span class="nb">float</span><span class="p">(</span><span class="n">num_zero</span><span class="p">))</span>
-
-    <span class="k">def</span> <span class="nf">_largerange_correction</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">e</span><span class="p">):</span>
-        <span class="k">return</span> <span class="o">-</span> <span class="p">(</span><span class="mi">1</span> <span class="o">&lt;&lt;</span> <span class="mi">32</span><span class="p">)</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="mf">1.0</span> <span class="o">-</span> <span class="n">e</span> <span class="o">/</span> <span class="p">(</span><span class="mi">1</span> <span class="o">&lt;&lt;</span> <span class="mi">32</span><span class="p">))</span>
-
-<div class="viewcode-block" id="HyperLogLog.count"><a class="viewcode-back" href="../../index.html#datasketch.HyperLogLog.count">[docs]</a>    <span class="k">def</span> <span class="nf">count</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&#39;&#39;&#39;</span>
-<span class="sd">        Estimate the cardinality of the data seen so far.</span>
+<span class="sd">        Returns:</span>
+<span class="sd">            int: The estimated cardinality.</span>
 <span class="sd">        &#39;&#39;&#39;</span>
         <span class="c1"># Use HyperLogLog estimation function</span>
         <span class="n">e</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">alpha</span> <span class="o">*</span> <span class="nb">float</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">m</span> <span class="o">**</span> <span class="mi">2</span><span class="p">)</span> <span class="o">/</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="mf">2.0</span><span class="o">**</span><span class="p">(</span><span class="o">-</span><span class="bp">self</span><span class="o">.</span><span class="n">reg</span><span class="p">))</span>
@@ -221,11 +165,92 @@
         <span class="c1"># Large range correction</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_largerange_correction</span><span class="p">(</span><span class="n">e</span><span class="p">)</span></div>
 
-    <span class="nd">@classmethod</span>
-<div class="viewcode-block" id="HyperLogLog.union"><a class="viewcode-back" href="../../index.html#datasketch.HyperLogLog.union">[docs]</a>    <span class="k">def</span> <span class="nf">union</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="o">*</span><span class="n">hyperloglogs</span><span class="p">):</span>
+<div class="viewcode-block" id="HyperLogLog.merge"><a class="viewcode-back" href="../../documentation.html#datasketch.HyperLogLog.merge">[docs]</a>    <span class="k">def</span> <span class="nf">merge</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
         <span class="sd">&#39;&#39;&#39;</span>
-<span class="sd">        Return the union of all given HyperLogLogs</span>
+<span class="sd">        Merge the other HyperLogLog with this one, making this the union of the</span>
+<span class="sd">        two.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            other (datasketch.HyperLogLog):</span>
 <span class="sd">        &#39;&#39;&#39;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">m</span> <span class="o">!=</span> <span class="n">other</span><span class="o">.</span><span class="n">m</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">p</span> <span class="o">!=</span> <span class="n">other</span><span class="o">.</span><span class="n">p</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Cannot merge HyperLogLog with different</span><span class="se">\</span>
+<span class="s2">                    precisions.&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">reg</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">maximum</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">reg</span><span class="p">,</span> <span class="n">other</span><span class="o">.</span><span class="n">reg</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="HyperLogLog.digest"><a class="viewcode-back" href="../../documentation.html#datasketch.HyperLogLog.digest">[docs]</a>    <span class="k">def</span> <span class="nf">digest</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">hashobj</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">        Returns:</span>
+<span class="sd">            numpy.array: The current internal state.</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+        <span class="k">return</span> <span class="n">copy</span><span class="o">.</span><span class="n">copy</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">reg</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="HyperLogLog.copy"><a class="viewcode-back" href="../../documentation.html#datasketch.HyperLogLog.copy">[docs]</a>    <span class="k">def</span> <span class="nf">copy</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">        Create a copy of the current HyperLogLog by exporting its state.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            datasketch.HyperLogLog:</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+        <span class="k">return</span> <span class="n">HyperLogLog</span><span class="p">(</span><span class="n">reg</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">digest</span><span class="p">())</span></div>
+
+<div class="viewcode-block" id="HyperLogLog.is_empty"><a class="viewcode-back" href="../../documentation.html#datasketch.HyperLogLog.is_empty">[docs]</a>    <span class="k">def</span> <span class="nf">is_empty</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">        Returns:</span>
+<span class="sd">            bool: True if the current HyperLogLog is empty - at the state of just</span>
+<span class="sd">            initialized.</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+        <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">any</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">reg</span><span class="p">):</span>
+            <span class="k">return</span> <span class="kc">False</span>
+        <span class="k">return</span> <span class="kc">True</span></div>
+
+<div class="viewcode-block" id="HyperLogLog.clear"><a class="viewcode-back" href="../../documentation.html#datasketch.HyperLogLog.clear">[docs]</a>    <span class="k">def</span> <span class="nf">clear</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">        Reset the current HyperLogLog to empty.</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">reg</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="bp">self</span><span class="o">.</span><span class="n">m</span><span class="p">,),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">int8</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="HyperLogLog.__len__"><a class="viewcode-back" href="../../documentation.html#datasketch.HyperLogLog.__len__">[docs]</a>    <span class="k">def</span> <span class="nf">__len__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">        Returns:</span>
+<span class="sd">            int: Get the size of the HyperLogLog as the size of </span>
+<span class="sd">                `reg`.</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+        <span class="k">return</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">reg</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="HyperLogLog.__eq__"><a class="viewcode-back" href="../../documentation.html#datasketch.HyperLogLog.__eq__">[docs]</a>    <span class="k">def</span> <span class="nf">__eq__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">        Check equivalence between two HyperLogLogs</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            other (datasketch.HyperLogLog): </span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            bool: True if both have the same internal state.</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">p</span> <span class="o">!=</span> <span class="n">other</span><span class="o">.</span><span class="n">p</span><span class="p">:</span>
+            <span class="k">return</span> <span class="kc">False</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">m</span> <span class="o">!=</span> <span class="n">other</span><span class="o">.</span><span class="n">m</span><span class="p">:</span>
+            <span class="k">return</span> <span class="kc">False</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">np</span><span class="o">.</span><span class="n">array_equal</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">reg</span><span class="p">,</span> <span class="n">other</span><span class="o">.</span><span class="n">reg</span><span class="p">):</span>
+            <span class="k">return</span> <span class="kc">False</span>
+        <span class="k">return</span> <span class="kc">True</span></div>
+
+    <span class="k">def</span> <span class="nf">_get_rank</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">bits</span><span class="p">):</span>
+        <span class="n">rank</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">max_rank</span> <span class="o">-</span> <span class="n">_bit_length</span><span class="p">(</span><span class="n">bits</span><span class="p">)</span> <span class="o">+</span> <span class="mi">1</span>
+        <span class="k">if</span> <span class="n">rank</span> <span class="o">&lt;=</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Hash value overflow, maximum size is </span><span class="si">%d</span><span class="se">\</span>
+<span class="s2">                    bits&quot;</span> <span class="o">%</span> <span class="bp">self</span><span class="o">.</span><span class="n">max_rank</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">rank</span>
+
+    <span class="k">def</span> <span class="nf">_linearcounting</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">num_zero</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">m</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">m</span> <span class="o">/</span> <span class="nb">float</span><span class="p">(</span><span class="n">num_zero</span><span class="p">))</span>
+
+    <span class="k">def</span> <span class="nf">_largerange_correction</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">e</span><span class="p">):</span>
+        <span class="k">return</span> <span class="o">-</span> <span class="p">(</span><span class="mi">1</span> <span class="o">&lt;&lt;</span> <span class="mi">32</span><span class="p">)</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="mf">1.0</span> <span class="o">-</span> <span class="n">e</span> <span class="o">/</span> <span class="p">(</span><span class="mi">1</span> <span class="o">&lt;&lt;</span> <span class="mi">32</span><span class="p">))</span>
+
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">union</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="o">*</span><span class="n">hyperloglogs</span><span class="p">):</span>
         <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">hyperloglogs</span><span class="p">)</span> <span class="o">&lt;</span> <span class="mi">2</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Cannot union less than 2 HyperLogLog</span><span class="se">\</span>
 <span class="s2">                    sketches&quot;</span><span class="p">)</span>
@@ -235,7 +260,7 @@
 <span class="s2">                    different precisions&quot;</span><span class="p">)</span>
         <span class="n">reg</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">maximum</span><span class="o">.</span><span class="n">reduce</span><span class="p">([</span><span class="n">h</span><span class="o">.</span><span class="n">reg</span> <span class="k">for</span> <span class="n">h</span> <span class="ow">in</span> <span class="n">hyperloglogs</span><span class="p">])</span>
         <span class="n">h</span> <span class="o">=</span> <span class="n">cls</span><span class="p">(</span><span class="n">reg</span><span class="o">=</span><span class="n">reg</span><span class="p">)</span>
-        <span class="k">return</span> <span class="n">h</span></div>
+        <span class="k">return</span> <span class="n">h</span>
 
     <span class="k">def</span> <span class="nf">bytesize</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="c1"># Since p is no larger than 64, use 8 bits</span>
@@ -291,14 +316,18 @@
                 <span class="n">buffer</span><span class="p">(</span><span class="n">buf</span><span class="p">),</span> <span class="n">offset</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">int8</span><span class="p">)</span></div>
 
 
-<div class="viewcode-block" id="HyperLogLogPlusPlus"><a class="viewcode-back" href="../../index.html#datasketch.HyperLogLogPlusPlus">[docs]</a><span class="k">class</span> <span class="nc">HyperLogLogPlusPlus</span><span class="p">(</span><span class="n">HyperLogLog</span><span class="p">):</span>
+<div class="viewcode-block" id="HyperLogLogPlusPlus"><a class="viewcode-back" href="../../documentation.html#datasketch.HyperLogLogPlusPlus">[docs]</a><span class="k">class</span> <span class="nc">HyperLogLogPlusPlus</span><span class="p">(</span><span class="n">HyperLogLog</span><span class="p">):</span>
     <span class="sd">&#39;&#39;&#39;</span>
-<span class="sd">    The HyperLogLog++, an enhanced HyperLogLog from Google.</span>
-<span class="sd">    http://research.google.com/pubs/pub40671.html</span>
-<span class="sd">    Main changes:</span>
-<span class="sd">    1) Use 64 bits instead of 32 bits for hash function</span>
-<span class="sd">    2) A new small-cardinality estimation scheme</span>
-<span class="sd">    3) Sparse representation (not implemented here)</span>
+<span class="sd">    HyperLogLog++ is an enhanced HyperLogLog `from Google</span>
+<span class="sd">    &lt;http://research.google.com/pubs/pub40671.html&gt;`_.</span>
+<span class="sd">    Main changes from the original HyperLogLog:</span>
+
+<span class="sd">    1. Use 64 bits instead of 32 bits for hash function</span>
+<span class="sd">    2. A new small-cardinality estimation scheme</span>
+<span class="sd">    3. Sparse representation (not implemented here)</span>
+
+<span class="sd">    This class has the same set of methods as </span>
+<span class="sd">    :class:`datasketch.HyperLogLog`.</span>
 <span class="sd">    &#39;&#39;&#39;</span>
 
     <span class="n">_hash_range_bit</span> <span class="o">=</span> <span class="mi">64</span>
