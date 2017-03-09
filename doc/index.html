@@ -1,0 +1,459 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>datasketch &#8212; datasketch 1.0.0 documentation</title>
+    
+    <link rel="stylesheet" href="_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     '1.0.0',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link rel="top" title="datasketch 1.0.0 documentation" href="#" />
+   
+  <link rel="stylesheet" href="_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head>
+  <body role="document">
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="datasketch">
+<h1>datasketch<a class="headerlink" href="#datasketch" title="Permalink to this headline">¶</a></h1>
+<dl class="class">
+<dt id="datasketch.MinHash">
+<em class="property">class </em><code class="descclassname">datasketch.</code><code class="descname">MinHash</code><span class="sig-paren">(</span><em>num_perm=128</em>, <em>seed=1</em>, <em>hashobj=&lt;built-in function openssl_sha1&gt;</em>, <em>hashvalues=None</em>, <em>permutations=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/datasketch/minhash.html#MinHash"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#datasketch.MinHash" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create a MinHash with <cite>num_perm</cite> number of random permutation
+functions.
+The <cite>seed</cite> parameter controls the set of random permutation functions
+generated for this MinHash.
+Different seed will generate different sets of permutaiton functions.
+The <cite>hashobj</cite> parameter specifies a hash used for generating
+hash value. It must implements the <cite>digest</cite> interface similar to
+hashlib hashes.
+<cite>hashvalues</cite> and <cite>permutations</cite> can be specified for faster
+initialization using existing state from another MinHash.</p>
+<dl class="method">
+<dt id="datasketch.MinHash.__len__">
+<code class="descname">__len__</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/datasketch/minhash.html#MinHash.__len__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#datasketch.MinHash.__len__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return the size of the MinHash</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="datasketch.MinHash.__eq__">
+<code class="descname">__eq__</code><span class="sig-paren">(</span><em>other</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/datasketch/minhash.html#MinHash.__eq__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#datasketch.MinHash.__eq__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Check equivalence between MinHash</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="datasketch.MinHash.is_empty">
+<code class="descname">is_empty</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/datasketch/minhash.html#MinHash.is_empty"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#datasketch.MinHash.is_empty" title="Permalink to this definition">¶</a></dt>
+<dd><p>Check if the current MinHash is empty - at the state of just
+initialized.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="datasketch.MinHash.clear">
+<code class="descname">clear</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/datasketch/minhash.html#MinHash.clear"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#datasketch.MinHash.clear" title="Permalink to this definition">¶</a></dt>
+<dd><p>Clear the current state of the Minhash.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="datasketch.MinHash.copy">
+<code class="descname">copy</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/datasketch/minhash.html#MinHash.copy"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#datasketch.MinHash.copy" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create a copy of this MinHash by exporting its state.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="datasketch.MinHash.update">
+<code class="descname">update</code><span class="sig-paren">(</span><em>b</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/datasketch/minhash.html#MinHash.update"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#datasketch.MinHash.update" title="Permalink to this definition">¶</a></dt>
+<dd><p>Update the Minhash with a new data value in bytes.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="datasketch.MinHash.digest">
+<code class="descname">digest</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/datasketch/minhash.html#MinHash.digest"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#datasketch.MinHash.digest" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the hash values.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="datasketch.MinHash.merge">
+<code class="descname">merge</code><span class="sig-paren">(</span><em>other</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/datasketch/minhash.html#MinHash.merge"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#datasketch.MinHash.merge" title="Permalink to this definition">¶</a></dt>
+<dd><p>Merge the other MinHash with this one, making this the union
+of both.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="datasketch.MinHash.count">
+<code class="descname">count</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/datasketch/minhash.html#MinHash.count"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#datasketch.MinHash.count" title="Permalink to this definition">¶</a></dt>
+<dd><p>Estimate the cardinality count.
+See: <a class="reference external" href="http://ieeexplore.ieee.org/stamp/stamp.jsp?arnumber=365694">http://ieeexplore.ieee.org/stamp/stamp.jsp?arnumber=365694</a></p>
+</dd></dl>
+
+<dl class="method">
+<dt id="datasketch.MinHash.jaccard">
+<code class="descname">jaccard</code><span class="sig-paren">(</span><em>other</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/datasketch/minhash.html#MinHash.jaccard"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#datasketch.MinHash.jaccard" title="Permalink to this definition">¶</a></dt>
+<dd><p>Estimate the Jaccard similarity (resemblance) between this Minhash
+and the other.</p>
+</dd></dl>
+
+<dl class="classmethod">
+<dt id="datasketch.MinHash.union">
+<em class="property">classmethod </em><code class="descname">union</code><span class="sig-paren">(</span><em>*mhs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/datasketch/minhash.html#MinHash.union"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#datasketch.MinHash.union" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return the union MinHash of multiple MinHash</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="datasketch.WeightedMinHashGenerator">
+<em class="property">class </em><code class="descclassname">datasketch.</code><code class="descname">WeightedMinHashGenerator</code><span class="sig-paren">(</span><em>dim</em>, <em>sample_size=128</em>, <em>seed=1</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/datasketch/weighted_minhash.html#WeightedMinHashGenerator"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#datasketch.WeightedMinHashGenerator" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="method">
+<dt id="datasketch.WeightedMinHashGenerator.__init__">
+<code class="descname">__init__</code><span class="sig-paren">(</span><em>dim</em>, <em>sample_size=128</em>, <em>seed=1</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/datasketch/weighted_minhash.html#WeightedMinHashGenerator.__init__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#datasketch.WeightedMinHashGenerator.__init__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Initialize the generator with the number of dimensions of input
+vectors, number of samples, and the seed for creating random parameters.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="datasketch.WeightedMinHashGenerator.minhash">
+<code class="descname">minhash</code><span class="sig-paren">(</span><em>v</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/datasketch/weighted_minhash.html#WeightedMinHashGenerator.minhash"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#datasketch.WeightedMinHashGenerator.minhash" title="Permalink to this definition">¶</a></dt>
+<dd><p>Takes a vector of weights as input and returns a
+WeightedMinHash object.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="datasketch.WeightedMinHashGenerator.__weakref__">
+<code class="descname">__weakref__</code><a class="headerlink" href="#datasketch.WeightedMinHashGenerator.__weakref__" title="Permalink to this definition">¶</a></dt>
+<dd><p>list of weak references to the object (if defined)</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="datasketch.WeightedMinHash">
+<em class="property">class </em><code class="descclassname">datasketch.</code><code class="descname">WeightedMinHash</code><span class="sig-paren">(</span><em>seed</em>, <em>hashvalues</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/datasketch/weighted_minhash.html#WeightedMinHash"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#datasketch.WeightedMinHash" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="method">
+<dt id="datasketch.WeightedMinHash.__init__">
+<code class="descname">__init__</code><span class="sig-paren">(</span><em>seed</em>, <em>hashvalues</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/datasketch/weighted_minhash.html#WeightedMinHash.__init__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#datasketch.WeightedMinHash.__init__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create a WeightedMinHash object given the seed
+that was used to generate it and the hash values.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="datasketch.WeightedMinHash.__len__">
+<code class="descname">__len__</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/datasketch/weighted_minhash.html#WeightedMinHash.__len__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#datasketch.WeightedMinHash.__len__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return the number of hash values as the size</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="datasketch.WeightedMinHash.__eq__">
+<code class="descname">__eq__</code><span class="sig-paren">(</span><em>other</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/datasketch/weighted_minhash.html#WeightedMinHash.__eq__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#datasketch.WeightedMinHash.__eq__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Check equivalence between WeightedMinHash</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="datasketch.WeightedMinHash.copy">
+<code class="descname">copy</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/datasketch/weighted_minhash.html#WeightedMinHash.copy"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#datasketch.WeightedMinHash.copy" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create a copy of this WeightedMinHash by exporting its state.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="datasketch.WeightedMinHash.digest">
+<code class="descname">digest</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/datasketch/weighted_minhash.html#WeightedMinHash.digest"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#datasketch.WeightedMinHash.digest" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the hash values.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="datasketch.WeightedMinHash.jaccard">
+<code class="descname">jaccard</code><span class="sig-paren">(</span><em>other</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/datasketch/weighted_minhash.html#WeightedMinHash.jaccard"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#datasketch.WeightedMinHash.jaccard" title="Permalink to this definition">¶</a></dt>
+<dd><p>Estimate Jaccard similarity (resemblance) using this WeightedMinHash
+and the other.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="datasketch.WeightedMinHash.__weakref__">
+<code class="descname">__weakref__</code><a class="headerlink" href="#datasketch.WeightedMinHash.__weakref__" title="Permalink to this definition">¶</a></dt>
+<dd><p>list of weak references to the object (if defined)</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="datasketch.MinHashLSH">
+<em class="property">class </em><code class="descclassname">datasketch.</code><code class="descname">MinHashLSH</code><span class="sig-paren">(</span><em>threshold=0.9</em>, <em>num_perm=128</em>, <em>weights=(0.5</em>, <em>0.5)</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/datasketch/lsh.html#MinHashLSH"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#datasketch.MinHashLSH" title="Permalink to this definition">¶</a></dt>
+<dd><p>The classic MinHash LSH</p>
+<dl class="method">
+<dt id="datasketch.MinHashLSH.__init__">
+<code class="descname">__init__</code><span class="sig-paren">(</span><em>threshold=0.9</em>, <em>num_perm=128</em>, <em>weights=(0.5</em>, <em>0.5)</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/datasketch/lsh.html#MinHashLSH.__init__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#datasketch.MinHashLSH.__init__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create an empty <cite>MinHashLSH</cite> index that accepts MinHash objects
+with <cite>num_perm</cite> permutation functions and query
+Jaccard similarity threshold <cite>threshold</cite>.
+The initialized <cite>MinHashLSH</cite> will be optimized for the threshold by
+minizing the false positive and false negative.</p>
+<p>Use <cite>weights</cite> to adjust the relative importance of
+minizing false positive and false negative when optimizing
+for the Jaccard similarity threshold.
+<cite>weights</cite> is a tuple in the format of
+(false_positive_weight, false_negative_weight).</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="datasketch.MinHashLSH.__contains__">
+<code class="descname">__contains__</code><span class="sig-paren">(</span><em>key</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/datasketch/lsh.html#MinHashLSH.__contains__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#datasketch.MinHashLSH.__contains__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return True only if the key exists in the index.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="datasketch.MinHashLSH.insert">
+<code class="descname">insert</code><span class="sig-paren">(</span><em>key</em>, <em>minhash</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/datasketch/lsh.html#MinHashLSH.insert"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#datasketch.MinHashLSH.insert" title="Permalink to this definition">¶</a></dt>
+<dd><p>Insert a unique <cite>key</cite> to the index, together
+with a <cite>minhash</cite> of the data referenced by the <cite>key</cite>.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="datasketch.MinHashLSH.query">
+<code class="descname">query</code><span class="sig-paren">(</span><em>minhash</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/datasketch/lsh.html#MinHashLSH.query"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#datasketch.MinHashLSH.query" title="Permalink to this definition">¶</a></dt>
+<dd><p>Giving the MinHash of the query dataset, retrieve
+the keys that references datasets with Jaccard
+similarities greater than the threshold set by the index.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="datasketch.MinHashLSH.remove">
+<code class="descname">remove</code><span class="sig-paren">(</span><em>key</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/datasketch/lsh.html#MinHashLSH.remove"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#datasketch.MinHashLSH.remove" title="Permalink to this definition">¶</a></dt>
+<dd><p>Remove the key from the index.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="datasketch.MinHashLSH.__weakref__">
+<code class="descname">__weakref__</code><a class="headerlink" href="#datasketch.MinHashLSH.__weakref__" title="Permalink to this definition">¶</a></dt>
+<dd><p>list of weak references to the object (if defined)</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="datasketch.MinHashLSHForest">
+<em class="property">class </em><code class="descclassname">datasketch.</code><code class="descname">MinHashLSHForest</code><span class="sig-paren">(</span><em>num_perm=128</em>, <em>l=8</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/datasketch/lshforest.html#MinHashLSHForest"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#datasketch.MinHashLSHForest" title="Permalink to this definition">¶</a></dt>
+<dd><p>The LSH Forests for MinHash data sketch.
+Each hash table is a sorted array of the hash values.</p>
+<dl class="method">
+<dt id="datasketch.MinHashLSHForest.__init__">
+<code class="descname">__init__</code><span class="sig-paren">(</span><em>num_perm=128</em>, <em>l=8</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/datasketch/lshforest.html#MinHashLSHForest.__init__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#datasketch.MinHashLSHForest.__init__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Creates an empty <cite>MinHashLSHForest</cite> object that accepts
+MinHash objects with <cite>num_perm</cite> number of permutation functions.
+<cite>l</cite> is the number of prefix trees as described in the paper.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="datasketch.MinHashLSHForest.is_empty">
+<code class="descname">is_empty</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/datasketch/lshforest.html#MinHashLSHForest.is_empty"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#datasketch.MinHashLSHForest.is_empty" title="Permalink to this definition">¶</a></dt>
+<dd><p>Check whether there is any searchable keys in the index.
+Note that keys won&#8217;t be searchable until <cite>index</cite> is called.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="datasketch.MinHashLSHForest.__contains__">
+<code class="descname">__contains__</code><span class="sig-paren">(</span><em>key</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/datasketch/lshforest.html#MinHashLSHForest.__contains__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#datasketch.MinHashLSHForest.__contains__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return True only if the key has been added to the index.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="datasketch.MinHashLSHForest.add">
+<code class="descname">add</code><span class="sig-paren">(</span><em>key</em>, <em>minhash</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/datasketch/lshforest.html#MinHashLSHForest.add"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#datasketch.MinHashLSHForest.add" title="Permalink to this definition">¶</a></dt>
+<dd><p>Add a unique <cite>key</cite>, together
+with a <cite>minhash</cite> of the data referenced by the <cite>key</cite>.
+The key won&#8217;t be searchbale until <cite>index</cite> method is called.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="datasketch.MinHashLSHForest.index">
+<code class="descname">index</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/datasketch/lshforest.html#MinHashLSHForest.index"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#datasketch.MinHashLSHForest.index" title="Permalink to this definition">¶</a></dt>
+<dd><p>Index all the keys added so far and make them searchable.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="datasketch.MinHashLSHForest.query">
+<code class="descname">query</code><span class="sig-paren">(</span><em>minhash</em>, <em>k</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/datasketch/lshforest.html#MinHashLSHForest.query"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#datasketch.MinHashLSHForest.query" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return the approximate top-<cite>k</cite> keys that have the highest
+Jaccard similarities to the query <cite>minhash</cite>.
+This will return at most <cite>k</cite> keys as a list.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="datasketch.MinHashLSHForest.__weakref__">
+<code class="descname">__weakref__</code><a class="headerlink" href="#datasketch.MinHashLSHForest.__weakref__" title="Permalink to this definition">¶</a></dt>
+<dd><p>list of weak references to the object (if defined)</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="datasketch.HyperLogLog">
+<em class="property">class </em><code class="descclassname">datasketch.</code><code class="descname">HyperLogLog</code><span class="sig-paren">(</span><em>p=8</em>, <em>reg=None</em>, <em>hashobj=&lt;built-in function openssl_sha1&gt;</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/datasketch/hyperloglog.html#HyperLogLog"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#datasketch.HyperLogLog" title="Permalink to this definition">¶</a></dt>
+<dd><p>The HyperLogLog class.</p>
+<dl class="method">
+<dt id="datasketch.HyperLogLog.__init__">
+<code class="descname">__init__</code><span class="sig-paren">(</span><em>p=8</em>, <em>reg=None</em>, <em>hashobj=&lt;built-in function openssl_sha1&gt;</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/datasketch/hyperloglog.html#HyperLogLog.__init__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#datasketch.HyperLogLog.__init__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create a HyperLogLog with precision parameter <cite>p</cite> and (optionally) a
+register vector <cite>reg</cite>. If <cite>reg</cite> is specified, the constructor will
+use it as the underlying regiser, instead of creating a new one, and
+the <cite>p</cite> parameter value is ignored.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="datasketch.HyperLogLog.__len__">
+<code class="descname">__len__</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/datasketch/hyperloglog.html#HyperLogLog.__len__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#datasketch.HyperLogLog.__len__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the size of the HyperLogLog.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="datasketch.HyperLogLog.__eq__">
+<code class="descname">__eq__</code><span class="sig-paren">(</span><em>other</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/datasketch/hyperloglog.html#HyperLogLog.__eq__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#datasketch.HyperLogLog.__eq__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Check equivalence between two HyperLogLogs</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="datasketch.HyperLogLog.is_empty">
+<code class="descname">is_empty</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/datasketch/hyperloglog.html#HyperLogLog.is_empty"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#datasketch.HyperLogLog.is_empty" title="Permalink to this definition">¶</a></dt>
+<dd><p>Check if the current HyperLogLog is empty - at the state of just
+initialized.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="datasketch.HyperLogLog.clear">
+<code class="descname">clear</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/datasketch/hyperloglog.html#HyperLogLog.clear"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#datasketch.HyperLogLog.clear" title="Permalink to this definition">¶</a></dt>
+<dd><p>Reset the current HyperLogLog.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="datasketch.HyperLogLog.copy">
+<code class="descname">copy</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/datasketch/hyperloglog.html#HyperLogLog.copy"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#datasketch.HyperLogLog.copy" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create a copy of the current HyperLogLog by exporting its state.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="datasketch.HyperLogLog.update">
+<code class="descname">update</code><span class="sig-paren">(</span><em>b</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/datasketch/hyperloglog.html#HyperLogLog.update"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#datasketch.HyperLogLog.update" title="Permalink to this definition">¶</a></dt>
+<dd><p>Update the HyperLogLog with a new data value in bytes.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="datasketch.HyperLogLog.digest">
+<code class="descname">digest</code><span class="sig-paren">(</span><em>hashobj</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/datasketch/hyperloglog.html#HyperLogLog.digest"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#datasketch.HyperLogLog.digest" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return the current register.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="datasketch.HyperLogLog.merge">
+<code class="descname">merge</code><span class="sig-paren">(</span><em>other</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/datasketch/hyperloglog.html#HyperLogLog.merge"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#datasketch.HyperLogLog.merge" title="Permalink to this definition">¶</a></dt>
+<dd><p>Merge the other HyperLogLog with this one, making this the union of the
+two.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="datasketch.HyperLogLog.count">
+<code class="descname">count</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/datasketch/hyperloglog.html#HyperLogLog.count"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#datasketch.HyperLogLog.count" title="Permalink to this definition">¶</a></dt>
+<dd><p>Estimate the cardinality of the data seen so far.</p>
+</dd></dl>
+
+<dl class="classmethod">
+<dt id="datasketch.HyperLogLog.union">
+<em class="property">classmethod </em><code class="descname">union</code><span class="sig-paren">(</span><em>*hyperloglogs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/datasketch/hyperloglog.html#HyperLogLog.union"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#datasketch.HyperLogLog.union" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return the union of all given HyperLogLogs</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="datasketch.HyperLogLogPlusPlus">
+<em class="property">class </em><code class="descclassname">datasketch.</code><code class="descname">HyperLogLogPlusPlus</code><span class="sig-paren">(</span><em>p=8</em>, <em>reg=None</em>, <em>hashobj=&lt;built-in function openssl_sha1&gt;</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/datasketch/hyperloglog.html#HyperLogLogPlusPlus"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#datasketch.HyperLogLogPlusPlus" title="Permalink to this definition">¶</a></dt>
+<dd><p>The HyperLogLog++, an enhanced HyperLogLog from Google.
+<a class="reference external" href="http://research.google.com/pubs/pub40671.html">http://research.google.com/pubs/pub40671.html</a>
+Main changes:
+1) Use 64 bits instead of 32 bits for hash function
+2) A new small-cardinality estimation scheme
+3) Sparse representation (not implemented here)</p>
+<dl class="attribute">
+<dt id="datasketch.HyperLogLogPlusPlus.__weakref__">
+<code class="descname">__weakref__</code><a class="headerlink" href="#datasketch.HyperLogLogPlusPlus.__weakref__" title="Permalink to this definition">¶</a></dt>
+<dd><p>list of weak references to the object (if defined)</p>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper"><div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="#">Documentation overview</a><ul>
+  </ul></li>
+</ul>
+</div>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/index.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <div><input type="text" name="q" /></div>
+      <div><input type="submit" value="Go" /></div>
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2017, ekzhu.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.4.6</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.9</a>
+      
+      |
+      <a href="_sources/index.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

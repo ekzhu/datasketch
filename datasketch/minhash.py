@@ -155,10 +155,6 @@ class MinHash(object):
                 np.float(len(self))
 
     def bytesize(self):
-        '''
-        Returns the size of this MinHash in bytes.
-        To be used in serialization.
-        '''
         # Use 8 bytes to store the seed integer
         seed_size = struct.calcsize('q')
         # Use 4 bytes to store the number of hash values
@@ -168,10 +164,6 @@ class MinHash(object):
         return seed_size + length_size + len(self) * hashvalue_size
 
     def serialize(self, buf):
-        '''
-        Serializes this MinHash into bytes, store in `buf`.
-        This is more efficient than using pickle.dumps on the object.
-        '''
         if len(buf) < self.bytesize():
             raise ValueError("The buffer does not have enough space\
                     for holding this MinHash.")
@@ -181,11 +173,6 @@ class MinHash(object):
 
     @classmethod
     def deserialize(cls, buf):
-        '''
-        Reconstruct a MinHash from a byte buffer.
-        This is more efficient than using the pickle.loads on the pickled
-        bytes.
-        '''
         try:
             seed, num_perm = struct.unpack_from('qi', buf, 0)
         except TypeError:
@@ -198,12 +185,6 @@ class MinHash(object):
         return cls(num_perm=num_perm, seed=seed, hashvalues=hashvalues)
 
     def __getstate__(self):
-        '''
-        This function is called when pickling the MinHash.
-        Returns a bytearray which will then be pickled.
-        Note that the bytes returned by the Python pickle.dumps is not
-        the same as the buffer returned by this function.
-        '''
         buf = bytearray(self.bytesize())
         fmt = "qi%dI" % len(self)
         struct.pack_into(fmt, buf, 0,
@@ -211,12 +192,6 @@ class MinHash(object):
         return buf
 
     def __setstate__(self, buf):
-        '''
-        This function is called when unpickling the MinHash.
-        Initialize the object with data in the buffer.
-        Note that the input buffer is not the same as the input to the
-        Python pickle.loads function.
-        '''
         try:
             seed, num_perm = struct.unpack_from('qi', buf, 0)
         except TypeError:

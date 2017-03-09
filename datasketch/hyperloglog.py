@@ -194,9 +194,6 @@ class HyperLogLog(object):
         return h
 
     def bytesize(self):
-        '''
-        Return the size of the HyperLogLog in bytes.
-        '''
         # Since p is no larger than 64, use 8 bits
         p_size = struct.calcsize('B')
         # Each register value is no larger than 64, use 8 bits
@@ -206,10 +203,6 @@ class HyperLogLog(object):
         return p_size + reg_val_size * self.m
 
     def serialize(self, buf):
-        '''
-        Serialize this HyperLogLog into bytes, store in the `buf`.
-        This is more efficient than using pickle.dumps on the object.
-        '''
         if len(buf) < self.bytesize():
             raise ValueError("The buffer does not have enough space\
                     for holding this HyperLogLog.")
@@ -218,11 +211,6 @@ class HyperLogLog(object):
 
     @classmethod
     def deserialize(cls, buf):
-        '''
-        Reconstruct a HyperLogLog from bytes in `buf`.
-        This is more efficient than using the pickle.loads on the pickled
-        bytes.
-        '''
         size = struct.calcsize('B')
         try:
             p = struct.unpack_from('B', buf, 0)[0]
@@ -239,23 +227,11 @@ class HyperLogLog(object):
         return h
 
     def __getstate__(self):
-        '''
-        This function is called when pickling the HyperLogLog object.
-        Returns a bytearray which will then be pickled.
-        Note that the bytes returned by the Python pickle.dumps is not
-        the same as the buffer returned by this function.
-        '''
         buf = bytearray(self.bytesize())
         self.serialize(buf)
         return buf
 
     def __setstate__(self, buf):
-        '''
-        This function is called when unpickling the HyperLogLog object.
-        Initialize the object with data in the buffer.
-        Note that the input buffer is not the same as the input to the
-        Python pickle.loads function.
-        '''
         size = struct.calcsize('B')
         try:
             p = struct.unpack_from('B', buf, 0)[0]
