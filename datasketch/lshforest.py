@@ -127,7 +127,7 @@ class MinHashLSHForest(object):
         '''
         Check whether there is any searchable keys in the index.
         Note that keys won't be searchable until `index` is called.
-        
+
         Returns:
             bool: True if there is no searchable key in the index.
         '''
