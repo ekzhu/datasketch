@@ -58,22 +58,22 @@ class MinHashLSH(object):
     Reference: `Chapter 3, Mining of Massive Datasets 
     <http://www.mmds.org/>`_.
 
-    Note:
-        The MinHash LSH index also works with weighted Jaccard similarity
-        and weighted MinHash without modification.
-
     Args:
         threshold (float): The Jaccard similarity threshold between 0.0 and
             1.0. The initialized MinHash LSH will be optimized for the threshold by
             minizing the false positive and false negative.
         num_perm (int, optional): The number of permutation functions used
             by the MinHash to be indexed. For weighted MinHash, this
-            is the number of samples (`num_sample`).
+            is the sample size (`sample_size`).
         weights (tuple, optional): Used to adjust the relative importance of 
             minizing false positive and false negative when optimizing 
             for the Jaccard similarity threshold.
             `weights` is a tuple in the format of 
             :code:`(false_positive_weight, false_negative_weight)`.
+    
+    Note:
+        The MinHash LSH index also works with weighted Jaccard similarity
+        and weighted MinHash without modification.
     '''
 
     def __init__(self, threshold=0.9, num_perm=128, weights=(0.5,0.5)):
@@ -172,25 +172,3 @@ class MinHashLSH(object):
     def _H(self, hs):
         return bytes(hs.byteswap().data)
 
-
-class WeightedMinHashLSH(MinHashLSH):
-    '''
-    The classic MinHash LSH adapted for Weighted MinHash
-    '''
-
-    def __init__(self, threshold=0.9, sample_size=128, weights=(0.5,0.5)):
-        '''
-        Create an empty `WeightedMinHashLSH` index that accepts 
-        WeightedMinHash objects
-        with `sample_size` samples and query
-        Jaccard similarity threshold `threshold`.
-        The initialized `WeightedMinHashLSH` will be optimized for the threshold by
-        minizing the false positive and false negative.
-
-        Use `weights` to adjust the relative importance of 
-        minizing false positive and false negative when optimizing 
-        for the Jaccard similarity threshold.
-        `weights` is a tuple in the format of 
-        (false_positive_weight, false_negative_weight).
-        '''
-        super(WeightedMinHashLSH, self).__init__(threshold, sample_size, weights)

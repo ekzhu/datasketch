@@ -1,0 +1,197 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>MinHash &#8212; datasketch 1.0.0 documentation</title>
+    
+    <link rel="stylesheet" href="_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     '1.0.0',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link rel="top" title="datasketch 1.0.0 documentation" href="index.html" />
+    <link rel="next" title="Weighted MinHash" href="weightedminhash.html" />
+    <link rel="prev" title="MinHash LSH Forest" href="lshforest.html" />
+   
+  <link rel="stylesheet" href="_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head>
+  <body role="document">
+  <div class="document">
+    
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="index.html">datasketch</a></h1>
+
+
+
+<p class="blurb">Probabilistic data structures for Big Data</p>
+
+
+
+
+<p>
+<iframe src="https://ghbtns.com/github-btn.html?user=ekzhu&repo=datasketch&type=star&count=true&size=large&v=2"
+  allowtransparency="true" frameborder="0" scrolling="0" width="200px" height="35px"></iframe>
+</p>
+
+
+
+
+
+<h3>Navigation</h3>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="documentation.html">API Documentation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="hyperloglog.html">HyperLogLog</a></li>
+<li class="toctree-l1"><a class="reference internal" href="hyperloglog.html#hyperloglog-plusplus">HyperLogLog++</a></li>
+<li class="toctree-l1"><a class="reference internal" href="lsh.html">MinHash LSH</a></li>
+<li class="toctree-l1"><a class="reference internal" href="lshforest.html">MinHash LSH Forest</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">MinHash</a></li>
+<li class="toctree-l1"><a class="reference internal" href="weightedminhash.html">Weighted MinHash</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="index.html">Documentation overview</a><ul>
+      <li>Previous: <a href="lshforest.html" title="previous chapter">MinHash LSH Forest</a></li>
+      <li>Next: <a href="weightedminhash.html" title="next chapter">Weighted MinHash</a></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <div><input type="text" name="q" /></div>
+      <div><input type="submit" value="Go" /></div>
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="minhash">
+<span id="id1"></span><h1>MinHash<a class="headerlink" href="#minhash" title="Permalink to this headline">¶</a></h1>
+<p><a class="reference internal" href="documentation.html#datasketch.MinHash" title="datasketch.MinHash"><code class="xref py py-class docutils literal"><span class="pre">datasketch.MinHash</span></code></a> lets you estimate the <a class="reference external" href="https://en.wikipedia.org/wiki/Jaccard_index">Jaccard
+similarity</a>
+(resemblance) between
+<a class="reference external" href="https://en.wikipedia.org/wiki/Set_(mathematics)">**sets**</a> of
+arbitrary sizes in linear time using a small and fixed memory space. It
+can also be used to compute Jaccard similarity between data streams.
+MinHash is introduced by Andrei Z. Broder in this
+<a class="reference external" href="http://cs.brown.edu/courses/cs253/papers/nearduplicate.pdf">paper</a></p>
+<div class="code python highlight-default"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">datasketch</span> <span class="k">import</span> <span class="n">MinHash</span>
+
+<span class="n">data1</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;minhash&#39;</span><span class="p">,</span> <span class="s1">&#39;is&#39;</span><span class="p">,</span> <span class="s1">&#39;a&#39;</span><span class="p">,</span> <span class="s1">&#39;probabilistic&#39;</span><span class="p">,</span> <span class="s1">&#39;data&#39;</span><span class="p">,</span> <span class="s1">&#39;structure&#39;</span><span class="p">,</span> <span class="s1">&#39;for&#39;</span><span class="p">,</span>
+        <span class="s1">&#39;estimating&#39;</span><span class="p">,</span> <span class="s1">&#39;the&#39;</span><span class="p">,</span> <span class="s1">&#39;similarity&#39;</span><span class="p">,</span> <span class="s1">&#39;between&#39;</span><span class="p">,</span> <span class="s1">&#39;datasets&#39;</span><span class="p">]</span>
+<span class="n">data2</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;minhash&#39;</span><span class="p">,</span> <span class="s1">&#39;is&#39;</span><span class="p">,</span> <span class="s1">&#39;a&#39;</span><span class="p">,</span> <span class="s1">&#39;probability&#39;</span><span class="p">,</span> <span class="s1">&#39;data&#39;</span><span class="p">,</span> <span class="s1">&#39;structure&#39;</span><span class="p">,</span> <span class="s1">&#39;for&#39;</span><span class="p">,</span>
+        <span class="s1">&#39;estimating&#39;</span><span class="p">,</span> <span class="s1">&#39;the&#39;</span><span class="p">,</span> <span class="s1">&#39;similarity&#39;</span><span class="p">,</span> <span class="s1">&#39;between&#39;</span><span class="p">,</span> <span class="s1">&#39;documents&#39;</span><span class="p">]</span>
+
+<span class="n">m1</span><span class="p">,</span> <span class="n">m2</span> <span class="o">=</span> <span class="n">MinHash</span><span class="p">(),</span> <span class="n">MinHash</span><span class="p">()</span>
+<span class="k">for</span> <span class="n">d</span> <span class="ow">in</span> <span class="n">data1</span><span class="p">:</span>
+    <span class="n">m1</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">d</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="s1">&#39;utf8&#39;</span><span class="p">))</span>
+<span class="k">for</span> <span class="n">d</span> <span class="ow">in</span> <span class="n">data2</span><span class="p">:</span>
+    <span class="n">m2</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">d</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="s1">&#39;utf8&#39;</span><span class="p">))</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Estimated Jaccard for data1 and data2 is&quot;</span><span class="p">,</span> <span class="n">m1</span><span class="o">.</span><span class="n">jaccard</span><span class="p">(</span><span class="n">m2</span><span class="p">))</span>
+
+<span class="n">s1</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">data1</span><span class="p">)</span>
+<span class="n">s2</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">data2</span><span class="p">)</span>
+<span class="n">actual_jaccard</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">s1</span><span class="o">.</span><span class="n">intersection</span><span class="p">(</span><span class="n">s2</span><span class="p">)))</span><span class="o">/</span><span class="nb">float</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">s1</span><span class="o">.</span><span class="n">union</span><span class="p">(</span><span class="n">s2</span><span class="p">)))</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Actual Jaccard for data1 and data2 is&quot;</span><span class="p">,</span> <span class="n">actual_jaccard</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>You can adjust the accuracy by customizing the number of permutation
+functions used in MinHash.</p>
+<div class="code python highlight-default"><div class="highlight"><pre><span></span><span class="c1"># This will give better accuracy than the default setting (128).</span>
+<span class="n">m</span> <span class="o">=</span> <span class="n">MinHash</span><span class="p">(</span><span class="n">num_perm</span><span class="o">=</span><span class="mi">256</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>The trade-off for better accuracy is slower speed and higher memory
+usage. Because using more permutation functions means 1) more CPU
+instructions for every data value hashed and 2) more hash values to be
+stored. The speed and memory usage of MinHash are both linearly
+proportional to the number of permutation functions used.</p>
+<div class="figure" id="id2">
+<img alt="MinHash Benchmark" src="https://github.com/ekzhu/datasketch/raw/master/plots/minhash_benchmark.png" />
+<p class="caption"><span class="caption-text">MinHash Benchmark</span></p>
+</div>
+<p>You can union two MinHash object using the <code class="docutils literal"><span class="pre">merge</span></code> function. This
+makes MinHash useful in parallel MapReduce style data analysis.</p>
+<div class="code python highlight-default"><div class="highlight"><pre><span></span><span class="c1"># The makes m1 the union of m2 and the original m1.</span>
+<span class="n">m1</span><span class="o">.</span><span class="n">merge</span><span class="p">(</span><span class="n">m2</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>MinHash can be used for estimating the number of distinct elements, or
+cardinality. The analysis is presented in <a class="reference external" href="http://ieeexplore.ieee.org/stamp/stamp.jsp?arnumber=365694">Cohen
+1994</a>.</p>
+<div class="code python highlight-default"><div class="highlight"><pre><span></span><span class="c1"># Returns the estimation of the cardinality of</span>
+<span class="c1"># all data values seen so far.</span>
+<span class="n">m</span><span class="o">.</span><span class="n">count</span><span class="p">()</span>
+</pre></div>
+</div>
+<p>If you are handling billions of MinHash objects, consider using
+<a class="reference internal" href="documentation.html#datasketch.LeanMinHash" title="datasketch.LeanMinHash"><code class="xref py py-class docutils literal"><span class="pre">datasketch.LeanMinHash</span></code></a> to reduce your memory footprint.</p>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+    <div class="clearer"></div>
+  </div>
+    <div class="footer">
+      &copy;2017, Eric Zhu.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.4.6</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.10</a>
+      
+      |
+      <a href="_sources/minhash.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+    <script type="text/javascript">
+
+      var _gaq = _gaq || [];
+      _gaq.push(['_setAccount', 'UA-93507731-1']);
+      _gaq.push(['_setDomainName', 'none']);
+      _gaq.push(['_setAllowLinker', true]);
+      _gaq.push(['_trackPageview']);
+
+      (function() {
+        var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+        ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+        var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+      })();
+
+    </script>
+    
+  </body>
+</html>

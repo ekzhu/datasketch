@@ -34,9 +34,60 @@
 
   </head>
   <body role="document">
-  
+  <div class="document">
+    
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../../index.html">datasketch</a></h1>
 
-    <div class="document">
+
+
+<p class="blurb">Probabilistic data structures for Big Data</p>
+
+
+
+
+<p>
+<iframe src="https://ghbtns.com/github-btn.html?user=ekzhu&repo=datasketch&type=star&count=true&size=large&v=2"
+  allowtransparency="true" frameborder="0" scrolling="0" width="200px" height="35px"></iframe>
+</p>
+
+
+
+
+
+<h3>Navigation</h3>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../documentation.html">API Documentation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../hyperloglog.html">HyperLogLog</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../hyperloglog.html#hyperloglog-plusplus">HyperLogLog++</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../lsh.html">MinHash LSH</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../lshforest.html">MinHash LSH Forest</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../minhash.html">MinHash</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../weightedminhash.html">Weighted MinHash</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../index.html">Documentation overview</a><ul>
+  <li><a href="../index.html">Module code</a><ul>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="../../search.html" method="get">
+      <div><input type="text" name="q" /></div>
+      <div><input type="submit" value="Go" /></div>
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
       <div class="documentwrapper">
         <div class="bodywrapper">
           <div class="body" role="main">
@@ -102,22 +153,22 @@
 <span class="sd">    Reference: `Chapter 3, Mining of Massive Datasets </span>
 <span class="sd">    &lt;http://www.mmds.org/&gt;`_.</span>
 
-<span class="sd">    Note:</span>
-<span class="sd">        The MinHash LSH index also works with weighted Jaccard similarity</span>
-<span class="sd">        and weighted MinHash without modification.</span>
-
 <span class="sd">    Args:</span>
 <span class="sd">        threshold (float): The Jaccard similarity threshold between 0.0 and</span>
 <span class="sd">            1.0. The initialized MinHash LSH will be optimized for the threshold by</span>
 <span class="sd">            minizing the false positive and false negative.</span>
 <span class="sd">        num_perm (int, optional): The number of permutation functions used</span>
 <span class="sd">            by the MinHash to be indexed. For weighted MinHash, this</span>
-<span class="sd">            is the number of samples (`num_sample`).</span>
+<span class="sd">            is the sample size (`sample_size`).</span>
 <span class="sd">        weights (tuple, optional): Used to adjust the relative importance of </span>
 <span class="sd">            minizing false positive and false negative when optimizing </span>
 <span class="sd">            for the Jaccard similarity threshold.</span>
 <span class="sd">            `weights` is a tuple in the format of </span>
 <span class="sd">            :code:`(false_positive_weight, false_negative_weight)`.</span>
+<span class="sd">    </span>
+<span class="sd">    Note:</span>
+<span class="sd">        The MinHash LSH index also works with weighted Jaccard similarity</span>
+<span class="sd">        and weighted MinHash without modification.</span>
 <span class="sd">    &#39;&#39;&#39;</span>
 
     <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">threshold</span><span class="o">=</span><span class="mf">0.9</span><span class="p">,</span> <span class="n">num_perm</span><span class="o">=</span><span class="mi">128</span><span class="p">,</span> <span class="n">weights</span><span class="o">=</span><span class="p">(</span><span class="mf">0.5</span><span class="p">,</span><span class="mf">0.5</span><span class="p">)):</span>
@@ -216,68 +267,40 @@
     <span class="k">def</span> <span class="nf">_H</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">hs</span><span class="p">):</span>
         <span class="k">return</span> <span class="nb">bytes</span><span class="p">(</span><span class="n">hs</span><span class="o">.</span><span class="n">byteswap</span><span class="p">()</span><span class="o">.</span><span class="n">data</span><span class="p">)</span></div>
 
-
-<span class="k">class</span> <span class="nc">WeightedMinHashLSH</span><span class="p">(</span><span class="n">MinHashLSH</span><span class="p">):</span>
-    <span class="sd">&#39;&#39;&#39;</span>
-<span class="sd">    The classic MinHash LSH adapted for Weighted MinHash</span>
-<span class="sd">    &#39;&#39;&#39;</span>
-
-    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">threshold</span><span class="o">=</span><span class="mf">0.9</span><span class="p">,</span> <span class="n">sample_size</span><span class="o">=</span><span class="mi">128</span><span class="p">,</span> <span class="n">weights</span><span class="o">=</span><span class="p">(</span><span class="mf">0.5</span><span class="p">,</span><span class="mf">0.5</span><span class="p">)):</span>
-        <span class="sd">&#39;&#39;&#39;</span>
-<span class="sd">        Create an empty `WeightedMinHashLSH` index that accepts </span>
-<span class="sd">        WeightedMinHash objects</span>
-<span class="sd">        with `sample_size` samples and query</span>
-<span class="sd">        Jaccard similarity threshold `threshold`.</span>
-<span class="sd">        The initialized `WeightedMinHashLSH` will be optimized for the threshold by</span>
-<span class="sd">        minizing the false positive and false negative.</span>
-
-<span class="sd">        Use `weights` to adjust the relative importance of </span>
-<span class="sd">        minizing false positive and false negative when optimizing </span>
-<span class="sd">        for the Jaccard similarity threshold.</span>
-<span class="sd">        `weights` is a tuple in the format of </span>
-<span class="sd">        (false_positive_weight, false_negative_weight).</span>
-<span class="sd">        &#39;&#39;&#39;</span>
-        <span class="nb">super</span><span class="p">(</span><span class="n">WeightedMinHashLSH</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">__init__</span><span class="p">(</span><span class="n">threshold</span><span class="p">,</span> <span class="n">sample_size</span><span class="p">,</span> <span class="n">weights</span><span class="p">)</span>
 </pre></div>
 
           </div>
         </div>
       </div>
-      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
-        <div class="sphinxsidebarwrapper"><div class="relations">
-<h3>Related Topics</h3>
-<ul>
-  <li><a href="../../index.html">Documentation overview</a><ul>
-  <li><a href="../index.html">Module code</a><ul>
-  </ul></li>
-  </ul></li>
-</ul>
-</div>
-<div id="searchbox" style="display: none" role="search">
-  <h3>Quick search</h3>
-    <form class="search" action="../../search.html" method="get">
-      <div><input type="text" name="q" /></div>
-      <div><input type="submit" value="Go" /></div>
-      <input type="hidden" name="check_keywords" value="yes" />
-      <input type="hidden" name="area" value="default" />
-    </form>
-</div>
-<script type="text/javascript">$('#searchbox').show(0);</script>
-        </div>
-      </div>
-      <div class="clearer"></div>
-    </div>
+    <div class="clearer"></div>
+  </div>
     <div class="footer">
-      &copy;2017, ekzhu.
+      &copy;2017, Eric Zhu.
       
       |
       Powered by <a href="http://sphinx-doc.org/">Sphinx 1.4.6</a>
-      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.9</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.10</a>
       
     </div>
 
     
 
+    
+    <script type="text/javascript">
+
+      var _gaq = _gaq || [];
+      _gaq.push(['_setAccount', 'UA-93507731-1']);
+      _gaq.push(['_setDomainName', 'none']);
+      _gaq.push(['_setAllowLinker', true]);
+      _gaq.push(['_trackPageview']);
+
+      (function() {
+        var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+        ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+        var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+      })();
+
+    </script>
     
   </body>
 </html>

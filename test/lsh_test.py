@@ -2,7 +2,7 @@ import unittest
 from hashlib import sha1
 import pickle
 import numpy as np
-from datasketch.lsh import MinHashLSH, WeightedMinHashLSH
+from datasketch.lsh import MinHashLSH
 from datasketch.minhash import MinHash
 from datasketch.weighted_minhash import WeightedMinHashGenerator
 
@@ -93,16 +93,16 @@ class TestMinHashLSH(unittest.TestCase):
 class TestWeightedMinHashLSH(unittest.TestCase):
 
     def test_init(self):
-        lsh = WeightedMinHashLSH(threshold=0.8)
+        lsh = MinHashLSH(threshold=0.8)
         self.assertTrue(lsh.is_empty())
         b1, r1 = lsh.b, lsh.r
-        lsh = WeightedMinHashLSH(threshold=0.8, weights=(0.2,0.8))
+        lsh = MinHashLSH(threshold=0.8, weights=(0.2,0.8))
         b2, r2 = lsh.b, lsh.r
         self.assertTrue(b1 < b2)
         self.assertTrue(r1 > r2)
 
     def test_insert(self):
-        lsh = WeightedMinHashLSH(threshold=0.5, sample_size=4)
+        lsh = MinHashLSH(threshold=0.5, num_perm=4)
         mg = WeightedMinHashGenerator(10, 4)
         m1 = mg.minhash(np.random.uniform(1, 10, 10))
         m2 = mg.minhash(np.random.uniform(1, 10, 10))
@@ -125,7 +125,7 @@ class TestWeightedMinHashLSH(unittest.TestCase):
         self.assertRaises(ValueError, lsh.insert, "c", m3)
 
     def test_query(self):
-        lsh = WeightedMinHashLSH(threshold=0.5, sample_size=4)
+        lsh = MinHashLSH(threshold=0.5, num_perm=4)
         mg = WeightedMinHashGenerator(10, 4)
         m1 = mg.minhash(np.random.uniform(1, 10, 10))
         m2 = mg.minhash(np.random.uniform(1, 10, 10))
@@ -141,7 +141,7 @@ class TestWeightedMinHashLSH(unittest.TestCase):
         self.assertRaises(ValueError, lsh.query, m3)
 
     def test_remove(self):
-        lsh = WeightedMinHashLSH(threshold=0.5, sample_size=4)
+        lsh = MinHashLSH(threshold=0.5, num_perm=4)
         mg = WeightedMinHashGenerator(10, 4)
         m1 = mg.minhash(np.random.uniform(1, 10, 10))
         m2 = mg.minhash(np.random.uniform(1, 10, 10))
@@ -158,7 +158,7 @@ class TestWeightedMinHashLSH(unittest.TestCase):
         self.assertRaises(ValueError, lsh.remove, "c")
 
     def test_pickle(self):
-        lsh = WeightedMinHashLSH(threshold=0.5, sample_size=4)
+        lsh = MinHashLSH(threshold=0.5, num_perm=4)
         mg = WeightedMinHashGenerator(10, 4)
         m1 = mg.minhash(np.random.uniform(1, 10, 10))
         m2 = mg.minhash(np.random.uniform(1, 10, 10))

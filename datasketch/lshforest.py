@@ -10,16 +10,16 @@ class MinHashLSHForest(object):
     I use a sorted array to store the hash values in every
     hash table.
     
-    Note:
-        The MinHash LSH Forest also works with weighted Jaccard similarity
-        and weighted MinHash without modification.
-
     Args:
         num_perm (int, optional): The number of permutation functions used
             by the MinHash to be indexed. For weighted MinHash, this
-            is the number of samples (`num_sample`).
+            is the sample size (`sample_size`).
         l (int, optional): The number of prefix trees as described in the
             paper.
+    
+    Note:
+        The MinHash LSH Forest also works with weighted Jaccard similarity
+        and weighted MinHash without modification.
     '''
 
     def __init__(self, num_perm=128, l=8):

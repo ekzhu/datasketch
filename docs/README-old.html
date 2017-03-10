@@ -1,0 +1,631 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>datasketch &#8212; datasketch 1.0.0 documentation</title>
+    
+    <link rel="stylesheet" href="_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     '1.0.0',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link rel="top" title="datasketch 1.0.0 documentation" href="index.html" />
+    <link rel="next" title="API Documentation" href="documentation.html" />
+    <link rel="prev" title="datasketch: Big Data Looks Small" href="index.html" />
+   
+  <link rel="stylesheet" href="_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head>
+  <body role="document">
+  <div class="document">
+    
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">datasketch</a><ul>
+<li><a class="reference internal" href="#install">Install</a></li>
+<li><a class="reference internal" href="#minhash">MinHash</a></li>
+<li><a class="reference internal" href="#minhash-lsh">MinHash LSH</a></li>
+<li><a class="reference internal" href="#minhash-lsh-forest">MinHash LSH Forest</a></li>
+<li><a class="reference internal" href="#weighted-minhash">Weighted MinHash</a></li>
+<li><a class="reference internal" href="#b-bit-minhash">b-Bit MinHash</a></li>
+<li><a class="reference internal" href="#hyperloglog">HyperLogLog</a></li>
+<li><a class="reference internal" href="#id1">HyperLogLog++</a></li>
+<li><a class="reference internal" href="#serialization">Serialization</a></li>
+</ul>
+</li>
+</ul>
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="index.html">Documentation overview</a><ul>
+      <li>Previous: <a href="index.html" title="previous chapter">datasketch: Big Data Looks Small</a></li>
+      <li>Next: <a href="documentation.html" title="next chapter">API Documentation</a></li>
+  </ul></li>
+</ul>
+</div>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/README-old.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <div><input type="text" name="q" /></div>
+      <div><input type="submit" value="Go" /></div>
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="datasketch">
+<h1>datasketch<a class="headerlink" href="#datasketch" title="Permalink to this headline">¶</a></h1>
+<p><a class="reference external" href="https://travis-ci.org/ekzhu/datasketch"><img alt="Build Status" src="https://travis-ci.org/ekzhu/datasketch.svg?branch=master" /></a> <a class="reference external" href="https://zenodo.org/badge/latestdoi/32555448"><img alt="DOI" src="https://zenodo.org/badge/32555448.svg" /></a></p>
+<p><a class="reference external" href="https://ekzhu.github.io/datasketch/documentation.html">Documentation</a></p>
+<p>datasketch gives you probabilistic data structures that can process and
+search vary large amount of data super fast, with little loss of
+accuracy.</p>
+<p>This package contains the following data sketches:</p>
+<table border="1" class="docutils">
+<colgroup>
+<col width="30%" />
+<col width="70%" />
+</colgroup>
+<thead valign="bottom">
+<tr class="row-odd"><th class="head">Data Sketch</th>
+<th class="head">Usage</th>
+</tr>
+</thead>
+<tbody valign="top">
+<tr class="row-even"><td>MinHash</td>
+<td>estimate Jaccard similarity and cardinality</td>
+</tr>
+<tr class="row-odd"><td>b-Bit MinHash</td>
+<td>estimate Jaccard similarity</td>
+</tr>
+<tr class="row-even"><td>Weighted MinHash</td>
+<td>estimate weighted Jaccard similarity</td>
+</tr>
+<tr class="row-odd"><td>HyperLogLog</td>
+<td>estimate cardinality</td>
+</tr>
+<tr class="row-even"><td>HyperLogLog++</td>
+<td>estimate cardinality</td>
+</tr>
+</tbody>
+</table>
+<p>The following indexes for data sketches are provided to support
+sub-linear query time:</p>
+<table border="1" class="docutils">
+<colgroup>
+<col width="29%" />
+<col width="39%" />
+<col width="32%" />
+</colgroup>
+<thead valign="bottom">
+<tr class="row-odd"><th class="head">Index</th>
+<th class="head">For Data Sketch</th>
+<th class="head">Supported Query Type</th>
+</tr>
+</thead>
+<tbody valign="top">
+<tr class="row-even"><td>MinHash LSH</td>
+<td>MinHash, Weighted MinHash</td>
+<td>Radius (Threshold)</td>
+</tr>
+<tr class="row-odd"><td>MinHash LSH Forest</td>
+<td>MinHash, Weighted MinHash</td>
+<td>Top-K</td>
+</tr>
+</tbody>
+</table>
+<p>datasketch must be used with Python 2.7 or above and NumPy 1.11 or
+above. Scipy is optional, but with it the LSH initialization can be much
+faster.</p>
+<div class="section" id="install">
+<h2>Install<a class="headerlink" href="#install" title="Permalink to this headline">¶</a></h2>
+<p>To install datasketch using <code class="docutils literal"><span class="pre">pip</span></code>:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">pip</span> <span class="n">install</span> <span class="n">datasketch</span> <span class="o">-</span><span class="n">U</span>
+</pre></div>
+</div>
+<p>This will also install NumPy as dependency.</p>
+</div>
+<div class="section" id="minhash">
+<h2>MinHash<a class="headerlink" href="#minhash" title="Permalink to this headline">¶</a></h2>
+<p><a class="reference external" href="https://ekzhu.github.io/datasketch/documentation.html#datasketch.MinHash">Documentation</a></p>
+<p>MinHash lets you estimate the <a class="reference external" href="https://en.wikipedia.org/wiki/Jaccard_index">Jaccard
+similarity</a>
+(resemblance) between
+<a class="reference external" href="https://en.wikipedia.org/wiki/Set_(mathematics)">**sets**</a> of
+arbitrary sizes in linear time using a small and fixed memory space. It
+can also be used to compute Jaccard similarity between data streams.
+MinHash is introduced by Andrei Z. Broder in this
+<a class="reference external" href="http://cs.brown.edu/courses/cs253/papers/nearduplicate.pdf">paper</a></p>
+<div class="code python highlight-default"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">datasketch</span> <span class="k">import</span> <span class="n">MinHash</span>
+
+<span class="n">data1</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;minhash&#39;</span><span class="p">,</span> <span class="s1">&#39;is&#39;</span><span class="p">,</span> <span class="s1">&#39;a&#39;</span><span class="p">,</span> <span class="s1">&#39;probabilistic&#39;</span><span class="p">,</span> <span class="s1">&#39;data&#39;</span><span class="p">,</span> <span class="s1">&#39;structure&#39;</span><span class="p">,</span> <span class="s1">&#39;for&#39;</span><span class="p">,</span>
+        <span class="s1">&#39;estimating&#39;</span><span class="p">,</span> <span class="s1">&#39;the&#39;</span><span class="p">,</span> <span class="s1">&#39;similarity&#39;</span><span class="p">,</span> <span class="s1">&#39;between&#39;</span><span class="p">,</span> <span class="s1">&#39;datasets&#39;</span><span class="p">]</span>
+<span class="n">data2</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;minhash&#39;</span><span class="p">,</span> <span class="s1">&#39;is&#39;</span><span class="p">,</span> <span class="s1">&#39;a&#39;</span><span class="p">,</span> <span class="s1">&#39;probability&#39;</span><span class="p">,</span> <span class="s1">&#39;data&#39;</span><span class="p">,</span> <span class="s1">&#39;structure&#39;</span><span class="p">,</span> <span class="s1">&#39;for&#39;</span><span class="p">,</span>
+        <span class="s1">&#39;estimating&#39;</span><span class="p">,</span> <span class="s1">&#39;the&#39;</span><span class="p">,</span> <span class="s1">&#39;similarity&#39;</span><span class="p">,</span> <span class="s1">&#39;between&#39;</span><span class="p">,</span> <span class="s1">&#39;documents&#39;</span><span class="p">]</span>
+
+<span class="n">m1</span><span class="p">,</span> <span class="n">m2</span> <span class="o">=</span> <span class="n">MinHash</span><span class="p">(),</span> <span class="n">MinHash</span><span class="p">()</span>
+<span class="k">for</span> <span class="n">d</span> <span class="ow">in</span> <span class="n">data1</span><span class="p">:</span>
+    <span class="n">m1</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">d</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="s1">&#39;utf8&#39;</span><span class="p">))</span>
+<span class="k">for</span> <span class="n">d</span> <span class="ow">in</span> <span class="n">data2</span><span class="p">:</span>
+    <span class="n">m2</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">d</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="s1">&#39;utf8&#39;</span><span class="p">))</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Estimated Jaccard for data1 and data2 is&quot;</span><span class="p">,</span> <span class="n">m1</span><span class="o">.</span><span class="n">jaccard</span><span class="p">(</span><span class="n">m2</span><span class="p">))</span>
+
+<span class="n">s1</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">data1</span><span class="p">)</span>
+<span class="n">s2</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">data2</span><span class="p">)</span>
+<span class="n">actual_jaccard</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">s1</span><span class="o">.</span><span class="n">intersection</span><span class="p">(</span><span class="n">s2</span><span class="p">)))</span><span class="o">/</span><span class="nb">float</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">s1</span><span class="o">.</span><span class="n">union</span><span class="p">(</span><span class="n">s2</span><span class="p">)))</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Actual Jaccard for data1 and data2 is&quot;</span><span class="p">,</span> <span class="n">actual_jaccard</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>You can adjust the accuracy by customizing the number of permutation
+functions used in MinHash.</p>
+<div class="code python highlight-default"><div class="highlight"><pre><span></span><span class="c1"># This will give better accuracy than the default setting (128).</span>
+<span class="n">m</span> <span class="o">=</span> <span class="n">MinHash</span><span class="p">(</span><span class="n">num_perm</span><span class="o">=</span><span class="mi">256</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>The trade-off for better accuracy is slower speed and higher memory
+usage. Because using more permutation functions means 1) more CPU
+instructions for every data value hashed and 2) more hash values to be
+stored. The speed and memory usage of MinHash are both linearly
+proportional to the number of permutation functions used.</p>
+<div class="figure" id="id2">
+<img alt="MinHash Benchmark" src="https://github.com/ekzhu/datasketch/raw/master/plots/minhash_benchmark.png" />
+<p class="caption"><span class="caption-text">MinHash Benchmark</span></p>
+</div>
+<p>You can union two MinHash object using the <code class="docutils literal"><span class="pre">merge</span></code> function. This
+makes MinHash useful in parallel MapReduce style data analysis.</p>
+<div class="code python highlight-default"><div class="highlight"><pre><span></span><span class="c1"># The makes m1 the union of m2 and the original m1.</span>
+<span class="n">m1</span><span class="o">.</span><span class="n">merge</span><span class="p">(</span><span class="n">m2</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>MinHash can be used for estimating the number of distinct elements, or
+cardinality. The analysis is presented in <a class="reference external" href="http://ieeexplore.ieee.org/stamp/stamp.jsp?arnumber=365694">Cohen
+1994</a>.</p>
+<div class="code python highlight-default"><div class="highlight"><pre><span></span><span class="c1"># Returns the estimation of the cardinality of</span>
+<span class="c1"># all data values seen so far.</span>
+<span class="n">m</span><span class="o">.</span><span class="n">count</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="minhash-lsh">
+<h2>MinHash LSH<a class="headerlink" href="#minhash-lsh" title="Permalink to this headline">¶</a></h2>
+<p><a class="reference external" href="https://ekzhu.github.io/datasketch/documentation.html#datasketch.MinHashLSH">Documentation</a></p>
+<p>Suppose you have a very large collection of
+<a class="reference external" href="https://en.wikipedia.org/wiki/Set_(mathematics)">sets</a>. Giving a
+query, which is also a set, you want to find sets in your collection
+that have Jaccard similarities above certain threshold, and you want to
+do it with many other queries. To do this efficiently, you can create a
+MinHash for every set, and when a query comes, you compute the Jaccard
+similarities between the query MinHash and all the MinHash of your
+collection, and return the sets that satisfy your threshold.</p>
+<p>The said approach is still an O(n) algorithm, meaning the query cost
+increases linearly with respect to the number of sets. A popular
+alternative is to use Locality Sensitive Hashing (LSH) index. LSH can be
+used with MinHash to achieve sub-linear query cost - that is a huge
+improvement. The details of the algorithm can be found in <a class="reference external" href="http://infolab.stanford.edu/~ullman/mmds/ch3.pdf">Chapter 3,
+Mining of Massive
+Datasets</a>,</p>
+<p>This package includes the classic version of MinHash LSH. It is
+important to note that the query does not give you the exact result, due
+to the use of MinHash and LSH. There will be false positives - sets that
+do not satisfy your threshold but returned, and false negatives -
+qualifying sets that are not returned. However, the property of LSH
+assures that sets with higher Jaccard similarities always have higher
+probabilities to get returned than sets with lower similarities.
+Moreover, LSH can be optimized so that there can be a &#8220;jump&#8221; in
+probability right at the threshold, making the qualifying sets much more
+likely to get returned than the rest.</p>
+<div class="code python highlight-default"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">datasketch</span> <span class="k">import</span> <span class="n">MinHash</span><span class="p">,</span> <span class="n">MinHashLSH</span>
+
+<span class="n">data1</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;minhash&#39;</span><span class="p">,</span> <span class="s1">&#39;is&#39;</span><span class="p">,</span> <span class="s1">&#39;a&#39;</span><span class="p">,</span> <span class="s1">&#39;probabilistic&#39;</span><span class="p">,</span> <span class="s1">&#39;data&#39;</span><span class="p">,</span> <span class="s1">&#39;structure&#39;</span><span class="p">,</span> <span class="s1">&#39;for&#39;</span><span class="p">,</span>
+        <span class="s1">&#39;estimating&#39;</span><span class="p">,</span> <span class="s1">&#39;the&#39;</span><span class="p">,</span> <span class="s1">&#39;similarity&#39;</span><span class="p">,</span> <span class="s1">&#39;between&#39;</span><span class="p">,</span> <span class="s1">&#39;datasets&#39;</span><span class="p">]</span>
+<span class="n">data2</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;minhash&#39;</span><span class="p">,</span> <span class="s1">&#39;is&#39;</span><span class="p">,</span> <span class="s1">&#39;a&#39;</span><span class="p">,</span> <span class="s1">&#39;probability&#39;</span><span class="p">,</span> <span class="s1">&#39;data&#39;</span><span class="p">,</span> <span class="s1">&#39;structure&#39;</span><span class="p">,</span> <span class="s1">&#39;for&#39;</span><span class="p">,</span>
+        <span class="s1">&#39;estimating&#39;</span><span class="p">,</span> <span class="s1">&#39;the&#39;</span><span class="p">,</span> <span class="s1">&#39;similarity&#39;</span><span class="p">,</span> <span class="s1">&#39;between&#39;</span><span class="p">,</span> <span class="s1">&#39;documents&#39;</span><span class="p">]</span>
+<span class="n">data3</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;minhash&#39;</span><span class="p">,</span> <span class="s1">&#39;is&#39;</span><span class="p">,</span> <span class="s1">&#39;probability&#39;</span><span class="p">,</span> <span class="s1">&#39;data&#39;</span><span class="p">,</span> <span class="s1">&#39;structure&#39;</span><span class="p">,</span> <span class="s1">&#39;for&#39;</span><span class="p">,</span>
+        <span class="s1">&#39;estimating&#39;</span><span class="p">,</span> <span class="s1">&#39;the&#39;</span><span class="p">,</span> <span class="s1">&#39;similarity&#39;</span><span class="p">,</span> <span class="s1">&#39;between&#39;</span><span class="p">,</span> <span class="s1">&#39;documents&#39;</span><span class="p">]</span>
+
+<span class="c1"># Create MinHash objects</span>
+<span class="n">m1</span> <span class="o">=</span> <span class="n">MinHash</span><span class="p">(</span><span class="n">num_perm</span><span class="o">=</span><span class="mi">128</span><span class="p">)</span>
+<span class="n">m2</span> <span class="o">=</span> <span class="n">MinHash</span><span class="p">(</span><span class="n">num_perm</span><span class="o">=</span><span class="mi">128</span><span class="p">)</span>
+<span class="n">m3</span> <span class="o">=</span> <span class="n">MinHash</span><span class="p">(</span><span class="n">num_perm</span><span class="o">=</span><span class="mi">128</span><span class="p">)</span>
+<span class="k">for</span> <span class="n">d</span> <span class="ow">in</span> <span class="n">data1</span><span class="p">:</span>
+    <span class="n">m1</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">d</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="s1">&#39;utf8&#39;</span><span class="p">))</span>
+<span class="k">for</span> <span class="n">d</span> <span class="ow">in</span> <span class="n">data2</span><span class="p">:</span>
+    <span class="n">m2</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">d</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="s1">&#39;utf8&#39;</span><span class="p">))</span>
+<span class="k">for</span> <span class="n">d</span> <span class="ow">in</span> <span class="n">data3</span><span class="p">:</span>
+    <span class="n">m3</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">d</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="s1">&#39;utf8&#39;</span><span class="p">))</span>
+
+<span class="c1"># Create an MinHashLSH index optimized for Jaccard threshold 0.5,</span>
+<span class="c1"># that accepts MinHash objects with 128 permutations functions</span>
+<span class="n">lsh</span> <span class="o">=</span> <span class="n">MinHashLSH</span><span class="p">(</span><span class="n">threshold</span><span class="o">=</span><span class="mf">0.5</span><span class="p">,</span> <span class="n">num_perm</span><span class="o">=</span><span class="mi">128</span><span class="p">)</span>
+
+<span class="c1"># Insert m2 and m3 into the index</span>
+<span class="n">lsh</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="s2">&quot;m2&quot;</span><span class="p">,</span> <span class="n">m2</span><span class="p">)</span>
+<span class="n">lsh</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="s2">&quot;m3&quot;</span><span class="p">,</span> <span class="n">m3</span><span class="p">)</span>
+
+<span class="c1"># Check for membership using the key</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;m2&quot;</span> <span class="ow">in</span> <span class="n">lsh</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;m3&quot;</span> <span class="ow">in</span> <span class="n">lsh</span><span class="p">)</span>
+
+<span class="c1"># Using m1 as the query, retrieve the keys of the qualifying datasets</span>
+<span class="n">result</span> <span class="o">=</span> <span class="n">lsh</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">m1</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Candidates with Jaccard similarity &gt; 0.5&quot;</span><span class="p">,</span> <span class="n">result</span><span class="p">)</span>
+
+<span class="c1"># Remove key from lsh</span>
+<span class="n">lsh</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="s2">&quot;m2&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>The Jaccard similarity threshold must be set at initialization, and
+cannot be changed. So does the <code class="docutils literal"><span class="pre">num_perm</span></code> parameter. Similar to
+MinHash, higher <code class="docutils literal"><span class="pre">num_perm</span></code> can improve the accuracy of <code class="docutils literal"><span class="pre">MinHashLSH</span></code>,
+but increase query cost, since more processing is required as the
+MinHash gets bigger. Unlike MinHash, the benefit of higher <code class="docutils literal"><span class="pre">num_perm</span></code>
+seems to be limited for <code class="docutils literal"><span class="pre">MinHashLSH</span></code> - it looks like when <code class="docutils literal"><span class="pre">num_perm</span></code>
+becomes greater than the dataset cardinality, both precision and recall
+starts to decrease. I experimented with the <a class="reference external" href="http://scikit-learn.org/stable/datasets/twenty_newsgroups.html">20 News Group
+Dataset</a>,
+which has an average cardinality of 193 (3-shingles). The average
+recall, average precision, and 90 percentile query time vs. <code class="docutils literal"><span class="pre">num_perm</span></code>
+are plotted below. See the <code class="docutils literal"><span class="pre">benchmark</span></code> directory for the experiment
+and plotting code.</p>
+<div class="figure" id="id3">
+<img alt="MinHashLSH Benchmark" src="https://github.com/ekzhu/datasketch/raw/master/plots/lsh_benchmark.png" />
+<p class="caption"><span class="caption-text">MinHashLSH Benchmark</span></p>
+</div>
+<p>There are other optional parameters that be used to tune the index:</p>
+<div class="code python highlight-default"><div class="highlight"><pre><span></span><span class="c1"># Use defaults: threshold=0.5, num_perm=128, weights=(0.5, 0.5)</span>
+<span class="n">lsh</span> <span class="o">=</span> <span class="n">MinHashLSH</span><span class="p">()</span>
+
+<span class="c1"># `weights` controls the relative importance between minizing false positive</span>
+<span class="c1"># and minizing false negative when building the `MinHashLSH`.</span>
+<span class="c1"># `weights` must sum to 1.0, and the format is</span>
+<span class="c1"># (false positive weight, false negative weight).</span>
+<span class="c1"># For example, if minizing false negative (or maintaining high recall) is more</span>
+<span class="c1"># important, assign more weight toward false negative: weights=(0.4, 0.6).</span>
+<span class="c1"># Note: try to live with a small difference between weights (i.e. &lt; 0.5).</span>
+<span class="n">lsh</span> <span class="o">=</span> <span class="n">MinHashLSH</span><span class="p">(</span><span class="n">weights</span><span class="o">=</span><span class="p">(</span><span class="mf">0.4</span><span class="p">,</span> <span class="mf">0.6</span><span class="p">))</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="minhash-lsh-forest">
+<h2>MinHash LSH Forest<a class="headerlink" href="#minhash-lsh-forest" title="Permalink to this headline">¶</a></h2>
+<p><a class="reference external" href="https://ekzhu.github.io/datasketch/documentation.html#datasketch.MinHashLSHForest">Documentation</a></p>
+<p>MinHash LSH is useful for radius (or threshold) queries. However,
+<strong>top-k</strong> queries are often more useful in some cases. <a class="reference external" href="http://ilpubs.stanford.edu:8090/678/1/2005-14.pdf">LSH
+Forest</a> by Bawa et
+al. is a general LSH data structure that makes top-k query possible for
+many different types of LSH indexes, which include MinHash LSH. I
+implemented the MinHash LSH Forest, which takes a MinHash data sketch of
+the query set, and returns the top-k matching sets that have the highest
+Jaccard similarities with the query set.</p>
+<p>The interface of <code class="docutils literal"><span class="pre">MinHashLSHForest</span></code> is similar to <code class="docutils literal"><span class="pre">MinHashLSH</span></code>,
+however, it is very important to call <code class="docutils literal"><span class="pre">index</span></code> method after adding the
+keys. Without calling the <code class="docutils literal"><span class="pre">index</span></code> method, the keys won&#8217;t be
+searchable.</p>
+<div class="code python highlight-default"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">datasketch</span> <span class="k">import</span> <span class="n">MinHashLSHForest</span><span class="p">,</span> <span class="n">MinHash</span>
+
+<span class="n">data1</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;minhash&#39;</span><span class="p">,</span> <span class="s1">&#39;is&#39;</span><span class="p">,</span> <span class="s1">&#39;a&#39;</span><span class="p">,</span> <span class="s1">&#39;probabilistic&#39;</span><span class="p">,</span> <span class="s1">&#39;data&#39;</span><span class="p">,</span> <span class="s1">&#39;structure&#39;</span><span class="p">,</span> <span class="s1">&#39;for&#39;</span><span class="p">,</span>
+        <span class="s1">&#39;estimating&#39;</span><span class="p">,</span> <span class="s1">&#39;the&#39;</span><span class="p">,</span> <span class="s1">&#39;similarity&#39;</span><span class="p">,</span> <span class="s1">&#39;between&#39;</span><span class="p">,</span> <span class="s1">&#39;datasets&#39;</span><span class="p">]</span>
+<span class="n">data2</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;minhash&#39;</span><span class="p">,</span> <span class="s1">&#39;is&#39;</span><span class="p">,</span> <span class="s1">&#39;a&#39;</span><span class="p">,</span> <span class="s1">&#39;probability&#39;</span><span class="p">,</span> <span class="s1">&#39;data&#39;</span><span class="p">,</span> <span class="s1">&#39;structure&#39;</span><span class="p">,</span> <span class="s1">&#39;for&#39;</span><span class="p">,</span>
+        <span class="s1">&#39;estimating&#39;</span><span class="p">,</span> <span class="s1">&#39;the&#39;</span><span class="p">,</span> <span class="s1">&#39;similarity&#39;</span><span class="p">,</span> <span class="s1">&#39;between&#39;</span><span class="p">,</span> <span class="s1">&#39;documents&#39;</span><span class="p">]</span>
+<span class="n">data3</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;minhash&#39;</span><span class="p">,</span> <span class="s1">&#39;is&#39;</span><span class="p">,</span> <span class="s1">&#39;probability&#39;</span><span class="p">,</span> <span class="s1">&#39;data&#39;</span><span class="p">,</span> <span class="s1">&#39;structure&#39;</span><span class="p">,</span> <span class="s1">&#39;for&#39;</span><span class="p">,</span>
+        <span class="s1">&#39;estimating&#39;</span><span class="p">,</span> <span class="s1">&#39;the&#39;</span><span class="p">,</span> <span class="s1">&#39;similarity&#39;</span><span class="p">,</span> <span class="s1">&#39;between&#39;</span><span class="p">,</span> <span class="s1">&#39;documents&#39;</span><span class="p">]</span>
+
+<span class="c1"># Create MinHash objects</span>
+<span class="n">m1</span> <span class="o">=</span> <span class="n">MinHash</span><span class="p">(</span><span class="n">num_perm</span><span class="o">=</span><span class="mi">128</span><span class="p">)</span>
+<span class="n">m2</span> <span class="o">=</span> <span class="n">MinHash</span><span class="p">(</span><span class="n">num_perm</span><span class="o">=</span><span class="mi">128</span><span class="p">)</span>
+<span class="n">m3</span> <span class="o">=</span> <span class="n">MinHash</span><span class="p">(</span><span class="n">num_perm</span><span class="o">=</span><span class="mi">128</span><span class="p">)</span>
+<span class="k">for</span> <span class="n">d</span> <span class="ow">in</span> <span class="n">data1</span><span class="p">:</span>
+    <span class="n">m1</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">d</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="s1">&#39;utf8&#39;</span><span class="p">))</span>
+<span class="k">for</span> <span class="n">d</span> <span class="ow">in</span> <span class="n">data2</span><span class="p">:</span>
+    <span class="n">m2</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">d</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="s1">&#39;utf8&#39;</span><span class="p">))</span>
+<span class="k">for</span> <span class="n">d</span> <span class="ow">in</span> <span class="n">data3</span><span class="p">:</span>
+    <span class="n">m3</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">d</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="s1">&#39;utf8&#39;</span><span class="p">))</span>
+
+<span class="c1"># Create a MinHash LSH Forest with the same num_perm parameter</span>
+<span class="n">forest</span> <span class="o">=</span> <span class="n">MinHashLSHForest</span><span class="p">(</span><span class="n">num_perm</span><span class="o">=</span><span class="mi">128</span><span class="p">)</span>
+
+<span class="c1"># Add m2 and m3 into the index</span>
+<span class="n">forest</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="s2">&quot;m2&quot;</span><span class="p">,</span> <span class="n">m2</span><span class="p">)</span>
+<span class="n">forest</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="s2">&quot;m3&quot;</span><span class="p">,</span> <span class="n">m3</span><span class="p">)</span>
+
+<span class="c1"># IMPORTANT: must call index() otherwise the keys won&#39;t be searchable</span>
+<span class="n">forest</span><span class="o">.</span><span class="n">index</span><span class="p">()</span>
+
+<span class="c1"># Check for membership using the key</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;m2&quot;</span> <span class="ow">in</span> <span class="n">forest</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;m3&quot;</span> <span class="ow">in</span> <span class="n">forest</span><span class="p">)</span>
+
+<span class="c1"># Using m1 as the query, retrieve top 2 keys that have the higest Jaccard</span>
+<span class="n">result</span> <span class="o">=</span> <span class="n">forest</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">m1</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Top 2 candidates&quot;</span><span class="p">,</span> <span class="n">result</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>The plot below shows the <a class="reference external" href="https://www.kaggle.com/wiki/MeanAveragePrecision">mean average precision
+(MAP)</a> of linear
+scan with MinHash and MinHash LSH Forest. Synthetic data was used. See
+<code class="docutils literal"><span class="pre">benchmark/lshforest_benchmark.py</span></code> for details.</p>
+<div class="figure" id="id4">
+<img alt="MinHashLSHForest Benchmark" src="https://github.com/ekzhu/datasketch/raw/master/plots/lshforest_benchmark.png" />
+<p class="caption"><span class="caption-text">MinHashLSHForest Benchmark</span></p>
+</div>
+<p>(Optional) If you have read the LSH Forest
+<a class="reference external" href="http://ilpubs.stanford.edu:8090/678/1/2005-14.pdf">paper</a>, and
+understand the data structure, you may want to customize another
+parameter for <code class="docutils literal"><span class="pre">MinHashLSHForest</span></code> &#8211; <code class="docutils literal"><span class="pre">l</span></code>, the number of prefix trees
+(or &#8220;LSH Trees&#8221; as in the paper) in the LSH Forest index. Different from
+the paper, this implementation fixes the number of LSH functions, in
+this case <code class="docutils literal"><span class="pre">num_perm</span></code>, and makes the maximum depth of every prefix tree
+dependent on <code class="docutils literal"><span class="pre">num_perm</span></code> and <code class="docutils literal"><span class="pre">l</span></code>:</p>
+<div class="code python highlight-default"><div class="highlight"><pre><span></span><span class="c1"># The maximum depth of a prefix tree depends on num_perm and l</span>
+<span class="n">k</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">num_perm</span> <span class="o">/</span> <span class="n">l</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>This way the interface of the <code class="docutils literal"><span class="pre">MinHashLSHForest</span></code> is in coherence with
+the interface of <code class="docutils literal"><span class="pre">MinHash</span></code>.</p>
+<div class="code python highlight-default"><div class="highlight"><pre><span></span><span class="c1"># There is another optional parameter l (default l=8).</span>
+<span class="n">forest</span> <span class="o">=</span> <span class="n">MinHashLSHForest</span><span class="p">(</span><span class="n">num_perm</span><span class="o">=</span><span class="mi">250</span><span class="p">,</span> <span class="n">l</span><span class="o">=</span><span class="mi">10</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="weighted-minhash">
+<h2>Weighted MinHash<a class="headerlink" href="#weighted-minhash" title="Permalink to this headline">¶</a></h2>
+<p><a class="reference external" href="https://ekzhu.github.io/datasketch/documentation.html#datasketch.WeightedMinHash">Documentation</a></p>
+<p>MinHash can be used to compress unweighted
+<a class="reference external" href="https://en.wikipedia.org/wiki/Set_(mathematics)">set</a> or binary
+vector, and estimate the <a class="reference external" href="https://en.wikipedia.org/wiki/Jaccard_index">unweighted Jaccard
+similarity</a>. It is
+possible to modify MinHash for <a class="reference external" href="https://en.wikipedia.org/wiki/Jaccard_index#Generalized_Jaccard_similarity_and_distance">weighted
+Jaccard</a>
+on <a class="reference external" href="https://en.wikipedia.org/wiki/Multiset">**multisets**</a> by
+expanding each item (or dimension) by its weight (usually its count in
+the multiset). However this approach does not support real number
+weights, and doing so can be very expensive if the weights are very
+large. <a class="reference external" href="http://static.googleusercontent.com/media/research.google.com/en//pubs/archive/36928.pdf">Weighted
+MinHash</a>
+is created by Sergey Ioffe, and its performance does not depend on the
+weights - as long as the universe of all possible items (or dimension
+for vectors) is known. This makes it unsuitable for stream processing,
+when the knowledge of unseen items cannot be assumed.</p>
+<p>In this library, <code class="docutils literal"><span class="pre">WeightedMinHash</span></code> objects can only be created from
+vectors using <code class="docutils literal"><span class="pre">WeightedMinHashGenerator</span></code>, which takes the dimension as
+a required parameter.</p>
+<div class="code python highlight-default"><div class="highlight"><pre><span></span><span class="c1"># Using default sample_size 256 and seed 1</span>
+<span class="n">wmg</span> <span class="o">=</span> <span class="n">WeightedMinHashGenerator</span><span class="p">(</span><span class="mi">1000</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>You can specify the number of samples (similar to number of permutation
+functions in MinHash) and the random seed.</p>
+<div class="code python highlight-default"><div class="highlight"><pre><span></span><span class="n">wmg</span> <span class="o">=</span> <span class="n">WeightedMinHashGenerator</span><span class="p">(</span><span class="mi">1000</span><span class="p">,</span> <span class="n">sample_size</span><span class="o">=</span><span class="mi">512</span><span class="p">,</span> <span class="n">seed</span><span class="o">=</span><span class="mi">12</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Here is a usage example.</p>
+<div class="code python highlight-default"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">datasketch</span> <span class="k">import</span> <span class="n">WeightedMinHashGenerator</span>
+
+<span class="n">v1</span> <span class="o">=</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">5</span><span class="p">,</span> <span class="mi">6</span><span class="p">,</span> <span class="mi">7</span><span class="p">,</span> <span class="mi">8</span><span class="p">,</span> <span class="mi">9</span><span class="p">,</span> <span class="mi">10</span><span class="p">,</span> <span class="mi">4</span><span class="p">]</span>
+<span class="n">v2</span> <span class="o">=</span> <span class="p">[</span><span class="mi">2</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">8</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">7</span><span class="p">,</span> <span class="mi">10</span><span class="p">,</span> <span class="mi">9</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span>
+
+<span class="c1"># WeightedMinHashGenerator requires dimension as the first argument</span>
+<span class="n">wmg</span> <span class="o">=</span> <span class="n">WeightedMinHashGenerator</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">v1</span><span class="p">))</span>
+<span class="n">wm1</span> <span class="o">=</span> <span class="n">wmg</span><span class="o">.</span><span class="n">minhash</span><span class="p">(</span><span class="n">v1</span><span class="p">)</span> <span class="c1"># wm1 is of the type WeightedMinHash</span>
+<span class="n">wm2</span> <span class="o">=</span> <span class="n">wmg</span><span class="o">.</span><span class="n">minhash</span><span class="p">(</span><span class="n">v2</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Estimated Jaccard is&quot;</span><span class="p">,</span> <span class="n">wm1</span><span class="o">.</span><span class="n">jaccard</span><span class="p">(</span><span class="n">wm2</span><span class="p">))</span>
+</pre></div>
+</div>
+<p>It is possible to make <code class="docutils literal"><span class="pre">WeightedMinHash</span></code> have a <code class="docutils literal"><span class="pre">update</span></code> interface
+similar to <code class="docutils literal"><span class="pre">MinHash</span></code> and use it for stream data processing. However,
+this makes the cost of <code class="docutils literal"><span class="pre">update</span></code> increase linearly with respect to the
+weight. Thus, <code class="docutils literal"><span class="pre">update</span></code> is not implemented for <code class="docutils literal"><span class="pre">WeightedMinHash</span></code> in
+this library.</p>
+<p>Weighted MinHash as similar accuracy and performance profiles as
+MinHash. As you increase the number of samples, you get better accuracy,
+at the expense of slower speed.</p>
+<div class="figure" id="id5">
+<img alt="Weighted MinHash Benchmark" src="https://github.com/ekzhu/datasketch/raw/master/plots/weighted_minhash_benchmark.png" />
+<p class="caption"><span class="caption-text">Weighted MinHash Benchmark</span></p>
+</div>
+<p>The <code class="docutils literal"><span class="pre">MinHashLSH</span></code> index can also be used to index <code class="docutils literal"><span class="pre">WeightedMinHash</span></code>.</p>
+<div class="code python highlight-default"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">from</span> <span class="nn">datasketch</span> <span class="k">import</span> <span class="n">WeightedMinHashGenerator</span>
+<span class="kn">from</span> <span class="nn">datasketch</span> <span class="k">import</span> <span class="n">MinHashLSH</span>
+
+<span class="n">v1</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">uniform</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">10</span><span class="p">,</span> <span class="mi">10</span><span class="p">)</span>
+<span class="n">v2</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">uniform</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">10</span><span class="p">,</span> <span class="mi">10</span><span class="p">)</span>
+<span class="n">v3</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">uniform</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">10</span><span class="p">,</span> <span class="mi">10</span><span class="p">)</span>
+<span class="n">mg</span> <span class="o">=</span> <span class="n">WeightedMinHashGenerator</span><span class="p">(</span><span class="mi">10</span><span class="p">,</span> <span class="mi">5</span><span class="p">)</span>
+<span class="n">m1</span> <span class="o">=</span> <span class="n">mg</span><span class="o">.</span><span class="n">minhash</span><span class="p">(</span><span class="n">v1</span><span class="p">)</span>
+<span class="n">m2</span> <span class="o">=</span> <span class="n">mg</span><span class="o">.</span><span class="n">minhash</span><span class="p">(</span><span class="n">v2</span><span class="p">)</span>
+<span class="n">m3</span> <span class="o">=</span> <span class="n">mg</span><span class="o">.</span><span class="n">minhash</span><span class="p">(</span><span class="n">v3</span><span class="p">)</span>
+
+<span class="c1"># Create weighted MinHash LSH index</span>
+<span class="n">lsh</span> <span class="o">=</span> <span class="n">MinHashLSH</span><span class="p">(</span><span class="n">threshold</span><span class="o">=</span><span class="mf">0.1</span><span class="p">,</span> <span class="n">sample_size</span><span class="o">=</span><span class="mi">5</span><span class="p">)</span>
+<span class="n">lsh</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="s2">&quot;m2&quot;</span><span class="p">,</span> <span class="n">m2</span><span class="p">)</span>
+<span class="n">lsh</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="s2">&quot;m3&quot;</span><span class="p">,</span> <span class="n">m3</span><span class="p">)</span>
+<span class="n">result</span> <span class="o">=</span> <span class="n">lsh</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">m1</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Approximate neighbours with weighted Jaccard similarity &gt; 0.1&quot;</span><span class="p">,</span> <span class="n">result</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="b-bit-minhash">
+<h2>b-Bit MinHash<a class="headerlink" href="#b-bit-minhash" title="Permalink to this headline">¶</a></h2>
+<p><a class="reference external" href="http://research.microsoft.com/pubs/120078/wfc0398-liPS.pdf">b-Bit
+MinHash</a>
+is created by Ping Li and Arnd Christian König. It is a compression of
+MinHash - it stores only the lowest b-bits of each minimum hashed values
+in the MinHash, allowing one to trade accuracy for less storage cost.</p>
+<p>When the actual Jaccard similarity, or resemblance, is large (&gt;= 0.5),
+b-Bit MinHash&#8217;s estimation for Jaccard has very small loss of accuracy
+comparing to the original MinHash. On the other hand, when the actual
+Jaccard is small, b-Bit MinHash gives bad estimation for Jaccard, and it
+tends to over-estimate.</p>
+<div class="figure" id="id6">
+<img alt="b-Bit MinHash Benchmark" src="https://github.com/ekzhu/datasketch/raw/master/plots/b_bit_minhash_benchmark.png" />
+<p class="caption"><span class="caption-text">b-Bit MinHash Benchmark</span></p>
+</div>
+<p>To create a b-Bit MinHash object from an existing MinHash object:</p>
+<div class="code python highlight-default"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">datasketch</span> <span class="k">import</span> <span class="n">bBitMinHash</span>
+
+<span class="c1"># minhash is an existing MinHash object.</span>
+<span class="n">bm</span> <span class="o">=</span> <span class="n">bBitMinHash</span><span class="p">(</span><span class="n">minhash</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>To estimate Jaccard similarity using two b-Bit MinHash objects:</p>
+<div class="code python highlight-default"><div class="highlight"><pre><span></span><span class="c1"># Estimate Jaccard given bm1 and bm2, both must have the same</span>
+<span class="c1"># value for parameter b.</span>
+<span class="n">bm1</span><span class="o">.</span><span class="n">jaccard</span><span class="p">(</span><span class="n">bm2</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>The default value for parameter b is 1. Estimation accuracy can be
+improved by keeping more bits - increasing the value for parameter b.</p>
+<div class="code python highlight-default"><div class="highlight"><pre><span></span><span class="c1"># Using higher value for b can improve accuracy, at the expense of</span>
+<span class="c1"># using more storage space.</span>
+<span class="n">bm</span> <span class="o">=</span> <span class="n">bBitMinHash</span><span class="p">(</span><span class="n">minhash</span><span class="p">,</span> <span class="n">b</span><span class="o">=</span><span class="mi">4</span><span class="p">)</span>
+</pre></div>
+</div>
+<p><strong>Note:</strong> for this implementation, using different values for the
+parameter b won&#8217;t make a difference in the in-memory size of b-Bit
+MinHash, as the underlying storage is a NumPy integer array. However,
+the size of a serialized b-Bit MinHash is determined by the parameter b
+(and of course the number of permutation functions in the original
+MinHash).</p>
+<p>Because b-Bit MinHash only retains the lowest b-bits of the minimum
+hashed values in the original MinHash, it is not mergable. Thus it has
+no <code class="docutils literal"><span class="pre">merge</span></code> function.</p>
+</div>
+<div class="section" id="hyperloglog">
+<h2>HyperLogLog<a class="headerlink" href="#hyperloglog" title="Permalink to this headline">¶</a></h2>
+<p><a class="reference external" href="https://ekzhu.github.io/datasketch/documentation.html#datasketch.HyperLogLog">Documentation</a></p>
+<p>HyperLogLog is capable of estimating the cardinality (the number of
+distinct values) of dataset in a single pass, using a small and fixed
+memory space. HyperLogLog is first introduced in this
+<a class="reference external" href="http://algo.inria.fr/flajolet/Publications/FlFuGaMe07.pdf">paper</a> by
+Philippe Flajolet, Éric Fusy, Olivier Gandouet and Frédéric Meunier.</p>
+<div class="code python highlight-default"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">datasketch</span> <span class="k">import</span> <span class="n">HyperLogLog</span>
+
+<span class="n">data1</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;hyperloglog&#39;</span><span class="p">,</span> <span class="s1">&#39;is&#39;</span><span class="p">,</span> <span class="s1">&#39;a&#39;</span><span class="p">,</span> <span class="s1">&#39;probabilistic&#39;</span><span class="p">,</span> <span class="s1">&#39;data&#39;</span><span class="p">,</span> <span class="s1">&#39;structure&#39;</span><span class="p">,</span> <span class="s1">&#39;for&#39;</span><span class="p">,</span>
+<span class="s1">&#39;estimating&#39;</span><span class="p">,</span> <span class="s1">&#39;the&#39;</span><span class="p">,</span> <span class="s1">&#39;cardinality&#39;</span><span class="p">,</span> <span class="s1">&#39;of&#39;</span><span class="p">,</span> <span class="s1">&#39;dataset&#39;</span><span class="p">,</span> <span class="s1">&#39;dataset&#39;</span><span class="p">,</span> <span class="s1">&#39;a&#39;</span><span class="p">]</span>
+
+<span class="n">h</span> <span class="o">=</span> <span class="n">HyperLogLog</span><span class="p">()</span>
+<span class="k">for</span> <span class="n">d</span> <span class="ow">in</span> <span class="n">data1</span><span class="p">:</span>
+  <span class="n">h</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">d</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="s1">&#39;utf8&#39;</span><span class="p">))</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Estimated cardinality is&quot;</span><span class="p">,</span> <span class="n">h</span><span class="o">.</span><span class="n">count</span><span class="p">())</span>
+
+<span class="n">s1</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">data1</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Actual cardinality is&quot;</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">s1</span><span class="p">))</span>
+</pre></div>
+</div>
+<p>As in MinHash, you can also control the accuracy of HyperLogLog by
+changing the parameter p.</p>
+<div class="code python highlight-default"><div class="highlight"><pre><span></span><span class="c1"># This will give better accuracy than the default setting (8).</span>
+<span class="n">h</span> <span class="o">=</span> <span class="n">HyperLogLog</span><span class="p">(</span><span class="n">p</span><span class="o">=</span><span class="mi">12</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Interestingly, there is no speed penalty for using higher p value.
+However the memory usage is exponential to the p value.</p>
+<div class="figure" id="id7">
+<img alt="HyperLogLog Benchmark" src="https://github.com/ekzhu/datasketch/raw/master/plots/hyperloglog_benchmark.png" />
+<p class="caption"><span class="caption-text">HyperLogLog Benchmark</span></p>
+</div>
+<p>As in MinHash, you can also merge two HyperLogLogs to create a union
+HyperLogLog.</p>
+<div class="code python highlight-default"><div class="highlight"><pre><span></span><span class="n">h1</span> <span class="o">=</span> <span class="n">HyperLogLog</span><span class="p">()</span>
+<span class="n">h2</span> <span class="o">=</span> <span class="n">HyperLogLog</span><span class="p">()</span>
+<span class="n">h1</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="s1">&#39;test&#39;</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="s1">&#39;utf8&#39;</span><span class="p">))</span>
+<span class="c1"># The makes h1 the union of h2 and the original h1.</span>
+<span class="n">h1</span><span class="o">.</span><span class="n">merge</span><span class="p">(</span><span class="n">h2</span><span class="p">)</span>
+<span class="c1"># This will return the cardinality of the union</span>
+<span class="n">h1</span><span class="o">.</span><span class="n">count</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="id1">
+<h2>HyperLogLog++<a class="headerlink" href="#id1" title="Permalink to this headline">¶</a></h2>
+<p><a class="reference external" href="https://ekzhu.github.io/datasketch/documentation.html#datasketch.HyperLogLogPlusPlus">Documentation</a></p>
+<p><a class="reference external" href="http://research.google.com/pubs/pub40671.html">HyperLogLog++</a> is an
+enhanced version of HyperLogLog by Google with the following changes: *
+Use 64-bit hash values instead of the 32-bit used by HyperLogLog * A
+more stable bias correction scheme based on experiments on many datasets
+* Sparse representation (not implemented here)</p>
+<p>HyperLogLog++ object shares the same interface as HyperLogLog. So you
+can use all the HyperLogLog functions in HyperLogLog++.</p>
+<div class="code python highlight-default"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">datasketch</span> <span class="k">import</span> <span class="n">HyperLogLogPlusPlus</span>
+
+<span class="c1"># Initialize an HyperLogLog++ object.</span>
+<span class="n">hpp</span> <span class="o">=</span> <span class="n">HyperLogLogPlusPlus</span><span class="p">()</span>
+<span class="c1"># Everything else is the same as HyperLogLog</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="serialization">
+<h2>Serialization<a class="headerlink" href="#serialization" title="Permalink to this headline">¶</a></h2>
+<p>All data sketches supports efficient serialization using Python&#8217;s
+<code class="docutils literal"><span class="pre">pickle</span></code> module. For example:</p>
+<div class="code python highlight-default"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">pickle</span>
+
+<span class="n">m1</span> <span class="o">=</span> <span class="n">MinHash</span><span class="p">()</span>
+<span class="c1"># Serialize the MinHash objects to bytes</span>
+<span class="nb">bytes</span> <span class="o">=</span> <span class="n">pickle</span><span class="o">.</span><span class="n">dumps</span><span class="p">(</span><span class="n">m1</span><span class="p">)</span>
+<span class="c1"># Reconstruct the serialized MinHash object</span>
+<span class="n">m2</span> <span class="o">=</span> <span class="n">pickle</span><span class="o">.</span><span class="n">loads</span><span class="p">(</span><span class="nb">bytes</span><span class="p">)</span>
+<span class="c1"># m1 and m2 should be equal</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">m1</span> <span class="o">==</span> <span class="n">m2</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+    <div class="clearer"></div>
+  </div>
+    <div class="footer">
+      &copy;2017, ekzhu.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.4.6</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.9</a>
+      
+      |
+      <a href="_sources/README-old.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

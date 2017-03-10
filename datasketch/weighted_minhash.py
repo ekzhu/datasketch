@@ -91,6 +91,7 @@ class WeightedMinHashGenerator(object):
         sample_size (int, optional): The number of samples to use for creating
             weighted MinHash.
         seed (int): The random seed to use for generating permutation functions.
+
     '''
 
     def __init__(self, dim, sample_size=128, seed=1):

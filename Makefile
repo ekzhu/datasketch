@@ -1,3 +1,14 @@
+test:
+	nosetests
+
 doc:
-	pandoc --from=markdown --to=rst --output=docsrc/index.rst README.md
-	sphinx-build -b html docsrc docs
+	sphinx-build -a -b html docsrc docs
+
+
+upload:
+	rm -rf ./dist/*
+	python setup.py bdist_wheel --universal
+	twine upload ./dist/*
+
+install:
+	pip install -e .

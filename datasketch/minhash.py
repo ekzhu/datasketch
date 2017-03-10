@@ -13,7 +13,7 @@ _hash_range = (1 << 32)
 class MinHash(object):
     '''MinHash is a probabilistic data structure for computing 
     `Jaccard similarity`_ between sets.
-    
+ 
     Args:
         num_perm (int, optional): Number of random permutation functions.
             It will be ignored if `hashvalues` is not None.
@@ -29,6 +29,10 @@ class MinHash(object):
         permutations (optional): The permutation function parameters. This argument
             can be specified for faster initialization using the existing
             state from another MinHash.
+    
+    Note:
+        To save memory usage, consider using :class:`datasketch.LeanMinHash`.
+    
     .. _`Jaccard similarity`: https://en.wikipedia.org/wiki/Jaccard_index
     .. _hashlib: https://docs.python.org/3.5/library/hashlib.html
     '''

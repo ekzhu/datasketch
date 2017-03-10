@@ -6,7 +6,7 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>Documentation &#8212; datasketch 1.0.0 documentation</title>
+    <title>API Documentation &#8212; datasketch 1.0.0 documentation</title>
     
     <link rel="stylesheet" href="_static/alabaster.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
@@ -25,6 +25,8 @@
     <script type="text/javascript" src="_static/doctools.js"></script>
     <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
     <link rel="top" title="datasketch 1.0.0 documentation" href="index.html" />
+    <link rel="next" title="HyperLogLog" href="hyperloglog.html" />
+    <link rel="prev" title="datasketch: Big Data Looks Small" href="index.html" />
    
   <link rel="stylesheet" href="_static/custom.css" type="text/css" />
   
@@ -33,15 +35,77 @@
 
   </head>
   <body role="document">
-  
+  <div class="document">
+    
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="index.html">datasketch</a></h1>
 
-    <div class="document">
+
+
+<p class="blurb">Probabilistic data structures for Big Data</p>
+
+
+
+
+<p>
+<iframe src="https://ghbtns.com/github-btn.html?user=ekzhu&repo=datasketch&type=star&count=true&size=large&v=2"
+  allowtransparency="true" frameborder="0" scrolling="0" width="200px" height="35px"></iframe>
+</p>
+
+
+
+
+
+<h3>Navigation</h3>
+<ul class="current">
+<li class="toctree-l1 current"><a class="current reference internal" href="#">API Documentation</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#minhash">MinHash</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#lean-minhash">Lean MinHash</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#weighted-minhash">Weighted MinHash</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#minhash-lsh">MinHash LSH</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#minhash-lsh-forest">MinHash LSH Forest</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#hyperloglog">HyperLogLog</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#id1">HyperLogLog++</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="hyperloglog.html">HyperLogLog</a></li>
+<li class="toctree-l1"><a class="reference internal" href="hyperloglog.html#hyperloglog-plusplus">HyperLogLog++</a></li>
+<li class="toctree-l1"><a class="reference internal" href="lsh.html">MinHash LSH</a></li>
+<li class="toctree-l1"><a class="reference internal" href="lshforest.html">MinHash LSH Forest</a></li>
+<li class="toctree-l1"><a class="reference internal" href="minhash.html">MinHash</a></li>
+<li class="toctree-l1"><a class="reference internal" href="weightedminhash.html">Weighted MinHash</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="index.html">Documentation overview</a><ul>
+      <li>Previous: <a href="index.html" title="previous chapter">datasketch: Big Data Looks Small</a></li>
+      <li>Next: <a href="hyperloglog.html" title="next chapter">HyperLogLog</a></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <div><input type="text" name="q" /></div>
+      <div><input type="submit" value="Go" /></div>
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
       <div class="documentwrapper">
         <div class="bodywrapper">
           <div class="body" role="main">
             
-  <div class="section" id="documentation">
-<h1>Documentation<a class="headerlink" href="#documentation" title="Permalink to this headline">¶</a></h1>
+  <div class="section" id="api-documentation">
+<h1>API Documentation<a class="headerlink" href="#api-documentation" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="minhash">
+<h2>MinHash<a class="headerlink" href="#minhash" title="Permalink to this headline">¶</a></h2>
 <dl class="class">
 <dt id="datasketch.MinHash">
 <em class="property">class </em><code class="descclassname">datasketch.</code><code class="descname">MinHash</code><span class="sig-paren">(</span><em>num_perm=128</em>, <em>seed=1</em>, <em>hashobj=&lt;built-in function openssl_sha1&gt;</em>, <em>hashvalues=None</em>, <em>permutations=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/datasketch/minhash.html#MinHash"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#datasketch.MinHash" title="Permalink to this definition">¶</a></dt>
@@ -71,6 +135,10 @@ state from another MinHash.</li>
 </tr>
 </tbody>
 </table>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">To save memory usage, consider using <a class="reference internal" href="#datasketch.LeanMinHash" title="datasketch.LeanMinHash"><code class="xref py py-class docutils literal"><span class="pre">datasketch.LeanMinHash</span></code></a>.</p>
+</div>
 <dl class="method">
 <dt id="datasketch.MinHash.update">
 <code class="descname">update</code><span class="sig-paren">(</span><em>b</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/datasketch/minhash.html#MinHash.update"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#datasketch.MinHash.update" title="Permalink to this definition">¶</a></dt>
@@ -258,6 +326,65 @@ but must be at least 2.</td>
 
 </dd></dl>
 
+</div>
+<div class="section" id="lean-minhash">
+<h2>Lean MinHash<a class="headerlink" href="#lean-minhash" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="datasketch.LeanMinHash">
+<em class="property">class </em><code class="descclassname">datasketch.</code><code class="descname">LeanMinHash</code><span class="sig-paren">(</span><em>minhash</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/datasketch/lean_minhash.html#LeanMinHash"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#datasketch.LeanMinHash" title="Permalink to this definition">¶</a></dt>
+<dd><p>Lean MinHash is MinHash with a smaller memory footprint
+and faster deserialization, but with its internal state frozen
+&#8211; no <cite>update()</cite>.</p>
+<p>Lean MinHash inherits all methods from <a class="reference internal" href="#datasketch.MinHash" title="datasketch.MinHash"><code class="xref py py-class docutils literal"><span class="pre">datasketch.MinHash</span></code></a>.
+It does not store the <cite>permutations</cite> and the <cite>hashobj</cite> needed for updating.
+If a MinHash does not need further updates, convert it into a lean MinHash
+to save memory.</p>
+<p class="rubric">Example</p>
+<p>To create a lean MinHash from an existing MinHash:</p>
+<div class="highlight-python"><div class="highlight"><pre><span></span><span class="n">lean_minhash</span> <span class="o">=</span> <span class="n">LeanMinHash</span><span class="p">(</span><span class="n">minhash</span><span class="p">)</span>
+
+<span class="c1"># You can compute the Jaccard similarity between two lean MinHash</span>
+<span class="n">lean_minhash</span><span class="o">.</span><span class="n">jaccard</span><span class="p">(</span><span class="n">lean_minhash2</span><span class="p">)</span>
+
+<span class="c1"># Or between a lean MinHash and a MinHash</span>
+<span class="n">lean_minhash</span><span class="o">.</span><span class="n">jaccard</span><span class="p">(</span><span class="n">minhash2</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>To create a MinHash from a lean MinHash:</p>
+<div class="highlight-python"><div class="highlight"><pre><span></span><span class="n">minhash</span> <span class="o">=</span> <span class="n">MinHash</span><span class="p">(</span><span class="n">seed</span><span class="o">=</span><span class="n">lean_minhash</span><span class="o">.</span><span class="n">seed</span><span class="p">,</span>
+                  <span class="n">hashvalues</span><span class="o">=</span><span class="n">lean_minhash</span><span class="o">.</span><span class="n">hashvalues</span><span class="p">)</span>
+
+<span class="c1"># Or if you want to prevent further updates on minhash</span>
+<span class="c1"># from affecting the state of lean_minhash</span>
+<span class="n">minhash</span> <span class="o">=</span> <span class="n">MinHash</span><span class="p">(</span><span class="n">seed</span><span class="o">=</span><span class="n">lean_minhash</span><span class="o">.</span><span class="n">seed</span><span class="p">,</span>
+                  <span class="n">hashvalues</span><span class="o">=</span><span class="n">lean_minhash</span><span class="o">.</span><span class="n">digest</span><span class="p">())</span>
+</pre></div>
+</div>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">Lean MinHash can also be used in <a class="reference internal" href="#datasketch.MinHashLSH" title="datasketch.MinHashLSH"><code class="xref py py-class docutils literal"><span class="pre">datasketch.MinHashLSH</span></code></a>
+and <a class="reference internal" href="#datasketch.MinHashLSHForest" title="datasketch.MinHashLSHForest"><code class="xref py py-class docutils literal"><span class="pre">datasketch.MinHashLSHForest</span></code></a>.</p>
+</div>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>MinHash</strong> &#8211; The MinHash object used to initialize the LeanMinHash.</td>
+</tr>
+</tbody>
+</table>
+<dl class="method">
+<dt id="datasketch.LeanMinHash.update">
+<code class="descname">update</code><span class="sig-paren">(</span><em>b</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/datasketch/lean_minhash.html#LeanMinHash.update"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#datasketch.LeanMinHash.update" title="Permalink to this definition">¶</a></dt>
+<dd><p>This method is not available on a LeanMinHash.
+Calling it raises a TypeError.</p>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="weighted-minhash">
+<h2>Weighted MinHash<a class="headerlink" href="#weighted-minhash" title="Permalink to this headline">¶</a></h2>
 <dl class="class">
 <dt id="datasketch.WeightedMinHashGenerator">
 <em class="property">class </em><code class="descclassname">datasketch.</code><code class="descname">WeightedMinHashGenerator</code><span class="sig-paren">(</span><em>dim</em>, <em>sample_size=128</em>, <em>seed=1</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/datasketch/weighted_minhash.html#WeightedMinHashGenerator"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#datasketch.WeightedMinHashGenerator" title="Permalink to this definition">¶</a></dt>
@@ -415,59 +542,9 @@ are equivalent.</td>
 
 </dd></dl>
 
-<dl class="class">
-<dt id="datasketch.LeanMinHash">
-<em class="property">class </em><code class="descclassname">datasketch.</code><code class="descname">LeanMinHash</code><span class="sig-paren">(</span><em>minhash</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/datasketch/lean_minhash.html#LeanMinHash"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#datasketch.LeanMinHash" title="Permalink to this definition">¶</a></dt>
-<dd><p>Lean MinHash is MinHash with a smaller memory footprint
-and faster deserialization, but with its internal state frozen
-&#8211; no <cite>update()</cite>.</p>
-<p>Lean MinHash inherits all methods from <a class="reference internal" href="#datasketch.MinHash" title="datasketch.MinHash"><code class="xref py py-class docutils literal"><span class="pre">datasketch.MinHash</span></code></a>.
-It does not store the <cite>permutations</cite> and the <cite>hashobj</cite> needed for updating.
-If a MinHash does not need further updates, convert it into a lean MinHash
-to save memory.</p>
-<p class="rubric">Example</p>
-<p>To create a lean MinHash from an existing MinHash:</p>
-<div class="highlight-python"><div class="highlight"><pre><span></span><span class="n">lean_minhash</span> <span class="o">=</span> <span class="n">LeanMinHash</span><span class="p">(</span><span class="n">minhash</span><span class="p">)</span>
-
-<span class="c1"># You can compute the Jaccard similarity between two lean MinHash</span>
-<span class="n">lean_minhash</span><span class="o">.</span><span class="n">jaccard</span><span class="p">(</span><span class="n">lean_minhash2</span><span class="p">)</span>
-
-<span class="c1"># Or between a lean MinHash and a MinHash</span>
-<span class="n">lean_minhash</span><span class="o">.</span><span class="n">jaccard</span><span class="p">(</span><span class="n">minhash2</span><span class="p">)</span>
-</pre></div>
 </div>
-<p>To create a MinHash from a lean MinHash:</p>
-<div class="highlight-python"><div class="highlight"><pre><span></span><span class="n">minhash</span> <span class="o">=</span> <span class="n">MinHash</span><span class="p">(</span><span class="n">seed</span><span class="o">=</span><span class="n">lean_minhash</span><span class="o">.</span><span class="n">seed</span><span class="p">,</span>
-                  <span class="n">hashvalues</span><span class="o">=</span><span class="n">lean_minhash</span><span class="o">.</span><span class="n">hashvalues</span><span class="p">)</span>
-
-<span class="c1"># Or if you want to prevent further updates on minhash</span>
-<span class="c1"># from affecting the state of lean_minhash</span>
-<span class="n">minhash</span> <span class="o">=</span> <span class="n">MinHash</span><span class="p">(</span><span class="n">seed</span><span class="o">=</span><span class="n">lean_minhash</span><span class="o">.</span><span class="n">seed</span><span class="p">,</span>
-                  <span class="n">hashvalues</span><span class="o">=</span><span class="n">lean_minhash</span><span class="o">.</span><span class="n">digest</span><span class="p">())</span>
-</pre></div>
-</div>
-<div class="admonition note">
-<p class="first admonition-title">Note</p>
-<p class="last">Lean MinHash can also be used in <a class="reference internal" href="#datasketch.MinHashLSH" title="datasketch.MinHashLSH"><code class="xref py py-class docutils literal"><span class="pre">datasketch.MinHashLSH</span></code></a>
-and <a class="reference internal" href="#datasketch.MinHashLSHForest" title="datasketch.MinHashLSHForest"><code class="xref py py-class docutils literal"><span class="pre">datasketch.MinHashLSHForest</span></code></a>.</p>
-</div>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>MinHash</strong> &#8211; The MinHash object used to initialize the LeanMinHash.</td>
-</tr>
-</tbody>
-</table>
-<dl class="method">
-<dt id="datasketch.LeanMinHash.update">
-<code class="descname">update</code><span class="sig-paren">(</span><em>b</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/datasketch/lean_minhash.html#LeanMinHash.update"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#datasketch.LeanMinHash.update" title="Permalink to this definition">¶</a></dt>
-<dd><p>This method is not available on a LeanMinHash.
-Calling it raises a TypeError.</p>
-</dd></dl>
-
-</dd></dl>
-
+<div class="section" id="minhash-lsh">
+<h2>MinHash LSH<a class="headerlink" href="#minhash-lsh" title="Permalink to this headline">¶</a></h2>
 <dl class="class">
 <dt id="datasketch.MinHashLSH">
 <em class="property">class </em><code class="descclassname">datasketch.</code><code class="descname">MinHashLSH</code><span class="sig-paren">(</span><em>threshold=0.9</em>, <em>num_perm=128</em>, <em>weights=(0.5</em>, <em>0.5)</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/datasketch/lsh.html#MinHashLSH"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#datasketch.MinHashLSH" title="Permalink to this definition">¶</a></dt>
@@ -475,11 +552,6 @@ Calling it raises a TypeError.</p>
 with MinHash (MinHash LSH).
 It supports query with <a class="reference external" href="https://en.wikipedia.org/wiki/Jaccard_index">Jaccard similarity</a> threshold.
 Reference: <a class="reference external" href="http://www.mmds.org/">Chapter 3, Mining of Massive Datasets</a>.</p>
-<div class="admonition note">
-<p class="first admonition-title">Note</p>
-<p class="last">The MinHash LSH index also works with weighted Jaccard similarity
-and weighted MinHash without modification.</p>
-</div>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
@@ -490,7 +562,7 @@ and weighted MinHash without modification.</p>
 minizing the false positive and false negative.</li>
 <li><strong>num_perm</strong> (<em>int, optional</em>) &#8211; The number of permutation functions used
 by the MinHash to be indexed. For weighted MinHash, this
-is the number of samples (<cite>num_sample</cite>).</li>
+is the sample size (<cite>sample_size</cite>).</li>
 <li><strong>weights</strong> (<em>tuple, optional</em>) &#8211; Used to adjust the relative importance of
 minizing false positive and false negative when optimizing
 for the Jaccard similarity threshold.
@@ -501,6 +573,11 @@ for the Jaccard similarity threshold.
 </tr>
 </tbody>
 </table>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">The MinHash LSH index also works with weighted Jaccard similarity
+and weighted MinHash without modification.</p>
+</div>
 <dl class="method">
 <dt id="datasketch.MinHashLSH.insert">
 <code class="descname">insert</code><span class="sig-paren">(</span><em>key</em>, <em>minhash</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/datasketch/lsh.html#MinHashLSH.insert"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#datasketch.MinHashLSH.insert" title="Permalink to this definition">¶</a></dt>
@@ -593,6 +670,9 @@ similarities greater than the threshold.</p>
 
 </dd></dl>
 
+</div>
+<div class="section" id="minhash-lsh-forest">
+<h2>MinHash LSH Forest<a class="headerlink" href="#minhash-lsh-forest" title="Permalink to this headline">¶</a></h2>
 <dl class="class">
 <dt id="datasketch.MinHashLSHForest">
 <em class="property">class </em><code class="descclassname">datasketch.</code><code class="descname">MinHashLSHForest</code><span class="sig-paren">(</span><em>num_perm=128</em>, <em>l=8</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/datasketch/lshforest.html#MinHashLSHForest"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#datasketch.MinHashLSHForest" title="Permalink to this definition">¶</a></dt>
@@ -600,11 +680,6 @@ similarities greater than the threshold.</p>
 Instead of using prefix trees as the <a class="reference external" href="http://ilpubs.stanford.edu:8090/678/1/2005-14.pdf">original paper</a>,
 I use a sorted array to store the hash values in every
 hash table.</p>
-<div class="admonition note">
-<p class="first admonition-title">Note</p>
-<p class="last">The MinHash LSH Forest also works with weighted Jaccard similarity
-and weighted MinHash without modification.</p>
-</div>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
@@ -612,7 +687,7 @@ and weighted MinHash without modification.</p>
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
 <li><strong>num_perm</strong> (<em>int, optional</em>) &#8211; The number of permutation functions used
 by the MinHash to be indexed. For weighted MinHash, this
-is the number of samples (<cite>num_sample</cite>).</li>
+is the sample size (<cite>sample_size</cite>).</li>
 <li><strong>l</strong> (<em>int, optional</em>) &#8211; The number of prefix trees as described in the
 paper.</li>
 </ul>
@@ -620,6 +695,11 @@ paper.</li>
 </tr>
 </tbody>
 </table>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">The MinHash LSH Forest also works with weighted Jaccard similarity
+and weighted MinHash without modification.</p>
+</div>
 <dl class="method">
 <dt id="datasketch.MinHashLSHForest.add">
 <code class="descname">add</code><span class="sig-paren">(</span><em>key</em>, <em>minhash</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/datasketch/lshforest.html#MinHashLSHForest.add"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#datasketch.MinHashLSHForest.add" title="Permalink to this definition">¶</a></dt>
@@ -712,6 +792,9 @@ Note that keys won&#8217;t be searchable until <cite>index</cite> is called.</p>
 
 </dd></dl>
 
+</div>
+<div class="section" id="hyperloglog">
+<h2>HyperLogLog<a class="headerlink" href="#hyperloglog" title="Permalink to this headline">¶</a></h2>
 <dl class="class">
 <dt id="datasketch.HyperLogLog">
 <em class="property">class </em><code class="descclassname">datasketch.</code><code class="descname">HyperLogLog</code><span class="sig-paren">(</span><em>p=8</em>, <em>reg=None</em>, <em>hashobj=&lt;built-in function openssl_sha1&gt;</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/datasketch/hyperloglog.html#HyperLogLog"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#datasketch.HyperLogLog" title="Permalink to this definition">¶</a></dt>
@@ -881,6 +964,9 @@ initialized.</td>
 
 </dd></dl>
 
+</div>
+<div class="section" id="id1">
+<h2>HyperLogLog++<a class="headerlink" href="#id1" title="Permalink to this headline">¶</a></h2>
 <dl class="class">
 <dt id="datasketch.HyperLogLogPlusPlus">
 <em class="property">class </em><code class="descclassname">datasketch.</code><code class="descname">HyperLogLogPlusPlus</code><span class="sig-paren">(</span><em>p=8</em>, <em>reg=None</em>, <em>hashobj=&lt;built-in function openssl_sha1&gt;</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/datasketch/hyperloglog.html#HyperLogLogPlusPlus"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#datasketch.HyperLogLogPlusPlus" title="Permalink to this definition">¶</a></dt>
@@ -902,46 +988,20 @@ Main changes from the original HyperLogLog:</p>
 </dd></dl>
 
 </div>
+</div>
 
 
           </div>
         </div>
       </div>
-      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
-        <div class="sphinxsidebarwrapper"><div class="relations">
-<h3>Related Topics</h3>
-<ul>
-  <li><a href="index.html">Documentation overview</a><ul>
-  </ul></li>
-</ul>
-</div>
-  <div role="note" aria-label="source link">
-    <h3>This Page</h3>
-    <ul class="this-page-menu">
-      <li><a href="_sources/documentation.txt"
-            rel="nofollow">Show Source</a></li>
-    </ul>
-   </div>
-<div id="searchbox" style="display: none" role="search">
-  <h3>Quick search</h3>
-    <form class="search" action="search.html" method="get">
-      <div><input type="text" name="q" /></div>
-      <div><input type="submit" value="Go" /></div>
-      <input type="hidden" name="check_keywords" value="yes" />
-      <input type="hidden" name="area" value="default" />
-    </form>
-</div>
-<script type="text/javascript">$('#searchbox').show(0);</script>
-        </div>
-      </div>
-      <div class="clearer"></div>
-    </div>
+    <div class="clearer"></div>
+  </div>
     <div class="footer">
-      &copy;2017, ekzhu.
+      &copy;2017, Eric Zhu.
       
       |
       Powered by <a href="http://sphinx-doc.org/">Sphinx 1.4.6</a>
-      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.9</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.10</a>
       
       |
       <a href="_sources/documentation.txt"
@@ -950,6 +1010,22 @@ Main changes from the original HyperLogLog:</p>
 
     
 
+    
+    <script type="text/javascript">
+
+      var _gaq = _gaq || [];
+      _gaq.push(['_setAccount', 'UA-93507731-1']);
+      _gaq.push(['_setDomainName', 'none']);
+      _gaq.push(['_setAllowLinker', true]);
+      _gaq.push(['_trackPageview']);
+
+      (function() {
+        var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+        ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+        var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+      })();
+
+    </script>
     
   </body>
 </html>
