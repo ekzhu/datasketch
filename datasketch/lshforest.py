@@ -142,4 +142,3 @@ class MinHashLSHForest(object):
             bool: True only if the key has been added to the index.
         '''
         return key in self.keys
-

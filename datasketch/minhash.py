@@ -28,7 +28,6 @@ class MinHash(object):
         permutations (optional): The permutation function parameters. This argument
             can be specified for faster initialization using the existing
             state from another MinHash.
-
     .. _`Jaccard similarity`: https://en.wikipedia.org/wiki/Jaccard_index
     .. _hashlib: https://docs.python.org/3.5/library/hashlib.html
     '''
@@ -72,15 +71,13 @@ class MinHash(object):
 
     def update(self, b):
         '''Update this MinHash with a new value.
-
+        
         Args:
             b (bytes): The value of type `bytes`.
-
+            
         Example:
             To update with a new string value:
-
             .. code-block:: python
-
                 minhash.update("new value".encode('utf-8'))
         '''
         hv = struct.unpack('<I', self.hashobj(b).digest()[:4])[0]
@@ -91,10 +88,10 @@ class MinHash(object):
     def jaccard(self, other):
         '''Estimate the `Jaccard similarity`_ (resemblance) between the sets
         represented by this MinHash and the other.
-
+        
         Args:
             other (datasketch.MinHash): The other MinHash.
-
+            
         Returns:
             float: The Jaccard similarity, which is between 0.0 and 1.0.
         '''
@@ -110,7 +107,7 @@ class MinHash(object):
     def count(self):
         '''Estimate the cardinality count based on the technique described in
         `this paper <http://ieeexplore.ieee.org/stamp/stamp.jsp?arnumber=365694>`_.
-
+        
         Returns:
             int: The estimated cardinality of the set represented by this MinHash.
         '''
@@ -120,7 +117,7 @@ class MinHash(object):
     def merge(self, other):
         '''Merge the other MinHash with this one, making this one the union
         of both.
-
+        
         Args:
             other (datasketch.MinHash): The other MinHash.
         '''
@@ -135,7 +132,7 @@ class MinHash(object):
     def digest(self):
         '''Export the hash values, which is the internal state of the
         MinHash.
-
+        
         Returns:
             numpy.array: The hash values which is a Numpy array.
         '''
@@ -145,7 +142,7 @@ class MinHash(object):
         '''
         Returns: 
             bool: If the current MinHash is empty - at the state of just
-            initialized.
+                initialized.
         '''
         if np.any(self.hashvalues != _max_hash):
             return False
@@ -162,7 +159,7 @@ class MinHash(object):
         '''
         Returns:
             datasketch.MinHash: A copy of this MinHash by exporting its
-            state.
+                state.
         '''
         return MinHash(seed=self.seed, hashvalues=self.digest(),
                 permutations=self.permutations)
@@ -178,7 +175,7 @@ class MinHash(object):
         '''
         Returns:
             bool: If their seeds and hash values are both equal then two
-            are equivalent.
+                are equivalent.
         '''
         return self.seed == other.seed and \
                 np.array_equal(self.hashvalues, other.hashvalues)
@@ -234,13 +231,23 @@ class MinHash(object):
 
     @classmethod
     def union(cls, *mhs):
+        '''Create a MinHash which is the union of the MinHash objects passed as arguments.
+
+        Args:
+            *mhs: The MinHash objects to be united. The argument list length is variable,
+                but must be at least 2.
+        
+        Returns:
+            datasketch.MinHash: A new union MinHash.
+        '''
         if len(mhs) < 2:
             raise ValueError("Cannot union less than 2 MinHash")
         num_perm = len(mhs[0])
         seed = mhs[0].seed
-        if any(seed != m.seed for m in mhs) or \
-                any(num_perm != len(m) for m in mhs):
+        if any((seed != m.seed or num_perm != len(m)) for m in mhs):
             raise ValueError("The unioning MinHash must have the\
                     same seed and number of permutation functions")
         hashvalues = np.minimum.reduce([m.hashvalues for m in mhs])
-        return cls(num_perm=num_perm, seed=seed, hashvalues=hashvalues)
+        permutations = mhs[0].permutations
+        return cls(num_perm=num_perm, seed=seed, hashvalues=hashvalues,
+                permutations=permutations)
