@@ -13,6 +13,10 @@ Documentation
     :members:
     :special-members:
 
+.. autoclass:: datasketch.LeanMinHash
+    :members:
+    :special-members:
+
 .. autoclass:: datasketch.MinHashLSH
     :members:
     :special-members:

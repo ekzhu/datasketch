@@ -52,16 +52,17 @@
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
-<li><strong>num_perm</strong> (<em>int, optional</em>) &#8211; Number of random permutation functions.</li>
+<li><strong>num_perm</strong> (<em>int, optional</em>) &#8211; Number of random permutation functions.
+It will be ignored if <cite>hashvalues</cite> is not None.</li>
 <li><strong>seed</strong> (<em>int, optional</em>) &#8211; The random seed controls the set of random
 permutation functions generated for this MinHash.</li>
 <li><strong>hashobj</strong> (<em>optional</em>) &#8211; The hash function used by this MinHash.
 It must implements
 the <cite>digest()</cite> method similar to <a class="reference external" href="https://docs.python.org/3.5/library/hashlib.html">hashlib</a> hash functions, such
 as <cite>hashlib.sha1</cite>.</li>
-<li><strong>hashvalues</strong> (<em>optional</em>) &#8211; The hash values is the internal state of the MinHash.
-It can be specified for faster initialization using the existing
-state from another MinHash.</li>
+<li><strong>hashvalues</strong> (<cite>numpy.array</cite> or <cite>list</cite>, optional) &#8211; The hash values is
+the internal state of the MinHash. It can be specified for faster
+initialization using the existing state from another MinHash.</li>
 <li><strong>permutations</strong> (<em>optional</em>) &#8211; The permutation function parameters. This argument
 can be specified for faster initialization using the existing
 state from another MinHash.</li>
@@ -164,8 +165,11 @@ MinHash.</p>
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">If the current MinHash is empty - at the state of just
-initialized.</td>
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body"><dl class="docutils">
+<dt>If the current MinHash is empty - at the state of just</dt>
+<dd>initialized.</dd>
+</dl>
+</td>
 </tr>
 <tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body">bool</td>
 </tr>
@@ -187,8 +191,11 @@ All hash values are reset.</p>
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">A copy of this MinHash by exporting its
-state.</td>
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body"><dl class="docutils">
+<dt>A copy of this MinHash by exporting its</dt>
+<dd>state.</dd>
+</dl>
+</td>
 </tr>
 <tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body"><a class="reference internal" href="#datasketch.MinHash" title="datasketch.MinHash">datasketch.MinHash</a></td>
 </tr>
@@ -218,10 +225,32 @@ state.</td>
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">If their seeds and hash values are both equal then two
-are equivalent.</td>
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body"><dl class="docutils">
+<dt>If their seeds and hash values are both equal then two</dt>
+<dd>are equivalent.</dd>
+</dl>
+</td>
 </tr>
 <tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body">bool</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="classmethod">
+<dt id="datasketch.MinHash.union">
+<em class="property">classmethod </em><code class="descname">union</code><span class="sig-paren">(</span><em>*mhs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/datasketch/minhash.html#MinHash.union"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#datasketch.MinHash.union" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create a MinHash which is the union of the MinHash objects passed as arguments.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>*mhs</strong> &#8211; The MinHash objects to be united. The argument list length is variable,
+but must be at least 2.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">A new union MinHash.</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><a class="reference internal" href="#datasketch.MinHash" title="datasketch.MinHash">datasketch.MinHash</a></td>
 </tr>
 </tbody>
 </table>
@@ -382,6 +411,59 @@ are equivalent.</td>
 <dt id="datasketch.WeightedMinHash.__weakref__">
 <code class="descname">__weakref__</code><a class="headerlink" href="#datasketch.WeightedMinHash.__weakref__" title="Permalink to this definition">¶</a></dt>
 <dd><p>list of weak references to the object (if defined)</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="datasketch.LeanMinHash">
+<em class="property">class </em><code class="descclassname">datasketch.</code><code class="descname">LeanMinHash</code><span class="sig-paren">(</span><em>minhash</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/datasketch/lean_minhash.html#LeanMinHash"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#datasketch.LeanMinHash" title="Permalink to this definition">¶</a></dt>
+<dd><p>Lean MinHash is MinHash with a smaller memory footprint
+and faster deserialization, but with its internal state frozen
+&#8211; no <cite>update()</cite>.</p>
+<p>Lean MinHash inherits all methods from <a class="reference internal" href="#datasketch.MinHash" title="datasketch.MinHash"><code class="xref py py-class docutils literal"><span class="pre">datasketch.MinHash</span></code></a>.
+It does not store the <cite>permutations</cite> and the <cite>hashobj</cite> needed for updating.
+If a MinHash does not need further updates, convert it into a lean MinHash
+to save memory.</p>
+<p class="rubric">Example</p>
+<p>To create a lean MinHash from an existing MinHash:</p>
+<div class="highlight-python"><div class="highlight"><pre><span></span><span class="n">lean_minhash</span> <span class="o">=</span> <span class="n">LeanMinHash</span><span class="p">(</span><span class="n">minhash</span><span class="p">)</span>
+
+<span class="c1"># You can compute the Jaccard similarity between two lean MinHash</span>
+<span class="n">lean_minhash</span><span class="o">.</span><span class="n">jaccard</span><span class="p">(</span><span class="n">lean_minhash2</span><span class="p">)</span>
+
+<span class="c1"># Or between a lean MinHash and a MinHash</span>
+<span class="n">lean_minhash</span><span class="o">.</span><span class="n">jaccard</span><span class="p">(</span><span class="n">minhash2</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>To create a MinHash from a lean MinHash:</p>
+<div class="highlight-python"><div class="highlight"><pre><span></span><span class="n">minhash</span> <span class="o">=</span> <span class="n">MinHash</span><span class="p">(</span><span class="n">seed</span><span class="o">=</span><span class="n">lean_minhash</span><span class="o">.</span><span class="n">seed</span><span class="p">,</span>
+                  <span class="n">hashvalues</span><span class="o">=</span><span class="n">lean_minhash</span><span class="o">.</span><span class="n">hashvalues</span><span class="p">)</span>
+
+<span class="c1"># Or if you want to prevent further updates on minhash</span>
+<span class="c1"># from affecting the state of lean_minhash</span>
+<span class="n">minhash</span> <span class="o">=</span> <span class="n">MinHash</span><span class="p">(</span><span class="n">seed</span><span class="o">=</span><span class="n">lean_minhash</span><span class="o">.</span><span class="n">seed</span><span class="p">,</span>
+                  <span class="n">hashvalues</span><span class="o">=</span><span class="n">lean_minhash</span><span class="o">.</span><span class="n">digest</span><span class="p">())</span>
+</pre></div>
+</div>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">Lean MinHash can also be used in <a class="reference internal" href="#datasketch.MinHashLSH" title="datasketch.MinHashLSH"><code class="xref py py-class docutils literal"><span class="pre">datasketch.MinHashLSH</span></code></a>
+and <a class="reference internal" href="#datasketch.MinHashLSHForest" title="datasketch.MinHashLSHForest"><code class="xref py py-class docutils literal"><span class="pre">datasketch.MinHashLSHForest</span></code></a>.</p>
+</div>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>MinHash</strong> &#8211; The MinHash object used to initialize the LeanMinHash.</td>
+</tr>
+</tbody>
+</table>
+<dl class="method">
+<dt id="datasketch.LeanMinHash.update">
+<code class="descname">update</code><span class="sig-paren">(</span><em>b</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/datasketch/lean_minhash.html#LeanMinHash.update"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#datasketch.LeanMinHash.update" title="Permalink to this definition">¶</a></dt>
+<dd><p>This method is not available on a LeanMinHash.
+Calling it raises a TypeError.</p>
 </dd></dl>
 
 </dd></dl>

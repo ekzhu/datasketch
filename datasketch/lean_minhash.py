@@ -4,10 +4,43 @@ import numpy as np
 from datasketch import MinHash
 
 class LeanMinHash(MinHash):
-    '''LeanMinHash is a MinHash which doesn't store the permutations and the 
-    hashobj needed for updating. It trades the update() functionality for a faster
-    deserialization and a smaller memory footprint. If a MinHash won't need further updates
-    and needs to be serialized, create a LeanMinHash out of it and serialize that instead.
+    '''Lean MinHash is MinHash with a smaller memory footprint
+    and faster deserialization, but with its internal state frozen
+    -- no `update()`.
+
+    Lean MinHash inherits all methods from :class:`datasketch.MinHash`.
+    It does not store the `permutations` and the `hashobj` needed for updating.
+    If a MinHash does not need further updates, convert it into a lean MinHash
+    to save memory.
+
+    Example:
+        To create a lean MinHash from an existing MinHash:
+
+        .. code-block:: python
+            
+            lean_minhash = LeanMinHash(minhash)
+
+            # You can compute the Jaccard similarity between two lean MinHash
+            lean_minhash.jaccard(lean_minhash2)
+
+            # Or between a lean MinHash and a MinHash
+            lean_minhash.jaccard(minhash2)
+
+        To create a MinHash from a lean MinHash:
+
+        .. code-block:: python
+            
+            minhash = MinHash(seed=lean_minhash.seed, 
+                              hashvalues=lean_minhash.hashvalues)
+
+            # Or if you want to prevent further updates on minhash
+            # from affecting the state of lean_minhash
+            minhash = MinHash(seed=lean_minhash.seed,
+                              hashvalues=lean_minhash.digest())
+
+    Note:
+        Lean MinHash can also be used in :class:`datasketch.MinHashLSH`
+        and :class:`datasketch.MinHashLSHForest`.
     
     Args:
         MinHash: The MinHash object used to initialize the LeanMinHash.
@@ -29,20 +62,16 @@ class LeanMinHash(MinHash):
     def __init__(self, minhash):
         self._initialize_slots(minhash.seed, minhash.hashvalues)
 
+    def update(self, b):
+        '''This method is not available on a LeanMinHash.
+        Calling it raises a TypeError.
+        '''
+        raise TypeError("Cannot update a LeanMinHash")
+
     def copy(self):
-        '''
-        Returns:
-            datasketch.LeanMinHash: A copy of this LeanMinHash by exporting its
-                state.
-        '''
         lmh = object.__new__(LeanMinHash)
         lmh._initialize_slots(*self.__slots__)
         return lmh
-
-    def update(self, b):
-        '''This method is not available on a LeanMinHash.
-        '''
-        raise TypeError("Cannot update a LeanMinHash")
 
     @classmethod
     def deserialize(cls, buf):
@@ -74,15 +103,6 @@ class LeanMinHash(MinHash):
 
     @classmethod
     def union(cls, *lmhs):
-        '''Create a LeanMinHash which is the union of the LeanMinHash objects passed as arguments.
-
-        Args:
-            *mhs: The LeanMinHash objects to be united. The argument list length is variable,
-                but must be at least 2.
-        
-        Returns:
-            datasketch.LeanMinHash: A new union LeanMinHash.
-        '''
         if len(lmhs) < 2:
             raise ValueError("Cannot union less than 2 MinHash")
         num_perm = len(lmhs[0])

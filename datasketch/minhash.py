@@ -16,15 +16,16 @@ class MinHash(object):
     
     Args:
         num_perm (int, optional): Number of random permutation functions.
+            It will be ignored if `hashvalues` is not None.
         seed (int, optional): The random seed controls the set of random 
             permutation functions generated for this MinHash.
         hashobj (optional): The hash function used by this MinHash. 
             It must implements
             the `digest()` method similar to hashlib_ hash functions, such
             as `hashlib.sha1`.
-        hashvalues (optional): The hash values is the internal state of the MinHash.
-            It can be specified for faster initialization using the existing
-            state from another MinHash.
+        hashvalues (`numpy.array` or `list`, optional): The hash values is 
+            the internal state of the MinHash. It can be specified for faster 
+            initialization using the existing state from another MinHash. 
         permutations (optional): The permutation function parameters. This argument
             can be specified for faster initialization using the existing
             state from another MinHash.
@@ -36,6 +37,8 @@ class MinHash(object):
 
     def __init__(self, num_perm=128, seed=1, hashobj=sha1,
             hashvalues=None, permutations=None):
+        if hashvalues is not None:
+            num_perm = len(hashvalues)
         if num_perm > _hash_range:
             # Because 1) we don't want the size to be too large, and
             # 2) we are using 4 bytes to store the size value
@@ -77,7 +80,9 @@ class MinHash(object):
             
         Example:
             To update with a new string value:
+            
             .. code-block:: python
+
                 minhash.update("new value".encode('utf-8'))
         '''
         hv = struct.unpack('<I', self.hashobj(b).digest()[:4])[0]
