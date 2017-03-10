@@ -71,8 +71,10 @@ class MinHash(object):
 
     def update(self, b):
         '''Update this MinHash with a new value.
+        
         Args:
             b (bytes): The value of type `bytes`.
+            
         Example:
             To update with a new string value:
             .. code-block:: python
@@ -86,8 +88,10 @@ class MinHash(object):
     def jaccard(self, other):
         '''Estimate the `Jaccard similarity`_ (resemblance) between the sets
         represented by this MinHash and the other.
+        
         Args:
             other (datasketch.MinHash): The other MinHash.
+            
         Returns:
             float: The Jaccard similarity, which is between 0.0 and 1.0.
         '''
@@ -103,6 +107,7 @@ class MinHash(object):
     def count(self):
         '''Estimate the cardinality count based on the technique described in
         `this paper <http://ieeexplore.ieee.org/stamp/stamp.jsp?arnumber=365694>`_.
+        
         Returns:
             int: The estimated cardinality of the set represented by this MinHash.
         '''
@@ -112,6 +117,7 @@ class MinHash(object):
     def merge(self, other):
         '''Merge the other MinHash with this one, making this one the union
         of both.
+        
         Args:
             other (datasketch.MinHash): The other MinHash.
         '''
@@ -126,6 +132,7 @@ class MinHash(object):
     def digest(self):
         '''Export the hash values, which is the internal state of the
         MinHash.
+        
         Returns:
             numpy.array: The hash values which is a Numpy array.
         '''
@@ -135,7 +142,7 @@ class MinHash(object):
         '''
         Returns: 
             bool: If the current MinHash is empty - at the state of just
-            initialized.
+                initialized.
         '''
         if np.any(self.hashvalues != _max_hash):
             return False
@@ -152,7 +159,7 @@ class MinHash(object):
         '''
         Returns:
             datasketch.MinHash: A copy of this MinHash by exporting its
-            state.
+                state.
         '''
         return MinHash(seed=self.seed, hashvalues=self.digest(),
                 permutations=self.permutations)
@@ -168,7 +175,7 @@ class MinHash(object):
         '''
         Returns:
             bool: If their seeds and hash values are both equal then two
-            are equivalent.
+                are equivalent.
         '''
         return self.seed == other.seed and \
                 np.array_equal(self.hashvalues, other.hashvalues)
