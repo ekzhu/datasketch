@@ -12,17 +12,17 @@ accuracy.
 
 This package contains the following data sketches:
 
-+-----------------------------+-----------------------------------------------+
-| Data Sketch                 | Usage                                         |
-+=============================+===============================================+
-| :ref:`minhash`              | estimate Jaccard similarity and cardinality   |
-+-----------------------------+-----------------------------------------------+
-| :ref:`weighted_minhash`     | estimate weighted Jaccard similarity          |
-+-----------------------------+-----------------------------------------------+
-| :ref:`hyperloglog`          | estimate cardinality                          |
-+-----------------------------+-----------------------------------------------+
-| :ref:`hyperloglog_plusplus` | estimate cardinality                          |
-+-----------------------------+-----------------------------------------------+
++-------------------------+-----------------------------------------------+
+| Data Sketch             | Usage                                         |
++=========================+===============================================+
+| `MinHash`_              | estimate Jaccard similarity and cardinality   |
++-------------------------+-----------------------------------------------+
+| `Weighted MinHash`_     | estimate weighted Jaccard similarity          |
++-------------------------+-----------------------------------------------+
+| `HyperLogLog`_          | estimate cardinality                          |
++-------------------------+-----------------------------------------------+
+| `HyperLogLog++`_        | estimate cardinality                          |
++-------------------------+-----------------------------------------------+
 
 The following indexes for data sketches are provided to support
 sub-linear query time:
@@ -30,9 +30,9 @@ sub-linear query time:
 +---------------------------+-----------------------------+------------------------+
 | Index                     | For Data Sketch             | Supported Query Type   |
 +===========================+=============================+========================+
-| :ref:`minhash_lsh`        | MinHash, Weighted MinHash   | Radius (Threshold)     |
+| `MinHash LSH`_            | MinHash, Weighted MinHash   | Radius (Threshold)     |
 +---------------------------+-----------------------------+------------------------+
-| :ref:`minhash_lsh_forest` | MinHash, Weighted MinHash   | Top-K                  |
+| `MinHash LSH Forest`_     | MinHash, Weighted MinHash   | Top-K                  |
 +---------------------------+-----------------------------+------------------------+
 
 datasketch must be used with Python 2.7 or above and NumPy 1.11 or
@@ -50,3 +50,9 @@ To install datasketch using ``pip``:
 
 This will also install NumPy as dependency.
 
+.. _`MinHash`: https://ekzhu.github.io/datasketch/minhash.html
+.. _`Weighted MinHash`: https://ekzhu.github.io/datasketch/weightedminhash.html
+.. _`HyperLogLog`: https://ekzhu.github.io/datasketch/hyperloglog.html
+.. _`HyperLogLog++`: https://ekzhu.github.io/datasketch/hyperloglog.html#hyperloglog-plusplus
+.. _`MinHash LSH`: https://ekzhu.github.io/datasketch/lsh.html
+.. _`MinHash LSH Forest`: https://ekzhu.github.io/datasketch/lshforest.html
