@@ -17,14 +17,16 @@
         VERSION:     '1.0.0',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
-        HAS_SOURCE:  true
+        HAS_SOURCE:  true,
+        SOURCELINK_SUFFIX: '.txt'
       };
     </script>
     <script type="text/javascript" src="_static/jquery.js"></script>
     <script type="text/javascript" src="_static/underscore.js"></script>
     <script type="text/javascript" src="_static/doctools.js"></script>
     <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
-    <link rel="top" title="datasketch 1.0.0 documentation" href="index.html" />
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
     <link rel="next" title="HyperLogLog" href="hyperloglog.html" />
     <link rel="prev" title="datasketch: Big Data Looks Small" href="index.html" />
    
@@ -116,9 +118,9 @@
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
-<li><strong>num_perm</strong> (<em>int, optional</em>) &#8211; Number of random permutation functions.
+<li><strong>num_perm</strong> (<em>int</em><em>, </em><em>optional</em>) &#8211; Number of random permutation functions.
 It will be ignored if <cite>hashvalues</cite> is not None.</li>
-<li><strong>seed</strong> (<em>int, optional</em>) &#8211; The random seed controls the set of random
+<li><strong>seed</strong> (<em>int</em><em>, </em><em>optional</em>) &#8211; The random seed controls the set of random
 permutation functions generated for this MinHash.</li>
 <li><strong>hashobj</strong> (<em>optional</em>) &#8211; The hash function used by this MinHash.
 It must implements
@@ -398,7 +400,7 @@ new <a class="reference internal" href="#datasketch.WeightedMinHash" title="data
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
 <li><strong>dim</strong> (<em>int</em>) &#8211; The number of dimensions of the input Jaccard vectors.</li>
-<li><strong>sample_size</strong> (<em>int, optional</em>) &#8211; The number of samples to use for creating
+<li><strong>sample_size</strong> (<em>int</em><em>, </em><em>optional</em>) &#8211; The number of samples to use for creating
 weighted MinHash.</li>
 <li><strong>seed</strong> (<em>int</em>) &#8211; The random seed to use for generating permutation functions.</li>
 </ul>
@@ -560,10 +562,10 @@ Reference: <a class="reference external" href="http://www.mmds.org/">Chapter 3, 
 <li><strong>threshold</strong> (<em>float</em>) &#8211; The Jaccard similarity threshold between 0.0 and
 1.0. The initialized MinHash LSH will be optimized for the threshold by
 minizing the false positive and false negative.</li>
-<li><strong>num_perm</strong> (<em>int, optional</em>) &#8211; The number of permutation functions used
+<li><strong>num_perm</strong> (<em>int</em><em>, </em><em>optional</em>) &#8211; The number of permutation functions used
 by the MinHash to be indexed. For weighted MinHash, this
 is the sample size (<cite>sample_size</cite>).</li>
-<li><strong>weights</strong> (<em>tuple, optional</em>) &#8211; Used to adjust the relative importance of
+<li><strong>weights</strong> (<em>tuple</em><em>, </em><em>optional</em>) &#8211; Used to adjust the relative importance of
 minizing false positive and false negative when optimizing
 for the Jaccard similarity threshold.
 <cite>weights</cite> is a tuple in the format of
@@ -685,10 +687,10 @@ hash table.</p>
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
-<li><strong>num_perm</strong> (<em>int, optional</em>) &#8211; The number of permutation functions used
+<li><strong>num_perm</strong> (<em>int</em><em>, </em><em>optional</em>) &#8211; The number of permutation functions used
 by the MinHash to be indexed. For weighted MinHash, this
 is the sample size (<cite>sample_size</cite>).</li>
-<li><strong>l</strong> (<em>int, optional</em>) &#8211; The number of prefix trees as described in the
+<li><strong>l</strong> (<em>int</em><em>, </em><em>optional</em>) &#8211; The number of prefix trees as described in the
 paper.</li>
 </ul>
 </td>
@@ -808,9 +810,9 @@ The original HyperLogLog is described <a class="reference external" href="http:/
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
-<li><strong>p</strong> (<em>int, optional</em>) &#8211; The precision parameter. It is ignored if
+<li><strong>p</strong> (<em>int</em><em>, </em><em>optional</em>) &#8211; The precision parameter. It is ignored if
 the <cite>reg</cite> is given.</li>
-<li><strong>reg</strong> (<em>numpy.array, optional</em>) &#8211; The internal state.
+<li><strong>reg</strong> (<em>numpy.array</em><em>, </em><em>optional</em>) &#8211; The internal state.
 This argument is for initializing the HyperLogLog from
 an existing one.</li>
 <li><strong>hashobj</strong> (<em>optional</em>) &#8211; The hash function used.
@@ -1000,11 +1002,11 @@ Main changes from the original HyperLogLog:</p>
       &copy;2017, Eric Zhu.
       
       |
-      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.4.6</a>
-      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.9</a>
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.5.3</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.10</a>
       
       |
-      <a href="_sources/documentation.txt"
+      <a href="_sources/documentation.rst.txt"
           rel="nofollow">Page source</a>
     </div>
 
