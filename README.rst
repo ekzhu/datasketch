@@ -7,7 +7,7 @@ datasketch: Big Data Looks Small
    :target: https://doi.org/10.5281/zenodo.290602
 
 datasketch gives you probabilistic data structures that can process and
-search vary large amount of data super fast, with little loss of
+search very large amount of data super fast, with little loss of
 accuracy.
 
 This package contains the following data sketches:

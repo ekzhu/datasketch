@@ -66,37 +66,6 @@ class TestMinHash(unittest.TestCase):
         u = minhash.MinHash.union(m1, m2)
         self.assertTrue(u.jaccard(m2) == 1.0)
 
-    def test_bytesize(self):
-        m1 = minhash.MinHash(4, 1, hashobj=FakeHash)
-        self.assertTrue(m1.bytesize() == (4*4)+4+8)
-
-    def test_serialize(self):
-        m1 = minhash.MinHash(2, 1, hashobj=FakeHash)
-        buf = bytearray(m1.bytesize())
-        # Only test for syntax
-        m1.serialize(buf)
-
-    def test_deserialize(self):
-        m1 = minhash.MinHash(10, 1, hashobj=FakeHash)
-        m1.update(123)
-        buf = bytearray(m1.bytesize())
-        m1.serialize(buf)
-
-        # Test if we get back the exact same MinHash objects after
-        # deserializing from bytes
-        m1d = minhash.MinHash.deserialize(buf)
-        m1d.hashobj = FakeHash
-        self.assertEqual(m1d.seed, m1.seed)
-        self.assertEqual(len(m1d.hashvalues), len(m1.hashvalues))
-        self.assertTrue(all(hvd == hv for hv, hvd in zip(m1.hashvalues,
-                m1d.hashvalues)))
-
-        # Test if the permutation functions are the same
-        m1.update(34)
-        m1d.update(34)
-        self.assertTrue(all(hvd == hv for hv, hvd in zip(m1.hashvalues,
-                m1d.hashvalues)))
-
     def test_pickle(self):
         m = minhash.MinHash(4, 1, hashobj=FakeHash)
         m.update(123)
