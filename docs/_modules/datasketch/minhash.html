@@ -131,10 +131,10 @@
 <span class="sd">        </span>
 <span class="sd">    Note:</span>
 <span class="sd">        Since version 1.1.1, MinHash will only support serialization using </span>
-<span class="sd">        ``pickle``. ``serialize`` and ``deserialize`` methods are removed. </span>
+<span class="sd">        `pickle`_. ``serialize`` and ``deserialize`` methods are removed, </span>
+<span class="sd">        and are supported in :class:`datasketch.LeanMinHash` instead. </span>
 <span class="sd">        MinHash serialized before version 1.1.1 cannot be deserialized properly </span>
-<span class="sd">        in newer versions. However they can be still deserialized into </span>
-<span class="sd">        :class:`datasketch.LeanMinHash` using ``pickle``.</span>
+<span class="sd">        in newer versions (`need to migrate? &lt;https://github.com/ekzhu/datasketch/issues/18&gt;`_). </span>
 
 <span class="sd">    .. _`Jaccard similarity`: https://en.wikipedia.org/wiki/Jaccard_index</span>
 <span class="sd">    .. _hashlib: https://docs.python.org/3.5/library/hashlib.html</span>

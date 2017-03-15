@@ -35,9 +35,10 @@ class MinHash(object):
         
     Note:
         Since version 1.1.1, MinHash will only support serialization using 
-        ``pickle``. ``serialize`` and ``deserialize`` methods are removed. 
+        `pickle`_. ``serialize`` and ``deserialize`` methods are removed, 
+        and are supported in :class:`datasketch.LeanMinHash` instead. 
         MinHash serialized before version 1.1.1 cannot be deserialized properly 
-        in newer versions. 
+        in newer versions (`need to migrate? <https://github.com/ekzhu/datasketch/issues/18>`_). 
 
     .. _`Jaccard similarity`: https://en.wikipedia.org/wiki/Jaccard_index
     .. _hashlib: https://docs.python.org/3.5/library/hashlib.html

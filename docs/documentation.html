@@ -144,10 +144,10 @@ state from another MinHash.</li>
 <div class="admonition note">
 <p class="first admonition-title">Note</p>
 <p class="last">Since version 1.1.1, MinHash will only support serialization using
-<code class="docutils literal"><span class="pre">pickle</span></code>. <code class="docutils literal"><span class="pre">serialize</span></code> and <code class="docutils literal"><span class="pre">deserialize</span></code> methods are removed.
+<a class="reference external" href="https://docs.python.org/3/library/pickle.html">pickle</a>. <code class="docutils literal"><span class="pre">serialize</span></code> and <code class="docutils literal"><span class="pre">deserialize</span></code> methods are removed,
+and are supported in <a class="reference internal" href="#datasketch.LeanMinHash" title="datasketch.LeanMinHash"><code class="xref py py-class docutils literal"><span class="pre">datasketch.LeanMinHash</span></code></a> instead.
 MinHash serialized before version 1.1.1 cannot be deserialized properly
-in newer versions. However they can be still deserialized into
-<a class="reference internal" href="#datasketch.LeanMinHash" title="datasketch.LeanMinHash"><code class="xref py py-class docutils literal"><span class="pre">datasketch.LeanMinHash</span></code></a> using <code class="docutils literal"><span class="pre">pickle</span></code>.</p>
+in newer versions (<a class="reference external" href="https://github.com/ekzhu/datasketch/issues/18">need to migrate?</a>).</p>
 </div>
 <dl class="method">
 <dt id="datasketch.MinHash.update">
