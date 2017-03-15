@@ -68,7 +68,7 @@
 <li class="toctree-l2"><a class="reference internal" href="#minhash-lsh">MinHash LSH</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#minhash-lsh-forest">MinHash LSH Forest</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#hyperloglog">HyperLogLog</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#id1">HyperLogLog++</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#id3">HyperLogLog++</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="hyperloglog.html">HyperLogLog</a></li>
@@ -394,6 +394,109 @@ and <a class="reference internal" href="#datasketch.MinHashLSHForest" title="dat
 <code class="descname">update</code><span class="sig-paren">(</span><em>b</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/datasketch/lean_minhash.html#LeanMinHash.update"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#datasketch.LeanMinHash.update" title="Permalink to this definition">¶</a></dt>
 <dd><p>This method is not available on a LeanMinHash.
 Calling it raises a TypeError.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="datasketch.LeanMinHash.bytesize">
+<code class="descname">bytesize</code><span class="sig-paren">(</span><em>byteorder='&#64;'</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/datasketch/lean_minhash.html#LeanMinHash.bytesize"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#datasketch.LeanMinHash.bytesize" title="Permalink to this definition">¶</a></dt>
+<dd><p>Compute the byte size after serialization.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>byteorder</strong> (<em>str</em><em>, </em><em>optional</em>) &#8211; This is byte order of the serialized data. Use one
+of the <a class="reference external" href="https://docs.python.org/3/library/struct.html#byte-order-size-and-alignment">byte order characters</a>:
+<code class="docutils literal"><span class="pre">&#64;</span></code>, <code class="docutils literal"><span class="pre">=</span></code>, <code class="docutils literal"><span class="pre">&lt;</span></code>, <code class="docutils literal"><span class="pre">&gt;</span></code>, and <code class="docutils literal"><span class="pre">!</span></code>.
+Default is <code class="docutils literal"><span class="pre">&#64;</span></code> &#8211; the native order.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">Size in number of bytes after serialization.</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body">int</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="datasketch.LeanMinHash.serialize">
+<code class="descname">serialize</code><span class="sig-paren">(</span><em>buf</em>, <em>byteorder='&#64;'</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/datasketch/lean_minhash.html#LeanMinHash.serialize"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#datasketch.LeanMinHash.serialize" title="Permalink to this definition">¶</a></dt>
+<dd><p>Serialize this lean MinHash and store the result in an allocated buffer.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>buf</strong> (<em>buffer</em>) &#8211; <cite>buf</cite> must implement the <a class="reference external" href="https://docs.python.org/3/c-api/buffer.html">buffer</a> interface.
+One such example is the built-in <a class="reference external" href="https://docs.python.org/3.6/library/functions.html#bytearray">bytearray</a> class.</li>
+<li><strong>byteorder</strong> (<em>str</em><em>, </em><em>optional</em>) &#8211; <p>This is byte order of the serialized data. Use one
+of the <a class="reference external" href="https://docs.python.org/3/library/struct.html#byte-order-size-and-alignment">byte order characters</a>:
+<code class="docutils literal"><span class="pre">&#64;</span></code>, <code class="docutils literal"><span class="pre">=</span></code>, <code class="docutils literal"><span class="pre">&lt;</span></code>, <code class="docutils literal"><span class="pre">&gt;</span></code>, and <code class="docutils literal"><span class="pre">!</span></code>.
+Default is <code class="docutils literal"><span class="pre">&#64;</span></code> &#8211; the native order.</p>
+</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+<p>This is preferred over using <a class="reference external" href="https://docs.python.org/3/library/pickle.html">pickle</a> if the serialized lean MinHash needs
+to be used by another program in a different programming language.</p>
+<dl class="docutils">
+<dt>The serialization schema:</dt>
+<dd><ol class="first last arabic simple">
+<li>The first 8 bytes is the seed integer</li>
+<li>The next 4 bytes is the number of hash values</li>
+<li>The rest is the serialized hash values, each uses 4 bytes</li>
+</ol>
+</dd>
+</dl>
+<p class="rubric">Example</p>
+<p>To serialize a single lean MinHash into a <a class="reference external" href="https://docs.python.org/3.6/library/functions.html#bytearray">bytearray</a> buffer.</p>
+<div class="highlight-python"><div class="highlight"><pre><span></span><span class="n">buf</span> <span class="o">=</span> <span class="nb">bytearray</span><span class="p">(</span><span class="n">lean_minhash</span><span class="o">.</span><span class="n">bytesize</span><span class="p">())</span>
+<span class="n">lean_minhash</span><span class="o">.</span><span class="n">serialize</span><span class="p">(</span><span class="n">buf</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>To serialize multiple lean MinHash into a <a class="reference external" href="https://docs.python.org/3.6/library/functions.html#bytearray">bytearray</a> buffer.</p>
+<div class="highlight-python"><div class="highlight"><pre><span></span><span class="c1"># assuming lean_minhashs is a list of LeanMinHash with the same size</span>
+<span class="n">size</span> <span class="o">=</span> <span class="n">lean_minhashs</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">bytesize</span><span class="p">()</span>
+<span class="n">buf</span> <span class="o">=</span> <span class="nb">bytearray</span><span class="p">(</span><span class="n">size</span><span class="o">*</span><span class="nb">len</span><span class="p">(</span><span class="n">lean_minhashs</span><span class="p">))</span>
+<span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">lean_minhash</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">lean_minhashs</span><span class="p">):</span>
+    <span class="n">lean_minhash</span><span class="o">.</span><span class="n">serialize</span><span class="p">(</span><span class="n">buf</span><span class="p">[</span><span class="n">i</span><span class="o">*</span><span class="n">size</span><span class="p">:])</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="classmethod">
+<dt id="datasketch.LeanMinHash.deserialize">
+<em class="property">classmethod </em><code class="descname">deserialize</code><span class="sig-paren">(</span><em>buf</em>, <em>byteorder='&#64;'</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/datasketch/lean_minhash.html#LeanMinHash.deserialize"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#datasketch.LeanMinHash.deserialize" title="Permalink to this definition">¶</a></dt>
+<dd><p>Deserialize a lean MinHash from a buffer.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>buf</strong> (<em>buffer</em>) &#8211; <cite>buf</cite> must implement the <a class="reference external" href="https://docs.python.org/3/c-api/buffer.html">buffer</a> interface.
+One such example is the built-in <a class="reference external" href="https://docs.python.org/3.6/library/functions.html#bytearray">bytearray</a> class.</li>
+<li><strong>byteorder</strong> (<em>str. optional</em>) &#8211; <p>This is byte order of the serialized data. Use one
+of the <a class="reference external" href="https://docs.python.org/3/library/struct.html#byte-order-size-and-alignment">byte order characters</a>:
+<code class="docutils literal"><span class="pre">&#64;</span></code>, <code class="docutils literal"><span class="pre">=</span></code>, <code class="docutils literal"><span class="pre">&lt;</span></code>, <code class="docutils literal"><span class="pre">&gt;</span></code>, and <code class="docutils literal"><span class="pre">!</span></code>.
+Default is <code class="docutils literal"><span class="pre">&#64;</span></code> &#8211; the native order.</p>
+</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">The deserialized lean MinHash</p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last"><a class="reference internal" href="#datasketch.LeanMinHash" title="datasketch.LeanMinHash">datasketch.LeanMinHash</a></p>
+</td>
+</tr>
+</tbody>
+</table>
+<p class="rubric">Example</p>
+<p>To deserialize a lean MinHash from a buffer.</p>
+<div class="highlight-python"><div class="highlight"><pre><span></span><span class="n">lean_minhash</span> <span class="o">=</span> <span class="n">LeanMinHash</span><span class="o">.</span><span class="n">deserialize</span><span class="p">(</span><span class="n">buf</span><span class="p">)</span>
+</pre></div>
+</div>
 </dd></dl>
 
 </dd></dl>
@@ -981,8 +1084,8 @@ initialized.</td>
 </dd></dl>
 
 </div>
-<div class="section" id="id1">
-<h2>HyperLogLog++<a class="headerlink" href="#id1" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="id3">
+<h2>HyperLogLog++<a class="headerlink" href="#id3" title="Permalink to this headline">¶</a></h2>
 <dl class="class">
 <dt id="datasketch.HyperLogLogPlusPlus">
 <em class="property">class </em><code class="descclassname">datasketch.</code><code class="descname">HyperLogLogPlusPlus</code><span class="sig-paren">(</span><em>p=8</em>, <em>reg=None</em>, <em>hashobj=&lt;built-in function openssl_sha1&gt;</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/datasketch/hyperloglog.html#HyperLogLogPlusPlus"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#datasketch.HyperLogLogPlusPlus" title="Permalink to this definition">¶</a></dt>

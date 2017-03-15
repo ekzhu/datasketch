@@ -91,6 +91,13 @@ class TestLeanMinHash(unittest.TestCase):
         # Only test for syntax
         lm1.serialize(buf)
 
+        m2 = MinHash(2, 1, hashobj=FakeHash)
+        lm2 = LeanMinHash(m2)
+        size = lm1.bytesize()
+        buf = bytearray(size*2)
+        lm1.serialize(buf)
+        lm2.serialize(buf[size:])
+
     def test_deserialize(self):
         m1 = MinHash(10, 1, hashobj=FakeHash)
         m1.update(123)
@@ -106,6 +113,23 @@ class TestLeanMinHash(unittest.TestCase):
         self.assertEqual(len(lm1d.hashvalues), len(lm1.hashvalues))
         self.assertTrue(all(hvd == hv for hv, hvd in zip(lm1.hashvalues,
                 lm1d.hashvalues)))
+    
+    def test_deserialize_byteorder(self):
+        for byteorder in "@=<>!":
+            m1 = MinHash(10, 1, hashobj=FakeHash)
+            m1.update(123)
+            lm1 = LeanMinHash(m1)
+            buf = bytearray(lm1.bytesize(byteorder))
+            lm1.serialize(buf, byteorder)
+
+            # Test if we get back the exact same LeanMinHash objects after
+            # deserializing from bytes
+            lm1d = LeanMinHash.deserialize(buf, byteorder)
+            lm1d.hashobj = FakeHash
+            self.assertEqual(lm1d.seed, lm1.seed)
+            self.assertEqual(len(lm1d.hashvalues), len(lm1.hashvalues))
+            self.assertTrue(all(hvd == hv for hv, hvd in zip(lm1.hashvalues,
+                    lm1d.hashvalues)))
 
     def test_pickle(self):
         m = MinHash(4, 1, hashobj=FakeHash)

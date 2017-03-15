@@ -73,34 +73,112 @@ class LeanMinHash(MinHash):
         lmh._initialize_slots(*self.__slots__)
         return lmh
 
-    def bytesize(self):
+    def bytesize(self, byteorder='@'):
+        '''Compute the byte size after serialization.
+
+        Args:
+            byteorder (str, optional): This is byte order of the serialized data. Use one 
+                of the `byte order characters 
+                <https://docs.python.org/3/library/struct.html#byte-order-size-and-alignment>`_:
+                ``@``, ``=``, ``<``, ``>``, and ``!``.
+                Default is ``@`` -- the native order.
+
+        Returns:
+            int: Size in number of bytes after serialization.
+        '''
         # Use 8 bytes to store the seed integer
-        seed_size = struct.calcsize('q')
+        seed_size = struct.calcsize(byteorder+'q')
         # Use 4 bytes to store the number of hash values
-        length_size = struct.calcsize('i')
+        length_size = struct.calcsize(byteorder+'i')
         # Use 4 bytes to store each hash value as we are using the lower 32 bit
-        hashvalue_size = struct.calcsize('I')
+        hashvalue_size = struct.calcsize(byteorder+'I')
         return seed_size + length_size + len(self) * hashvalue_size
 
-    def serialize(self, buf):
+    def serialize(self, buf, byteorder='@'):
+        '''
+        Serialize this lean MinHash and store the result in an allocated buffer.
+
+        Args:
+            buf (buffer): `buf` must implement the `buffer`_ interface.
+                One such example is the built-in `bytearray`_ class.
+            byteorder (str, optional): This is byte order of the serialized data. Use one 
+                of the `byte order characters 
+                <https://docs.python.org/3/library/struct.html#byte-order-size-and-alignment>`_:
+                ``@``, ``=``, ``<``, ``>``, and ``!``.
+                Default is ``@`` -- the native order.
+
+        This is preferred over using `pickle`_ if the serialized lean MinHash needs
+        to be used by another program in a different programming language.
+
+        The serialization schema:
+            1. The first 8 bytes is the seed integer
+            2. The next 4 bytes is the number of hash values 
+            3. The rest is the serialized hash values, each uses 4 bytes
+        
+        Example:
+            To serialize a single lean MinHash into a `bytearray`_ buffer.
+
+            .. code-block:: python
+                
+                buf = bytearray(lean_minhash.bytesize())
+                lean_minhash.serialize(buf)
+
+            To serialize multiple lean MinHash into a `bytearray`_ buffer.
+
+            .. code-block:: python
+                
+                # assuming lean_minhashs is a list of LeanMinHash with the same size
+                size = lean_minhashs[0].bytesize()
+                buf = bytearray(size*len(lean_minhashs))
+                for i, lean_minhash in enumerate(lean_minhashs):
+                    lean_minhash.serialize(buf[i*size:])
+
+        .. _`buffer`: https://docs.python.org/3/c-api/buffer.html
+        .. _`bytearray`: https://docs.python.org/3.6/library/functions.html#bytearray
+        .. _`byteorder`: https://docs.python.org/3/library/struct.html
+        '''
         if len(buf) < self.bytesize():
             raise ValueError("The buffer does not have enough space\
                     for holding this MinHash.")
-        fmt = "qi%dI" % len(self)
+        fmt = "%sqi%dI" % (byteorder, len(self))
         struct.pack_into(fmt, buf, 0,
                 self.seed, len(self), *self.hashvalues)
 
     @classmethod
-    def deserialize(cls, buf):
+    def deserialize(cls, buf, byteorder='@'):
+        '''
+        Deserialize a lean MinHash from a buffer.
+
+        Args:
+            buf (buffer): `buf` must implement the `buffer`_ interface.
+                One such example is the built-in `bytearray`_ class.
+            byteorder (str. optional): This is byte order of the serialized data. Use one 
+                of the `byte order characters 
+                <https://docs.python.org/3/library/struct.html#byte-order-size-and-alignment>`_:
+                ``@``, ``=``, ``<``, ``>``, and ``!``.
+                Default is ``@`` -- the native order.
+       
+        Return:
+            datasketch.LeanMinHash: The deserialized lean MinHash
+
+        Example:
+            To deserialize a lean MinHash from a buffer.
+
+            .. code-block:: python
+                
+                lean_minhash = LeanMinHash.deserialize(buf)
+        '''
+        fmt_seed_size = "%sqi" % byteorder
+        fmt_hash = byteorder + "%dI"
         try:
-            seed, num_perm = struct.unpack_from('qi', buf, 0)
+            seed, num_perm = struct.unpack_from(fmt_seed_size, buf, 0)
         except TypeError:
-            seed, num_perm = struct.unpack_from('qi', buffer(buf), 0)
-        offset = struct.calcsize('qi')
+            seed, num_perm = struct.unpack_from(fmt_seed_size, buffer(buf), 0)
+        offset = struct.calcsize(fmt_seed_size)
         try:
-            hashvalues = struct.unpack_from('%dI' % num_perm, buf, offset)
+            hashvalues = struct.unpack_from(fmt_hash % num_perm, buf, offset)
         except TypeError:
-            hashvalues = struct.unpack_from('%dI' % num_perm, buffer(buf), offset)
+            hashvalues = struct.unpack_from(fmt_hash % num_perm, buffer(buf), offset)
         lmh = object.__new__(LeanMinHash)
         lmh._initialize_slots(seed, hashvalues)
         return lmh
