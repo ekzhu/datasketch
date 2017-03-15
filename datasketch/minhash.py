@@ -32,9 +32,16 @@ class MinHash(object):
     
     Note:
         To save memory usage, consider using :class:`datasketch.LeanMinHash`.
-    
+        
+    Note:
+        Since version 1.1.1, MinHash will only support serialization using 
+        ``pickle``. ``serialize`` and ``deserialize`` methods are removed. 
+        MinHash serialized before version 1.1.1 cannot be deserialized properly 
+        in newer versions. 
+
     .. _`Jaccard similarity`: https://en.wikipedia.org/wiki/Jaccard_index
     .. _hashlib: https://docs.python.org/3.5/library/hashlib.html
+    .. _`pickle`: https://docs.python.org/3/library/pickle.html
     '''
 
     def __init__(self, num_perm=128, seed=1, hashobj=sha1,
