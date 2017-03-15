@@ -128,12 +128,18 @@
 <span class="sd">    </span>
 <span class="sd">    Note:</span>
 <span class="sd">        To save memory usage, consider using :class:`datasketch.LeanMinHash`.</span>
-<span class="sd">    </span>
+<span class="sd">        </span>
+<span class="sd">    Note:</span>
+<span class="sd">        Since version 1.1.1, MinHash will only support serialization using </span>
+<span class="sd">        `pickle`_. ``serialize`` and ``deserialize`` methods are removed, </span>
+<span class="sd">        and are supported in :class:`datasketch.LeanMinHash` instead. </span>
+<span class="sd">        MinHash serialized before version 1.1.1 cannot be deserialized properly </span>
+<span class="sd">        in newer versions (`need to migrate? &lt;https://github.com/ekzhu/datasketch/issues/18&gt;`_). </span>
+
 <span class="sd">    .. _`Jaccard similarity`: https://en.wikipedia.org/wiki/Jaccard_index</span>
 <span class="sd">    .. _hashlib: https://docs.python.org/3.5/library/hashlib.html</span>
+<span class="sd">    .. _`pickle`: https://docs.python.org/3/library/pickle.html</span>
 <span class="sd">    &#39;&#39;&#39;</span>
-
-    <span class="vm">__slots__</span> <span class="o">=</span> <span class="p">(</span><span class="s1">&#39;permutations&#39;</span><span class="p">,</span> <span class="s1">&#39;hashvalues&#39;</span><span class="p">,</span> <span class="s1">&#39;seed&#39;</span><span class="p">,</span> <span class="s1">&#39;hashobj&#39;</span><span class="p">)</span>
 
     <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">num_perm</span><span class="o">=</span><span class="mi">128</span><span class="p">,</span> <span class="n">seed</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">hashobj</span><span class="o">=</span><span class="n">sha1</span><span class="p">,</span>
             <span class="n">hashvalues</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">permutations</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
@@ -284,55 +290,6 @@
 <span class="sd">        &#39;&#39;&#39;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">seed</span> <span class="o">==</span> <span class="n">other</span><span class="o">.</span><span class="n">seed</span> <span class="ow">and</span> \
                 <span class="n">np</span><span class="o">.</span><span class="n">array_equal</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">hashvalues</span><span class="p">,</span> <span class="n">other</span><span class="o">.</span><span class="n">hashvalues</span><span class="p">)</span></div>
-
-    <span class="k">def</span> <span class="nf">bytesize</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="c1"># Use 8 bytes to store the seed integer</span>
-        <span class="n">seed_size</span> <span class="o">=</span> <span class="n">struct</span><span class="o">.</span><span class="n">calcsize</span><span class="p">(</span><span class="s1">&#39;q&#39;</span><span class="p">)</span>
-        <span class="c1"># Use 4 bytes to store the number of hash values</span>
-        <span class="n">length_size</span> <span class="o">=</span> <span class="n">struct</span><span class="o">.</span><span class="n">calcsize</span><span class="p">(</span><span class="s1">&#39;i&#39;</span><span class="p">)</span>
-        <span class="c1"># Use 4 bytes to store each hash value as we are using the lower 32 bit</span>
-        <span class="n">hashvalue_size</span> <span class="o">=</span> <span class="n">struct</span><span class="o">.</span><span class="n">calcsize</span><span class="p">(</span><span class="s1">&#39;I&#39;</span><span class="p">)</span>
-        <span class="k">return</span> <span class="n">seed_size</span> <span class="o">+</span> <span class="n">length_size</span> <span class="o">+</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">*</span> <span class="n">hashvalue_size</span>
-
-    <span class="k">def</span> <span class="nf">serialize</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">buf</span><span class="p">):</span>
-        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">buf</span><span class="p">)</span> <span class="o">&lt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">bytesize</span><span class="p">():</span>
-            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;The buffer does not have enough space</span><span class="se">\</span>
-<span class="s2">                    for holding this MinHash.&quot;</span><span class="p">)</span>
-        <span class="n">fmt</span> <span class="o">=</span> <span class="s2">&quot;qi</span><span class="si">%d</span><span class="s2">I&quot;</span> <span class="o">%</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
-        <span class="n">struct</span><span class="o">.</span><span class="n">pack_into</span><span class="p">(</span><span class="n">fmt</span><span class="p">,</span> <span class="n">buf</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">seed</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="p">),</span> <span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">hashvalues</span><span class="p">)</span>
-
-    <span class="nd">@classmethod</span>
-    <span class="k">def</span> <span class="nf">deserialize</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">buf</span><span class="p">):</span>
-        <span class="k">try</span><span class="p">:</span>
-            <span class="n">seed</span><span class="p">,</span> <span class="n">num_perm</span> <span class="o">=</span> <span class="n">struct</span><span class="o">.</span><span class="n">unpack_from</span><span class="p">(</span><span class="s1">&#39;qi&#39;</span><span class="p">,</span> <span class="n">buf</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
-        <span class="k">except</span> <span class="ne">TypeError</span><span class="p">:</span>
-            <span class="n">seed</span><span class="p">,</span> <span class="n">num_perm</span> <span class="o">=</span> <span class="n">struct</span><span class="o">.</span><span class="n">unpack_from</span><span class="p">(</span><span class="s1">&#39;qi&#39;</span><span class="p">,</span> <span class="n">buffer</span><span class="p">(</span><span class="n">buf</span><span class="p">),</span> <span class="mi">0</span><span class="p">)</span>
-        <span class="n">offset</span> <span class="o">=</span> <span class="n">struct</span><span class="o">.</span><span class="n">calcsize</span><span class="p">(</span><span class="s1">&#39;qi&#39;</span><span class="p">)</span>
-        <span class="k">try</span><span class="p">:</span>
-            <span class="n">hashvalues</span> <span class="o">=</span> <span class="n">struct</span><span class="o">.</span><span class="n">unpack_from</span><span class="p">(</span><span class="s1">&#39;</span><span class="si">%d</span><span class="s1">I&#39;</span> <span class="o">%</span> <span class="n">num_perm</span><span class="p">,</span> <span class="n">buf</span><span class="p">,</span> <span class="n">offset</span><span class="p">)</span>
-        <span class="k">except</span> <span class="ne">TypeError</span><span class="p">:</span>
-            <span class="n">hashvalues</span> <span class="o">=</span> <span class="n">struct</span><span class="o">.</span><span class="n">unpack_from</span><span class="p">(</span><span class="s1">&#39;</span><span class="si">%d</span><span class="s1">I&#39;</span> <span class="o">%</span> <span class="n">num_perm</span><span class="p">,</span> <span class="n">buffer</span><span class="p">(</span><span class="n">buf</span><span class="p">),</span> <span class="n">offset</span><span class="p">)</span>
-        <span class="k">return</span> <span class="bp">cls</span><span class="p">(</span><span class="n">num_perm</span><span class="o">=</span><span class="n">num_perm</span><span class="p">,</span> <span class="n">seed</span><span class="o">=</span><span class="n">seed</span><span class="p">,</span> <span class="n">hashvalues</span><span class="o">=</span><span class="n">hashvalues</span><span class="p">)</span>
-
-    <span class="k">def</span> <span class="nf">__getstate__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="n">buf</span> <span class="o">=</span> <span class="nb">bytearray</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">bytesize</span><span class="p">())</span>
-        <span class="n">fmt</span> <span class="o">=</span> <span class="s2">&quot;qi</span><span class="si">%d</span><span class="s2">I&quot;</span> <span class="o">%</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
-        <span class="n">struct</span><span class="o">.</span><span class="n">pack_into</span><span class="p">(</span><span class="n">fmt</span><span class="p">,</span> <span class="n">buf</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">seed</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="p">),</span> <span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">hashvalues</span><span class="p">)</span>
-        <span class="k">return</span> <span class="n">buf</span>
-
-    <span class="k">def</span> <span class="nf">__setstate__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">buf</span><span class="p">):</span>
-        <span class="k">try</span><span class="p">:</span>
-            <span class="n">seed</span><span class="p">,</span> <span class="n">num_perm</span> <span class="o">=</span> <span class="n">struct</span><span class="o">.</span><span class="n">unpack_from</span><span class="p">(</span><span class="s1">&#39;qi&#39;</span><span class="p">,</span> <span class="n">buf</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
-        <span class="k">except</span> <span class="ne">TypeError</span><span class="p">:</span>
-            <span class="n">seed</span><span class="p">,</span> <span class="n">num_perm</span> <span class="o">=</span> <span class="n">struct</span><span class="o">.</span><span class="n">unpack_from</span><span class="p">(</span><span class="s1">&#39;qi&#39;</span><span class="p">,</span> <span class="n">buffer</span><span class="p">(</span><span class="n">buf</span><span class="p">),</span> <span class="mi">0</span><span class="p">)</span>
-        <span class="n">offset</span> <span class="o">=</span> <span class="n">struct</span><span class="o">.</span><span class="n">calcsize</span><span class="p">(</span><span class="s1">&#39;qi&#39;</span><span class="p">)</span>
-        <span class="k">try</span><span class="p">:</span>
-            <span class="n">hashvalues</span> <span class="o">=</span> <span class="n">struct</span><span class="o">.</span><span class="n">unpack_from</span><span class="p">(</span><span class="s1">&#39;</span><span class="si">%d</span><span class="s1">I&#39;</span> <span class="o">%</span> <span class="n">num_perm</span><span class="p">,</span> <span class="n">buf</span><span class="p">,</span> <span class="n">offset</span><span class="p">)</span>
-        <span class="k">except</span> <span class="ne">TypeError</span><span class="p">:</span>
-            <span class="n">hashvalues</span> <span class="o">=</span> <span class="n">struct</span><span class="o">.</span><span class="n">unpack_from</span><span class="p">(</span><span class="s1">&#39;</span><span class="si">%d</span><span class="s1">I&#39;</span> <span class="o">%</span> <span class="n">num_perm</span><span class="p">,</span> <span class="n">buffer</span><span class="p">(</span><span class="n">buf</span><span class="p">),</span> <span class="n">offset</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">num_perm</span><span class="o">=</span><span class="n">num_perm</span><span class="p">,</span> <span class="n">seed</span><span class="o">=</span><span class="n">seed</span><span class="p">,</span> <span class="n">hashvalues</span><span class="o">=</span><span class="n">hashvalues</span><span class="p">)</span>
 
     <span class="nd">@classmethod</span>
 <div class="viewcode-block" id="MinHash.union"><a class="viewcode-back" href="../../documentation.html#datasketch.MinHash.union">[docs]</a>    <span class="k">def</span> <span class="nf">union</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="o">*</span><span class="n">mhs</span><span class="p">):</span>

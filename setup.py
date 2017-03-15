@@ -20,13 +20,13 @@ setup(
     # Versions should comply with PEP440.  For a discussion on single-sourcing
     # the version across setup.py and the project code, see
     # https://packaging.python.org/en/latest/single_source_version.html
-    version='1.1.0',
+    version='1.1.1',
 
     description='Probabilistic data structures for processing and searching very large datasets',
     long_description=long_description,
 
     # The project's main homepage.
-    url='https://github.com/ekzhu/datasketch',
+    url='https://ekzhu.github.io/datasketch',
 
     # Author details
     author='ekzhu',
@@ -59,6 +59,7 @@ setup(
         'Programming Language :: Python :: 3.3',
         'Programming Language :: Python :: 3.4',
         'Programming Language :: Python :: 3.5',
+        'Programming Language :: Python :: 3.6',
     ],
 
     # What does your project relate to?
@@ -67,7 +68,7 @@ setup(
     # You can just specify the packages manually here if your project is
     # simple. Or you can use find_packages().
     packages=find_packages(exclude=['contrib', 'docs', 'test*', 'benchmarks',
-            'examples']),
+            'examples', 'docsrc']),
 
     # List run-time dependencies here.  These will be installed by pip when
     # your project is installed. For an analysis of "install_requires" vs pip's

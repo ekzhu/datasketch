@@ -73,6 +73,23 @@ class LeanMinHash(MinHash):
         lmh._initialize_slots(*self.__slots__)
         return lmh
 
+    def bytesize(self):
+        # Use 8 bytes to store the seed integer
+        seed_size = struct.calcsize('q')
+        # Use 4 bytes to store the number of hash values
+        length_size = struct.calcsize('i')
+        # Use 4 bytes to store each hash value as we are using the lower 32 bit
+        hashvalue_size = struct.calcsize('I')
+        return seed_size + length_size + len(self) * hashvalue_size
+
+    def serialize(self, buf):
+        if len(buf) < self.bytesize():
+            raise ValueError("The buffer does not have enough space\
+                    for holding this MinHash.")
+        fmt = "qi%dI" % len(self)
+        struct.pack_into(fmt, buf, 0,
+                self.seed, len(self), *self.hashvalues)
+
     @classmethod
     def deserialize(cls, buf):
         try:
@@ -87,6 +104,13 @@ class LeanMinHash(MinHash):
         lmh = object.__new__(LeanMinHash)
         lmh._initialize_slots(seed, hashvalues)
         return lmh
+
+    def __getstate__(self):
+        buf = bytearray(self.bytesize())
+        fmt = "qi%dI" % len(self)
+        struct.pack_into(fmt, buf, 0,
+                self.seed, len(self), *self.hashvalues)
+        return buf
 
     def __setstate__(self, buf):
         try:

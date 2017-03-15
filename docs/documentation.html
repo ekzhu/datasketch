@@ -141,6 +141,14 @@ state from another MinHash.</li>
 <p class="first admonition-title">Note</p>
 <p class="last">To save memory usage, consider using <a class="reference internal" href="#datasketch.LeanMinHash" title="datasketch.LeanMinHash"><code class="xref py py-class docutils literal"><span class="pre">datasketch.LeanMinHash</span></code></a>.</p>
 </div>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">Since version 1.1.1, MinHash will only support serialization using
+<a class="reference external" href="https://docs.python.org/3/library/pickle.html">pickle</a>. <code class="docutils literal"><span class="pre">serialize</span></code> and <code class="docutils literal"><span class="pre">deserialize</span></code> methods are removed,
+and are supported in <a class="reference internal" href="#datasketch.LeanMinHash" title="datasketch.LeanMinHash"><code class="xref py py-class docutils literal"><span class="pre">datasketch.LeanMinHash</span></code></a> instead.
+MinHash serialized before version 1.1.1 cannot be deserialized properly
+in newer versions (<a class="reference external" href="https://github.com/ekzhu/datasketch/issues/18">need to migrate?</a>).</p>
+</div>
 <dl class="method">
 <dt id="datasketch.MinHash.update">
 <code class="descname">update</code><span class="sig-paren">(</span><em>b</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/datasketch/minhash.html#MinHash.update"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#datasketch.MinHash.update" title="Permalink to this definition">¶</a></dt>
@@ -305,6 +313,12 @@ All hash values are reset.</p>
 </tr>
 </tbody>
 </table>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="datasketch.MinHash.__weakref__">
+<code class="descname">__weakref__</code><a class="headerlink" href="#datasketch.MinHash.__weakref__" title="Permalink to this definition">¶</a></dt>
+<dd><p>list of weak references to the object (if defined)</p>
 </dd></dl>
 
 <dl class="classmethod">

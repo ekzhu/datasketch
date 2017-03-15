@@ -32,12 +32,18 @@ class MinHash(object):
     
     Note:
         To save memory usage, consider using :class:`datasketch.LeanMinHash`.
-    
+        
+    Note:
+        Since version 1.1.1, MinHash will only support serialization using 
+        `pickle`_. ``serialize`` and ``deserialize`` methods are removed, 
+        and are supported in :class:`datasketch.LeanMinHash` instead. 
+        MinHash serialized before version 1.1.1 cannot be deserialized properly 
+        in newer versions (`need to migrate? <https://github.com/ekzhu/datasketch/issues/18>`_). 
+
     .. _`Jaccard similarity`: https://en.wikipedia.org/wiki/Jaccard_index
     .. _hashlib: https://docs.python.org/3.5/library/hashlib.html
+    .. _`pickle`: https://docs.python.org/3/library/pickle.html
     '''
-
-    __slots__ = ('permutations', 'hashvalues', 'seed', 'hashobj')
 
     def __init__(self, num_perm=128, seed=1, hashobj=sha1,
             hashvalues=None, permutations=None):
@@ -188,55 +194,6 @@ class MinHash(object):
         '''
         return self.seed == other.seed and \
                 np.array_equal(self.hashvalues, other.hashvalues)
-
-    def bytesize(self):
-        # Use 8 bytes to store the seed integer
-        seed_size = struct.calcsize('q')
-        # Use 4 bytes to store the number of hash values
-        length_size = struct.calcsize('i')
-        # Use 4 bytes to store each hash value as we are using the lower 32 bit
-        hashvalue_size = struct.calcsize('I')
-        return seed_size + length_size + len(self) * hashvalue_size
-
-    def serialize(self, buf):
-        if len(buf) < self.bytesize():
-            raise ValueError("The buffer does not have enough space\
-                    for holding this MinHash.")
-        fmt = "qi%dI" % len(self)
-        struct.pack_into(fmt, buf, 0,
-                self.seed, len(self), *self.hashvalues)
-
-    @classmethod
-    def deserialize(cls, buf):
-        try:
-            seed, num_perm = struct.unpack_from('qi', buf, 0)
-        except TypeError:
-            seed, num_perm = struct.unpack_from('qi', buffer(buf), 0)
-        offset = struct.calcsize('qi')
-        try:
-            hashvalues = struct.unpack_from('%dI' % num_perm, buf, offset)
-        except TypeError:
-            hashvalues = struct.unpack_from('%dI' % num_perm, buffer(buf), offset)
-        return cls(num_perm=num_perm, seed=seed, hashvalues=hashvalues)
-
-    def __getstate__(self):
-        buf = bytearray(self.bytesize())
-        fmt = "qi%dI" % len(self)
-        struct.pack_into(fmt, buf, 0,
-                self.seed, len(self), *self.hashvalues)
-        return buf
-
-    def __setstate__(self, buf):
-        try:
-            seed, num_perm = struct.unpack_from('qi', buf, 0)
-        except TypeError:
-            seed, num_perm = struct.unpack_from('qi', buffer(buf), 0)
-        offset = struct.calcsize('qi')
-        try:
-            hashvalues = struct.unpack_from('%dI' % num_perm, buf, offset)
-        except TypeError:
-            hashvalues = struct.unpack_from('%dI' % num_perm, buffer(buf), offset)
-        self.__init__(num_perm=num_perm, seed=seed, hashvalues=hashvalues)
 
     @classmethod
     def union(cls, *mhs):
