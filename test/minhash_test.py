@@ -111,7 +111,7 @@ class TestMinHash(unittest.TestCase):
         m.update(b'Hello')
         self.assertListEqual(
             m.hashvalues.tolist(),
-            [4159347281, 889859675, 2216179651, 3113718761],
+            [734825475, 960773806, 359816889, 342714745],
         )
 
 class TestbBitMinHash(unittest.TestCase):
