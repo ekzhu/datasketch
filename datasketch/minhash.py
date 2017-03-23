@@ -65,13 +65,12 @@ class MinHash(object):
         if permutations is not None:
             self.permutations = permutations
         else:
-            generator = random.Random()
-            generator.seed(self.seed)
+            generator = np.random.RandomState(self.seed)
             # Create parameters for a random bijective permutation function
             # that maps a 32-bit hash value to another 32-bit hash value.
             # http://en.wikipedia.org/wiki/Universal_hashing
-            self.permutations = np.array([(generator.randint(1, _mersenne_prime),
-                                           generator.randint(0, _mersenne_prime))
+            self.permutations = np.array([(generator.randint(1, _mersenne_prime, dtype=np.uint64),
+                                           generator.randint(0, _mersenne_prime, dtype=np.uint64))
                                           for _ in range(num_perm)], dtype=np.uint64).T
         if len(self) != len(self.permutations[0]):
             raise ValueError("Numbers of hash values and permutations mismatch")
