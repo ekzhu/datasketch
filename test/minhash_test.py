@@ -106,6 +106,13 @@ class TestMinHash(unittest.TestCase):
         c = m.count()
         self.assertGreaterEqual(c, 0)
 
+    def test_byte_tokens(self):
+        m = minhash.MinHash(4, 1)
+        m.update(b'Hello')
+        self.assertListEqual(
+            m.hashvalues.tolist(),
+            [734825475, 960773806, 359816889, 342714745],
+        )
 
 class TestbBitMinHash(unittest.TestCase):
 
