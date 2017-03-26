@@ -70,5 +70,6 @@ ax.set_ylabel("Absolute error in Jaccard estimation")
 ax.set_title("MinHash accuracy")
 ax.grid()
 
+plt.tight_layout()
 fig.savefig(output)
 logging.info("Plot saved to %s" % output)
