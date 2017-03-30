@@ -58,7 +58,7 @@ if __name__ == "__main__":
     parser.add_argument("--output", type=str, default="lshensemble_benchmark.json")
     args = parser.parse_args(sys.argv[1:])
 
-    threshold = 0.9
+    threshold = 0.5
     num_perms = [32, 64, 96, 128, 160, 192, 224, 256]
     num_part = 16
     l = 8
@@ -68,8 +68,19 @@ if __name__ == "__main__":
               "l" : l,
               "lsh_times" : [], "lsh_results" : [],
               "ground_truth_times" : None, "ground_truth_results" : None}
-    index_data, query_data = bootstrap_data(num_perms, 1000, 500, 
-            scipy.stats.randint(10, 500))
+
+    population_size = 500
+    
+    class zipfian:
+        def __init__(self):
+            self.rv = scipy.stats.zipf(1.25)
+        def rvs(self):
+            x = int(self.rv.rvs())
+            if x > population_size:
+                return population_size
+            return x
+
+    index_data, query_data = bootstrap_data(num_perms, 100, population_size, zipfian())
 
     for num_perm in num_perms:
         print("Use num_perm = %d" % num_perm)

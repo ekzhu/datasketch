@@ -26,15 +26,15 @@ if __name__ == "__main__":
 
     fig, axes = plt.subplots(1, 2, figsize=(5*2, 4.5), sharex=True)
     # Plot query fscore vs. num perm
-    axes[0].plot(num_perms, lsh_fscores, marker="+", label="LSH")
+    axes[0].plot(num_perms, lsh_fscores, marker="+", label="LSH Ensemble")
     axes[0].set_ylabel("Average F-Score")
     axes[0].set_xlabel("# of Permmutation Functions")
     axes[0].grid()
     # Plot query time vs. num perm
-    axes[1].plot(num_perms, lsh_times, marker="+", label="LSH")
+    axes[1].plot(num_perms, lsh_times, marker="+", label="LSH Ensemble")
     axes[1].set_xlabel("# of Permutation Functions")
     axes[1].set_ylabel("90 Percentile Query Time (ms)")
     axes[1].grid()
-    axes[1].legend(loc="center right")
+    axes[1].legend(loc="lower right")
     plt.tight_layout()
     fig.savefig("lshensemble_benchmark.png", pad_inches=0.05, bbox_inches="tight")

@@ -129,6 +129,8 @@ class MinHashLSHEnsemble(object):
 
     def _get_optimal_param(self, x, q):
         i = np.searchsorted(self.xqs, float(x)/float(q), side='left')
+        if i == len(self.params):
+            i = i - 1
         return self.params[i]
     
     def index(self, entries):
