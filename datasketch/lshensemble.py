@@ -1,5 +1,6 @@
 from collections import deque
-from datasketch.lsh import integrate
+import numpy as np
+from datasketch.lsh import integrate, MinHashLSH
 
 
 def _false_positive_probability(threshold, b, r, xq):
@@ -53,19 +54,52 @@ def _optimal_param(threshold, num_perm, max_r, xq, false_positive_weight,
 
 class MinHashLSHEnsemble(object):
     '''
-    The LSH Ensemble index for MinHash.
-    The implementation is based on
+    The LSH Ensemble index for MinHash. It supports **Containment** queries.
+    The implementation is based on 
+    `E. Zhu et al. <http://www.vldb.org/pvldb/vol9/p1185-zhu.pdf>`_. 
+    
+    Args:
+        threshold (float): The Containment threshold between 0.0 and
+            1.0. The initialized LSH Ensemble will be optimized for the threshold by
+            minizing the false positive and false negative.
+        num_perm (int, optional): The number of permutation functions used
+            by the MinHash to be indexed. For weighted MinHash, this
+            is the sample size (`sample_size`).
+        weights (tuple, optional): Used to adjust the relative importance of 
+            minizing false positive and false negative when optimizing 
+            for the Containment threshold.
+            `weights` is a tuple in the format of 
+            :code:`(false_positive_weight, false_negative_weight)`.
+        num_part (int, optional): The number of partitions in LSH Ensemble. 
+        l (int, optional): The memory usage factor: an LSH Ensemble uses approximately
+            `l` times more memory space than a MinHash LSH with the same number of 
+            sets indexed. The higher the `l` the better the accuracy. 
+
+    Note:
+        Using more partitions (`num_part`) leads to better accuracy, at the
+        expense of slower query performance.
+        This is different from `the paper`_ and the `Go implementation`_, in which
+        more partitions leads to better accuracy AND faster query performance,
+        due to parallelism.
+
+    Note:
+        More information about the parameter `l` can be found in the 
+        `Go implementation`_
+        of LSH Ensemble, in which `l` is named `MaxK`.
+    
+    .. _`Go implementation`: https://github.com/ekzhu/lshensemble#explanation-for-the-parameter-maxk-and-bootstrap-options
+    .. _`the paper`: http://www.vldb.org/pvldb/vol9/p1185-zhu.pdf
     '''
 
     def __init__(self, threshold=0.9, num_perm=128, weights=(0.5,0.5), num_part=16, l=8):
         if threshold > 1.0 or threshold < 0.0:
             raise ValueError("threshold must be in [0.0, 1.0]") 
-        if num_part or l <= 0:
-            raise ValueError("num_part and l must be positive")
         if num_perm < 2:
             raise ValueError("Too few permutation functions")
-        if l > num_perm:
-            raise ValueError("l cannot be greater than num_perm")
+        if num_part < 2:
+            raise ValueError("num_part must be at least 2")
+        if l < 2 or l > num_perm:
+            raise ValueError("l must be in the range of [2, num_perm]")
         if any(w < 0.0 or w > 1.0 for w in weights):
             raise ValueError("Weight must be in [0.0, 1.0]")
         if sum(weights) != 1.0:
@@ -75,7 +109,7 @@ class MinHashLSHEnsemble(object):
         self.l = l
         rs = self._init_optimal_params(weights)
         # Initialize multiple LSH indexes for each partition
-        self.indexes = [dict((r, MinHashLSH(num_perm=self.h, params=(self.h/r, r))) for r in rs)
+        self.indexes = [dict((r, MinHashLSH(num_perm=self.h, params=(int(self.h/r), r))) for r in rs)
                         for _ in range(0, num_part)] 
         self.lowers = [None for _ in self.indexes]
 
@@ -86,7 +120,7 @@ class MinHashLSHEnsemble(object):
                                                xq, 
                                                false_positive_weight,
                                                false_negative_weight) 
-                                for xq in self.xqs])
+                                for xq in self.xqs], dtype=np.int)
         # Find all unique r
         rs = set()
         for _, r in self.params:
@@ -97,16 +131,18 @@ class MinHashLSHEnsemble(object):
         i = np.searchsorted(self.xqs, float(x)/float(q), side='left')
         return self.params[i]
     
-    def index(self, entries)
+    def index(self, entries):
         '''
+        Index all sets given their keys, MinHashes, and sizes.
+
         Args:
-            entries (`iterable` of `tuple`): An iterable of tuples in the
-                form of `(key, minhash, size)`, where `key` is the unique
+            entries (`iterable` of `tuple`): An iterable of tuples, each must be
+                in the form of `(key, minhash, size)`, where `key` is the unique
                 identifier of a set, `minhash` is the MinHash of the set,
                 and `size` is the size or number of unique items in the set.
         
         Note:
-            The `size` must be positive.
+            `size` must be positive.
         '''
         if not isinstance(entries, list):
             queue = deque([])
@@ -120,11 +156,11 @@ class MinHashLSHEnsemble(object):
         entries.sort(key=lambda e : e[2])
         if entries[0][2] < 0:
             raise ValueError("Non-positive set size found in entries")
-        part_size = len(entries) / len(self.indexes) + 1
+        part_size = int(len(entries) / len(self.indexes)) + 1
         for i, index in enumerate(self.indexes):
             if part_size*i >= len(entries):
                 continue
-            self.lowers[i] = entries[part_size*i]
+            self.lowers[i] = entries[part_size*i][2]
             for r in index:
                 for key, minhash, size in entries[part_size*i:part_size*(i+1)]:
                     index[r].insert(key, minhash)
@@ -168,7 +204,6 @@ class MinHashLSHEnsemble(object):
         '''
         return all(all(index[r].is_empty() for r in index) 
                    for index in self.indexes) 
-
 
 
 if __name__ == "__main__":

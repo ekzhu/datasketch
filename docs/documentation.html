@@ -67,6 +67,7 @@
 <li class="toctree-l2"><a class="reference internal" href="#weighted-minhash">Weighted MinHash</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#minhash-lsh">MinHash LSH</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#minhash-lsh-forest">MinHash LSH Forest</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#minhash-lsh-ensemble">MinHash LSH Ensemble</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#hyperloglog">HyperLogLog</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#id3">HyperLogLog++</a></li>
 </ul>
@@ -675,7 +676,7 @@ are equivalent.</td>
 <h2>MinHash LSH<a class="headerlink" href="#minhash-lsh" title="Permalink to this headline">¶</a></h2>
 <dl class="class">
 <dt id="datasketch.MinHashLSH">
-<em class="property">class </em><code class="descclassname">datasketch.</code><code class="descname">MinHashLSH</code><span class="sig-paren">(</span><em>threshold=0.9</em>, <em>num_perm=128</em>, <em>weights=(0.5</em>, <em>0.5)</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/datasketch/lsh.html#MinHashLSH"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#datasketch.MinHashLSH" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="descclassname">datasketch.</code><code class="descname">MinHashLSH</code><span class="sig-paren">(</span><em>threshold=0.9</em>, <em>num_perm=128</em>, <em>weights=(0.5</em>, <em>0.5)</em>, <em>params=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/datasketch/lsh.html#MinHashLSH"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#datasketch.MinHashLSH" title="Permalink to this definition">¶</a></dt>
 <dd><p>The Locality Sensitive Hashing index
 with MinHash (MinHash LSH).
 It supports query with <a class="reference external" href="https://en.wikipedia.org/wiki/Jaccard_index">Jaccard similarity</a> threshold.
@@ -696,6 +697,10 @@ minizing false positive and false negative when optimizing
 for the Jaccard similarity threshold.
 <cite>weights</cite> is a tuple in the format of
 <code class="code docutils literal"><span class="pre">(false_positive_weight,</span> <span class="pre">false_negative_weight)</span></code>.</li>
+<li><strong>params</strong> (<em>tuple</em><em>, </em><em>optional</em>) &#8211; The LSH parameters (i.e., number of bands and size
+of each bands). This is used to bypass the parameter optimization
+step in the constructor. <cite>threshold</cite> and <cite>weights</cite> will be ignored
+if this is given.</li>
 </ul>
 </td>
 </tr>
@@ -804,7 +809,8 @@ similarities greater than the threshold.</p>
 <dl class="class">
 <dt id="datasketch.MinHashLSHForest">
 <em class="property">class </em><code class="descclassname">datasketch.</code><code class="descname">MinHashLSHForest</code><span class="sig-paren">(</span><em>num_perm=128</em>, <em>l=8</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/datasketch/lshforest.html#MinHashLSHForest"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#datasketch.MinHashLSHForest" title="Permalink to this definition">¶</a></dt>
-<dd><p>The LSH Forest for MinHash. It supports top-k query.
+<dd><p>The LSH Forest for MinHash. It supports top-k query in Jaccard
+similarity.
 Instead of using prefix trees as the <a class="reference external" href="http://ilpubs.stanford.edu:8090/678/1/2005-14.pdf">original paper</a>,
 I use a sorted array to store the hash values in every
 hash table.</p>
@@ -915,6 +921,138 @@ Note that keys won&#8217;t be searchable until <cite>index</cite> is called.</p>
 <dl class="attribute">
 <dt id="datasketch.MinHashLSHForest.__weakref__">
 <code class="descname">__weakref__</code><a class="headerlink" href="#datasketch.MinHashLSHForest.__weakref__" title="Permalink to this definition">¶</a></dt>
+<dd><p>list of weak references to the object (if defined)</p>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="minhash-lsh-ensemble">
+<h2>MinHash LSH Ensemble<a class="headerlink" href="#minhash-lsh-ensemble" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="datasketch.MinHashLSHEnsemble">
+<em class="property">class </em><code class="descclassname">datasketch.</code><code class="descname">MinHashLSHEnsemble</code><span class="sig-paren">(</span><em>threshold=0.9</em>, <em>num_perm=128</em>, <em>weights=(0.5</em>, <em>0.5)</em>, <em>num_part=16</em>, <em>l=8</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/datasketch/lshensemble.html#MinHashLSHEnsemble"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#datasketch.MinHashLSHEnsemble" title="Permalink to this definition">¶</a></dt>
+<dd><p>The LSH Ensemble index for MinHash. It supports <strong>Containment</strong> queries.
+The implementation is based on
+<a class="reference external" href="http://www.vldb.org/pvldb/vol9/p1185-zhu.pdf">E. Zhu et al.</a>.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>threshold</strong> (<em>float</em>) &#8211; The Containment threshold between 0.0 and
+1.0. The initialized LSH Ensemble will be optimized for the threshold by
+minizing the false positive and false negative.</li>
+<li><strong>num_perm</strong> (<em>int</em><em>, </em><em>optional</em>) &#8211; The number of permutation functions used
+by the MinHash to be indexed. For weighted MinHash, this
+is the sample size (<cite>sample_size</cite>).</li>
+<li><strong>weights</strong> (<em>tuple</em><em>, </em><em>optional</em>) &#8211; Used to adjust the relative importance of
+minizing false positive and false negative when optimizing
+for the Containment threshold.
+<cite>weights</cite> is a tuple in the format of
+<code class="code docutils literal"><span class="pre">(false_positive_weight,</span> <span class="pre">false_negative_weight)</span></code>.</li>
+<li><strong>num_part</strong> (<em>int</em><em>, </em><em>optional</em>) &#8211; The number of partitions in LSH Ensemble.</li>
+<li><strong>l</strong> (<em>int</em><em>, </em><em>optional</em>) &#8211; The memory usage factor: an LSH Ensemble uses approximately
+<cite>l</cite> times more memory space than a MinHash LSH with the same number of
+sets indexed. The higher the <cite>l</cite> the better the accuracy.</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">Using more partitions (<cite>num_part</cite>) leads to better accuracy, at the
+expense of slower query performance.
+This is different from <a class="reference external" href="http://www.vldb.org/pvldb/vol9/p1185-zhu.pdf">the paper</a> and the <a class="reference external" href="https://github.com/ekzhu/lshensemble#explanation-for-the-parameter-maxk-and-bootstrap-options">Go implementation</a>, in which
+more partitions leads to better accuracy AND faster query performance,
+due to parallelism.</p>
+</div>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">More information about the parameter <cite>l</cite> can be found in the
+<a class="reference external" href="https://github.com/ekzhu/lshensemble#explanation-for-the-parameter-maxk-and-bootstrap-options">Go implementation</a>
+of LSH Ensemble, in which <cite>l</cite> is named <cite>MaxK</cite>.</p>
+</div>
+<dl class="method">
+<dt id="datasketch.MinHashLSHEnsemble.index">
+<code class="descname">index</code><span class="sig-paren">(</span><em>entries</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/datasketch/lshensemble.html#MinHashLSHEnsemble.index"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#datasketch.MinHashLSHEnsemble.index" title="Permalink to this definition">¶</a></dt>
+<dd><p>Index all sets given their keys, MinHashes, and sizes.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>entries</strong> (<cite>iterable</cite> of <cite>tuple</cite>) &#8211; An iterable of tuples, each must be
+in the form of <cite>(key, minhash, size)</cite>, where <cite>key</cite> is the unique
+identifier of a set, <cite>minhash</cite> is the MinHash of the set,
+and <cite>size</cite> is the size or number of unique items in the set.</td>
+</tr>
+</tbody>
+</table>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last"><cite>size</cite> must be positive.</p>
+</div>
+</dd></dl>
+
+<dl class="method">
+<dt id="datasketch.MinHashLSHEnsemble.query">
+<code class="descname">query</code><span class="sig-paren">(</span><em>minhash</em>, <em>size</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/datasketch/lshensemble.html#MinHashLSHEnsemble.query"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#datasketch.MinHashLSHEnsemble.query" title="Permalink to this definition">¶</a></dt>
+<dd><p>Giving the MinHash and size of the query set, retrieve
+keys that references sets with containment with respect to
+the query set greater than the threshold.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>minhash</strong> (<a class="reference internal" href="#datasketch.MinHash" title="datasketch.MinHash"><em>datasketch.MinHash</em></a>) &#8211; The MinHash of the query set.</li>
+<li><strong>size</strong> (<em>int</em>) &#8211; The size (number of unique items) of the query set.</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last"><cite>iterator</cite> of keys.</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="datasketch.MinHashLSHEnsemble.__contains__">
+<code class="descname">__contains__</code><span class="sig-paren">(</span><em>key</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/datasketch/lshensemble.html#MinHashLSHEnsemble.__contains__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#datasketch.MinHashLSHEnsemble.__contains__" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>key</strong> (<em>hashable</em>) &#8211; The unique identifier of a set.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">True only if the key exists in the index.</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body">bool</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="datasketch.MinHashLSHEnsemble.is_empty">
+<code class="descname">is_empty</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/datasketch/lshensemble.html#MinHashLSHEnsemble.is_empty"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#datasketch.MinHashLSHEnsemble.is_empty" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">Check if the index is empty.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body">bool</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="datasketch.MinHashLSHEnsemble.__weakref__">
+<code class="descname">__weakref__</code><a class="headerlink" href="#datasketch.MinHashLSHEnsemble.__weakref__" title="Permalink to this definition">¶</a></dt>
 <dd><p>list of weak references to the object (if defined)</p>
 </dd></dl>
 
