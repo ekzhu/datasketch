@@ -72,7 +72,7 @@ if __name__ == "__main__":
               "ground_truth_times" : None, "ground_truth_results" : None}
 
     index_data, query_data = bootstrap_data(num_perms, 1000, 500, 
-             scipy.stats.(10, 500))
+             scipy.stats.randint(10, 500))
 
     threshold = 0.9
 
