@@ -47,10 +47,8 @@ instructions for every data value hashed and 2) more hash values to be
 stored. The speed and memory usage of MinHash are both linearly
 proportional to the number of permutation functions used.
 
-.. figure:: https://github.com/ekzhu/datasketch/raw/master/plots/minhash_benchmark.png
+.. figure:: /_static/minhash_benchmark.png
    :alt: MinHash Benchmark
-
-   MinHash Benchmark
 
 You can union two MinHash object using the ``merge`` function. This
 makes MinHash useful in parallel MapReduce style data analysis.

@@ -52,8 +52,7 @@ def _optimal_param(threshold, num_perm, false_positive_weight,
 
 class MinHashLSH(object):
     '''
-    The Locality Sensitive Hashing index 
-    with MinHash (MinHash LSH). 
+    The :ref:`minhash_lsh` index. 
     It supports query with `Jaccard similarity`_ threshold.
     Reference: `Chapter 3, Mining of Massive Datasets 
     <http://www.mmds.org/>`_.
@@ -74,10 +73,13 @@ class MinHashLSH(object):
             of each bands). This is used to bypass the parameter optimization
             step in the constructor. `threshold` and `weights` will be ignored 
             if this is given.
-    
-    Note:
-        The MinHash LSH index also works with weighted Jaccard similarity
-        and weighted MinHash without modification.
+
+    Note: 
+        `weights` must sum to 1.0, and the format is 
+        (false positive weight, false negative weight).
+        For example, if minizing false negative (or maintaining high recall) is more
+        important, assign more weight toward false negative: weights=(0.4, 0.6).
+        Try to live with a small difference between weights (i.e. < 0.5).
     '''
 
     def __init__(self, threshold=0.9, num_perm=128, weights=(0.5,0.5), params=None):
@@ -92,6 +94,8 @@ class MinHashLSH(object):
         self.h = num_perm
         if params is not None:
             self.b, self.r = params
+            if self.b * self.r > num_perm:
+                raise ValueError("The product of b and r must be less than num_perm")
         else:
             false_positive_weight, false_negative_weight = weights
             self.b, self.r = _optimal_param(threshold, num_perm,

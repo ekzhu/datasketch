@@ -54,7 +54,8 @@ def _optimal_param(threshold, num_perm, max_r, xq, false_positive_weight,
 
 class MinHashLSHEnsemble(object):
     '''
-    The LSH Ensemble index for MinHash. It supports **Containment** queries.
+    The :ref:`minhash_lsh_ensemble` index. It supports 
+    :ref:`containment` queries.
     The implementation is based on 
     `E. Zhu et al. <http://www.vldb.org/pvldb/vol9/p1185-zhu.pdf>`_. 
     
@@ -65,15 +66,14 @@ class MinHashLSHEnsemble(object):
         num_perm (int, optional): The number of permutation functions used
             by the MinHash to be indexed. For weighted MinHash, this
             is the sample size (`sample_size`).
+        num_part (int, optional): The number of partitions in LSH Ensemble. 
+        m (int, optional): The memory usage factor: an LSH Ensemble uses approximately
+            `m` times more memory space than a MinHash LSH with the same number of 
+            sets indexed. The higher the `m` the better the accuracy. 
         weights (tuple, optional): Used to adjust the relative importance of 
             minizing false positive and false negative when optimizing 
-            for the Containment threshold.
-            `weights` is a tuple in the format of 
-            :code:`(false_positive_weight, false_negative_weight)`.
-        num_part (int, optional): The number of partitions in LSH Ensemble. 
-        l (int, optional): The memory usage factor: an LSH Ensemble uses approximately
-            `l` times more memory space than a MinHash LSH with the same number of 
-            sets indexed. The higher the `l` the better the accuracy. 
+            for the Containment threshold. Similar to the `weights` parameter
+            in :class:`datasketch.MinHashLSH`.
 
     Note:
         Using more partitions (`num_part`) leads to better accuracy, at the
@@ -83,30 +83,30 @@ class MinHashLSHEnsemble(object):
         due to parallelism.
 
     Note:
-        More information about the parameter `l` can be found in the 
+        More information about the parameter `m` can be found in the 
         `Go implementation`_
-        of LSH Ensemble, in which `l` is named `MaxK`.
+        of LSH Ensemble, in which `m` is named `MaxK`.
     
-    .. _`Go implementation`: https://github.com/ekzhu/lshensemble#explanation-for-the-parameter-maxk-and-bootstrap-options
+    .. _`Go implementation`: https://github.com/ekzhu/lshensemble
     .. _`the paper`: http://www.vldb.org/pvldb/vol9/p1185-zhu.pdf
     '''
 
-    def __init__(self, threshold=0.9, num_perm=128, weights=(0.5,0.5), num_part=16, l=8):
+    def __init__(self, threshold=0.9, num_perm=128, num_part=16, m=8, weights=(0.5,0.5)):
         if threshold > 1.0 or threshold < 0.0:
             raise ValueError("threshold must be in [0.0, 1.0]") 
         if num_perm < 2:
             raise ValueError("Too few permutation functions")
         if num_part < 2:
             raise ValueError("num_part must be at least 2")
-        if l < 2 or l > num_perm:
-            raise ValueError("l must be in the range of [2, num_perm]")
+        if m < 2 or m > num_perm:
+            raise ValueError("m must be in the range of [2, num_perm]")
         if any(w < 0.0 or w > 1.0 for w in weights):
             raise ValueError("Weight must be in [0.0, 1.0]")
         if sum(weights) != 1.0:
             raise ValueError("Weights must sum to 1.0")
         self.threshold = threshold
         self.h = num_perm
-        self.l = l
+        self.m = m
         rs = self._init_optimal_params(weights)
         # Initialize multiple LSH indexes for each partition
         self.indexes = [dict((r, MinHashLSH(num_perm=self.h, params=(int(self.h/r), r))) for r in rs)
@@ -116,7 +116,7 @@ class MinHashLSHEnsemble(object):
     def _init_optimal_params(self, weights):
         false_positive_weight, false_negative_weight = weights
         self.xqs = np.exp(np.linspace(-5, 5, 10))
-        self.params = np.array([_optimal_param(self.threshold, self.h, self.l, 
+        self.params = np.array([_optimal_param(self.threshold, self.h, self.m, 
                                                xq, 
                                                false_positive_weight,
                                                false_negative_weight) 
@@ -136,6 +136,7 @@ class MinHashLSHEnsemble(object):
     def index(self, entries):
         '''
         Index all sets given their keys, MinHashes, and sizes.
+        It can be called only once after the index is created.
 
         Args:
             entries (`iterable` of `tuple`): An iterable of tuples, each must be
@@ -146,6 +147,8 @@ class MinHashLSHEnsemble(object):
         Note:
             `size` must be positive.
         '''
+        if not self.is_empty():
+            raise ValueError("Cannot call index again on a non-empty index")
         if not isinstance(entries, list):
             queue = deque([])
             for key, minhash, size in entries:

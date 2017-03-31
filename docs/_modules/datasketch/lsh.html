@@ -63,6 +63,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../../hyperloglog.html">HyperLogLog</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../hyperloglog.html#hyperloglog-plusplus">HyperLogLog++</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../lsh.html">MinHash LSH</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../lshensemble.html">MinHash LSH Ensemble</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../lshforest.html">MinHash LSH Forest</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../minhash.html">MinHash</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../weightedminhash.html">Weighted MinHash</a></li>
@@ -148,8 +149,7 @@
 
 <div class="viewcode-block" id="MinHashLSH"><a class="viewcode-back" href="../../documentation.html#datasketch.MinHashLSH">[docs]</a><span class="k">class</span> <span class="nc">MinHashLSH</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
     <span class="sd">&#39;&#39;&#39;</span>
-<span class="sd">    The Locality Sensitive Hashing index </span>
-<span class="sd">    with MinHash (MinHash LSH). </span>
+<span class="sd">    The :ref:`minhash_lsh` index. </span>
 <span class="sd">    It supports query with `Jaccard similarity`_ threshold.</span>
 <span class="sd">    Reference: `Chapter 3, Mining of Massive Datasets </span>
 <span class="sd">    &lt;http://www.mmds.org/&gt;`_.</span>
@@ -170,10 +170,13 @@
 <span class="sd">            of each bands). This is used to bypass the parameter optimization</span>
 <span class="sd">            step in the constructor. `threshold` and `weights` will be ignored </span>
 <span class="sd">            if this is given.</span>
-<span class="sd">    </span>
-<span class="sd">    Note:</span>
-<span class="sd">        The MinHash LSH index also works with weighted Jaccard similarity</span>
-<span class="sd">        and weighted MinHash without modification.</span>
+
+<span class="sd">    Note: </span>
+<span class="sd">        `weights` must sum to 1.0, and the format is </span>
+<span class="sd">        (false positive weight, false negative weight).</span>
+<span class="sd">        For example, if minizing false negative (or maintaining high recall) is more</span>
+<span class="sd">        important, assign more weight toward false negative: weights=(0.4, 0.6).</span>
+<span class="sd">        Try to live with a small difference between weights (i.e. &lt; 0.5).</span>
 <span class="sd">    &#39;&#39;&#39;</span>
 
     <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">threshold</span><span class="o">=</span><span class="mf">0.9</span><span class="p">,</span> <span class="n">num_perm</span><span class="o">=</span><span class="mi">128</span><span class="p">,</span> <span class="n">weights</span><span class="o">=</span><span class="p">(</span><span class="mf">0.5</span><span class="p">,</span><span class="mf">0.5</span><span class="p">),</span> <span class="n">params</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
@@ -188,6 +191,8 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">h</span> <span class="o">=</span> <span class="n">num_perm</span>
         <span class="k">if</span> <span class="n">params</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">b</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">r</span> <span class="o">=</span> <span class="n">params</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">b</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">r</span> <span class="o">&gt;</span> <span class="n">num_perm</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;The product of b and r must be less than num_perm&quot;</span><span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="n">false_positive_weight</span><span class="p">,</span> <span class="n">false_negative_weight</span> <span class="o">=</span> <span class="n">weights</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">b</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">r</span> <span class="o">=</span> <span class="n">_optimal_param</span><span class="p">(</span><span class="n">threshold</span><span class="p">,</span> <span class="n">num_perm</span><span class="p">,</span>

@@ -3,12 +3,12 @@
 MinHash LSH Forest
 ==================
 
-MinHash LSH is useful for radius (or threshold) queries. However,
+:ref:`minhash_lsh` is useful for radius (or threshold) queries. However,
 **top-k** queries are often more useful in some cases. `LSH
 Forest <http://ilpubs.stanford.edu:8090/678/1/2005-14.pdf>`__ by Bawa et
 al. is a general LSH data structure that makes top-k query possible for
 many different types of LSH indexes, which include MinHash LSH. I
-implemented the MinHash LSH Forest, which takes a MinHash data sketch of
+implemented the MinHash LSH Forest, which takes a :ref:`minhash` data sketch of
 the query set, and returns the top-k matching sets that have the highest
 Jaccard similarities with the query set.
 
@@ -64,10 +64,8 @@ scan with MinHash and MinHash LSH Forest. Synthetic data was used. See
 `benchmark <https://github.com/ekzhu/datasketch/blob/master/benchmark/lshforest_benchmark.py>`_ 
 for details.
 
-.. figure:: https://github.com/ekzhu/datasketch/raw/master/plots/lshforest_benchmark.png
+.. figure:: /_static/lshforest_benchmark.png
    :alt: MinHashLSHForest Benchmark
-
-   MinHashLSHForest Benchmark
 
 (Optional) If you have read the LSH Forest
 `paper <http://ilpubs.stanford.edu:8090/678/1/2005-14.pdf>`__, and

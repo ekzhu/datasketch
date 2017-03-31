@@ -32,79 +32,56 @@ probability right at the threshold, making the qualifying sets much more
 likely to get returned than the rest.
 
 .. code:: python
+        
+        from datasketch import MinHash, MinHashLSH
 
-    from datasketch import MinHash, MinHashLSH
+        set1 = set(['minhash', 'is', 'a', 'probabilistic', 'data', 'structure', 'for',
+                    'estimating', 'the', 'similarity', 'between', 'datasets'])
+        set2 = set(['minhash', 'is', 'a', 'probability', 'data', 'structure', 'for',
+                    'estimating', 'the', 'similarity', 'between', 'documents'])
+        set3 = set(['minhash', 'is', 'probability', 'data', 'structure', 'for',
+                    'estimating', 'the', 'similarity', 'between', 'documents'])
+        
+        m1 = MinHash(num_perm=128)
+        m2 = MinHash(num_perm=128)
+        m3 = MinHash(num_perm=128)
+        for d in set1:
+            m1.update(d.encode('utf8'))
+        for d in set2:
+            m2.update(d.encode('utf8'))
+        for d in set3:
+            m3.update(d.encode('utf8'))
 
-    data1 = ['minhash', 'is', 'a', 'probabilistic', 'data', 'structure', 'for',
-            'estimating', 'the', 'similarity', 'between', 'datasets']
-    data2 = ['minhash', 'is', 'a', 'probability', 'data', 'structure', 'for',
-            'estimating', 'the', 'similarity', 'between', 'documents']
-    data3 = ['minhash', 'is', 'probability', 'data', 'structure', 'for',
-            'estimating', 'the', 'similarity', 'between', 'documents']
-
-    # Create MinHash objects
-    m1 = MinHash(num_perm=128)
-    m2 = MinHash(num_perm=128)
-    m3 = MinHash(num_perm=128)
-    for d in data1:
-        m1.update(d.encode('utf8'))
-    for d in data2:
-        m2.update(d.encode('utf8'))
-    for d in data3:
-        m3.update(d.encode('utf8'))
-
-    # Create an MinHashLSH index optimized for Jaccard threshold 0.5,
-    # that accepts MinHash objects with 128 permutations functions
-    lsh = MinHashLSH(threshold=0.5, num_perm=128)
-
-    # Insert m2 and m3 into the index
-    lsh.insert("m2", m2)
-    lsh.insert("m3", m3)
-
-    # Check for membership using the key
-    print("m2" in lsh)
-    print("m3" in lsh)
-
-    # Using m1 as the query, retrieve the keys of the qualifying datasets
-    result = lsh.query(m1)
-    print("Candidates with Jaccard similarity > 0.5", result)
-
-    # Remove key from lsh
-    lsh.remove("m2")
+        # Create LSH index
+        lsh = MinHashLSH(threshold=0.5, num_perm=128)
+        lsh.insert("m2", m2)
+        lsh.insert("m3", m3)
+        result = lsh.query(m1)
+        print("Approximate neighbours with Jaccard similarity > 0.5", result)
 
 The Jaccard similarity threshold must be set at initialization, and
-cannot be changed. So does the ``num_perm`` parameter. Similar to
-MinHash, higher ``num_perm`` can improve the accuracy of :class:`datasketch.MinHashLSH`,
-but increase query cost, since more processing is required as the
-MinHash gets bigger. Unlike MinHash, the benefit of higher ``num_perm``
-seems to be limited for :class:`datasketch.MinHashLSH` - it looks like when ``num_perm``
-becomes greater than the dataset cardinality, both precision and recall
-starts to decrease. I experimented with the `20 News Group
+cannot be changed. So does the number of permutation functions (``num_perm``) parameter. 
+Similar to MinHash, more permutation functions improves the accuracy,
+but also increases query cost, since more processing is required as the
+MinHash gets bigger. 
+I experimented with the `20 News Group
 Dataset <http://scikit-learn.org/stable/datasets/twenty_newsgroups.html>`__,
 which has an average cardinality of 193 (3-shingles). The average
-recall, average precision, and 90 percentile query time vs. ``num_perm``
+recall, average precision, and 90 percentile query time vs. number of permutation 
+functions
 are plotted below. 
-See the `benchmark <https://github.com/ekzhu/datasketch/tree/master/benchmark>`_ 
-directory for the experiment and plotting code.
+See the `benchmark` 
+directory in the source code repository for more experiment and 
+plotting code.
 
-.. figure:: https://github.com/ekzhu/datasketch/raw/master/plots/lsh_benchmark.png
+.. figure:: /_static/lsh_benchmark.png
    :alt: MinHashLSH Benchmark
 
-   MinHashLSH Benchmark
+There are other optional parameters that can be used to tune the index.
+See the documentation of :class:`datasketch.MinHashLSH` for details.
 
-There are other optional parameters that be used to tune the index:
-
-.. code:: python
-
-    # Use defaults: threshold=0.5, num_perm=128, weights=(0.5, 0.5)
-    lsh = MinHashLSH()
-
-    # `weights` controls the relative importance between minizing false positive
-    # and minizing false negative when building the `MinHashLSH`.
-    # `weights` must sum to 1.0, and the format is
-    # (false positive weight, false negative weight).
-    # For example, if minizing false negative (or maintaining high recall) is more
-    # important, assign more weight toward false negative: weights=(0.4, 0.6).
-    # Note: try to live with a small difference between weights (i.e. < 0.5).
-    lsh = MinHashLSH(weights=(0.4, 0.6))
-
+MinHash LSH does not support Top-K queries.
+See :ref:`minhash_lsh_forest` for an alternative.
+In addition, Jaccard similarity may not be the best measure if your intention is to
+find sets having high intersection with the query.
+For intersection search, see :ref:`minhash_lsh_ensemble`.
