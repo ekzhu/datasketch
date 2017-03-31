@@ -35,10 +35,8 @@ changing the parameter p.
 Interestingly, there is no speed penalty for using higher p value.
 However the memory usage is exponential to the p value.
 
-.. figure:: https://github.com/ekzhu/datasketch/raw/master/plots/hyperloglog_benchmark.png
+.. figure:: /_static/hyperloglog_benchmark.png
    :alt: HyperLogLog Benchmark
-
-   HyperLogLog Benchmark
 
 As in MinHash, you can also merge two HyperLogLogs to create a union
 HyperLogLog.

@@ -63,6 +63,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../../hyperloglog.html">HyperLogLog</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../hyperloglog.html#hyperloglog-plusplus">HyperLogLog++</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../lsh.html">MinHash LSH</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../lshensemble.html">MinHash LSH Ensemble</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../lshforest.html">MinHash LSH Forest</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../minhash.html">MinHash</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../weightedminhash.html">Weighted MinHash</a></li>
@@ -100,7 +101,8 @@
 
 <div class="viewcode-block" id="MinHashLSHForest"><a class="viewcode-back" href="../../documentation.html#datasketch.MinHashLSHForest">[docs]</a><span class="k">class</span> <span class="nc">MinHashLSHForest</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
     <span class="sd">&#39;&#39;&#39;</span>
-<span class="sd">    The LSH Forest for MinHash. It supports top-k query.</span>
+<span class="sd">    The LSH Forest for MinHash. It supports top-k query in Jaccard</span>
+<span class="sd">    similarity.</span>
 <span class="sd">    Instead of using prefix trees as the `original paper</span>
 <span class="sd">    &lt;http://ilpubs.stanford.edu:8090/678/1/2005-14.pdf&gt;`_, </span>
 <span class="sd">    I use a sorted array to store the hash values in every</span>

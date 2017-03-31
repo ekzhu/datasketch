@@ -4,7 +4,8 @@ from datasketch.minhash import hashvalue_byte_size
 
 class MinHashLSHForest(object):
     '''
-    The LSH Forest for MinHash. It supports top-k query.
+    The LSH Forest for MinHash. It supports top-k query in Jaccard
+    similarity.
     Instead of using prefix trees as the `original paper
     <http://ilpubs.stanford.edu:8090/678/1/2005-14.pdf>`_, 
     I use a sorted array to store the hash values in every

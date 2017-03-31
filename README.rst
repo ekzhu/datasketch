@@ -30,9 +30,11 @@ sub-linear query time:
 +---------------------------+-----------------------------+------------------------+
 | Index                     | For Data Sketch             | Supported Query Type   |
 +===========================+=============================+========================+
-| `MinHash LSH`_            | MinHash, Weighted MinHash   | Radius (Threshold)     |
+| `MinHash LSH`_            | MinHash, Weighted MinHash   | Jaccard Threshold      |
 +---------------------------+-----------------------------+------------------------+
-| `MinHash LSH Forest`_     | MinHash, Weighted MinHash   | Top-K                  |
+| `MinHash LSH Forest`_     | MinHash, Weighted MinHash   | Jaccard Top-K          |
++---------------------------+-----------------------------+------------------------+
+| `MinHash LSH Ensemble`_   | MinHash                     | Containment Threshold  |
 +---------------------------+-----------------------------+------------------------+
 
 datasketch must be used with Python 2.7 or above and NumPy 1.11 or
@@ -56,3 +58,4 @@ This will also install NumPy as dependency.
 .. _`HyperLogLog++`: https://ekzhu.github.io/datasketch/hyperloglog.html#hyperloglog-plusplus
 .. _`MinHash LSH`: https://ekzhu.github.io/datasketch/lsh.html
 .. _`MinHash LSH Forest`: https://ekzhu.github.io/datasketch/lshforest.html
+.. _`MinHash LSH Ensemble`: https://ekzhu.github.io/datasketch/lshensemble.html

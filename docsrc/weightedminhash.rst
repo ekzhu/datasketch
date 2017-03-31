@@ -61,10 +61,8 @@ Weighted MinHash as similar accuracy and performance profiles as
 MinHash. As you increase the number of samples, you get better accuracy,
 at the expense of slower speed.
 
-.. figure:: https://github.com/ekzhu/datasketch/raw/master/plots/weighted_minhash_benchmark.png
+.. figure:: /_static/weighted_minhash_benchmark.png
    :alt: Weighted MinHash Benchmark
-
-   Weighted MinHash Benchmark
 
 :class:`datasketch.MinHashLSH` and 
 :class:`datasketch.MinHashLSHForest` 

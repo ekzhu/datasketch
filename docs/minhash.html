@@ -65,6 +65,7 @@
 <li class="toctree-l1"><a class="reference internal" href="hyperloglog.html">HyperLogLog</a></li>
 <li class="toctree-l1"><a class="reference internal" href="hyperloglog.html#hyperloglog-plusplus">HyperLogLog++</a></li>
 <li class="toctree-l1"><a class="reference internal" href="lsh.html">MinHash LSH</a></li>
+<li class="toctree-l1"><a class="reference internal" href="lshensemble.html">MinHash LSH Ensemble</a></li>
 <li class="toctree-l1"><a class="reference internal" href="lshforest.html">MinHash LSH Forest</a></li>
 <li class="toctree-l1 current"><a class="current reference internal" href="#">MinHash</a></li>
 <li class="toctree-l1"><a class="reference internal" href="weightedminhash.html">Weighted MinHash</a></li>
@@ -100,7 +101,7 @@
 <p><a class="reference internal" href="documentation.html#datasketch.MinHash" title="datasketch.MinHash"><code class="xref py py-class docutils literal"><span class="pre">datasketch.MinHash</span></code></a> lets you estimate the <a class="reference external" href="https://en.wikipedia.org/wiki/Jaccard_index">Jaccard
 similarity</a>
 (resemblance) between
-<a class="reference external" href="https://en.wikipedia.org/wiki/Set_(mathematics)">**sets**</a> of
+<a class="reference external" href="https://en.wikipedia.org/wiki/Set_(mathematics)">sets</a> of
 arbitrary sizes in linear time using a small and fixed memory space. It
 can also be used to compute Jaccard similarity between data streams.
 MinHash is introduced by Andrei Z. Broder in this
@@ -132,13 +133,17 @@ functions used in MinHash.</p>
 </pre></div>
 </div>
 <p>The trade-off for better accuracy is slower speed and higher memory
-usage. Because using more permutation functions means 1) more CPU
-instructions for every data value hashed and 2) more hash values to be
-stored. The speed and memory usage of MinHash are both linearly
+usage. Because using more permutation functions means</p>
+<blockquote>
+<div><ol class="arabic simple">
+<li>more CPU instructions for every data value hashed and</li>
+<li>more hash values to be stored.</li>
+</ol>
+</div></blockquote>
+<p>The speed and memory usage of MinHash are both linearly
 proportional to the number of permutation functions used.</p>
-<div class="figure" id="id2">
-<img alt="MinHash Benchmark" src="https://github.com/ekzhu/datasketch/raw/master/plots/minhash_benchmark.png" />
-<p class="caption"><span class="caption-text">MinHash Benchmark</span></p>
+<div class="figure">
+<img alt="MinHash Benchmark" src="_images/minhash_benchmark.png" />
 </div>
 <p>You can union two MinHash object using the <code class="docutils literal"><span class="pre">merge</span></code> function. This
 makes MinHash useful in parallel MapReduce style data analysis.</p>

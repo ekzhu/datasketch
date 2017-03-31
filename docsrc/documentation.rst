@@ -42,6 +42,13 @@ MinHash LSH Forest
     :members:
     :special-members:
 
+MinHash LSH Ensemble
+--------------------
+
+.. autoclass:: datasketch.MinHashLSHEnsemble
+    :members:
+    :special-members:
+
 HyperLogLog
 -----------
 

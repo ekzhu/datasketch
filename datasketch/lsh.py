@@ -52,8 +52,7 @@ def _optimal_param(threshold, num_perm, false_positive_weight,
 
 class MinHashLSH(object):
     '''
-    The Locality Sensitive Hashing index 
-    with MinHash (MinHash LSH). 
+    The :ref:`minhash_lsh` index. 
     It supports query with `Jaccard similarity`_ threshold.
     Reference: `Chapter 3, Mining of Massive Datasets 
     <http://www.mmds.org/>`_.
@@ -70,13 +69,20 @@ class MinHashLSH(object):
             for the Jaccard similarity threshold.
             `weights` is a tuple in the format of 
             :code:`(false_positive_weight, false_negative_weight)`.
-    
-    Note:
-        The MinHash LSH index also works with weighted Jaccard similarity
-        and weighted MinHash without modification.
+        params (tuple, optional): The LSH parameters (i.e., number of bands and size
+            of each bands). This is used to bypass the parameter optimization
+            step in the constructor. `threshold` and `weights` will be ignored 
+            if this is given.
+
+    Note: 
+        `weights` must sum to 1.0, and the format is 
+        (false positive weight, false negative weight).
+        For example, if minizing false negative (or maintaining high recall) is more
+        important, assign more weight toward false negative: weights=(0.4, 0.6).
+        Try to live with a small difference between weights (i.e. < 0.5).
     '''
 
-    def __init__(self, threshold=0.9, num_perm=128, weights=(0.5,0.5)):
+    def __init__(self, threshold=0.9, num_perm=128, weights=(0.5,0.5), params=None):
         if threshold > 1.0 or threshold < 0.0:
             raise ValueError("threshold must be in [0.0, 1.0]") 
         if num_perm < 2:
@@ -85,11 +91,15 @@ class MinHashLSH(object):
             raise ValueError("Weight must be in [0.0, 1.0]")
         if sum(weights) != 1.0:
             raise ValueError("Weights must sum to 1.0")
-        self.threshold = threshold
         self.h = num_perm
-        false_positive_weight, false_negative_weight = weights
-        self.b, self.r = _optimal_param(threshold, num_perm,
-                false_positive_weight, false_negative_weight)
+        if params is not None:
+            self.b, self.r = params
+            if self.b * self.r > num_perm:
+                raise ValueError("The product of b and r must be less than num_perm")
+        else:
+            false_positive_weight, false_negative_weight = weights
+            self.b, self.r = _optimal_param(threshold, num_perm,
+                    false_positive_weight, false_negative_weight)
         self.hashtables = [defaultdict(list) for _ in range(self.b)]
         self.hashranges = [(i*self.r, (i+1)*self.r) for i in range(self.b)]
         self.keys = dict()
@@ -171,4 +181,18 @@ class MinHashLSH(object):
 
     def _H(self, hs):
         return bytes(hs.byteswap().data)
+
+    def _query_b(self, minhash, b):
+        if len(minhash) != self.h:
+            raise ValueError("Expecting minhash with length %d, got %d"
+                    % (self.h, len(minhash)))
+        if b > len(self.hashtables):
+            raise ValueError("b must be less or equal to the number of hash tables")
+        candidates = set()
+        for (start, end), hashtable in zip(self.hashranges[:b], self.hashtables[:b]):
+            H = self._H(minhash.hashvalues[start:end])
+            if H in hashtable:
+                for key in hashtable[H]:
+                    candidates.add(key)
+        return candidates
 

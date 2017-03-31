@@ -6,7 +6,7 @@ MinHash
 :class:`datasketch.MinHash` lets you estimate the `Jaccard
 similarity <https://en.wikipedia.org/wiki/Jaccard_index>`__
 (resemblance) between
-`**sets** <https://en.wikipedia.org/wiki/Set_(mathematics)>`__ of
+`sets <https://en.wikipedia.org/wiki/Set_(mathematics)>`__ of
 arbitrary sizes in linear time using a small and fixed memory space. It
 can also be used to compute Jaccard similarity between data streams.
 MinHash is introduced by Andrei Z. Broder in this
@@ -42,15 +42,16 @@ functions used in MinHash.
     m = MinHash(num_perm=256)
 
 The trade-off for better accuracy is slower speed and higher memory
-usage. Because using more permutation functions means 1) more CPU
-instructions for every data value hashed and 2) more hash values to be
-stored. The speed and memory usage of MinHash are both linearly
+usage. Because using more permutation functions means 
+    
+    1. more CPU instructions for every data value hashed and 
+    2. more hash values to be stored. 
+
+The speed and memory usage of MinHash are both linearly
 proportional to the number of permutation functions used.
 
-.. figure:: https://github.com/ekzhu/datasketch/raw/master/plots/minhash_benchmark.png
+.. figure:: /_static/minhash_benchmark.png
    :alt: MinHash Benchmark
-
-   MinHash Benchmark
 
 You can union two MinHash object using the ``merge`` function. This
 makes MinHash useful in parallel MapReduce style data analysis.

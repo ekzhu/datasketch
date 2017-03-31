@@ -10,7 +10,7 @@ from lshforest_benchmark import bootstrap_data, _compute_jaccard
 def benchmark_lsh(num_perm, threshold, index_data, query_data):
     print("Building LSH index")
     lsh = MinHashLSH(threshold, num_perm)
-    for key, minhash in z:xip(index_data.keys, index_data.minhashes[num_perm]):
+    for key, minhash in zip(index_data.keys, index_data.minhashes[num_perm]):
         lsh.insert(key, minhash)
     print("Querying")
     times = []
@@ -72,7 +72,7 @@ if __name__ == "__main__":
               "ground_truth_times" : None, "ground_truth_results" : None}
 
     index_data, query_data = bootstrap_data(num_perms, 1000, 500, 
-             scipy.stats.(10, 500))
+             scipy.stats.randint(10, 500))
 
     threshold = 0.9
 

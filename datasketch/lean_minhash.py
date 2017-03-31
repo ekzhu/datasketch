@@ -39,11 +39,11 @@ class LeanMinHash(MinHash):
                               hashvalues=lean_minhash.digest())
 
     Note:
-        Lean MinHash can also be used in :class:`datasketch.MinHashLSH`
-        and :class:`datasketch.MinHashLSHForest`.
+        Lean MinHash can also be used in :class:`datasketch.MinHashLSH`,
+        :class:`datasketch.MinHashLSHForest`, and :class:`datasketch.MinHashLSHEnsemble`.
     
     Args:
-        MinHash: The MinHash object used to initialize the LeanMinHash.
+        minhash: The :class:`datasketch.MinHash` object used to initialize the LeanMinHash.
     '''
 
     __slots__ = ('seed', 'hashvalues')
