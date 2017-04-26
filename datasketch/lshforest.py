@@ -107,7 +107,7 @@ class MinHashLSHForest(object):
             for key in self._query(minhash, r, self.l):
                 results.add(key)
                 if len(results) >= k:
-                    break
+                    return list(results)
             r -= 1
         return list(results)
 
