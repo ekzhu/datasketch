@@ -91,6 +91,9 @@ class Storage(ABC):
     def status(self):
         return {'keyspace_size': len(self)}
 
+    def empty_buffer(self):
+        pass
+
 
 class OrderedStorage(Storage):
 
@@ -143,12 +146,30 @@ class DictSetStorage(UnorderedStorage, DictListStorage):
         self._dict[key].update(vals)
 
 
+class RedisBuffer(redis.client.Pipeline):
+
+    def __init__(self, connection_pool, response_callbacks, transaction,
+                 shard_hint=None, buffer_size=50000):
+        self.buffer_size = buffer_size
+        super(RedisBuffer, self).__init__(
+            connection_pool, response_callbacks, transaction,
+            shard_hint=shard_hint)
+
+    def execute_command(self, *args, **kwargs):
+        if len(self.command_stack) >= self.buffer_size:
+            self.execute()
+        super(RedisBuffer, self).execute_command(*args, **kwargs)
+
+
 class RedisStorage:
 
     def __init__(self, config, name=None):
         self.config = config
         redis_param = self._parse_config(self.config['redis'])
         self._redis = redis.Redis(**redis_param)
+        self._buffer = RedisBuffer(self._redis.connection_pool,
+                                   self._redis.response_callbacks,
+                                   transaction=True)
         if name is None:
             name = _random_name(11)
         self._name = name
@@ -168,6 +189,7 @@ class RedisStorage:
     def __getstate__(self):
         state = self.__dict__.copy()
         state.pop('_redis')
+        state.pop('_buffer')
         return state
 
     def __setstate__(self, state):
@@ -213,7 +235,11 @@ class RedisListStorage(OrderedStorage, RedisStorage):
             self._redis.hdel(self._name, redis_key)
 
     def insert(self, key, *vals, **kwargs):
-        self._insert(self._redis, key, *vals)
+        buffer = kwargs.pop('buffer', False)
+        if buffer:
+            self._insert(self._buffer, key, *vals)
+        else:
+            self._insert(self._redis, key, *vals)
 
     def _insert(self, r, key, *values):
         redis_key = self.redis_key(key)
@@ -238,6 +264,10 @@ class RedisListStorage(OrderedStorage, RedisStorage):
 
     def has_key(self, key):
         return self._redis.hexists(self._name, key)
+
+    def empty_buffer(self):
+        self._buffer.execute()
+        self.__init__(self.config, name=self._name)
 
 
 class RedisSetStorage(UnorderedStorage, RedisListStorage):

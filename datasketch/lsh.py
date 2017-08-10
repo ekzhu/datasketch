@@ -117,16 +117,28 @@ class MinHashLSH(object):
             key (hashable): The unique identifier of the set. 
             minhash (datasketch.MinHash): The MinHash of the set. 
         '''
+        self._insert(key, minhash, check_duplication=True, buffer=False)
+
+    def insertion_session(self):
+        '''
+        Create a context manager for fast insertion into this index.
+
+        Returns:
+            datasketch.lsh.MinHashLSHInsertionSession
+        '''
+        return MinHashLSHInsertionSession(self)
+
+    def _insert(self, key, minhash, check_duplication=True, buffer=False):
         if len(minhash) != self.h:
             raise ValueError("Expecting minhash with length %d, got %d"
                     % (self.h, len(minhash)))
-        if key in self.keys:
+        if check_duplication and key in self.keys:
             raise ValueError("The given key already exists")
         Hs = [self._H(minhash.hashvalues[start:end])
               for start, end in self.hashranges]
-        self.keys.insert(key, *Hs)
+        self.keys.insert(key, *Hs, buffer=buffer)
         for H, hashtable in zip(Hs, self.hashtables):
-            hashtable.insert(H, key)
+            hashtable.insert(H, key, buffer=buffer)
 
     def query(self, minhash):
         '''
@@ -226,3 +238,32 @@ class MinHashLSH(object):
             for H, hashtable in zip(Hs, hashtables):
                 hashtable.insert(H, key)
         return [hashtable.itemcounts() for hashtable in hashtables]
+
+
+class MinHashLSHInsertionSession:
+    '''Context manager for batch insertion of documents into a MinHashLSH.
+    '''
+
+    def __init__(self, lsh):
+        self.lsh = lsh
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        self.lsh.keys.empty_buffer()
+        for hashtable in self.lsh.hashtables:
+            hashtable.empty_buffer()
+
+    def insert(self, key, minhash, check_duplication=True):
+        '''
+        Insert a unique key to the index, together
+        with a MinHash (or weighted MinHash) of the set referenced by
+        the key.
+
+        Args:
+            key (hashable): The unique identifier of the set.
+            minhash (datasketch.MinHash): The MinHash of the set.
+        '''
+        self.lsh._insert(key, minhash, check_duplication=check_duplication,
+                         buffer=True)
