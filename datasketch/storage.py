@@ -79,6 +79,11 @@ class Storage(ABC):
         pass
 
     @abstractmethod
+    def itemcounts(self, **kwargs):
+        '''Returns the number of items stored under each key'''
+        pass
+
+    @abstractmethod
     def has_key(self, key):
         '''Determines whether the key is in the storage or not'''
         pass
@@ -119,6 +124,9 @@ class DictListStorage(OrderedStorage):
 
     def size(self):
         return len(self._dict)
+
+    def itemcounts(self, **kwargs):
+        return {k: len(v) for k, v in self._dict.items()}
 
     def has_key(self, key):
         return key in self._dict
@@ -214,6 +222,15 @@ class RedisListStorage(OrderedStorage, RedisStorage):
 
     def size(self):
         return self._redis.hlen(self._name)
+
+    def itemcounts(self):
+        pipe = self._redis.pipeline()
+        pipe.multi()
+        ks = self.keys()
+        for k in ks:
+            self._get_len(pipe, self.redis_key(k))
+        d = dict(zip(ks, pipe.execute()))
+        return d
 
     @staticmethod
     def _get_len(r, k):

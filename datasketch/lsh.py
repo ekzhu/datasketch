@@ -199,3 +199,30 @@ class MinHashLSH(object):
                 for key in hashtable[H]:
                     candidates.add(key)
         return candidates
+
+    def get_counts(self):
+        '''
+        Returns a list of length ``self.b`` with elements representing the
+        number of keys stored under each bucket for the given permutation.
+        '''
+        counts = [
+            hashtable.itemcounts() for hashtable in self.hashtables]
+        return counts
+
+    def get_subset_counts(self, *keys):
+        '''
+        Returns the bucket allocation counts (see :ref:`get_counts` above)
+        restricted to the list of keys given.
+
+        Args:
+            keys (hashable) : the keys for which to get the bucket allocation
+                counts
+        '''
+        key_set = list(set(keys))
+        hashtables = [unordered_storage({'type': 'dict'}) for _ in
+                      range(self.b)]
+        Hss = self.keys.getmany(*key_set)
+        for key, Hs in zip(key_set, Hss):
+            for H, hashtable in zip(Hs, hashtables):
+                hashtable.insert(H, key)
+        return [hashtable.itemcounts() for hashtable in hashtables]
