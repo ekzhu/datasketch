@@ -1,5 +1,5 @@
-from collections import defaultdict
-
+from datasketch.storage import (
+    ordered_storage, unordered_storage)
 
 _integration_precision = 0.001
 def _integration(f, a, b):
@@ -73,6 +73,8 @@ class MinHashLSH(object):
             of each bands). This is used to bypass the parameter optimization
             step in the constructor. `threshold` and `weights` will be ignored 
             if this is given.
+        storage_config (dict, optional): Type of storage service to use for storing
+            hashtables and keys.
 
     Note: 
         `weights` must sum to 1.0, and the format is 
@@ -82,7 +84,8 @@ class MinHashLSH(object):
         Try to live with a small difference between weights (i.e. < 0.5).
     '''
 
-    def __init__(self, threshold=0.9, num_perm=128, weights=(0.5,0.5), params=None):
+    def __init__(self, threshold=0.9, num_perm=128, weights=(0.5,0.5),
+                 params=None, storage_config={'type': 'dict'}):
         if threshold > 1.0 or threshold < 0.0:
             raise ValueError("threshold must be in [0.0, 1.0]") 
         if num_perm < 2:
@@ -100,9 +103,9 @@ class MinHashLSH(object):
             false_positive_weight, false_negative_weight = weights
             self.b, self.r = _optimal_param(threshold, num_perm,
                     false_positive_weight, false_negative_weight)
-        self.hashtables = [defaultdict(list) for _ in range(self.b)]
+        self.hashtables = [unordered_storage(storage_config) for _ in range(self.b)]
         self.hashranges = [(i*self.r, (i+1)*self.r) for i in range(self.b)]
-        self.keys = dict()
+        self.keys = ordered_storage(storage_config)
 
     def insert(self, key, minhash):
         '''
@@ -119,10 +122,11 @@ class MinHashLSH(object):
                     % (self.h, len(minhash)))
         if key in self.keys:
             raise ValueError("The given key already exists")
-        self.keys[key] = [self._H(minhash.hashvalues[start:end]) 
-                for start, end in self.hashranges]
-        for H, hashtable in zip(self.keys[key], self.hashtables):
-            hashtable[H].append(key)
+        Hs = [self._H(minhash.hashvalues[start:end])
+              for start, end in self.hashranges]
+        self.keys.insert(key, *Hs)
+        for H, hashtable in zip(Hs, self.hashtables):
+            hashtable.insert(H, key)
 
     def query(self, minhash):
         '''
@@ -142,9 +146,8 @@ class MinHashLSH(object):
         candidates = set()
         for (start, end), hashtable in zip(self.hashranges, self.hashtables):
             H = self._H(minhash.hashvalues[start:end])
-            if H in hashtable:
-                for key in hashtable[H]:
-                    candidates.add(key)
+            for key in hashtable.get(H):
+                candidates.add(key)
         return list(candidates)
 
     def __contains__(self, key):
@@ -167,19 +170,20 @@ class MinHashLSH(object):
         if key not in self.keys:
             raise ValueError("The given key does not exist")
         for H, hashtable in zip(self.keys[key], self.hashtables):
-            hashtable[H].remove(key)
-            if not hashtable[H]:
-                del hashtable[H]
-        self.keys.pop(key)
+            hashtable.remove_val(H, key)
+            if not hashtable.get(H):
+                hashtable.remove(H)
+        self.keys.remove(key)
 
     def is_empty(self):
         '''
         Returns:
             bool: Check if the index is empty.
         '''
-        return any(len(t) == 0 for t in self.hashtables)
+        return any(t.size() == 0 for t in self.hashtables)
 
-    def _H(self, hs):
+    @staticmethod
+    def _H(hs):
         return bytes(hs.byteswap().data)
 
     def _query_b(self, minhash, b):
@@ -195,4 +199,3 @@ class MinHashLSH(object):
                 for key in hashtable[H]:
                     candidates.add(key)
         return candidates
-
