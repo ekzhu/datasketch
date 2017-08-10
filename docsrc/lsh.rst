@@ -85,3 +85,35 @@ See :ref:`minhash_lsh_forest` for an alternative.
 In addition, Jaccard similarity may not be the best measure if your intention is to
 find sets having high intersection with the query.
 For intersection search, see :ref:`minhash_lsh_ensemble`.
+
+MinHash LSH at scale
+--------------------
+MinHash LSH supports a Redis backend for querying large datasets as part of
+a production environment. The Redis storage backend is supported using
+
+.. code:: python
+
+      from datasketch import MinHashLSH
+
+      lsh = MinHashLSH(
+         threshold=0.5, num_perm=128, storage_config={
+            'type': 'redis',
+            'redis': {'host': 'localhost', 'port': 6379
+         })
+
+To insert a large number of MinHashes in sequence, it is advisable to use
+an insertion session. This reduces the number of network calls during
+bulk insertion.
+
+Note that for the Redis storage, keys must be ``bytes`` objects.
+
+.. code:: python
+
+      data_list = [("m1", m1), ("m2", m2), ("m3", m3)]
+
+      with lsh.insertion_session() as session:
+         for key, minhash in data_list:
+            session.insert(key, minhash)
+
+Note that querying the LSH object during an open insertion session may result in
+inconsistency.

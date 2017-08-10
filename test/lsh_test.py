@@ -1,10 +1,18 @@
 import unittest
-from hashlib import sha1
 import pickle
 import numpy as np
+import mockredis
+from mock import patch
 from datasketch.lsh import MinHashLSH
 from datasketch.minhash import MinHash
 from datasketch.weighted_minhash import WeightedMinHashGenerator
+
+
+def fake_redis(**kwargs):
+    redis = mockredis.mock_redis_client(**kwargs)
+    redis.connection_pool = None
+    redis.response_callbacks = None
+    return redis
 
 
 class TestMinHashLSH(unittest.TestCase):
@@ -89,6 +97,86 @@ class TestMinHashLSH(unittest.TestCase):
         result = lsh.query(m2)
         self.assertTrue("b" in result)
 
+    def test_insert_redis(self):
+        with patch('redis.Redis', fake_redis) as mock_redis:
+            lsh = MinHashLSH(threshold=0.5, num_perm=16, storage_config={
+                'type': 'redis', 'redis': {'host': 'localhost', 'port': 6379}
+            })
+            m1 = MinHash(16)
+            m1.update("a".encode("utf8"))
+            m2 = MinHash(16)
+            m2.update("b".encode("utf8"))
+            lsh.insert(b"a", m1)
+            lsh.insert(b"b", m2)
+            for t in lsh.hashtables:
+                self.assertTrue(len(t) >= 1)
+                items = []
+                for H in t:
+                    items.extend(t[H])
+                self.assertTrue(b"a" in items)
+                self.assertTrue(b"b" in items)
+            self.assertTrue(b"a" in lsh)
+            self.assertTrue(b"b" in lsh)
+            for i, H in enumerate(lsh.keys[b"a"]):
+                self.assertTrue(b"a" in lsh.hashtables[i][H])
+
+            m3 = MinHash(18)
+            self.assertRaises(ValueError, lsh.insert, "c", m3)
+
+    def test_query_redis(self):
+        with patch('redis.Redis', fake_redis) as mock_redis:
+            lsh = MinHashLSH(threshold=0.5, num_perm=16, storage_config={
+                'type': 'redis', 'redis': {'host': 'localhost', 'port': 6379}
+            })
+            m1 = MinHash(16)
+            m1.update("a".encode("utf8"))
+            m2 = MinHash(16)
+            m2.update("b".encode("utf8"))
+            lsh.insert(b"a", m1)
+            lsh.insert(b"b", m2)
+            result = lsh.query(m1)
+            self.assertTrue(b"a" in result)
+            result = lsh.query(m2)
+            self.assertTrue(b"b" in result)
+
+            m3 = MinHash(18)
+            self.assertRaises(ValueError, lsh.query, m3)
+
+    def test_insertion_session(self):
+        lsh = MinHashLSH(threshold=0.5, num_perm=16)
+        m1 = MinHash(16)
+        m1.update("a".encode("utf8"))
+        m2 = MinHash(16)
+        m2.update("b".encode("utf8"))
+        data = [("a", m1), ("b", m2)]
+        with lsh.insertion_session() as session:
+            for key, minhash in data:
+                session.insert(key, minhash)
+        for t in lsh.hashtables:
+            self.assertTrue(len(t) >= 1)
+            items = []
+            for H in t:
+                items.extend(t[H])
+            self.assertTrue("a" in items)
+            self.assertTrue("b" in items)
+        self.assertTrue("a" in lsh)
+        self.assertTrue("b" in lsh)
+        for i, H in enumerate(lsh.keys["a"]):
+            self.assertTrue("a" in lsh.hashtables[i][H])
+
+    def test_get_counts(self):
+        lsh = MinHashLSH(threshold=0.5, num_perm=16)
+        m1 = MinHash(16)
+        m1.update("a".encode("utf8"))
+        m2 = MinHash(16)
+        m2.update("b".encode("utf8"))
+        lsh.insert("a", m1)
+        lsh.insert("b", m2)
+        counts = lsh.get_counts()
+        self.assertEqual(len(counts), lsh.b)
+        for table in counts:
+            self.assertEqual(sum(table.values()), 2)
+
 
 class TestWeightedMinHashLSH(unittest.TestCase):
 
@@ -164,7 +252,7 @@ class TestWeightedMinHashLSH(unittest.TestCase):
         m2 = mg.minhash(np.random.uniform(1, 10, 10))
         lsh.insert("a", m1)
         lsh.insert("b", m2)
-        lsh2 = pickle.loads(pickle.dumps(lsh))
+
         result = lsh.query(m1)
         self.assertTrue("a" in result)
         result = lsh.query(m2)
