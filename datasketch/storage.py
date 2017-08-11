@@ -199,6 +199,9 @@ class RedisStorage:
 
 class RedisListStorage(OrderedStorage, RedisStorage):
 
+    def __init__(self, config, name=None):
+        RedisStorage.__init__(self, config, name=name)
+
     def keys(self):
         return self._redis.hkeys(self._name)
 
@@ -271,6 +274,9 @@ class RedisListStorage(OrderedStorage, RedisStorage):
 
 
 class RedisSetStorage(UnorderedStorage, RedisListStorage):
+
+    def __init__(self, config, name=None):
+        RedisListStorage.__init__(self, config, name=name)
 
     @staticmethod
     def _get_items(r, k):
