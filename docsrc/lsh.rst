@@ -98,7 +98,7 @@ a production environment. The Redis storage backend is supported using
       lsh = MinHashLSH(
          threshold=0.5, num_perm=128, storage_config={
             'type': 'redis',
-            'redis': {'host': 'localhost', 'port': 6379
+            'redis': {'host': 'localhost', 'port': 6379}
          })
 
 To insert a large number of MinHashes in sequence, it is advisable to use
