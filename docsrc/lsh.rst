@@ -105,8 +105,6 @@ To insert a large number of MinHashes in sequence, it is advisable to use
 an insertion session. This reduces the number of network calls during
 bulk insertion.
 
-Note that for the Redis storage, keys must be ``bytes`` objects.
-
 .. code:: python
 
       data_list = [("m1", m1), ("m2", m2), ("m3", m3)]

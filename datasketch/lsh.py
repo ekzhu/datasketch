@@ -1,3 +1,4 @@
+import pickle
 from datasketch.storage import (
     ordered_storage, unordered_storage)
 
@@ -85,7 +86,7 @@ class MinHashLSH(object):
     '''
 
     def __init__(self, threshold=0.9, num_perm=128, weights=(0.5,0.5),
-                 params=None, storage_config={'type': 'dict'}):
+                 params=None, storage_config={'type': 'dict'}, prepickle=None):
         if threshold > 1.0 or threshold < 0.0:
             raise ValueError("threshold must be in [0.0, 1.0]") 
         if num_perm < 2:
@@ -103,6 +104,10 @@ class MinHashLSH(object):
             false_positive_weight, false_negative_weight = weights
             self.b, self.r = _optimal_param(threshold, num_perm,
                     false_positive_weight, false_negative_weight)
+        if prepickle is None:
+            self.prepickle = storage_config['type'] == 'redis'
+        else:
+            self.prepickle = prepickle
         self.hashtables = [unordered_storage(storage_config) for _ in range(self.b)]
         self.hashranges = [(i*self.r, (i+1)*self.r) for i in range(self.b)]
         self.keys = ordered_storage(storage_config)
@@ -136,6 +141,8 @@ class MinHashLSH(object):
             raise ValueError("The given key already exists")
         Hs = [self._H(minhash.hashvalues[start:end])
               for start, end in self.hashranges]
+        if self.prepickle:
+            key = pickle.dumps(key)
         self.keys.insert(key, *Hs, buffer=buffer)
         for H, hashtable in zip(Hs, self.hashtables):
             hashtable.insert(H, key, buffer=buffer)
@@ -160,7 +167,10 @@ class MinHashLSH(object):
             H = self._H(minhash.hashvalues[start:end])
             for key in hashtable.get(H):
                 candidates.add(key)
-        return list(candidates)
+        if self.prepickle:
+            return [pickle.loads(key) for key in candidates]
+        else:
+            return list(candidates)
 
     def __contains__(self, key):
         '''
@@ -170,6 +180,8 @@ class MinHashLSH(object):
         Returns: 
             bool: True only if the key exists in the index.
         '''
+        if self.prepickle:
+            key = pickle.dumps(key)
         return key in self.keys
 
     def remove(self, key):
@@ -178,7 +190,10 @@ class MinHashLSH(object):
 
         Args:
             key (hashable): The unique identifier of a set.
+
         '''
+        if self.prepickle:
+            key = pickle.dumps(key)
         if key not in self.keys:
             raise ValueError("The given key does not exist")
         for H, hashtable in zip(self.keys[key], self.hashtables):
@@ -210,7 +225,10 @@ class MinHashLSH(object):
             if H in hashtable:
                 for key in hashtable[H]:
                     candidates.add(key)
-        return candidates
+        if self.prepickle:
+            return {pickle.loads(key) for key in candidates}
+        else:
+            return candidates
 
     def get_counts(self):
         '''
@@ -230,7 +248,10 @@ class MinHashLSH(object):
             keys (hashable) : the keys for which to get the bucket allocation
                 counts
         '''
-        key_set = list(set(keys))
+        if self.prepickle:
+            key_set = [pickle.dumps(key) for key in set(keys)]
+        else:
+            key_set = list(set(keys))
         hashtables = [unordered_storage({'type': 'dict'}) for _ in
                       range(self.b)]
         Hss = self.keys.getmany(*key_set)
