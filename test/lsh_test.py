@@ -113,12 +113,12 @@ class TestMinHashLSH(unittest.TestCase):
                 items = []
                 for H in t:
                     items.extend(t[H])
-                self.assertTrue("a" in items)
-                self.assertTrue("b" in items)
+                self.assertTrue(pickle.dumps("a") in items)
+                self.assertTrue(pickle.dumps("b") in items)
             self.assertTrue("a" in lsh)
             self.assertTrue("b" in lsh)
-            for i, H in enumerate(lsh.keys["a"]):
-                self.assertTrue("a" in lsh.hashtables[i][H])
+            for i, H in enumerate(lsh.keys[pickle.dumps("a")]):
+                self.assertTrue(pickle.dumps("a") in lsh.hashtables[i][H])
 
             m3 = MinHash(18)
             self.assertRaises(ValueError, lsh.insert, "c", m3)
