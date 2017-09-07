@@ -1,7 +1,6 @@
 import unittest
 import struct
 import pickle
-from hashlib import sha1
 import numpy as np
 from datasketch import MinHash
 from datasketch import LeanMinHash
@@ -113,7 +112,7 @@ class TestLeanMinHash(unittest.TestCase):
         self.assertEqual(len(lm1d.hashvalues), len(lm1.hashvalues))
         self.assertTrue(all(hvd == hv for hv, hvd in zip(lm1.hashvalues,
                 lm1d.hashvalues)))
-    
+
     def test_deserialize_byteorder(self):
         for byteorder in "@=<>!":
             m1 = MinHash(10, 1, hashobj=FakeHash)
@@ -179,6 +178,24 @@ class TestLeanMinHash(unittest.TestCase):
         lm = LeanMinHash(m)
         c = lm.count()
         self.assertGreaterEqual(c, 0)
+
+    def test_hash(self):
+        m = MinHash(hashobj=FakeHash)
+        m.update(11)
+        m.update(123)
+        m.update(92)
+        m.update(98)
+        m.update(123218)
+        m.update(32)
+        lm1 = LeanMinHash(m)
+        lm2 = LeanMinHash(m)
+        self.assertEqual(hash(lm1), hash(lm2))
+        m.update(444)
+        lm3 = LeanMinHash(m)
+        self.assertNotEqual(hash(lm1), hash(lm3))
+        d = dict()
+        d[lm1] = True
+        self.assertTrue(d[lm2])
 
 
 if __name__ == "__main__":

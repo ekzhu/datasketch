@@ -17,7 +17,7 @@ class LeanMinHash(MinHash):
         To create a lean MinHash from an existing MinHash:
 
         .. code-block:: python
-            
+
             lean_minhash = LeanMinHash(minhash)
 
             # You can compute the Jaccard similarity between two lean MinHash
@@ -29,8 +29,8 @@ class LeanMinHash(MinHash):
         To create a MinHash from a lean MinHash:
 
         .. code-block:: python
-            
-            minhash = MinHash(seed=lean_minhash.seed, 
+
+            minhash = MinHash(seed=lean_minhash.seed,
                               hashvalues=lean_minhash.hashvalues)
 
             # Or if you want to prevent further updates on minhash
@@ -41,7 +41,7 @@ class LeanMinHash(MinHash):
     Note:
         Lean MinHash can also be used in :class:`datasketch.MinHashLSH`,
         :class:`datasketch.MinHashLSHForest`, and :class:`datasketch.MinHashLSHEnsemble`.
-    
+
     Args:
         minhash: The :class:`datasketch.MinHash` object used to initialize the LeanMinHash.
     '''
@@ -52,7 +52,7 @@ class LeanMinHash(MinHash):
         '''Initialize the slots of the LeanMinHash.
 
         Args:
-            seed (int): The random seed controls the set of random 
+            seed (int): The random seed controls the set of random
                 permutation functions generated for this LeanMinHash.
             hashvalues: The hash values is the internal state of the LeanMinHash.
         '''
@@ -77,8 +77,8 @@ class LeanMinHash(MinHash):
         '''Compute the byte size after serialization.
 
         Args:
-            byteorder (str, optional): This is byte order of the serialized data. Use one 
-                of the `byte order characters 
+            byteorder (str, optional): This is byte order of the serialized data. Use one
+                of the `byte order characters
                 <https://docs.python.org/3/library/struct.html#byte-order-size-and-alignment>`_:
                 ``@``, ``=``, ``<``, ``>``, and ``!``.
                 Default is ``@`` -- the native order.
@@ -101,8 +101,8 @@ class LeanMinHash(MinHash):
         Args:
             buf (buffer): `buf` must implement the `buffer`_ interface.
                 One such example is the built-in `bytearray`_ class.
-            byteorder (str, optional): This is byte order of the serialized data. Use one 
-                of the `byte order characters 
+            byteorder (str, optional): This is byte order of the serialized data. Use one
+                of the `byte order characters
                 <https://docs.python.org/3/library/struct.html#byte-order-size-and-alignment>`_:
                 ``@``, ``=``, ``<``, ``>``, and ``!``.
                 Default is ``@`` -- the native order.
@@ -112,21 +112,21 @@ class LeanMinHash(MinHash):
 
         The serialization schema:
             1. The first 8 bytes is the seed integer
-            2. The next 4 bytes is the number of hash values 
+            2. The next 4 bytes is the number of hash values
             3. The rest is the serialized hash values, each uses 4 bytes
-        
+
         Example:
             To serialize a single lean MinHash into a `bytearray`_ buffer.
 
             .. code-block:: python
-                
+
                 buf = bytearray(lean_minhash.bytesize())
                 lean_minhash.serialize(buf)
 
             To serialize multiple lean MinHash into a `bytearray`_ buffer.
 
             .. code-block:: python
-                
+
                 # assuming lean_minhashs is a list of LeanMinHash with the same size
                 size = lean_minhashs[0].bytesize()
                 buf = bytearray(size*len(lean_minhashs))
@@ -152,12 +152,12 @@ class LeanMinHash(MinHash):
         Args:
             buf (buffer): `buf` must implement the `buffer`_ interface.
                 One such example is the built-in `bytearray`_ class.
-            byteorder (str. optional): This is byte order of the serialized data. Use one 
-                of the `byte order characters 
+            byteorder (str. optional): This is byte order of the serialized data. Use one
+                of the `byte order characters
                 <https://docs.python.org/3/library/struct.html#byte-order-size-and-alignment>`_:
                 ``@``, ``=``, ``<``, ``>``, and ``!``.
                 Default is ``@`` -- the native order.
-       
+
         Return:
             datasketch.LeanMinHash: The deserialized lean MinHash
 
@@ -165,7 +165,7 @@ class LeanMinHash(MinHash):
             To deserialize a lean MinHash from a buffer.
 
             .. code-block:: python
-                
+
                 lean_minhash = LeanMinHash.deserialize(buf)
         '''
         fmt_seed_size = "%sqi" % byteorder
@@ -202,6 +202,8 @@ class LeanMinHash(MinHash):
             hashvalues = struct.unpack_from('%dI' % num_perm, buffer(buf), offset)
         self._initialize_slots(seed, hashvalues)
 
+    def __hash__(self):
+        return hash((self.seed, tuple(self.hashvalues)))
 
     @classmethod
     def union(cls, *lmhs):
