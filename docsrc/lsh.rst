@@ -86,6 +86,8 @@ In addition, Jaccard similarity may not be the best measure if your intention is
 find sets having high intersection with the query.
 For intersection search, see :ref:`minhash_lsh_ensemble`.
 
+.. _minhash_lsh_at_scale:
+
 MinHash LSH at scale
 --------------------
 MinHash LSH supports a Redis backend for querying large datasets as part of

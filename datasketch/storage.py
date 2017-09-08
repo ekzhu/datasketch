@@ -8,7 +8,34 @@ ABC = ABCMeta('ABC', (object,), {}) # compatible with Python 2 *and* 3
 
 
 def ordered_storage(config, name=None):
-    '''Return ordered storage system based on the specified config'''
+    '''Return ordered storage system based on the specified config.
+
+    The canonical example of such a storage container is
+    ``defaultdict(list)``. Thus, the return value of this method contains
+    keys and values. The values are ordered lists with the last added
+    item at the end.
+
+    Args:
+        config (dict): Defines the configurations for the storage.
+            For in-memory storage, the config ``{'type': 'dict'}`` will
+            suffice. For Redis storage, the type should be ``'redis'`` and
+            the configurations for the Redis database should be supplied
+            under the key ``'redis'``. These parameters should be in a form
+            suitable for `redis.Redis`. The parameters may alternatively
+            contain references to environment variables, in which case
+            literal configuration values should be replaced by dicts of
+            the form::
+
+                {'env': 'REDIS_HOSTNAME',
+                 'default': 'localhost'}
+
+            For a full example, see :ref:`minhash_lsh_at_scale`
+
+        name (bytes, optional): A reference name for this storage container.
+            For dict-type containers, this is ignored. For Redis containers,
+            this name is used to prefix keys pertaining to this storage
+            container within the database.
+    '''
     tp = config['type']
     if tp == 'dict':
         return DictListStorage(config)
@@ -17,7 +44,33 @@ def ordered_storage(config, name=None):
 
 
 def unordered_storage(config, name=None):
-    '''Return an unordered storage system based on the specified config'''
+    '''Return an unordered storage system based on the specified config.
+
+    The canonical example of such a storage container is
+    ``defaultdict(set)``. Thus, the return value of this method contains
+    keys and values. The values are unordered sets.
+
+    Args:
+        config (dict): Defines the configurations for the storage.
+            For in-memory storage, the config ``{'type': 'dict'}`` will
+            suffice. For Redis storage, the type should be ``'redis'`` and
+            the configurations for the Redis database should be supplied
+            under the key ``'redis'``. These parameters should be in a form
+            suitable for `redis.Redis`. The parameters may alternatively
+            contain references to environment variables, in which case
+            literal configuration values should be replaced by dicts of
+            the form::
+
+                {'env': 'REDIS_HOSTNAME',
+                 'default': 'localhost'}
+
+            For a full example, see :ref:`minhash_lsh_at_scale`
+
+        name (bytes, optional): A reference name for this storage container.
+            For dict-type containers, this is ignored. For Redis containers,
+            this name is used to prefix keys pertaining to this storage
+            container within the database.
+    '''
     tp = config['type']
     if tp == 'dict':
         return DictSetStorage(config)
@@ -26,6 +79,7 @@ def unordered_storage(config, name=None):
 
 
 class Storage(ABC):
+    '''Base class for key, value containers where the values are sequences.'''
     def __getitem__(self, key):
         return self.get(key)
 
@@ -106,6 +160,9 @@ class UnorderedStorage(Storage):
 
 
 class DictListStorage(OrderedStorage):
+    '''This is a wrapper class around ``defaultdict(list)`` enabling
+    it to support an API consistent with `Storage`
+    '''
     def __init__(self, config):
         self._dict = defaultdict(list)
 
@@ -129,6 +186,10 @@ class DictListStorage(OrderedStorage):
         return len(self._dict)
 
     def itemcounts(self, **kwargs):
+        '''Returns a dict where the keys are the keys of the container.
+        The values are the *lengths* of the value sequences stored
+        in this container.
+        '''
         return {k: len(v) for k, v in self._dict.items()}
 
     def has_key(self, key):
@@ -136,6 +197,9 @@ class DictListStorage(OrderedStorage):
 
 
 class DictSetStorage(UnorderedStorage, DictListStorage):
+    '''This is a wrapper class around ``defaultdict(set)`` enabling
+    it to support an API consistent with `Storage`
+    '''
     def __init__(self, config):
         self._dict = defaultdict(set)
 
@@ -147,6 +211,12 @@ class DictSetStorage(UnorderedStorage, DictListStorage):
 
 
 class RedisBuffer(redis.client.Pipeline):
+    '''A bufferized version of `redis.pipeline.Pipeline`.
+
+    The only difference from the conventional pipeline object is the
+    ``buffer_size``. Once the buffer is longer than the buffer size,
+    the pipeline is automatically executed, and the buffer cleared.
+    '''
 
     def __init__(self, connection_pool, response_callbacks, transaction,
                  shard_hint=None, buffer_size=50000):
@@ -162,6 +232,32 @@ class RedisBuffer(redis.client.Pipeline):
 
 
 class RedisStorage:
+    '''Base class for Redis-based storage containers.
+
+    Args:
+        config (dict): Redis storage units require a configuration
+            of the form::
+
+                storage_config={
+                    'type': 'redis',
+                    'redis': {'host': 'localhost', 'port': 6379}
+                }
+
+            one can refer to system environment variables via::
+
+                storage_config={
+                    'type': 'redis',
+                    'redis': {
+                        'host': {'env': 'REDIS_HOSTNAME',
+                                 'default':'localhost'},
+                        'port': 6379}
+                    }
+                }
+
+        name (bytes, optional): A prefix to namespace all keys in
+            the database pertaining to this storage container.
+            If None, a random name will be chosen.
+    '''
 
     def __init__(self, config, name=None):
         self.config = config
@@ -180,6 +276,12 @@ class RedisStorage:
     def _parse_config(self, config):
         cfg = {}
         for key, value in config.items():
+            # If the value is a plain str, we will use the value
+            # If the value is a dict, we will extract the name of an environment
+            # variable stored under 'env' and optionally a default, stored under
+            # 'default'.
+            # (This is useful if the database relocates to a different host
+            # during the lifetime of the LSH object)
             if isinstance(value, dict):
                 if 'env' in value:
                     value = os.getenv(value['env'], value.get('default', None))
@@ -188,12 +290,15 @@ class RedisStorage:
 
     def __getstate__(self):
         state = self.__dict__.copy()
+        # We cannot pickle the connection objects, they get recreated
+        # upon unpickling
         state.pop('_redis')
         state.pop('_buffer')
         return state
 
     def __setstate__(self, state):
         self.__dict__ = state
+        # Reconnect here
         self.__init__(self.config, name=self._name)
 
 
@@ -238,6 +343,10 @@ class RedisListStorage(OrderedStorage, RedisStorage):
             self._redis.hdel(self._name, redis_key)
 
     def insert(self, key, *vals, **kwargs):
+        # Using buffer=True outside of an `insertion_session`
+        # could lead to inconsistencies, because those
+        # insertion will not be processed until the
+        # buffer is cleared
         buffer = kwargs.pop('buffer', False)
         if buffer:
             self._insert(self._buffer, key, *vals)
@@ -270,6 +379,8 @@ class RedisListStorage(OrderedStorage, RedisStorage):
 
     def empty_buffer(self):
         self._buffer.execute()
+        # To avoid broken pipes, recreate the connection
+        # objects upon emptying the buffer
         self.__init__(self.config, name=self._name)
 
 
@@ -299,5 +410,6 @@ class RedisSetStorage(UnorderedStorage, RedisListStorage):
 
 
 def _random_name(length):
+    # For use with Redis, we return bytes
     return ''.join(random.choice(string.ascii_lowercase)
                    for _ in range(length)).encode('utf8')
