@@ -7,22 +7,22 @@ from abc import ABCMeta, abstractmethod
 ABC = ABCMeta('ABC', (object,), {}) # compatible with Python 2 *and* 3
 
 
-def ordered_storage(config):
+def ordered_storage(config, name=None):
     '''Return ordered storage system based on the specified config'''
     tp = config['type']
     if tp == 'dict':
         return DictListStorage(config)
     if tp == 'redis':
-        return RedisListStorage(config)
+        return RedisListStorage(config, name=name)
 
 
-def unordered_storage(config):
+def unordered_storage(config, name=None):
     '''Return an unordered storage system based on the specified config'''
     tp = config['type']
     if tp == 'dict':
         return DictSetStorage(config)
     if tp == 'redis':
-        return RedisSetStorage(config)
+        return RedisSetStorage(config, name=name)
 
 
 class Storage(ABC):

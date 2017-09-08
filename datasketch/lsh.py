@@ -1,6 +1,6 @@
 import pickle
 from datasketch.storage import (
-    ordered_storage, unordered_storage)
+    ordered_storage, unordered_storage, _random_name)
 
 _integration_precision = 0.001
 def _integration(f, a, b):
@@ -111,9 +111,12 @@ class MinHashLSH(object):
             self.prepickle = storage_config['type'] == 'redis'
         else:
             self.prepickle = prepickle
-        self.hashtables = [unordered_storage(storage_config) for _ in range(self.b)]
+        basename = _random_name(11)
+        self.hashtables = [
+            unordered_storage(storage_config, name=basename + b'_bucket_' + bytes([i]))
+            for i in range(self.b)]
         self.hashranges = [(i*self.r, (i+1)*self.r) for i in range(self.b)]
-        self.keys = ordered_storage(storage_config)
+        self.keys = ordered_storage(storage_config, name=basename + b'_keys')
 
     def insert(self, key, minhash):
         '''
