@@ -1,16 +1,13 @@
+
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
   "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
-
 
 <html xmlns="http://www.w3.org/1999/xhtml">
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-    
     <title>MinHash LSH Forest &#8212; datasketch 1.0.0 documentation</title>
-    
     <link rel="stylesheet" href="_static/alabaster.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
-    
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    './',
@@ -24,7 +21,7 @@
     <script type="text/javascript" src="_static/jquery.js"></script>
     <script type="text/javascript" src="_static/underscore.js"></script>
     <script type="text/javascript" src="_static/doctools.js"></script>
-    <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
     <link rel="next" title="MinHash" href="minhash.html" />
@@ -36,7 +33,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
 
   </head>
-  <body role="document">
+  <body>
   <div class="document">
     
       <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
@@ -109,7 +106,7 @@ Jaccard similarities with the query set.</p>
 <p>The interface of <a class="reference internal" href="documentation.html#datasketch.MinHashLSHForest" title="datasketch.MinHashLSHForest"><code class="xref py py-class docutils literal"><span class="pre">datasketch.MinHashLSHForest</span></code></a> is similar to
 <a class="reference internal" href="documentation.html#datasketch.MinHashLSH" title="datasketch.MinHashLSH"><code class="xref py py-class docutils literal"><span class="pre">datasketch.MinHashLSH</span></code></a>,
 however, it is very important to call <code class="docutils literal"><span class="pre">index</span></code> method after adding the
-keys. Without calling the <code class="docutils literal"><span class="pre">index</span></code> method, the keys won&#8217;t be
+keys. Without calling the <code class="docutils literal"><span class="pre">index</span></code> method, the keys won’t be
 searchable.</p>
 <div class="code python highlight-default"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">datasketch</span> <span class="k">import</span> <span class="n">MinHashLSHForest</span><span class="p">,</span> <span class="n">MinHash</span>
 
@@ -161,8 +158,8 @@ for details.</p>
 <p>(Optional) If you have read the LSH Forest
 <a class="reference external" href="http://ilpubs.stanford.edu:8090/678/1/2005-14.pdf">paper</a>, and
 understand the data structure, you may want to customize another
-parameter for <a class="reference internal" href="documentation.html#datasketch.MinHashLSHForest" title="datasketch.MinHashLSHForest"><code class="xref py py-class docutils literal"><span class="pre">datasketch.MinHashLSHForest</span></code></a> &#8211; <code class="docutils literal"><span class="pre">l</span></code>, the number of prefix trees
-(or &#8220;LSH Trees&#8221; as in the paper) in the LSH Forest index. Different from
+parameter for <a class="reference internal" href="documentation.html#datasketch.MinHashLSHForest" title="datasketch.MinHashLSHForest"><code class="xref py py-class docutils literal"><span class="pre">datasketch.MinHashLSHForest</span></code></a> – <code class="docutils literal"><span class="pre">l</span></code>, the number of prefix trees
+(or “LSH Trees” as in the paper) in the LSH Forest index. Different from
 the paper, this implementation fixes the number of LSH functions, in
 this case <code class="docutils literal"><span class="pre">num_perm</span></code>, and makes the maximum depth of every prefix tree
 dependent on <code class="docutils literal"><span class="pre">num_perm</span></code> and <code class="docutils literal"><span class="pre">l</span></code>:</p>
@@ -188,7 +185,7 @@ the interface of <code class="docutils literal"><span class="pre">MinHash</span>
       &copy;2017, Eric Zhu.
       
       |
-      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.5.3</a>
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.6.3</a>
       &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.10</a>
       
       |

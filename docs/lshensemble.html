@@ -1,16 +1,13 @@
+
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
   "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
-
 
 <html xmlns="http://www.w3.org/1999/xhtml">
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-    
     <title>MinHash LSH Ensemble &#8212; datasketch 1.0.0 documentation</title>
-    
     <link rel="stylesheet" href="_static/alabaster.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
-    
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    './',
@@ -24,7 +21,7 @@
     <script type="text/javascript" src="_static/jquery.js"></script>
     <script type="text/javascript" src="_static/underscore.js"></script>
     <script type="text/javascript" src="_static/doctools.js"></script>
-    <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
     <link rel="next" title="MinHash LSH Forest" href="lshforest.html" />
@@ -36,7 +33,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
 
   </head>
-  <body role="document">
+  <body>
   <div class="document">
     
       <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
@@ -108,7 +105,7 @@
 measuring resemblance between two sets, however, it can be a biased measure for
 set intersection. This issue can be illustrated in the following Venn diagrams.
 The left pair (Q and X) have roughly the same intersection size as the right
-pair (Q&#8217; and X&#8217;).
+pair (Q’ and X’).
 But the Jaccard similarities, computed as
 <span class="math">\(\frac{|Q \cap X|}{|Q \cup X|}\)</span> and <span class="math">\(\frac{|Q' \cap X'|}{|Q' \cup X'|}\)</span>
 respectively,
@@ -134,13 +131,13 @@ denominator <span class="math">\(|Q|\)</span> is a constant, and the intersectio
 by the containment. Thus, we can search for sets in the collection with containment
 above a certain threshold instead, and the containment threshold can be easily
 deduced from the intersection threshold by multiplying <span class="math">\(|Q|\)</span>.</p>
-<p>Another way to think about containment: it is a &#8220;normalized&#8221; intersection
+<p>Another way to think about containment: it is a “normalized” intersection
 (with value between 0 and 1), which measures the fraction of the query set Q
 contained in X.</p>
 </div>
 <div class="section" id="lsh-for-containment">
 <h2>LSH for Containment<a class="headerlink" href="#lsh-for-containment" title="Permalink to this headline">¶</a></h2>
-<p>Similar to <a class="reference internal" href="lsh.html#minhash-lsh"><span class="std std-ref">MinHash LSH</span></a>, there is an LSH index for containment search &#8211;
+<p>Similar to <a class="reference internal" href="lsh.html#minhash-lsh"><span class="std std-ref">MinHash LSH</span></a>, there is an LSH index for containment search –
 given a query set, find sets with containment above a certain threshold.
 It is <em>LSH Ensemble</em> by <a class="reference external" href="http://www.vldb.org/pvldb/vol9/p1185-zhu.pdf">E. Zhu et al</a>.
 This package implements a slightly simplified version of the index,
@@ -205,7 +202,7 @@ See the documentation of <a class="reference internal" href="documentation.html#
       &copy;2017, Eric Zhu.
       
       |
-      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.5.3</a>
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.6.3</a>
       &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.10</a>
       
       |

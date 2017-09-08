@@ -1,16 +1,13 @@
+
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
   "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
-
 
 <html xmlns="http://www.w3.org/1999/xhtml">
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-    
     <title>datasketch.lean_minhash &#8212; datasketch 1.0.0 documentation</title>
-    
     <link rel="stylesheet" href="../../_static/alabaster.css" type="text/css" />
     <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
-    
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    '../../',
@@ -24,7 +21,7 @@
     <script type="text/javascript" src="../../_static/jquery.js"></script>
     <script type="text/javascript" src="../../_static/underscore.js"></script>
     <script type="text/javascript" src="../../_static/doctools.js"></script>
-    <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
    
@@ -34,7 +31,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
 
   </head>
-  <body role="document">
+  <body>
   <div class="document">
     
       <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
@@ -114,7 +111,7 @@
 <span class="sd">        To create a lean MinHash from an existing MinHash:</span>
 
 <span class="sd">        .. code-block:: python</span>
-<span class="sd">            </span>
+
 <span class="sd">            lean_minhash = LeanMinHash(minhash)</span>
 
 <span class="sd">            # You can compute the Jaccard similarity between two lean MinHash</span>
@@ -126,8 +123,8 @@
 <span class="sd">        To create a MinHash from a lean MinHash:</span>
 
 <span class="sd">        .. code-block:: python</span>
-<span class="sd">            </span>
-<span class="sd">            minhash = MinHash(seed=lean_minhash.seed, </span>
+
+<span class="sd">            minhash = MinHash(seed=lean_minhash.seed,</span>
 <span class="sd">                              hashvalues=lean_minhash.hashvalues)</span>
 
 <span class="sd">            # Or if you want to prevent further updates on minhash</span>
@@ -138,7 +135,7 @@
 <span class="sd">    Note:</span>
 <span class="sd">        Lean MinHash can also be used in :class:`datasketch.MinHashLSH`,</span>
 <span class="sd">        :class:`datasketch.MinHashLSHForest`, and :class:`datasketch.MinHashLSHEnsemble`.</span>
-<span class="sd">    </span>
+
 <span class="sd">    Args:</span>
 <span class="sd">        minhash: The :class:`datasketch.MinHash` object used to initialize the LeanMinHash.</span>
 <span class="sd">    &#39;&#39;&#39;</span>
@@ -149,7 +146,7 @@
         <span class="sd">&#39;&#39;&#39;Initialize the slots of the LeanMinHash.</span>
 
 <span class="sd">        Args:</span>
-<span class="sd">            seed (int): The random seed controls the set of random </span>
+<span class="sd">            seed (int): The random seed controls the set of random</span>
 <span class="sd">                permutation functions generated for this LeanMinHash.</span>
 <span class="sd">            hashvalues: The hash values is the internal state of the LeanMinHash.</span>
 <span class="sd">        &#39;&#39;&#39;</span>
@@ -174,8 +171,8 @@
         <span class="sd">&#39;&#39;&#39;Compute the byte size after serialization.</span>
 
 <span class="sd">        Args:</span>
-<span class="sd">            byteorder (str, optional): This is byte order of the serialized data. Use one </span>
-<span class="sd">                of the `byte order characters </span>
+<span class="sd">            byteorder (str, optional): This is byte order of the serialized data. Use one</span>
+<span class="sd">                of the `byte order characters</span>
 <span class="sd">                &lt;https://docs.python.org/3/library/struct.html#byte-order-size-and-alignment&gt;`_:</span>
 <span class="sd">                ``@``, ``=``, ``&lt;``, ``&gt;``, and ``!``.</span>
 <span class="sd">                Default is ``@`` -- the native order.</span>
@@ -198,8 +195,8 @@
 <span class="sd">        Args:</span>
 <span class="sd">            buf (buffer): `buf` must implement the `buffer`_ interface.</span>
 <span class="sd">                One such example is the built-in `bytearray`_ class.</span>
-<span class="sd">            byteorder (str, optional): This is byte order of the serialized data. Use one </span>
-<span class="sd">                of the `byte order characters </span>
+<span class="sd">            byteorder (str, optional): This is byte order of the serialized data. Use one</span>
+<span class="sd">                of the `byte order characters</span>
 <span class="sd">                &lt;https://docs.python.org/3/library/struct.html#byte-order-size-and-alignment&gt;`_:</span>
 <span class="sd">                ``@``, ``=``, ``&lt;``, ``&gt;``, and ``!``.</span>
 <span class="sd">                Default is ``@`` -- the native order.</span>
@@ -209,21 +206,21 @@
 
 <span class="sd">        The serialization schema:</span>
 <span class="sd">            1. The first 8 bytes is the seed integer</span>
-<span class="sd">            2. The next 4 bytes is the number of hash values </span>
+<span class="sd">            2. The next 4 bytes is the number of hash values</span>
 <span class="sd">            3. The rest is the serialized hash values, each uses 4 bytes</span>
-<span class="sd">        </span>
+
 <span class="sd">        Example:</span>
 <span class="sd">            To serialize a single lean MinHash into a `bytearray`_ buffer.</span>
 
 <span class="sd">            .. code-block:: python</span>
-<span class="sd">                </span>
+
 <span class="sd">                buf = bytearray(lean_minhash.bytesize())</span>
 <span class="sd">                lean_minhash.serialize(buf)</span>
 
 <span class="sd">            To serialize multiple lean MinHash into a `bytearray`_ buffer.</span>
 
 <span class="sd">            .. code-block:: python</span>
-<span class="sd">                </span>
+
 <span class="sd">                # assuming lean_minhashs is a list of LeanMinHash with the same size</span>
 <span class="sd">                size = lean_minhashs[0].bytesize()</span>
 <span class="sd">                buf = bytearray(size*len(lean_minhashs))</span>
@@ -241,20 +238,20 @@
         <span class="n">struct</span><span class="o">.</span><span class="n">pack_into</span><span class="p">(</span><span class="n">fmt</span><span class="p">,</span> <span class="n">buf</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">seed</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="p">),</span> <span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">hashvalues</span><span class="p">)</span></div>
 
-    <span class="nd">@classmethod</span>
-<div class="viewcode-block" id="LeanMinHash.deserialize"><a class="viewcode-back" href="../../documentation.html#datasketch.LeanMinHash.deserialize">[docs]</a>    <span class="k">def</span> <span class="nf">deserialize</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">buf</span><span class="p">,</span> <span class="n">byteorder</span><span class="o">=</span><span class="s1">&#39;@&#39;</span><span class="p">):</span>
+<div class="viewcode-block" id="LeanMinHash.deserialize"><a class="viewcode-back" href="../../documentation.html#datasketch.LeanMinHash.deserialize">[docs]</a>    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">deserialize</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">buf</span><span class="p">,</span> <span class="n">byteorder</span><span class="o">=</span><span class="s1">&#39;@&#39;</span><span class="p">):</span>
         <span class="sd">&#39;&#39;&#39;</span>
 <span class="sd">        Deserialize a lean MinHash from a buffer.</span>
 
 <span class="sd">        Args:</span>
 <span class="sd">            buf (buffer): `buf` must implement the `buffer`_ interface.</span>
 <span class="sd">                One such example is the built-in `bytearray`_ class.</span>
-<span class="sd">            byteorder (str. optional): This is byte order of the serialized data. Use one </span>
-<span class="sd">                of the `byte order characters </span>
+<span class="sd">            byteorder (str. optional): This is byte order of the serialized data. Use one</span>
+<span class="sd">                of the `byte order characters</span>
 <span class="sd">                &lt;https://docs.python.org/3/library/struct.html#byte-order-size-and-alignment&gt;`_:</span>
 <span class="sd">                ``@``, ``=``, ``&lt;``, ``&gt;``, and ``!``.</span>
 <span class="sd">                Default is ``@`` -- the native order.</span>
-<span class="sd">       </span>
+
 <span class="sd">        Return:</span>
 <span class="sd">            datasketch.LeanMinHash: The deserialized lean MinHash</span>
 
@@ -262,7 +259,7 @@
 <span class="sd">            To deserialize a lean MinHash from a buffer.</span>
 
 <span class="sd">            .. code-block:: python</span>
-<span class="sd">                </span>
+
 <span class="sd">                lean_minhash = LeanMinHash.deserialize(buf)</span>
 <span class="sd">        &#39;&#39;&#39;</span>
         <span class="n">fmt_seed_size</span> <span class="o">=</span> <span class="s2">&quot;</span><span class="si">%s</span><span class="s2">qi&quot;</span> <span class="o">%</span> <span class="n">byteorder</span>
@@ -299,6 +296,8 @@
             <span class="n">hashvalues</span> <span class="o">=</span> <span class="n">struct</span><span class="o">.</span><span class="n">unpack_from</span><span class="p">(</span><span class="s1">&#39;</span><span class="si">%d</span><span class="s1">I&#39;</span> <span class="o">%</span> <span class="n">num_perm</span><span class="p">,</span> <span class="n">buffer</span><span class="p">(</span><span class="n">buf</span><span class="p">),</span> <span class="n">offset</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_initialize_slots</span><span class="p">(</span><span class="n">seed</span><span class="p">,</span> <span class="n">hashvalues</span><span class="p">)</span>
 
+    <span class="k">def</span> <span class="nf">__hash__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="nb">hash</span><span class="p">((</span><span class="bp">self</span><span class="o">.</span><span class="n">seed</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">hashvalues</span><span class="p">)))</span>
 
     <span class="nd">@classmethod</span>
     <span class="k">def</span> <span class="nf">union</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="o">*</span><span class="n">lmhs</span><span class="p">):</span>
@@ -325,7 +324,7 @@
       &copy;2017, Eric Zhu.
       
       |
-      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.5.3</a>
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.6.3</a>
       &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.10</a>
       
     </div>

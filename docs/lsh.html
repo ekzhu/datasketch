@@ -1,16 +1,13 @@
+
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
   "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
-
 
 <html xmlns="http://www.w3.org/1999/xhtml">
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-    
     <title>MinHash LSH &#8212; datasketch 1.0.0 documentation</title>
-    
     <link rel="stylesheet" href="_static/alabaster.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
-    
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    './',
@@ -24,7 +21,7 @@
     <script type="text/javascript" src="_static/jquery.js"></script>
     <script type="text/javascript" src="_static/underscore.js"></script>
     <script type="text/javascript" src="_static/doctools.js"></script>
-    <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
     <link rel="next" title="MinHash LSH Ensemble" href="lshensemble.html" />
@@ -36,7 +33,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
 
   </head>
-  <body role="document">
+  <body>
   <div class="document">
     
       <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
@@ -64,7 +61,10 @@
 <li class="toctree-l1"><a class="reference internal" href="documentation.html">API Documentation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="hyperloglog.html">HyperLogLog</a></li>
 <li class="toctree-l1"><a class="reference internal" href="hyperloglog.html#hyperloglog-plusplus">HyperLogLog++</a></li>
-<li class="toctree-l1 current"><a class="current reference internal" href="#">MinHash LSH</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">MinHash LSH</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#minhash-lsh-at-scale">MinHash LSH at scale</a></li>
+</ul>
+</li>
 <li class="toctree-l1"><a class="reference internal" href="lshensemble.html">MinHash LSH Ensemble</a></li>
 <li class="toctree-l1"><a class="reference internal" href="lshforest.html">MinHash LSH Forest</a></li>
 <li class="toctree-l1"><a class="reference internal" href="minhash.html">MinHash</a></li>
@@ -120,7 +120,7 @@ do not satisfy your threshold but returned, and false negatives -
 qualifying sets that are not returned. However, the property of LSH
 assures that sets with higher Jaccard similarities always have higher
 probabilities to get returned than sets with lower similarities.
-Moreover, LSH can be optimized so that there can be a &#8220;jump&#8221; in
+Moreover, LSH can be optimized so that there can be a “jump” in
 probability right at the threshold, making the qualifying sets much more
 likely to get returned than the rest.</p>
 <div class="code python highlight-default"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">datasketch</span> <span class="k">import</span> <span class="n">MinHash</span><span class="p">,</span> <span class="n">MinHashLSH</span>
@@ -174,6 +174,37 @@ See <a class="reference internal" href="lshforest.html#minhash-lsh-forest"><span
 In addition, Jaccard similarity may not be the best measure if your intention is to
 find sets having high intersection with the query.
 For intersection search, see <a class="reference internal" href="lshensemble.html#minhash-lsh-ensemble"><span class="std std-ref">MinHash LSH Ensemble</span></a>.</p>
+<div class="section" id="minhash-lsh-at-scale">
+<span id="id2"></span><h2>MinHash LSH at scale<a class="headerlink" href="#minhash-lsh-at-scale" title="Permalink to this headline">¶</a></h2>
+<p>MinHash LSH supports using Redis as the storage layer for handling large index and
+providing optional persistence as part of
+a production environment.
+The Redis storage option can be configured using:</p>
+<div class="code python highlight-default"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">datasketch</span> <span class="k">import</span> <span class="n">MinHashLSH</span>
+
+<span class="n">lsh</span> <span class="o">=</span> <span class="n">MinHashLSH</span><span class="p">(</span>
+   <span class="n">threshold</span><span class="o">=</span><span class="mf">0.5</span><span class="p">,</span> <span class="n">num_perm</span><span class="o">=</span><span class="mi">128</span><span class="p">,</span> <span class="n">storage_config</span><span class="o">=</span><span class="p">{</span>
+      <span class="s1">&#39;type&#39;</span><span class="p">:</span> <span class="s1">&#39;redis&#39;</span><span class="p">,</span>
+      <span class="s1">&#39;redis&#39;</span><span class="p">:</span> <span class="p">{</span><span class="s1">&#39;host&#39;</span><span class="p">:</span> <span class="s1">&#39;localhost&#39;</span><span class="p">,</span> <span class="s1">&#39;port&#39;</span><span class="p">:</span> <span class="mi">6379</span><span class="p">}</span>
+   <span class="p">})</span>
+</pre></div>
+</div>
+<p>Starting multiple MinHash LSH objects across different Python processes sharing
+the same storage layer can be achieved through “pickling” of an initialized
+LSH object. You can also persist the index connection using <cite>pickle</cite>.</p>
+<p>To insert a large number of MinHashes in sequence, it is advisable to use
+an insertion session. This reduces the number of network calls during
+bulk insertion.</p>
+<div class="code python highlight-default"><div class="highlight"><pre><span></span><span class="n">data_list</span> <span class="o">=</span> <span class="p">[(</span><span class="s2">&quot;m1&quot;</span><span class="p">,</span> <span class="n">m1</span><span class="p">),</span> <span class="p">(</span><span class="s2">&quot;m2&quot;</span><span class="p">,</span> <span class="n">m2</span><span class="p">),</span> <span class="p">(</span><span class="s2">&quot;m3&quot;</span><span class="p">,</span> <span class="n">m3</span><span class="p">)]</span>
+
+<span class="k">with</span> <span class="n">lsh</span><span class="o">.</span><span class="n">insertion_session</span><span class="p">()</span> <span class="k">as</span> <span class="n">session</span><span class="p">:</span>
+   <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">minhash</span> <span class="ow">in</span> <span class="n">data_list</span><span class="p">:</span>
+      <span class="n">session</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="n">minhash</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Note that querying the LSH object during an open insertion session may result in
+inconsistency.</p>
+</div>
 </div>
 
 
@@ -186,7 +217,7 @@ For intersection search, see <a class="reference internal" href="lshensemble.htm
       &copy;2017, Eric Zhu.
       
       |
-      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.5.3</a>
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.6.3</a>
       &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.10</a>
       
       |
