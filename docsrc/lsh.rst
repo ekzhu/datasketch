@@ -90,8 +90,10 @@ For intersection search, see :ref:`minhash_lsh_ensemble`.
 
 MinHash LSH at scale
 --------------------
-MinHash LSH supports a Redis backend for querying large datasets as part of
-a production environment. The Redis storage backend is supported using
+MinHash LSH supports using Redis as the storage layer for handling large index and 
+providing optional persistence as part of
+a production environment. 
+The Redis storage option can be configured using:
 
 .. code:: python
 
@@ -102,6 +104,10 @@ a production environment. The Redis storage backend is supported using
             'type': 'redis',
             'redis': {'host': 'localhost', 'port': 6379}
          })
+
+Starting multiple MinHash LSH objects across different Python processes sharing 
+the same storage layer can be achieved through "pickling" of an initialized
+LSH object. You can also persist the index connection using `pickle`.
 
 To insert a large number of MinHashes in sequence, it is advisable to use
 an insertion session. This reduces the number of network calls during
