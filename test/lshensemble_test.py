@@ -42,4 +42,4 @@ class TestMinHashLSHEnsemble(unittest.TestCase):
         for key, minhash, size in data:
             keys1 = lsh.query(minhash, size)
             keys2 = lsh2.query(minhash, size)
-            self.assertTrue(all(k1 == k2 for k1, k2 in zip(keys1, keys2)))
+            self.assertTrue(set(keys1) == set(keys2))
