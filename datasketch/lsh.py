@@ -111,7 +111,7 @@ class MinHashLSH(object):
             self.prepickle = storage_config['type'] == 'redis'
         else:
             self.prepickle = prepickle
-        if storage_config.has_key('redis_prefix'):
+        if 'redis_prefix' in storage_config:
             basename = storage_config['redis_prefix']
         else:
             basename = _random_name(11)
