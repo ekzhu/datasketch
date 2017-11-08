@@ -66,7 +66,7 @@ class MinHashLSH(object):
             by the MinHash to be indexed. For weighted MinHash, this
             is the sample size (`sample_size`).
         weights (tuple, optional): Used to adjust the relative importance of 
-            minizing false positive and false negative when optimizing 
+            minimizing false positive and false negative when optimizing
             for the Jaccard similarity threshold.
             `weights` is a tuple in the format of 
             :code:`(false_positive_weight, false_negative_weight)`.
@@ -83,7 +83,7 @@ class MinHashLSH(object):
     Note: 
         `weights` must sum to 1.0, and the format is 
         (false positive weight, false negative weight).
-        For example, if minizing false negative (or maintaining high recall) is more
+        For example, if minimizing false negative (or maintaining high recall) is more
         important, assign more weight toward false negative: weights=(0.4, 0.6).
         Try to live with a small difference between weights (i.e. < 0.5).
     '''
