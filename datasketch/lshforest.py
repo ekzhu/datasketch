@@ -1,5 +1,4 @@
-from collections import deque, defaultdict
-from datasketch.minhash import hashvalue_byte_size
+from collections import defaultdict
 
 
 class MinHashLSHForest(object):
@@ -7,17 +6,17 @@ class MinHashLSHForest(object):
     The LSH Forest for MinHash. It supports top-k query in Jaccard
     similarity.
     Instead of using prefix trees as the `original paper
-    <http://ilpubs.stanford.edu:8090/678/1/2005-14.pdf>`_, 
+    <http://ilpubs.stanford.edu:8090/678/1/2005-14.pdf>`_,
     I use a sorted array to store the hash values in every
     hash table.
-    
+
     Args:
         num_perm (int, optional): The number of permutation functions used
             by the MinHash to be indexed. For weighted MinHash, this
             is the sample size (`sample_size`).
         l (int, optional): The number of prefix trees as described in the
             paper.
-    
+
     Note:
         The MinHash LSH Forest also works with weighted Jaccard similarity
         and weighted MinHash without modification.
@@ -44,18 +43,18 @@ class MinHashLSHForest(object):
         with a MinHash (or weighted MinHash) of the set referenced by the key.
 
         Note:
-            The key won't be searchbale until the 
+            The key won't be searchbale until the
             :func:`datasketch.MinHashLSHForest.index` method is called.
 
         Args:
-            key (hashable): The unique identifier of the set. 
-            minhash (datasketch.MinHash): The MinHash of the set. 
+            key (hashable): The unique identifier of the set.
+            minhash (datasketch.MinHash): The MinHash of the set.
         '''
         if len(minhash) < self.k*self.l:
             raise ValueError("The num_perm of MinHash out of range")
         if key in self.keys:
             raise ValueError("The given key has already been added")
-        self.keys[key] = [self._H(minhash.hashvalues[start:end]) 
+        self.keys[key] = [self._H(minhash.hashvalues[start:end])
                 for start, end in self.hashranges]
         for H, hashtable in zip(self.keys[key], self.hashtables):
             hashtable[H].append(key)
@@ -72,10 +71,10 @@ class MinHashLSHForest(object):
         if r > self.k or r <=0 or b > self.l or b <= 0:
             raise ValueError("parameter outside range")
         # Generate prefixes of concatenated hash values
-        hps = [self._H(minhash.hashvalues[start:start+r]) 
+        hps = [self._H(minhash.hashvalues[start:start+r])
                 for start, _ in self.hashranges]
-        # Caculate the string length of each original hash value
-        prefix_size = hashvalue_byte_size * r
+        # Set the prefix length for look-ups in the sorted hash values list
+        prefix_size = len(hps[0])
         for ht, hp, hashtable in zip(self.sorted_hashtables, hps, self.hashtables):
             i = self._binary_search(len(ht), lambda x : ht[x][:prefix_size] >= hp)
             if i < len(ht) and ht[i][:prefix_size] == hp:
@@ -87,7 +86,7 @@ class MinHashLSHForest(object):
 
     def query(self, minhash, k):
         '''
-        Return the approximate top-k keys that have the highest 
+        Return the approximate top-k keys that have the highest
         Jaccard similarities to the query set.
 
         Args:
@@ -103,7 +102,7 @@ class MinHashLSHForest(object):
             raise ValueError("The num_perm of MinHash out of range")
         results = set()
         r = self.k
-        while r > 0: 
+        while r > 0:
             for key in self._query(minhash, r, self.l):
                 results.add(key)
                 if len(results) >= k:

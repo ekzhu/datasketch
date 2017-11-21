@@ -26,6 +26,20 @@ class TestMinHashLSH(unittest.TestCase):
         self.assertTrue(b1 < b2)
         self.assertTrue(r1 > r2)
 
+    def test__H(self):
+        '''
+        Check _H output consistent bytes length given
+        the same concatenated hash value size
+        '''
+        for l in range(2, 128+1, 16):
+            lsh = MinHashLSH(num_perm=128)
+            m = MinHash()
+            m.update("abcdefg".encode("utf8"))
+            m.update("1234567".encode("utf8"))
+            lsh.insert("m", m)
+            sizes = [len(H) for ht in lsh.hashtables for H in ht]
+            self.assertTrue(all(sizes[0] == s for s in sizes))
+
     def test_insert(self):
         lsh = MinHashLSH(threshold=0.5, num_perm=16)
         m1 = MinHash(16)
@@ -92,9 +106,9 @@ class TestMinHashLSH(unittest.TestCase):
         lsh.insert("a", m1)
         lsh.insert("b", m2)
         lsh2 = pickle.loads(pickle.dumps(lsh))
-        result = lsh.query(m1)
+        result = lsh2.query(m1)
         self.assertTrue("a" in result)
-        result = lsh.query(m2)
+        result = lsh2.query(m2)
         self.assertTrue("b" in result)
 
     def test_insert_redis(self):
@@ -189,6 +203,19 @@ class TestWeightedMinHashLSH(unittest.TestCase):
         self.assertTrue(b1 < b2)
         self.assertTrue(r1 > r2)
 
+    def test__H(self):
+        '''
+        Check _H output consistent bytes length given
+        the same concatenated hash value size
+        '''
+        mg = WeightedMinHashGenerator(100, sample_size=128)
+        for l in range(2, mg.sample_size+1, 16):
+            m = mg.minhash(np.random.randint(1, 99999999, 100))
+            lsh = MinHashLSH(num_perm=128)
+            lsh.insert("m", m)
+            sizes = [len(H) for ht in lsh.hashtables for H in ht]
+            self.assertTrue(all(sizes[0] == s for s in sizes))
+
     def test_insert(self):
         lsh = MinHashLSH(threshold=0.5, num_perm=4)
         mg = WeightedMinHashGenerator(10, 4)
@@ -235,7 +262,7 @@ class TestWeightedMinHashLSH(unittest.TestCase):
         m2 = mg.minhash(np.random.uniform(1, 10, 10))
         lsh.insert("a", m1)
         lsh.insert("b", m2)
-        
+
         lsh.remove("a")
         self.assertTrue("a" not in lsh.keys)
         for table in lsh.hashtables:
@@ -252,10 +279,11 @@ class TestWeightedMinHashLSH(unittest.TestCase):
         m2 = mg.minhash(np.random.uniform(1, 10, 10))
         lsh.insert("a", m1)
         lsh.insert("b", m2)
+        lsh2 = pickle.loads(pickle.dumps(lsh))
 
-        result = lsh.query(m1)
+        result = lsh2.query(m1)
         self.assertTrue("a" in result)
-        result = lsh.query(m2)
+        result = lsh2.query(m2)
         self.assertTrue("b" in result)
 
 if __name__ == "__main__":
