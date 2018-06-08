@@ -2,13 +2,10 @@ import os
 import random
 import string
 import asyncio
+import aioredis
 from abc import ABCMeta
 
 ABC = ABCMeta('ABC', (object,), {})  # compatible with Python 2 *and* 3
-try:
-    import aioredis
-except ImportError:
-    aioredis = None
 
 
 async def async_ordered_storage(config, name=None):
