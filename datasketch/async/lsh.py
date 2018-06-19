@@ -43,15 +43,15 @@ class AsyncMinHashLSH(object):
     """
 
     def __init__(self, threshold=0.9, num_perm=128, weights=(0.5, 0.5),
-                 params=None, storage_config=None, prepickle=None):
+                 params=None, storage_config=None, prepickle=None, batch_size=10000):
 
         if storage_config is None:
             storage_config = {
                 'type': 'aioredis',
                 'redis': {'host': 'localhost', 'port': 6379}
             }
-
         self._storage_config = storage_config
+        self._batch_size = batch_size
         if threshold > 1.0 or threshold < 0.0:
             raise ValueError("threshold must be in [0.0, 1.0]")
         if num_perm < 2:
@@ -116,7 +116,8 @@ class AsyncMinHashLSH(object):
             fs = (
                 async_unordered_storage(
                     config=self._storage_config,
-                    name=self._basename + b'_bucket_'+bytes([i])
+                    batch_size=self._batch_size,
+                    name=self._basename + b'_bucket_'+bytes([i]),
                 )
                 for i in range(self.b)
             )
@@ -125,6 +126,7 @@ class AsyncMinHashLSH(object):
             fs = (
                 async_unordered_storage(
                     config=self._storage_config,
+                    batch_size=self._batch_size,
                     name=''.join([self._basename.decode('utf-8'), '_bucket_', str(i)])
                 )
                 for i in range(self.b)
@@ -132,6 +134,7 @@ class AsyncMinHashLSH(object):
 
         self.hashtables = await asyncio.gather(*fs)
         self.keys = await async_ordered_storage(self._storage_config,
+                                                batch_size=self._batch_size,
                                                 name=name_ordered)
 
     async def init_storages(self):
@@ -190,8 +193,6 @@ class AsyncMinHashLSH(object):
         await self.keys.insert(key, *Hs, buffer=buffer)
         fs = (hashtable.insert(H, key, buffer=buffer) for H, hashtable in zip(Hs, self.hashtables))
         await asyncio.gather(*fs)
-        # for H, hashtable in zip(Hs, self.hashtables):
-        #     await hashtable.insert(H, key, buffer=buffer)
 
     async def query(self, minhash):
         """
@@ -325,6 +326,12 @@ class AsyncMinHashLSHInsertionSession:
         return self
 
     async def __aexit__(self, exc_type, exc_val, exc_tb):
+        await self.close()
+        # await self.lsh.keys.empty_buffer()
+        # for hashtable in self.lsh.hashtables:
+        #     await hashtable.empty_buffer()
+
+    async def close(self):
         await self.lsh.keys.empty_buffer()
         for hashtable in self.lsh.hashtables:
             await hashtable.empty_buffer()

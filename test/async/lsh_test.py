@@ -225,14 +225,14 @@ class TestAsyncMinHashLSH(AsyncTestCase):
         the same concatenated hash value size
         """
         for l in range(2, 128 + 1, 16):
-                m = MinHash()
-                m.update("abcdefg".encode("utf8"))
-                m.update("1234567".encode("utf8"))
-                async with AsyncMinHashLSH(storage_config=self._storage_config_mongo,
-                                           num_perm=128) as lsh:
-                    await lsh.insert("m", m)
-                    sizes = [len(H) for ht in lsh.hashtables for H in await ht.keys()]
-                    self.assertTrue(all(sizes[0] == s for s in sizes))
+            m = MinHash()
+            m.update("abcdefg".encode("utf8"))
+            m.update("1234567".encode("utf8"))
+            async with AsyncMinHashLSH(storage_config=self._storage_config_mongo,
+                                       num_perm=128) as lsh:
+                await lsh.insert("m", m)
+                sizes = [len(H) for ht in lsh.hashtables for H in await ht.keys()]
+                self.assertTrue(all(sizes[0] == s for s in sizes))
 
     async def test_insert_mongo(self):
         async with AsyncMinHashLSH(storage_config=self._storage_config_mongo,
@@ -314,28 +314,30 @@ class TestAsyncMinHashLSH(AsyncTestCase):
             self.assertTrue("b" in result)
             await lsh2.close()
 
-    # async def test_insertion_session_mongo(self):
-    #     async with (await create_AsyncMinHashLSH(storage_config=self._storage_config_redis,
-    #                                              threshold=0.5, num_perm=16)) as lsh:
-    #         m1 = MinHash(16)
-    #         m1.update("a".encode("utf8"))
-    #         m2 = MinHash(16)
-    #         m2.update("b".encode("utf8"))
-    #         data = [("a", m1), ("b", m2)]
-    #         async with lsh.insertion_session() as session:
-    #             for key, minhash in data:
-    #                 await session.insert(key, minhash)
-    #         for t in lsh.hashtables:
-    #             self.assertTrue(await t.size() >= 1)
-    #             items = []
-    #             for H in await t.keys():
-    #                 items.extend(await t.get(H))
-    #             self.assertTrue(pickle.dumps("a") in items)
-    #             self.assertTrue(pickle.dumps("b") in items)
-    #         self.assertTrue(await lsh.has_key("a"))
-    #         self.assertTrue(await lsh.has_key("b"))
-    #         for i, H in enumerate(await lsh.keys.get(pickle.dumps("a"))):
-    #             self.assertTrue(pickle.dumps("a") in await lsh.hashtables[i].get(H))
+    async def test_insertion_session_mongo(self):
+        async with AsyncMinHashLSH(storage_config=self._storage_config_mongo,
+                                   threshold=0.5, num_perm=16, batch_size=5) as lsh:
+            seq = 'asdfgbnmkl'
+            objs = [MinHash(16) for _ in range(len(seq))]
+            for e, obj in zip(seq, objs):
+                obj.update(e.encode('utf-8'))
+
+            data = [(e, m) for e, m in zip(seq, objs)]
+
+            async with lsh.insertion_session() as session:
+                for key, minhash in data:
+                    await session.insert(key, minhash)
+            for t in lsh.hashtables:
+                self.assertTrue(await t.size() >= 1)
+                items = []
+                for H in await t.keys():
+                    items.extend(await t.get(H))
+                self.assertTrue("a" in items)
+                self.assertTrue("b" in items)
+            self.assertTrue(await lsh.has_key("a"))
+            self.assertTrue(await lsh.has_key("b"))
+            for i, H in enumerate(await lsh.keys.get("a")):
+                self.assertTrue("a" in await lsh.hashtables[i].get(H))
 
     async def test_get_counts_mongo(self):
         async with AsyncMinHashLSH(storage_config=self._storage_config_mongo,
