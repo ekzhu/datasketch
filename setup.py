@@ -85,7 +85,7 @@ setup(
     extras_require={
         'dev': ['check-manifest'],
         'test': test_requires + ['mockredispy', ],
-        'async': ['aioredis>=1.1.0', ],
+        'async': ['aioredis>=1.1.0', 'motor>=1.2.2', 'pymongo>=3.6.1'],
         'async_test': test_requires + ['aiounittest', ]
     },
 

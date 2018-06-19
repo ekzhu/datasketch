@@ -1,11 +1,11 @@
 import os
 import asyncio
 
-from abc import ABCMeta, abstractmethod
+from datasketch.storage import UnorderedStorage, OrderedStorage, _random_name
+from abc import ABCMeta
 
 ABC = ABCMeta('ABC', (object,), {})  # compatible with Python 2 *and* 3
 
-from datasketch.storage import UnorderedStorage, OrderedStorage, _random_name
 
 try:
     import aioredis
@@ -346,7 +346,7 @@ if motor is not None:
                 If None, a random name will be chosen.
         """
 
-        def __init__(self, config, name: str=None):  # collection_name=None, batch_size=50000 , key_name=None
+        def __init__(self, config, name=None):  # collection_name=None, batch_size=50000 , key_name=None
             assert config['type'] == 'aiomongo', 'Storage type <{}> not supported'.format(config['type'])
             self._config = config
             # self._batch_size = batch_size
@@ -357,11 +357,12 @@ if motor is not None:
 
             db_lsh = self.mongo_param if 'db' in self.mongo_param else 'db_0'
             if 'username' in self.mongo_param or 'password' in self.mongo_param:
-                conn_str = 'mongodb://{username}:{password}@{host}:{port}'.format(**self.mongo_param)
+                dsn = 'mongodb://{username}:{password}@{host}:{port}'.format(**self.mongo_param)
             else:
-                conn_str = 'mongodb://{host}:{port}'.format(**self.mongo_param)
+                dsn = 'mongodb://{host}:{port}'.format(**self.mongo_param)
 
-            self._collection = motor.motor_asyncio.AsyncIOMotorClient(conn_str)[db_lsh][self._collection_name]
+            self._collection = motor.motor_asyncio.AsyncIOMotorClient(dsn)[db_lsh][self._collection_name]
+            self._initialized = True
             # self._mongodb = motor.motor_asyncio.AsyncIOMotorClient(conn_str)[db_lsh]
             # self._collection = self._mongodb[self._collection_name]
             # self._buffer = AsyncMongoBuffer(self._mongodb)
@@ -369,6 +370,10 @@ if motor is not None:
         async def close(self):
             pass
             # self._mongodb.close()
+
+        @property
+        def initialized(self):
+            return self._initialized
 
         @property
         def mongo_param(self):
@@ -407,32 +412,29 @@ if motor is not None:
             self.__init__(self._config, name=self._name)
 
 
-    class AsyncMongoListStorage(AsyncOrderedStorage, AsyncMongoStorage):
-        def __init__(self, config, name=None):
-            AsyncMongoStorage.__init__(self, config, name=name)
-
+    class AsyncMongoListStorage(OrderedStorage, AsyncMongoStorage):
         async def keys(self):
             return [doc['key'] async for doc in self._collection.find(projection={'_id': False, 'vals': False})]
 
         async def get(self, key: str):
-            doc = await self._collection.find_one({'key': key}, projection={'_id': False})  # self.mongo_key(key)
+            doc = await self._collection.find_one({'key': key}, projection={'_id': False})
             return doc['vals'] if doc else []
 
         async def insert(self, key, *vals, **kwargs):
-            if await self._collection.find_one({'key': key}):  # self.mongo_key(key)
-                await self._collection.find_one_and_update({'key': key},  # self.mongo_key(key)
+            if await self._collection.find_one({'key': key}):
+                await self._collection.find_one_and_update({'key': key},
                                                            {'$push': {'vals': {'$each': vals}}},
                                                            projection={'_id': False},
                                                            return_document=ReturnDocument.AFTER)
             else:
-                await self._collection.insert_one({'key': key, 'vals': vals})  # self.mongo_key(key)
+                await self._collection.insert_one({'key': key, 'vals': vals})
 
         async def remove(self, *keys):
             for key in keys:
-                await self._collection.find_one_and_delete({'key': key}, projection={'_id': False})  # self.mongo_key(key)
+                await self._collection.find_one_and_delete({'key': key}, projection={'_id': False})
 
         async def remove_val(self, key: str, val):
-            return await self._collection.find_one_and_update({'key': key},  # self.mongo_key(key)
+            return await self._collection.find_one_and_update({'key': key},
                                                               {'$pull': {'vals': val}},
                                                               projection={'_id': False},
                                                               return_document=ReturnDocument.AFTER)
@@ -453,15 +455,9 @@ if motor is not None:
             return status
 
 
-    class AsyncMongoSetStorage(AsyncUnorderedStorage, AsyncMongoListStorage):
-
-        def __init__(self, config, name=None):
-            AsyncMongoStorage.__init__(self, config, name=name)
-
+    class AsyncMongoSetStorage(UnorderedStorage, AsyncMongoListStorage):
         async def get(self, key):
             return set(await AsyncMongoListStorage.get(self, key))
-            # doc = await self._collection.find_one({'key': key}, projection={'_id': False})
-            # return doc['vals'] if doc else set()
 
         async def insert(self, key, *vals, **kwargs):
             if await self._collection.find_one({'key': key}):
@@ -471,8 +467,3 @@ if motor is not None:
                                                            return_document=ReturnDocument.AFTER)
             else:
                 await self._collection.insert_one({'key': key, 'vals': list(set(vals))})
-
-
-def _random_name(length):
-    # For use with Redis, we return bytes
-    return ''.join(random.choice(string.ascii_lowercase) for _ in range(length)).encode('utf8')

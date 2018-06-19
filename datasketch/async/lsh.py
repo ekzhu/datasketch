@@ -3,7 +3,7 @@ import pickle
 from datasketch.async.storage import (async_ordered_storage,
                                       async_unordered_storage,)
 
-from datasketch.lsh import _optimal_param, MinHashLSH
+from datasketch.lsh import _optimal_param
 from datasketch.storage import unordered_storage, _random_name
 
 
@@ -121,7 +121,7 @@ class AsyncMinHashLSH(object):
                 for i in range(self.b)
             )
         else:
-            name_ordered = ''.join([basename, '_keys'])
+            name_ordered = ''.join([self._basename.decode('utf-8'), '_keys'])
             fs = (
                 async_unordered_storage(
                     config=self._storage_config,
@@ -188,8 +188,10 @@ class AsyncMinHashLSH(object):
         if self.prepickle:
             key = pickle.dumps(key)
         await self.keys.insert(key, *Hs, buffer=buffer)
-        for H, hashtable in zip(Hs, self.hashtables):
-            await hashtable.insert(H, key, buffer=buffer)
+        fs = (hashtable.insert(H, key, buffer=buffer) for H, hashtable in zip(Hs, self.hashtables))
+        await asyncio.gather(*fs)
+        # for H, hashtable in zip(Hs, self.hashtables):
+        #     await hashtable.insert(H, key, buffer=buffer)
 
     async def query(self, minhash):
         """
@@ -306,9 +308,8 @@ class AsyncMinHashLSH(object):
         Hss = await self.keys.getmany(*key_set)
         for key, Hs in zip(key_set, Hss):
             for H, hashtable in zip(Hs, hashtables):
-                await hashtable.insert(H, key)
-        fs = (hashtable.itemcounts() for hashtable in hashtables)
-        return await asyncio.gather(*fs)
+                hashtable.insert(H, key)
+        return [hashtable.itemcounts() for hashtable in hashtables]
 
 
 class AsyncMinHashLSHInsertionSession:
@@ -341,4 +342,4 @@ class AsyncMinHashLSHInsertionSession:
             :param check_duplication: (default=True)
         """
         await self.lsh._insert(key, minhash,
-                              check_duplication=check_duplication, buffer=True)
+                               check_duplication=check_duplication, buffer=True)
