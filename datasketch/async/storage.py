@@ -16,6 +16,7 @@ try:
     from pymongo import ReturnDocument
 except ImportError:
     motor = None
+    ReturnDocument = None
 
 
 async def async_ordered_storage(config, batch_size, name=None):
@@ -179,7 +180,7 @@ if aioredis is not None:
             # We cannot pickle the connection objects, they get recreated
             # upon unpickling
             state.pop('_redis')
-            state.pop('_buffer_collection')
+            state.pop('_buffer')
             state.pop('_lock')
             state['_initialized'] = False
             return state
@@ -285,37 +286,25 @@ if aioredis is not None:
         async def _get_len(r, k):
             return await r.scard(k)
 
-if motor is not None:
+if motor is not None and ReturnDocument is not None:
     class AsyncMongoBuffer:
         def __init__(self, aio_mongo_collection, batch_size):
             self.batch_size = batch_size
-            self._command_stack_len = 0
+            self._command_stack = tuple()
             self._mongo_coll = aio_mongo_collection
-            self._bulk = self._mongo_coll.initialize_ordered_bulk_op()
 
-        async def execute_command(self, func, *args, **kwargs):
-            if self._command_stack_len >= self.batch_size:
+        async def execute_command(self, document):
+            if len(self._command_stack) >= self.batch_size:
                 await self.execute()
-            func(*args, **kwargs)
-            self._command_stack_len += 1
+            self._command_stack += (document,)
 
         async def execute(self):
-            if self._command_stack_len:
-                await self._bulk.execute()
-                self._command_stack_len = 0
-                self._bulk = self._mongo_coll.initialize_ordered_bulk_op()
+            if self._command_stack:
+                await self._mongo_coll.insert_many(self._command_stack, ordered=False)
+                self._command_stack = tuple()
 
-        # async def find_one_and_update(self, *args, **kwargs):  # find, update, *args, **kwargs
-        #     # self._bulk.find(find).update(update)
-        #     # self._command_stack_len += 1
-        #     await self.execute_command(self._bulk.find_one_and_update, *args, **kwargs)
-        #     # self._bulk.find_one_and_update(*args, **kwargs)
-        #     # self._bulk.find(find).update(update)
-        #     # self._command_stack_len += 1
-        #     # await self.bulk_execute()
-
-        async def insert_one(self, *args, **kwargs):
-            await self.execute_command(self._bulk.insert, *args, **kwargs)
+        async def insert_one(self, document):
+            await self.execute_command(document)
 
 
     class AsyncMongoStorage(object):
@@ -364,10 +353,10 @@ if motor is not None:
             self._mongo_client = motor.motor_asyncio.AsyncIOMotorClient(dsn)
             self._collection = self._mongo_client[db_lsh][self._collection_name]
             self._initialized = True
-            self._buffer_collection = AsyncMongoBuffer(self._collection, batch_size)
+            self._buffer = AsyncMongoBuffer(self._collection, batch_size)
 
         async def close(self):
-            await self._buffer_collection.execute()
+            await self._buffer.execute()
             self._mongo_client.close()
 
         @property
@@ -398,7 +387,7 @@ if motor is not None:
             state = self.__dict__.copy()
             state.pop('_mongo_client')
             state.pop('_collection')
-            state.pop('_buffer_collection')
+            state.pop('_buffer')
             state['_initialized'] = False
             return state
 
@@ -418,17 +407,11 @@ if motor is not None:
         async def insert(self, key, *vals, **kwargs):
             buffer = kwargs.pop('buffer', False)
             if buffer:
-                await self._insert(self._buffer_collection, key, *vals)
+                await self._insert(self._buffer, key, *vals)
             else:
                 await self._insert(self._collection, key, *vals)
 
         async def _insert(self, obj, key, *values):
-            # if await self._collection.find_one({'key': key}):
-            #     await obj.find_one_and_update({'key': key},
-            #                                   {'$push': {'vals': {'$each': values}}},
-            #                                   projection={'_id': False},
-            #                                   return_document=ReturnDocument.AFTER)
-            # else:
             await obj.insert_one({'key': key, 'vals': values})
 
         async def remove(self, *keys):
@@ -457,7 +440,7 @@ if motor is not None:
             return status
 
         async def empty_buffer(self):
-            await self._buffer_collection.execute()
+            await self._buffer.execute()
 
 
     class AsyncMongoSetStorage(UnorderedStorage, AsyncMongoListStorage):
@@ -465,10 +448,4 @@ if motor is not None:
             return set(await AsyncMongoListStorage.get(self, key))
 
         async def _insert(self, obj, key, *values):
-            if await self._collection.find_one({'key': key}):
-                await obj.find_one_and_update({'key': key},
-                                              {'$addToSet': {'vals': {'$each': values}}},
-                                              projection={'_id': False},
-                                              return_document=ReturnDocument.AFTER)
-            else:
-                await obj.insert_one({'key': key, 'vals': list(set(values))})
+            await obj.insert_one({'key': key, 'vals': list(set(values))})

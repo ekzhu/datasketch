@@ -47,7 +47,7 @@ class TestAsyncMinHashLSH(AsyncTestCase):
     def setUp(self):
         super().setUp()
         self._storage_config_redis = {'type': 'aioredis', 'redis': {'host': 'localhost', 'port': 6379}}
-        self._storage_config_mongo = {'type': 'aiomongo', 'mongo': {'host': '10.216.20.31', 'port': 27017}}
+        self._storage_config_mongo = {'type': 'aiomongo', 'mongo': {'host': 'localhost', 'port': 27017}}
 
     async def tearDownAsync(self):
         dsn = 'redis://{host}:{port}'.format(**self._storage_config_redis['redis'])
@@ -315,15 +315,15 @@ class TestAsyncMinHashLSH(AsyncTestCase):
             await lsh2.close()
 
     async def test_insertion_session_mongo(self):
+        seq = 'asdfgbnmkl'
+        objs = [MinHash(16) for _ in range(len(seq))]
+        for e, obj in zip(seq, objs):
+            obj.update(e.encode('utf-8'))
+
+        data = [(e, m) for e, m in zip(seq, objs)]
+
         async with AsyncMinHashLSH(storage_config=self._storage_config_mongo,
-                                   threshold=0.5, num_perm=16, batch_size=5) as lsh:
-            seq = 'asdfgbnmkl'
-            objs = [MinHash(16) for _ in range(len(seq))]
-            for e, obj in zip(seq, objs):
-                obj.update(e.encode('utf-8'))
-
-            data = [(e, m) for e, m in zip(seq, objs)]
-
+                                   threshold=0.5, num_perm=16) as lsh:
             async with lsh.insertion_session() as session:
                 for key, minhash in data:
                     await session.insert(key, minhash)
@@ -360,17 +360,18 @@ class TestWeightedMinHashLSH(AsyncTestCase):
 
     def setUp(self):
         super().setUp()
-        self._storage_config_redis = {
-            'type': 'aioredis',
-            'redis': {'host': 'localhost', 'port': 6379}
-        }
+        self._storage_config_redis = {'type': 'aioredis', 'redis': {'host': 'localhost', 'port': 6379}}
+        self._storage_config_mongo = {'type': 'aiomongo', 'mongo': {'host': 'localhost', 'port': 27017}}
 
     async def tearDownAsync(self):
         dsn = 'redis://{host}:{port}'.format(**self._storage_config_redis['redis'])
         redis = await aioredis.create_redis(dsn, loop=self.get_event_loop())
         await redis.flushall()
 
-    async def test_init(self):
+        dsn = 'mongodb://{host}:{port}'.format(**self._storage_config_mongo['mongo'])
+        motor.motor_asyncio.AsyncIOMotorClient(dsn).drop_database('db_0')
+
+    async def test_init_redis(self):
         async with AsyncMinHashLSH(storage_config=self._storage_config_redis,
                                    threshold=0.8) as lsh:
             self.assertTrue(await lsh.is_empty())
@@ -415,8 +416,7 @@ class TestWeightedMinHashLSH(AsyncTestCase):
             self.assertTrue(await lsh.has_key("a"))
             self.assertTrue(await lsh.has_key("b"))
             for i, H in enumerate(await lsh.keys.get(pickle.dumps("a"))):
-                res = await lsh.hashtables[i].get(H)
-                self.assertTrue(pickle.dumps("a") in res)
+                self.assertTrue(pickle.dumps("a") in await lsh.hashtables[i].get(H))
 
             mg = WeightedMinHashGenerator(10, 5)
             m3 = mg.minhash(np.random.uniform(1, 10, 10))
@@ -463,6 +463,112 @@ class TestWeightedMinHashLSH(AsyncTestCase):
 
     async def test_pickle_redis(self):
         async with AsyncMinHashLSH(storage_config=self._storage_config_redis,
+                                   threshold=0.5, num_perm=4) as lsh:
+            mg = WeightedMinHashGenerator(10, 4)
+            m1 = mg.minhash(np.random.uniform(1, 10, 10))
+            m2 = mg.minhash(np.random.uniform(1, 10, 10))
+            await lsh.insert("a", m1)
+            await lsh.insert("b", m2)
+            pickled = pickle.dumps(lsh)
+
+        async with pickle.loads(pickled) as lsh2:
+            result = await lsh2.query(m1)
+            self.assertTrue("a" in result)
+            result = await lsh2.query(m2)
+            self.assertTrue("b" in result)
+
+    async def test_init_mongo(self):
+        async with AsyncMinHashLSH(storage_config=self._storage_config_mongo,
+                                   threshold=0.8) as lsh:
+            self.assertTrue(await lsh.is_empty())
+            b1, r1 = lsh.b, lsh.r
+        async with AsyncMinHashLSH(storage_config=self._storage_config_mongo,
+                                   threshold=0.8, weights=(0.2, 0.8)) as lsh:
+            b2, r2 = lsh.b, lsh.r
+        self.assertTrue(b1 < b2)
+        self.assertTrue(r1 > r2)
+
+    async def test__H_mongo(self):
+        """
+        Check _H output consistent bytes length given
+        the same concatenated hash value size
+        """
+        mg = WeightedMinHashGenerator(100, sample_size=128)
+        for l in range(2, mg.sample_size + 1, 16):
+            m = mg.minhash(np.random.randint(1, 99999999, 100))
+            async with AsyncMinHashLSH(storage_config=self._storage_config_mongo,
+                                       num_perm=128) as lsh:
+                await lsh.insert("m", m)
+                fs = (ht.keys() for ht in lsh.hashtables)
+                hashtables = await asyncio.gather(*fs)
+                sizes = [len(H) for H in hashtables]
+                self.assertTrue(all(sizes[0] == s for s in sizes))
+
+    async def test_insert_mongo(self):
+        async with AsyncMinHashLSH(storage_config=self._storage_config_mongo,
+                                   threshold=0.5, num_perm=4) as lsh:
+            mg = WeightedMinHashGenerator(10, 4)
+            m1 = mg.minhash(np.random.uniform(1, 10, 10))
+            m2 = mg.minhash(np.random.uniform(1, 10, 10))
+            await lsh.insert("a", m1)
+            await lsh.insert("b", m2)
+            for t in lsh.hashtables:
+                self.assertTrue(await t.size() >= 1)
+                items = []
+                for H in await t.keys():
+                    items.extend(await t.get(H))
+                self.assertTrue("a" in items)
+                self.assertTrue("b" in items)
+            self.assertTrue(await lsh.has_key("a"))
+            self.assertTrue(await lsh.has_key("b"))
+            for i, H in enumerate(await lsh.keys.get("a")):
+                self.assertTrue("a" in await lsh.hashtables[i].get(H))
+
+            mg = WeightedMinHashGenerator(10, 5)
+            m3 = mg.minhash(np.random.uniform(1, 10, 10))
+            with self.assertRaises(ValueError):
+                await lsh.insert("c", m3)
+
+    async def test_query_mongo(self):
+        async with AsyncMinHashLSH(storage_config=self._storage_config_mongo,
+                                   threshold=0.5, num_perm=4) as lsh:
+            mg = WeightedMinHashGenerator(10, 4)
+            m1 = mg.minhash(np.random.uniform(1, 10, 10))
+            m2 = mg.minhash(np.random.uniform(1, 10, 10))
+            await lsh.insert("a", m1)
+            await lsh.insert("b", m2)
+            result = await lsh.query(m1)
+            self.assertTrue("a" in result)
+            result = await lsh.query(m2)
+            self.assertTrue("b" in result)
+
+            mg = WeightedMinHashGenerator(10, 5)
+            m3 = mg.minhash(np.random.uniform(1, 10, 10))
+
+            with self.assertRaises(ValueError):
+                await lsh.query(m3)
+
+    async def test_remove_mongo(self):
+        async with AsyncMinHashLSH(storage_config=self._storage_config_mongo,
+                                   threshold=0.5, num_perm=4) as lsh:
+            mg = WeightedMinHashGenerator(10, 4)
+            m1 = mg.minhash(np.random.uniform(1, 10, 10))
+            m2 = mg.minhash(np.random.uniform(1, 10, 10))
+            await lsh.insert("a", m1)
+            await lsh.insert("b", m2)
+
+            await lsh.remove("a")
+            self.assertTrue(not await lsh.has_key("a"))
+            for table in lsh.hashtables:
+                for H in await table.keys():
+                    self.assertGreater(len(await table.get(H)), 0)
+                    self.assertTrue("a" not in await table.get(H))
+
+            with self.assertRaises(ValueError):
+                await lsh.remove("c")
+
+    async def test_pickle_mongo(self):
+        async with AsyncMinHashLSH(storage_config=self._storage_config_mongo,
                                    threshold=0.5, num_perm=4) as lsh:
             mg = WeightedMinHashGenerator(10, 4)
             m1 = mg.minhash(np.random.uniform(1, 10, 10))
