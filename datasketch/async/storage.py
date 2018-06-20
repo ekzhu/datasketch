@@ -344,7 +344,7 @@ if motor is not None and ReturnDocument is not None:
             self._name = name if name else _random_name(11).decode('utf-8')
             self._collection_name = 'lsh_' + self._name
 
-            db_lsh = self.mongo_param if 'db' in self.mongo_param else 'db_0'
+            db_lsh = self.mongo_param['db'] if 'db' in self.mongo_param else 'db_0'
             if 'username' in self.mongo_param or 'password' in self.mongo_param:
                 dsn = 'mongodb://{username}:{password}@{host}:{port}'.format(**self.mongo_param)
             else:
