@@ -1,5 +1,7 @@
 import os
 import asyncio
+from itertools import islice
+from functools import partial
 
 from datasketch.storage import UnorderedStorage, OrderedStorage, _random_name
 from abc import ABCMeta
@@ -287,6 +289,10 @@ if aioredis is not None:
             return await r.scard(k)
 
 if motor is not None and ReturnDocument is not None:
+    def chunk(it, size):
+        it = iter(it)
+        return iter(lambda: tuple(islice(it, size)), ())
+
     class AsyncMongoBuffer:
         def __init__(self, aio_mongo_collection, batch_size):
             self.batch_size = batch_size
@@ -300,7 +306,9 @@ if motor is not None and ReturnDocument is not None:
 
         async def execute(self):
             if self._command_stack:
-                await self._mongo_coll.insert_many(self._command_stack, ordered=False)
+                func = partial(self._mongo_coll.insert_many, ordered=False)
+                fs = (func(documents=docs) for docs in chunk(self._command_stack, 1000))
+                await asyncio.gather(*fs)
                 self._command_stack = tuple()
 
         async def insert_one(self, document):

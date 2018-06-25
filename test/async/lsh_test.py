@@ -323,7 +323,7 @@ class TestAsyncMinHashLSH(AsyncTestCase):
         data = [(e, m) for e, m in zip(seq, objs)]
 
         async with AsyncMinHashLSH(storage_config=self._storage_config_mongo,
-                                   threshold=0.5, num_perm=16) as lsh:
+                                   threshold=0.5, num_perm=16, batch_size=5) as lsh:
             async with lsh.insertion_session() as session:
                 for key, minhash in data:
                     await session.insert(key, minhash)
