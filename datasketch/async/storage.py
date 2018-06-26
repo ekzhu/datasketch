@@ -2,6 +2,7 @@ import os
 import asyncio
 from itertools import islice
 from functools import partial
+import copy
 
 from datasketch.storage import UnorderedStorage, OrderedStorage, _random_name
 from abc import ABCMeta
@@ -57,18 +58,20 @@ if aioredis is not None:
     class AsyncRedisBuffer:
         def __init__(self, aio_redis, batch_size):
             self.batch_size = batch_size
-            self._command_stack = []
+            self._command_stack = tuple()
             self._redis = aio_redis
 
         async def execute_command(self, func, *args, **kwargs):
             if len(self._command_stack) >= self.batch_size:
                 await self.execute()
-            self._command_stack.append(func(*args, **kwargs))
+            self._command_stack += (func(*args, **kwargs),)
 
         async def execute(self):
             if self._command_stack:
-                await asyncio.gather(*self._command_stack)
-                self._command_stack = []
+                _buffer = copy.deepcopy(self._command_stack)
+                self._command_stack = tuple()
+
+                await asyncio.gather(*_buffer)
 
         async def hset(self, *args, **kwargs):
             await self.execute_command(self._redis.hset, *args, **kwargs)
@@ -306,10 +309,12 @@ if motor is not None and ReturnDocument is not None:
 
         async def execute(self):
             if self._command_stack:
-                func = partial(self._mongo_coll.insert_many, ordered=False)
-                fs = (func(documents=docs) for docs in chunk(self._command_stack, 1000))
-                await asyncio.gather(*fs)
+                _buffer = copy.deepcopy(self._command_stack)
                 self._command_stack = tuple()
+
+                func = partial(self._mongo_coll.insert_many, ordered=False)
+                fs = (func(documents=docs) for docs in chunk(_buffer, 1000))
+                await asyncio.gather(*fs)
 
         async def insert_one(self, document):
             await self.execute_command(document)

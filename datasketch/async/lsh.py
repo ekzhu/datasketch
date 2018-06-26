@@ -327,9 +327,6 @@ class AsyncMinHashLSHInsertionSession:
 
     async def __aexit__(self, exc_type, exc_val, exc_tb):
         await self.close()
-        # await self.lsh.keys.empty_buffer()
-        # for hashtable in self.lsh.hashtables:
-        #     await hashtable.empty_buffer()
 
     async def close(self):
         await self.lsh.keys.empty_buffer()
