@@ -1,7 +1,8 @@
 import asyncio
 import pickle
+from itertools import chain
 from datasketch.async.storage import (async_ordered_storage,
-                                      async_unordered_storage,)
+                                      async_unordered_storage, )
 
 from datasketch.lsh import _optimal_param
 from datasketch.storage import unordered_storage, _random_name
@@ -117,7 +118,7 @@ class AsyncMinHashLSH(object):
                 async_unordered_storage(
                     config=self._storage_config,
                     batch_size=self._batch_size,
-                    name=self._basename + b'_bucket_'+bytes([i]),
+                    name=self._basename + b'_bucket_' + bytes([i]),
                 )
                 for i in range(self.b)
             )
@@ -132,10 +133,11 @@ class AsyncMinHashLSH(object):
                 for i in range(self.b)
             )
 
-        self.hashtables = await asyncio.gather(*fs)
-        self.keys = await async_ordered_storage(self._storage_config,
-                                                batch_size=self._batch_size,
-                                                name=name_ordered)
+        fs = chain(fs, (async_ordered_storage(self._storage_config,
+                                              batch_size=self._batch_size,
+                                              name=name_ordered),))
+        storages = await asyncio.gather(*fs)
+        self.hashtables, self.keys = storages[:self.b], storages[-1]
 
     async def init_storages(self):
         if self.keys is None:
@@ -179,8 +181,7 @@ class AsyncMinHashLSH(object):
         """
         return AsyncMinHashLSHInsertionSession(self)
 
-    async def _insert(self, key, minhash, check_duplication=True,
-                      buffer=False):
+    async def _insert(self, key, minhash, check_duplication=True, buffer=False):
         if len(minhash) != self.h:
             raise ValueError("Expecting minhash with length %d, "
                              "got %d" % (self.h, len(minhash)))
@@ -190,8 +191,8 @@ class AsyncMinHashLSH(object):
               for start, end in self.hashranges]
         if self.prepickle:
             key = pickle.dumps(key)
-        await self.keys.insert(key, *Hs, buffer=buffer)
-        fs = (hashtable.insert(H, key, buffer=buffer) for H, hashtable in zip(Hs, self.hashtables))
+        fs = chain((self.keys.insert(key, *Hs, buffer=buffer),),
+                   (hashtable.insert(H, key, buffer=buffer) for H, hashtable in zip(Hs, self.hashtables)))
         await asyncio.gather(*fs)
 
     async def query(self, minhash):
@@ -209,11 +210,10 @@ class AsyncMinHashLSH(object):
         if len(minhash) != self.h:
             raise ValueError("Expecting minhash with length %d, "
                              "got %d" % (self.h, len(minhash)))
-        candidates = set()
-        for (start, end), hashtable in zip(self.hashranges, self.hashtables):
-            H = self._H(minhash.hashvalues[start:end])
-            for key in await hashtable.get(H):
-                candidates.add(key)
+
+        fs = (hashtable.get(self._H(minhash.hashvalues[start:end]))
+              for (start, end), hashtable in zip(self.hashranges, self.hashtables))
+        candidates = set(chain.from_iterable(await asyncio.gather(*fs)))
 
         if self.prepickle:
             return [pickle.loads(key) for key in candidates]
@@ -244,11 +244,11 @@ class AsyncMinHashLSH(object):
             raise ValueError("The given key does not exist")
         if self.prepickle:
             key = pickle.dumps(key)
-        for H, hashtable in zip(await self.keys.get(key), self.hashtables):
-            await hashtable.remove_val(H, key)
-            if not await hashtable.get(H):
-                await hashtable.remove(H)
-        await self.keys.remove(key)
+
+        fs = chain.from_iterable((hashtable.remove_val(H, key), hashtable.remove(H))
+                                 for H, hashtable in zip(await self.keys.get(key), self.hashtables))
+        fs = chain((self.keys.remove(key),), fs)
+        await asyncio.gather(*fs)
 
     async def is_empty(self):
         """
@@ -271,12 +271,12 @@ class AsyncMinHashLSH(object):
         if b > len(self.hashtables):
             raise ValueError("b must be less or equal to the number "
                              "of hash tables")
-        candidates = set()
+        fs = []
         for (start, end), hashtable in zip(self.hashranges[:b], self.hashtables[:b]):
             H = self._H(minhash.hashvalues[start:end])
             if await hashtable.has_key(H):
-                for key in await hashtable.get(H):
-                    candidates.add(key)
+                fs.append(hashtable.get(H))
+        candidates = set(chain.from_iterable(await asyncio.gather(*fs)))
 
         if self.prepickle:
             return {pickle.loads(key) for key in candidates}
@@ -289,8 +289,7 @@ class AsyncMinHashLSH(object):
         number of keys stored under each bucket for the given permutation.
         """
         fs = (hashtable.itemcounts() for hashtable in self.hashtables)
-        counts = await asyncio.gather(*fs)
-        return counts
+        return await asyncio.gather(*fs)
 
     async def get_subset_counts(self, *keys):
         """

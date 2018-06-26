@@ -68,7 +68,7 @@ if aioredis is not None:
 
         async def execute(self):
             if self._command_stack:
-                _buffer = copy.deepcopy(self._command_stack)
+                _buffer = list(self._command_stack)
                 self._command_stack = tuple()
 
                 await asyncio.gather(*_buffer)
@@ -272,6 +272,9 @@ if aioredis is not None:
 
 
     class AsyncRedisSetStorage(UnorderedStorage, AsyncRedisListStorage):
+        async def get(self, key):
+            return set(await AsyncRedisListStorage.get(self, key))
+
         @staticmethod
         async def _get_items(r, k):
             return await r.smembers(k)

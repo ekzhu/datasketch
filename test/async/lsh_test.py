@@ -52,7 +52,7 @@ class TestAsyncMinHashLSH(AsyncTestCase):
     async def tearDownAsync(self):
         dsn = 'redis://{host}:{port}'.format(**self._storage_config_redis['redis'])
         redis = await aioredis.create_redis(dsn, loop=self.get_event_loop())
-        await redis.flushall()
+        await redis.flushdb()
         redis.close()
         await redis.wait_closed()
 
