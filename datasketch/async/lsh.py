@@ -137,7 +137,7 @@ class AsyncMinHashLSH(object):
                                               batch_size=self._batch_size,
                                               name=name_ordered),))
         storages = await asyncio.gather(*fs)
-        self.hashtables, self.keys = storages[:self.b], storages[-1]
+        *self.hashtables, self.keys = storages
 
     async def init_storages(self):
         if self.keys is None:
