@@ -111,6 +111,14 @@ class AsyncMinHashLSH(object):
         state['_lock'] = asyncio.Lock()
         self.__dict__ = state
 
+    @property
+    def batch_size(self):
+        return self._batch_size
+
+    @batch_size.setter
+    def batch_size(self, value):
+        self._batch_size = value
+
     async def _create_storages(self):
         if self._storage_config['type'] == 'aioredis':
             name_ordered = self._basename + b'_keys'
