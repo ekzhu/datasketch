@@ -221,7 +221,7 @@ class AsyncMinHashLSH(object):
 
         fs = (hashtable.get(self._H(minhash.hashvalues[start:end]))
               for (start, end), hashtable in zip(self.hashranges, self.hashtables))
-        candidates = set(chain.from_iterable(await asyncio.gather(*fs)))
+        candidates = frozenset(chain.from_iterable(await asyncio.gather(*fs)))
 
         if self.prepickle:
             return [pickle.loads(key) for key in candidates]
@@ -336,9 +336,9 @@ class AsyncMinHashLSHInsertionSession:
         await self.close()
 
     async def close(self):
-        await self.lsh.keys.empty_buffer()
-        for hashtable in self.lsh.hashtables:
-            await hashtable.empty_buffer()
+        fs = chain((self.lsh.keys.empty_buffer(),),
+                   (hashtable.empty_buffer() for hashtable in self.lsh.hashtables))
+        await asyncio.gather(*fs)
 
     async def insert(self, key, minhash, check_duplication=True):
         """

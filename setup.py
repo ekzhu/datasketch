@@ -22,7 +22,7 @@ setup(
     # Versions should comply with PEP440.  For a discussion on single-sourcing
     # the version across setup.py and the project code, see
     # https://packaging.python.org/en/latest/single_source_version.html
-    version='1.2.11',
+    version='1.2.12',
 
     description='Probabilistic data structures for processing and searching very large datasets',
     long_description=long_description,
