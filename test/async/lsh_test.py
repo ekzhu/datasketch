@@ -329,8 +329,8 @@ class TestAsyncMinHashLSH(AsyncTestCase):
         async with AsyncMinHashLSH(storage_config=self._storage_config_mongo,
                                    threshold=0.5, num_perm=16, batch_size=5) as lsh:
             async with lsh.insertion_session() as session:
-                for key, minhash in data:
-                    await session.insert(key, minhash)
+                fs = (session.insert(key, minhash) for key, minhash in data)
+                await asyncio.gather(*fs)
             for t in lsh.hashtables:
                 self.assertTrue(await t.size() >= 1)
                 items = []
