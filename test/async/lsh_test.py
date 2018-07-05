@@ -1,6 +1,9 @@
 import asyncio
 import pickle
 import unittest
+import random
+import string
+from itertools import chain, islice
 
 import aioredis
 import motor.motor_asyncio
@@ -318,7 +321,13 @@ class TestAsyncMinHashLSH(AsyncTestCase):
             await lsh2.close()
 
     async def test_insertion_session_mongo(self):
-        seq = ['aahhb', 'aahh', 'aahhc', 'aac', 'kld', 'bhg', 'kkd', 'yow', 'ppi', 'eer']
+        def chunk(it, size):
+            it = iter(it)
+            return iter(lambda: tuple(islice(it, size)), ())
+
+        _chunked_str = chunk((random.choice(string.ascii_lowercase) for _ in range(10000)), 4)
+        seq = tuple(chain((''.join(s) for s in _chunked_str),
+                          ('aahhb', 'aahh', 'aahhc', 'aac', 'kld', 'bhg', 'kkd', 'yow', 'ppi', 'eer')))
         objs = [MinHash(16) for _ in range(len(seq))]
         for e, obj in zip(seq, objs):
             for i in e:
@@ -327,10 +336,11 @@ class TestAsyncMinHashLSH(AsyncTestCase):
         data = [(e, m) for e, m in zip(seq, objs)]
 
         async with AsyncMinHashLSH(storage_config=self._storage_config_mongo,
-                                   threshold=0.5, num_perm=16, batch_size=5) as lsh:
+                                   threshold=0.5, num_perm=16, batch_size=500) as lsh:
             async with lsh.insertion_session() as session:
                 fs = (session.insert(key, minhash) for key, minhash in data)
                 await asyncio.gather(*fs)
+
             for t in lsh.hashtables:
                 self.assertTrue(await t.size() >= 1)
                 items = []

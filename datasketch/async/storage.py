@@ -298,22 +298,24 @@ if motor is not None and ReturnDocument is not None:
     class AsyncMongoBuffer:
         def __init__(self, aio_mongo_collection, batch_size):
             self.batch_size = batch_size
-            self._command_stack = tuple()
+            self._commands_col = 0
             self._mongo_coll = aio_mongo_collection
+            self._bulk = self._mongo_coll.initialize_unordered_bulk_op()
 
-        async def execute_command(self, command_name, *args, **kwargs):
-            if len(self._command_stack) >= self.batch_size:
+        async def execute_command(self, command_name, **kwargs):
+            if self._commands_col >= self.batch_size:
                 await self.execute()
+            self._commands_col += 1
             if command_name == 'find_one_and_update':
-                self._command_stack += (self._mongo_coll.find_one_and_update(*args, **kwargs),)
+                self._bulk.find(kwargs['filter']).upsert().update(kwargs['update'])
             elif command_name == 'insert_one':
-                self._command_stack += (self._mongo_coll.insert_one(*args, **kwargs),)
+                self._bulk.insert(kwargs['document'])
 
         async def execute(self):
-            if self._command_stack:
-                _buffer = tuple(self._command_stack)
-                self._command_stack = tuple()
-                await asyncio.gather(*_buffer)
+            if self._commands_col:
+                task = self._bulk.execute()
+                self._bulk, self._commands_col = self._mongo_coll.initialize_unordered_bulk_op(), 0
+                await asyncio.gather(task)
 
         async def insert_one(self, **kwargs):
             await self.execute_command('insert_one', **kwargs)
