@@ -14,6 +14,9 @@ from datasketch.async.lsh import AsyncMinHashLSH
 from datasketch.minhash import MinHash
 from datasketch.weighted_minhash import WeightedMinHashGenerator
 
+STORAGE_CONFIG_REDIS = {'type': 'aioredis', 'redis': {'host': 'localhost', 'port': 6379}}
+STORAGE_CONFIG_MONGO = {'type': 'aiomongo', 'mongo': {'host': '10.216.20.31', 'port': 27017, 'db': 'lsh_test'}}
+
 
 class AsyncTestCase(aiounittest.AsyncTestCase):
     def get_event_loop(self):
@@ -49,8 +52,8 @@ class TestAsyncMinHashLSH(AsyncTestCase):
 
     def setUp(self):
         super().setUp()
-        self._storage_config_redis = {'type': 'aioredis', 'redis': {'host': 'localhost', 'port': 6379}}
-        self._storage_config_mongo = {'type': 'aiomongo', 'mongo': {'host': 'localhost', 'port': 27017}}
+        self._storage_config_redis = STORAGE_CONFIG_REDIS
+        self._storage_config_mongo = STORAGE_CONFIG_MONGO
 
     async def tearDownAsync(self):
         dsn = 'redis://{host}:{port}'.format(**self._storage_config_redis['redis'])
@@ -60,7 +63,7 @@ class TestAsyncMinHashLSH(AsyncTestCase):
         await redis.wait_closed()
 
         dsn = 'mongodb://{host}:{port}'.format(**self._storage_config_mongo['mongo'])
-        motor.motor_asyncio.AsyncIOMotorClient(dsn).drop_database('db_0')
+        motor.motor_asyncio.AsyncIOMotorClient(dsn).drop_database(self._storage_config_mongo['mongo']['db'])
 
     async def test_init_redis(self):
         async with AsyncMinHashLSH(storage_config=self._storage_config_redis,
@@ -326,7 +329,7 @@ class TestAsyncMinHashLSH(AsyncTestCase):
             return iter(lambda: tuple(islice(it, size)), ())
 
         _chunked_str = chunk((random.choice(string.ascii_lowercase) for _ in range(10000)), 4)
-        seq = tuple(chain((''.join(s) for s in _chunked_str),
+        seq = frozenset(chain((''.join(s) for s in _chunked_str),
                           ('aahhb', 'aahh', 'aahhc', 'aac', 'kld', 'bhg', 'kkd', 'yow', 'ppi', 'eer')))
         objs = [MinHash(16) for _ in range(len(seq))]
         for e, obj in zip(seq, objs):
@@ -336,9 +339,9 @@ class TestAsyncMinHashLSH(AsyncTestCase):
         data = [(e, m) for e, m in zip(seq, objs)]
 
         async with AsyncMinHashLSH(storage_config=self._storage_config_mongo,
-                                   threshold=0.5, num_perm=16, batch_size=500) as lsh:
+                                   threshold=0.5, num_perm=16, batch_size=1000) as lsh:
             async with lsh.insertion_session() as session:
-                fs = (session.insert(key, minhash) for key, minhash in data)
+                fs = (session.insert(key, minhash, check_duplication=False) for key, minhash in data)
                 await asyncio.gather(*fs)
 
             for t in lsh.hashtables:
@@ -374,8 +377,8 @@ class TestWeightedMinHashLSH(AsyncTestCase):
 
     def setUp(self):
         super().setUp()
-        self._storage_config_redis = {'type': 'aioredis', 'redis': {'host': 'localhost', 'port': 6379}}
-        self._storage_config_mongo = {'type': 'aiomongo', 'mongo': {'host': 'localhost', 'port': 27017}}
+        self._storage_config_redis = STORAGE_CONFIG_REDIS
+        self._storage_config_mongo = STORAGE_CONFIG_MONGO
 
     async def tearDownAsync(self):
         dsn = 'redis://{host}:{port}'.format(**self._storage_config_redis['redis'])
@@ -383,7 +386,7 @@ class TestWeightedMinHashLSH(AsyncTestCase):
         await redis.flushall()
 
         dsn = 'mongodb://{host}:{port}'.format(**self._storage_config_mongo['mongo'])
-        motor.motor_asyncio.AsyncIOMotorClient(dsn).drop_database('db_0')
+        motor.motor_asyncio.AsyncIOMotorClient(dsn).drop_database(self._storage_config_mongo['mongo']['db'])
 
     async def test_init_redis(self):
         async with AsyncMinHashLSH(storage_config=self._storage_config_redis,

@@ -1,8 +1,6 @@
 import os
 import asyncio
-from itertools import islice
-from functools import partial
-import copy
+from itertools import chain
 
 from datasketch.storage import UnorderedStorage, OrderedStorage, _random_name
 from abc import ABCMeta
@@ -300,28 +298,24 @@ if motor is not None and ReturnDocument is not None:
             self.batch_size = batch_size
             self._commands_col = 0
             self._mongo_coll = aio_mongo_collection
-            self._bulk = self._mongo_coll.initialize_unordered_bulk_op()
+            self._bulk = self._mongo_coll.initialize_unordered_bulk_op(bypass_document_validation=True)
 
         async def execute_command(self, command_name, **kwargs):
             if self._commands_col >= self.batch_size:
                 await self.execute()
             self._commands_col += 1
-            if command_name == 'find_one_and_update':
-                self._bulk.find(kwargs['filter']).upsert().update(kwargs['update'])
-            elif command_name == 'insert_one':
+            if command_name == 'insert_one':
                 self._bulk.insert(kwargs['document'])
 
         async def execute(self):
             if self._commands_col:
                 task = self._bulk.execute()
-                self._bulk, self._commands_col = self._mongo_coll.initialize_unordered_bulk_op(), 0
+                self._bulk = self._mongo_coll.initialize_unordered_bulk_op(bypass_document_validation=True)
+                self._commands_col = 0
                 await asyncio.gather(task)
 
         async def insert_one(self, **kwargs):
             await self.execute_command('insert_one', **kwargs)
-
-        async def find_one_and_update(self, **kwargs):
-            await self.execute_command('find_one_and_update', **kwargs)
 
 
     class AsyncMongoStorage(object):
@@ -352,7 +346,7 @@ if motor is not None and ReturnDocument is not None:
                 If None, a random name will be chosen.
         """
 
-        def __init__(self, config, name=None, batch_size=10000):
+        def __init__(self, config, name=None, batch_size=1000):
             assert config['type'] == 'aiomongo', 'Storage type <{}> not supported'.format(config['type'])
             self._config = config
             # self._batch_size = batch_size
@@ -418,8 +412,10 @@ if motor is not None and ReturnDocument is not None:
             return [doc['key'] async for doc in self._collection.find(projection={'_id': False, 'vals': False})]
 
         async def get(self, key: str):
-            doc = await self._collection.find_one({'key': key}, projection={'_id': False})
-            return doc['vals'] if doc else []
+            return list(chain.from_iterable([doc['vals'] async for doc in self._collection.find(filter={'key': key},
+                                                                                                projection={
+                                                                                                    '_id': False,
+                                                                                                    'key': False})]))
 
         async def insert(self, key, *vals, **kwargs):
             buffer = kwargs.pop('buffer', False)
@@ -432,8 +428,8 @@ if motor is not None and ReturnDocument is not None:
             await obj.insert_one(document={'key': key, 'vals': values})
 
         async def remove(self, *keys):
-            for key in keys:
-                await self._collection.find_one_and_delete({'key': key}, projection={'_id': False})
+            fs = (self._collection.delete_many({'key': key}) for key in keys)
+            await asyncio.gather(*fs)
 
         async def remove_val(self, key: str, val):
             return await self._collection.find_one_and_update({'key': key},
@@ -445,8 +441,8 @@ if motor is not None and ReturnDocument is not None:
             return await self._collection.count()
 
         async def itemcounts(self):
-            return {doc['key']: doc['count'] async for doc in
-                    self._collection.aggregate([{'$project': {'key': 1, 'count': {'$size': '$vals'}}}])}
+            return {doc['_id']: doc['count'] async for doc in
+                    self._collection.aggregate([{'$group': {'_id': '$key', 'count': {'$sum': 1}}}])}
 
         async def has_key(self, key):
             return True if await self._collection.find_one({'key': key}) else False
@@ -462,8 +458,13 @@ if motor is not None and ReturnDocument is not None:
 
     class AsyncMongoSetStorage(UnorderedStorage, AsyncMongoListStorage):
         async def get(self, key):
-            return frozenset(await AsyncMongoListStorage.get(self, key))
+            keys = [doc['vals'] async for doc in self._collection.find(filter={'key': key},
+                                                                       projection={'_id': False, 'key': False})]
+            return frozenset(keys)
 
         async def _insert(self, obj, key, *values):
-            await obj.find_one_and_update(filter={'key': key}, update={'$addToSet': {'vals': {'$each': values}}},
-                                          upsert=True)
+            await obj.insert_one(document={'key': key, 'vals': values[0]})
+
+        async def remove_val(self, key: str, val):
+            return await self._collection.find_one_and_delete({'key': key, 'vals': val},
+                                                              projection={'_id': False})
