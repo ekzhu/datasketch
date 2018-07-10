@@ -4,20 +4,12 @@
 
 <html xmlns="http://www.w3.org/1999/xhtml">
   <head>
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     <title>API Documentation &#8212; datasketch 1.0.0 documentation</title>
     <link rel="stylesheet" href="_static/alabaster.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
-    <script type="text/javascript">
-      var DOCUMENTATION_OPTIONS = {
-        URL_ROOT:    './',
-        VERSION:     '1.0.0',
-        COLLAPSE_INDEX: false,
-        FILE_SUFFIX: '.html',
-        HAS_SOURCE:  true,
-        SOURCELINK_SUFFIX: '.txt'
-      };
-    </script>
+    <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
     <script type="text/javascript" src="_static/jquery.js"></script>
     <script type="text/javascript" src="_static/underscore.js"></script>
     <script type="text/javascript" src="_static/doctools.js"></script>
@@ -32,8 +24,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
 
-  </head>
-  <body>
+  </head><body>
   <div class="document">
     
       <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
@@ -63,6 +54,7 @@
 <li class="toctree-l2"><a class="reference internal" href="#lean-minhash">Lean MinHash</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#weighted-minhash">Weighted MinHash</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#minhash-lsh">MinHash LSH</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#asynchronous-minhash-lsh">Asynchronous MinHash LSH</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#minhash-lsh-forest">MinHash LSH Forest</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#minhash-lsh-ensemble">MinHash LSH Ensemble</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#hyperloglog">HyperLogLog</a></li>
@@ -89,18 +81,22 @@
 </div>
 <div id="searchbox" style="display: none" role="search">
   <h3>Quick search</h3>
+    <div class="searchformwrapper">
     <form class="search" action="search.html" method="get">
-      <div><input type="text" name="q" /></div>
-      <div><input type="submit" value="Go" /></div>
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
       <input type="hidden" name="check_keywords" value="yes" />
       <input type="hidden" name="area" value="default" />
     </form>
+    </div>
 </div>
 <script type="text/javascript">$('#searchbox').show(0);</script>
         </div>
       </div>
       <div class="documentwrapper">
         <div class="bodywrapper">
+          
+
           <div class="body" role="main">
             
   <div class="section" id="api-documentation">
@@ -138,13 +134,13 @@ state from another MinHash.</li>
 </table>
 <div class="admonition note">
 <p class="first admonition-title">Note</p>
-<p class="last">To save memory usage, consider using <a class="reference internal" href="#datasketch.LeanMinHash" title="datasketch.LeanMinHash"><code class="xref py py-class docutils literal"><span class="pre">datasketch.LeanMinHash</span></code></a>.</p>
+<p class="last">To save memory usage, consider using <a class="reference internal" href="#datasketch.LeanMinHash" title="datasketch.LeanMinHash"><code class="xref py py-class docutils literal notranslate"><span class="pre">datasketch.LeanMinHash</span></code></a>.</p>
 </div>
 <div class="admonition note">
 <p class="first admonition-title">Note</p>
 <p class="last">Since version 1.1.1, MinHash will only support serialization using
-<a class="reference external" href="https://docs.python.org/3/library/pickle.html">pickle</a>. <code class="docutils literal"><span class="pre">serialize</span></code> and <code class="docutils literal"><span class="pre">deserialize</span></code> methods are removed,
-and are supported in <a class="reference internal" href="#datasketch.LeanMinHash" title="datasketch.LeanMinHash"><code class="xref py py-class docutils literal"><span class="pre">datasketch.LeanMinHash</span></code></a> instead.
+<a class="reference external" href="https://docs.python.org/3/library/pickle.html">pickle</a>. <code class="docutils literal notranslate"><span class="pre">serialize</span></code> and <code class="docutils literal notranslate"><span class="pre">deserialize</span></code> methods are removed,
+and are supported in <a class="reference internal" href="#datasketch.LeanMinHash" title="datasketch.LeanMinHash"><code class="xref py py-class docutils literal notranslate"><span class="pre">datasketch.LeanMinHash</span></code></a> instead.
 MinHash serialized before version 1.1.1 cannot be deserialized properly
 in newer versions (<a class="reference external" href="https://github.com/ekzhu/datasketch/issues/18">need to migrate?</a>).</p>
 </div>
@@ -154,9 +150,15 @@ in newer versions (<a class="reference external" href="https://github.com/ekzhu/
 instead of Python’s built-in random package. This change makes the
 hash values consistent across different Python versions.
 The side-effect is that now MinHash created before version 1.1.3 won’t
-work (i.e., <code class="docutils literal"><span class="pre">jaccard</span></code>, <code class="docutils literal"><span class="pre">merge</span></code> and <code class="docutils literal"><span class="pre">union</span></code>)
+work (i.e., <code class="docutils literal notranslate"><span class="pre">jaccard</span></code>, <code class="docutils literal notranslate"><span class="pre">merge</span></code> and <code class="docutils literal notranslate"><span class="pre">union</span></code>)
 with those created after.</p>
 </div>
+<dl class="method">
+<dt id="datasketch.MinHash.__init__">
+<code class="descname">__init__</code><span class="sig-paren">(</span><em>num_perm=128</em>, <em>seed=1</em>, <em>hashobj=&lt;built-in function openssl_sha1&gt;</em>, <em>hashvalues=None</em>, <em>permutations=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/datasketch/minhash.html#MinHash.__init__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#datasketch.MinHash.__init__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Initialize self.  See help(type(self)) for accurate signature.</p>
+</dd></dl>
+
 <dl class="method">
 <dt id="datasketch.MinHash.update">
 <code class="descname">update</code><span class="sig-paren">(</span><em>b</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/datasketch/minhash.html#MinHash.update"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#datasketch.MinHash.update" title="Permalink to this definition">¶</a></dt>
@@ -171,7 +173,7 @@ with those created after.</p>
 </table>
 <p class="rubric">Example</p>
 <p>To update with a new string value:</p>
-<div class="highlight-python"><div class="highlight"><pre><span></span><span class="n">minhash</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="s2">&quot;new value&quot;</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="s1">&#39;utf-8&#39;</span><span class="p">))</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">minhash</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="s2">&quot;new value&quot;</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="s1">&#39;utf-8&#39;</span><span class="p">))</span>
 </pre></div>
 </div>
 </dd></dl>
@@ -277,13 +279,7 @@ All hash values are reset.</p>
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body"><dl class="docutils">
-<dt>A copy of this MinHash by exporting its</dt>
-<dd>state.</dd>
-</dl>
-</td>
-</tr>
-<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body"><a class="reference internal" href="#datasketch.MinHash" title="datasketch.MinHash">datasketch.MinHash</a></td>
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">datasketch.MinHash – A copy of this MinHash by exporting its state.</td>
 </tr>
 </tbody>
 </table>
@@ -296,9 +292,7 @@ All hash values are reset.</p>
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">The number of hash values.</td>
-</tr>
-<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body">int</td>
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">int – The number of hash values.</td>
 </tr>
 </tbody>
 </table>
@@ -311,13 +305,7 @@ All hash values are reset.</p>
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body"><dl class="docutils">
-<dt>If their seeds and hash values are both equal then two</dt>
-<dd>are equivalent.</dd>
-</dl>
-</td>
-</tr>
-<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body">bool</td>
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">bool – If their seeds and hash values are both equal then two are equivalent.</td>
 </tr>
 </tbody>
 </table>
@@ -359,13 +347,13 @@ but must be at least 2.</td>
 <dd><p>Lean MinHash is MinHash with a smaller memory footprint
 and faster deserialization, but with its internal state frozen
 – no <cite>update()</cite>.</p>
-<p>Lean MinHash inherits all methods from <a class="reference internal" href="#datasketch.MinHash" title="datasketch.MinHash"><code class="xref py py-class docutils literal"><span class="pre">datasketch.MinHash</span></code></a>.
+<p>Lean MinHash inherits all methods from <a class="reference internal" href="#datasketch.MinHash" title="datasketch.MinHash"><code class="xref py py-class docutils literal notranslate"><span class="pre">datasketch.MinHash</span></code></a>.
 It does not store the <cite>permutations</cite> and the <cite>hashobj</cite> needed for updating.
 If a MinHash does not need further updates, convert it into a lean MinHash
 to save memory.</p>
 <p class="rubric">Example</p>
 <p>To create a lean MinHash from an existing MinHash:</p>
-<div class="highlight-python"><div class="highlight"><pre><span></span><span class="n">lean_minhash</span> <span class="o">=</span> <span class="n">LeanMinHash</span><span class="p">(</span><span class="n">minhash</span><span class="p">)</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">lean_minhash</span> <span class="o">=</span> <span class="n">LeanMinHash</span><span class="p">(</span><span class="n">minhash</span><span class="p">)</span>
 
 <span class="c1"># You can compute the Jaccard similarity between two lean MinHash</span>
 <span class="n">lean_minhash</span><span class="o">.</span><span class="n">jaccard</span><span class="p">(</span><span class="n">lean_minhash2</span><span class="p">)</span>
@@ -375,7 +363,7 @@ to save memory.</p>
 </pre></div>
 </div>
 <p>To create a MinHash from a lean MinHash:</p>
-<div class="highlight-python"><div class="highlight"><pre><span></span><span class="n">minhash</span> <span class="o">=</span> <span class="n">MinHash</span><span class="p">(</span><span class="n">seed</span><span class="o">=</span><span class="n">lean_minhash</span><span class="o">.</span><span class="n">seed</span><span class="p">,</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">minhash</span> <span class="o">=</span> <span class="n">MinHash</span><span class="p">(</span><span class="n">seed</span><span class="o">=</span><span class="n">lean_minhash</span><span class="o">.</span><span class="n">seed</span><span class="p">,</span>
                   <span class="n">hashvalues</span><span class="o">=</span><span class="n">lean_minhash</span><span class="o">.</span><span class="n">hashvalues</span><span class="p">)</span>
 
 <span class="c1"># Or if you want to prevent further updates on minhash</span>
@@ -386,22 +374,41 @@ to save memory.</p>
 </div>
 <div class="admonition note">
 <p class="first admonition-title">Note</p>
-<p class="last">Lean MinHash can also be used in <a class="reference internal" href="#datasketch.MinHashLSH" title="datasketch.MinHashLSH"><code class="xref py py-class docutils literal"><span class="pre">datasketch.MinHashLSH</span></code></a>,
-<a class="reference internal" href="#datasketch.MinHashLSHForest" title="datasketch.MinHashLSHForest"><code class="xref py py-class docutils literal"><span class="pre">datasketch.MinHashLSHForest</span></code></a>, and <a class="reference internal" href="#datasketch.MinHashLSHEnsemble" title="datasketch.MinHashLSHEnsemble"><code class="xref py py-class docutils literal"><span class="pre">datasketch.MinHashLSHEnsemble</span></code></a>.</p>
+<p class="last">Lean MinHash can also be used in <a class="reference internal" href="#datasketch.MinHashLSH" title="datasketch.MinHashLSH"><code class="xref py py-class docutils literal notranslate"><span class="pre">datasketch.MinHashLSH</span></code></a>,
+<a class="reference internal" href="#datasketch.MinHashLSHForest" title="datasketch.MinHashLSHForest"><code class="xref py py-class docutils literal notranslate"><span class="pre">datasketch.MinHashLSHForest</span></code></a>, and <a class="reference internal" href="#datasketch.MinHashLSHEnsemble" title="datasketch.MinHashLSHEnsemble"><code class="xref py py-class docutils literal notranslate"><span class="pre">datasketch.MinHashLSHEnsemble</span></code></a>.</p>
 </div>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>minhash</strong> – The <a class="reference internal" href="#datasketch.MinHash" title="datasketch.MinHash"><code class="xref py py-class docutils literal"><span class="pre">datasketch.MinHash</span></code></a> object used to initialize the LeanMinHash.</td>
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>minhash</strong> – The <a class="reference internal" href="#datasketch.MinHash" title="datasketch.MinHash"><code class="xref py py-class docutils literal notranslate"><span class="pre">datasketch.MinHash</span></code></a> object used to initialize the LeanMinHash.</td>
 </tr>
 </tbody>
 </table>
+<dl class="method">
+<dt id="datasketch.LeanMinHash.__init__">
+<code class="descname">__init__</code><span class="sig-paren">(</span><em>minhash</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/datasketch/lean_minhash.html#LeanMinHash.__init__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#datasketch.LeanMinHash.__init__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Initialize self.  See help(type(self)) for accurate signature.</p>
+</dd></dl>
+
 <dl class="method">
 <dt id="datasketch.LeanMinHash.update">
 <code class="descname">update</code><span class="sig-paren">(</span><em>b</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/datasketch/lean_minhash.html#LeanMinHash.update"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#datasketch.LeanMinHash.update" title="Permalink to this definition">¶</a></dt>
 <dd><p>This method is not available on a LeanMinHash.
 Calling it raises a TypeError.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="datasketch.LeanMinHash.copy">
+<code class="descname">copy</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/datasketch/lean_minhash.html#LeanMinHash.copy"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#datasketch.LeanMinHash.copy" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">datasketch.MinHash – A copy of this MinHash by exporting its state.</td>
+</tr>
+</tbody>
+</table>
 </dd></dl>
 
 <dl class="method">
@@ -414,8 +421,8 @@ Calling it raises a TypeError.</p>
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>byteorder</strong> (<em>str</em><em>, </em><em>optional</em>) – This is byte order of the serialized data. Use one
 of the <a class="reference external" href="https://docs.python.org/3/library/struct.html#byte-order-size-and-alignment">byte order characters</a>:
-<code class="docutils literal"><span class="pre">&#64;</span></code>, <code class="docutils literal"><span class="pre">=</span></code>, <code class="docutils literal"><span class="pre">&lt;</span></code>, <code class="docutils literal"><span class="pre">&gt;</span></code>, and <code class="docutils literal"><span class="pre">!</span></code>.
-Default is <code class="docutils literal"><span class="pre">&#64;</span></code> – the native order.</td>
+<code class="docutils literal notranslate"><span class="pre">&#64;</span></code>, <code class="docutils literal notranslate"><span class="pre">=</span></code>, <code class="docutils literal notranslate"><span class="pre">&lt;</span></code>, <code class="docutils literal notranslate"><span class="pre">&gt;</span></code>, and <code class="docutils literal notranslate"><span class="pre">!</span></code>.
+Default is <code class="docutils literal notranslate"><span class="pre">&#64;</span></code> – the native order.</td>
 </tr>
 <tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">Size in number of bytes after serialization.</td>
 </tr>
@@ -438,8 +445,8 @@ Default is <code class="docutils literal"><span class="pre">&#64;</span></code> 
 One such example is the built-in <a class="reference external" href="https://docs.python.org/3.6/library/functions.html#bytearray">bytearray</a> class.</li>
 <li><strong>byteorder</strong> (<em>str</em><em>, </em><em>optional</em>) – <p>This is byte order of the serialized data. Use one
 of the <a class="reference external" href="https://docs.python.org/3/library/struct.html#byte-order-size-and-alignment">byte order characters</a>:
-<code class="docutils literal"><span class="pre">&#64;</span></code>, <code class="docutils literal"><span class="pre">=</span></code>, <code class="docutils literal"><span class="pre">&lt;</span></code>, <code class="docutils literal"><span class="pre">&gt;</span></code>, and <code class="docutils literal"><span class="pre">!</span></code>.
-Default is <code class="docutils literal"><span class="pre">&#64;</span></code> – the native order.</p>
+<code class="docutils literal notranslate"><span class="pre">&#64;</span></code>, <code class="docutils literal notranslate"><span class="pre">=</span></code>, <code class="docutils literal notranslate"><span class="pre">&lt;</span></code>, <code class="docutils literal notranslate"><span class="pre">&gt;</span></code>, and <code class="docutils literal notranslate"><span class="pre">!</span></code>.
+Default is <code class="docutils literal notranslate"><span class="pre">&#64;</span></code> – the native order.</p>
 </li>
 </ul>
 </td>
@@ -459,12 +466,12 @@ to be used by another program in a different programming language.</p>
 </dl>
 <p class="rubric">Example</p>
 <p>To serialize a single lean MinHash into a <a class="reference external" href="https://docs.python.org/3.6/library/functions.html#bytearray">bytearray</a> buffer.</p>
-<div class="highlight-python"><div class="highlight"><pre><span></span><span class="n">buf</span> <span class="o">=</span> <span class="nb">bytearray</span><span class="p">(</span><span class="n">lean_minhash</span><span class="o">.</span><span class="n">bytesize</span><span class="p">())</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">buf</span> <span class="o">=</span> <span class="nb">bytearray</span><span class="p">(</span><span class="n">lean_minhash</span><span class="o">.</span><span class="n">bytesize</span><span class="p">())</span>
 <span class="n">lean_minhash</span><span class="o">.</span><span class="n">serialize</span><span class="p">(</span><span class="n">buf</span><span class="p">)</span>
 </pre></div>
 </div>
 <p>To serialize multiple lean MinHash into a <a class="reference external" href="https://docs.python.org/3.6/library/functions.html#bytearray">bytearray</a> buffer.</p>
-<div class="highlight-python"><div class="highlight"><pre><span></span><span class="c1"># assuming lean_minhashs is a list of LeanMinHash with the same size</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># assuming lean_minhashs is a list of LeanMinHash with the same size</span>
 <span class="n">size</span> <span class="o">=</span> <span class="n">lean_minhashs</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">bytesize</span><span class="p">()</span>
 <span class="n">buf</span> <span class="o">=</span> <span class="nb">bytearray</span><span class="p">(</span><span class="n">size</span><span class="o">*</span><span class="nb">len</span><span class="p">(</span><span class="n">lean_minhashs</span><span class="p">))</span>
 <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">lean_minhash</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">lean_minhashs</span><span class="p">):</span>
@@ -486,8 +493,8 @@ to be used by another program in a different programming language.</p>
 One such example is the built-in <a class="reference external" href="https://docs.python.org/3.6/library/functions.html#bytearray">bytearray</a> class.</li>
 <li><strong>byteorder</strong> (<em>str. optional</em>) – <p>This is byte order of the serialized data. Use one
 of the <a class="reference external" href="https://docs.python.org/3/library/struct.html#byte-order-size-and-alignment">byte order characters</a>:
-<code class="docutils literal"><span class="pre">&#64;</span></code>, <code class="docutils literal"><span class="pre">=</span></code>, <code class="docutils literal"><span class="pre">&lt;</span></code>, <code class="docutils literal"><span class="pre">&gt;</span></code>, and <code class="docutils literal"><span class="pre">!</span></code>.
-Default is <code class="docutils literal"><span class="pre">&#64;</span></code> – the native order.</p>
+<code class="docutils literal notranslate"><span class="pre">&#64;</span></code>, <code class="docutils literal notranslate"><span class="pre">=</span></code>, <code class="docutils literal notranslate"><span class="pre">&lt;</span></code>, <code class="docutils literal notranslate"><span class="pre">&gt;</span></code>, and <code class="docutils literal notranslate"><span class="pre">!</span></code>.
+Default is <code class="docutils literal notranslate"><span class="pre">&#64;</span></code> – the native order.</p>
 </li>
 </ul>
 </td>
@@ -502,9 +509,34 @@ Default is <code class="docutils literal"><span class="pre">&#64;</span></code> 
 </table>
 <p class="rubric">Example</p>
 <p>To deserialize a lean MinHash from a buffer.</p>
-<div class="highlight-python"><div class="highlight"><pre><span></span><span class="n">lean_minhash</span> <span class="o">=</span> <span class="n">LeanMinHash</span><span class="o">.</span><span class="n">deserialize</span><span class="p">(</span><span class="n">buf</span><span class="p">)</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">lean_minhash</span> <span class="o">=</span> <span class="n">LeanMinHash</span><span class="o">.</span><span class="n">deserialize</span><span class="p">(</span><span class="n">buf</span><span class="p">)</span>
 </pre></div>
 </div>
+</dd></dl>
+
+<dl class="method">
+<dt id="datasketch.LeanMinHash.__hash__">
+<code class="descname">__hash__</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/datasketch/lean_minhash.html#LeanMinHash.__hash__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#datasketch.LeanMinHash.__hash__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return hash(self).</p>
+</dd></dl>
+
+<dl class="classmethod">
+<dt id="datasketch.LeanMinHash.union">
+<em class="property">classmethod </em><code class="descname">union</code><span class="sig-paren">(</span><em>*lmhs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/datasketch/lean_minhash.html#LeanMinHash.union"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#datasketch.LeanMinHash.union" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create a MinHash which is the union of the MinHash objects passed as arguments.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>*mhs</strong> – The MinHash objects to be united. The argument list length is variable,
+but must be at least 2.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">A new union MinHash.</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><a class="reference internal" href="#datasketch.MinHash" title="datasketch.MinHash">datasketch.MinHash</a></td>
+</tr>
+</tbody>
+</table>
 </dd></dl>
 
 </dd></dl>
@@ -516,7 +548,7 @@ Default is <code class="docutils literal"><span class="pre">&#64;</span></code> 
 <dt id="datasketch.WeightedMinHashGenerator">
 <em class="property">class </em><code class="descclassname">datasketch.</code><code class="descname">WeightedMinHashGenerator</code><span class="sig-paren">(</span><em>dim</em>, <em>sample_size=128</em>, <em>seed=1</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/datasketch/weighted_minhash.html#WeightedMinHashGenerator"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#datasketch.WeightedMinHashGenerator" title="Permalink to this definition">¶</a></dt>
 <dd><p>The weighted MinHash generator is used for creating
-new <a class="reference internal" href="#datasketch.WeightedMinHash" title="datasketch.WeightedMinHash"><code class="xref py py-class docutils literal"><span class="pre">datasketch.WeightedMinHash</span></code></a> objects.</p>
+new <a class="reference internal" href="#datasketch.WeightedMinHash" title="datasketch.WeightedMinHash"><code class="xref py py-class docutils literal notranslate"><span class="pre">datasketch.WeightedMinHash</span></code></a> objects.</p>
 <p>This weighted MinHash implementation is based on Sergey Ioffe’s paper,
 <a class="reference external" href="http://static.googleusercontent.com/media/research.google.com/en//pubs/archive/36928.pdf">Improved Consistent Sampling, Weighted Minhash and L1 Sketching</a></p>
 <table class="docutils field-list" frame="void" rules="none">
@@ -533,6 +565,12 @@ weighted MinHash.</li>
 </tr>
 </tbody>
 </table>
+<dl class="method">
+<dt id="datasketch.WeightedMinHashGenerator.__init__">
+<code class="descname">__init__</code><span class="sig-paren">(</span><em>dim</em>, <em>sample_size=128</em>, <em>seed=1</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/datasketch/weighted_minhash.html#WeightedMinHashGenerator.__init__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#datasketch.WeightedMinHashGenerator.__init__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Initialize self.  See help(type(self)) for accurate signature.</p>
+</dd></dl>
+
 <dl class="method">
 <dt id="datasketch.WeightedMinHashGenerator.minhash">
 <code class="descname">minhash</code><span class="sig-paren">(</span><em>v</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/datasketch/weighted_minhash.html#WeightedMinHashGenerator.minhash"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#datasketch.WeightedMinHashGenerator.minhash" title="Permalink to this definition">¶</a></dt>
@@ -562,7 +600,7 @@ by the vector.</p>
 <dt id="datasketch.WeightedMinHash">
 <em class="property">class </em><code class="descclassname">datasketch.</code><code class="descname">WeightedMinHash</code><span class="sig-paren">(</span><em>seed</em>, <em>hashvalues</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/datasketch/weighted_minhash.html#WeightedMinHash"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#datasketch.WeightedMinHash" title="Permalink to this definition">¶</a></dt>
 <dd><p>New weighted MinHash is generated by
-<a class="reference internal" href="#datasketch.WeightedMinHashGenerator" title="datasketch.WeightedMinHashGenerator"><code class="xref py py-class docutils literal"><span class="pre">datasketch.WeightedMinHashGenerator</span></code></a>.
+<a class="reference internal" href="#datasketch.WeightedMinHashGenerator" title="datasketch.WeightedMinHashGenerator"><code class="xref py py-class docutils literal notranslate"><span class="pre">datasketch.WeightedMinHashGenerator</span></code></a>.
 You can also initialize weighted MinHash by using the state
 from an existing one.</p>
 <table class="docutils field-list" frame="void" rules="none">
@@ -578,6 +616,12 @@ MinHash.</li>
 </tr>
 </tbody>
 </table>
+<dl class="method">
+<dt id="datasketch.WeightedMinHash.__init__">
+<code class="descname">__init__</code><span class="sig-paren">(</span><em>seed</em>, <em>hashvalues</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/datasketch/weighted_minhash.html#WeightedMinHash.__init__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#datasketch.WeightedMinHash.__init__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Initialize self.  See help(type(self)) for accurate signature.</p>
+</dd></dl>
+
 <dl class="method">
 <dt id="datasketch.WeightedMinHash.jaccard">
 <code class="descname">jaccard</code><span class="sig-paren">(</span><em>other</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/datasketch/weighted_minhash.html#WeightedMinHash.jaccard"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#datasketch.WeightedMinHash.jaccard" title="Permalink to this definition">¶</a></dt>
@@ -690,10 +734,10 @@ minizing the false positive and false negative.</li>
 by the MinHash to be indexed. For weighted MinHash, this
 is the sample size (<cite>sample_size</cite>).</li>
 <li><strong>weights</strong> (<em>tuple</em><em>, </em><em>optional</em>) – Used to adjust the relative importance of
-minizing false positive and false negative when optimizing
+minimizing false positive and false negative when optimizing
 for the Jaccard similarity threshold.
 <cite>weights</cite> is a tuple in the format of
-<code class="code docutils literal"><span class="pre">(false_positive_weight,</span> <span class="pre">false_negative_weight)</span></code>.</li>
+<code class="code docutils literal notranslate"><span class="pre">(false_positive_weight,</span> <span class="pre">false_negative_weight)</span></code>.</li>
 <li><strong>params</strong> (<em>tuple</em><em>, </em><em>optional</em>) – The LSH parameters (i.e., number of bands and size
 of each bands). This is used to bypass the parameter optimization
 step in the constructor. <cite>threshold</cite> and <cite>weights</cite> will be ignored
@@ -712,10 +756,16 @@ insertion. If None, a default value is chosen based on the
 <p class="first admonition-title">Note</p>
 <p class="last"><cite>weights</cite> must sum to 1.0, and the format is
 (false positive weight, false negative weight).
-For example, if minizing false negative (or maintaining high recall) is more
+For example, if minimizing false negative (or maintaining high recall) is more
 important, assign more weight toward false negative: weights=(0.4, 0.6).
 Try to live with a small difference between weights (i.e. &lt; 0.5).</p>
 </div>
+<dl class="method">
+<dt id="datasketch.MinHashLSH.__init__">
+<code class="descname">__init__</code><span class="sig-paren">(</span><em>threshold=0.9</em>, <em>num_perm=128</em>, <em>weights=(0.5</em>, <em>0.5)</em>, <em>params=None</em>, <em>storage_config={'type': 'dict'}</em>, <em>prepickle=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/datasketch/lsh.html#MinHashLSH.__init__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#datasketch.MinHashLSH.__init__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Initialize self.  See help(type(self)) for accurate signature.</p>
+</dd></dl>
+
 <dl class="method">
 <dt id="datasketch.MinHashLSH.insert">
 <code class="descname">insert</code><span class="sig-paren">(</span><em>key</em>, <em>minhash</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/datasketch/lsh.html#MinHashLSH.insert"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#datasketch.MinHashLSH.insert" title="Permalink to this definition">¶</a></dt>
@@ -817,14 +867,14 @@ similarities greater than the threshold.</p>
 <dl class="method">
 <dt id="datasketch.MinHashLSH.get_counts">
 <code class="descname">get_counts</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/datasketch/lsh.html#MinHashLSH.get_counts"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#datasketch.MinHashLSH.get_counts" title="Permalink to this definition">¶</a></dt>
-<dd><p>Returns a list of length <code class="docutils literal"><span class="pre">self.b</span></code> with elements representing the
+<dd><p>Returns a list of length <code class="docutils literal notranslate"><span class="pre">self.b</span></code> with elements representing the
 number of keys stored under each bucket for the given permutation.</p>
 </dd></dl>
 
 <dl class="method">
 <dt id="datasketch.MinHashLSH.get_subset_counts">
 <code class="descname">get_subset_counts</code><span class="sig-paren">(</span><em>*keys</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/datasketch/lsh.html#MinHashLSH.get_subset_counts"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#datasketch.MinHashLSH.get_subset_counts" title="Permalink to this definition">¶</a></dt>
-<dd><p>Returns the bucket allocation counts (see <span class="xref std std-ref">get_counts</span> above)
+<dd><p>Returns the bucket allocation counts (see <a class="reference internal" href="#datasketch.MinHashLSH.get_counts" title="datasketch.MinHashLSH.get_counts"><code class="xref py py-func docutils literal notranslate"><span class="pre">get_counts()</span></code></a> above)
 restricted to the list of keys given.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
@@ -841,6 +891,179 @@ counts</td>
 <dt id="datasketch.MinHashLSH.__weakref__">
 <code class="descname">__weakref__</code><a class="headerlink" href="#datasketch.MinHashLSH.__weakref__" title="Permalink to this definition">¶</a></dt>
 <dd><p>list of weak references to the object (if defined)</p>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="asynchronous-minhash-lsh">
+<h2>Asynchronous MinHash LSH<a class="headerlink" href="#asynchronous-minhash-lsh" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="datasketch.experimental.async.AsyncMinHashLSH">
+<em class="property">class </em><code class="descclassname">datasketch.experimental.async.</code><code class="descname">AsyncMinHashLSH</code><span class="sig-paren">(</span><em>threshold=0.9</em>, <em>num_perm=128</em>, <em>weights=(0.5</em>, <em>0.5)</em>, <em>params=None</em>, <em>storage_config=None</em>, <em>prepickle=None</em>, <em>batch_size=10000</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/datasketch/experimental/async/lsh.html#AsyncMinHashLSH"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#datasketch.experimental.async.AsyncMinHashLSH" title="Permalink to this definition">¶</a></dt>
+<dd><p>Asynchronous MinHashLSH index.
+For main functionality of LSH algorithm see <a class="reference internal" href="#datasketch.MinHashLSH" title="datasketch.MinHashLSH"><code class="xref py py-class docutils literal notranslate"><span class="pre">datasketch.MinHashLSH</span></code></a>.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>threshold</strong> (<em>float</em>) – see <a class="reference internal" href="#datasketch.MinHashLSH" title="datasketch.MinHashLSH"><code class="xref py py-class docutils literal notranslate"><span class="pre">datasketch.MinHashLSH</span></code></a>.</li>
+<li><strong>num_perm</strong> (<em>int</em>) – see <a class="reference internal" href="#datasketch.MinHashLSH" title="datasketch.MinHashLSH"><code class="xref py py-class docutils literal notranslate"><span class="pre">datasketch.MinHashLSH</span></code></a>.</li>
+<li><strong>weights</strong> (<em>tuple</em><em>(</em><em>float</em><em>, </em><em>float</em><em>)</em>) – see <a class="reference internal" href="#datasketch.MinHashLSH" title="datasketch.MinHashLSH"><code class="xref py py-class docutils literal notranslate"><span class="pre">datasketch.MinHashLSH</span></code></a>.</li>
+<li><strong>params</strong> (<em>tuple</em>) – see <a class="reference internal" href="#datasketch.MinHashLSH" title="datasketch.MinHashLSH"><code class="xref py py-class docutils literal notranslate"><span class="pre">datasketch.MinHashLSH</span></code></a>.</li>
+<li><strong>storage_config</strong> (<em>dict</em>) – New types of storage service (aioredis, aiomongo) to use for storing hashtables and keys are implemented. If storage_config is None aioredis storage will be used.</li>
+<li><strong>prepickle</strong> (<em>bool</em>) – for redis type storage use bytes as keys.</li>
+<li><strong>batch_size</strong> (<em>int</em>) – the size of chunks to use in insert_session mode.</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+<p class="rubric">Example</p>
+<dl class="docutils">
+<dt>There is two ways to create a AsyncMinHash index.</dt>
+<dd><ol class="first last arabic">
+<li><p class="first">Usual way:</p>
+<blockquote>
+<div><div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">datasketch.experimental.async</span> <span class="kn">import</span> <span class="n">AsyncMinHashLSH</span>
+
+<span class="n">_storage_config_redis</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;type&#39;</span><span class="p">:</span> <span class="s1">&#39;aioredis&#39;</span><span class="p">,</span> <span class="s1">&#39;redis&#39;</span><span class="p">:</span> <span class="p">{</span><span class="s1">&#39;host&#39;</span><span class="p">:</span> <span class="s1">&#39;localhost&#39;</span><span class="p">,</span> <span class="s1">&#39;port&#39;</span><span class="p">:</span> <span class="mi">6379</span><span class="p">}}</span>
+
+<span class="n">lsh</span> <span class="o">=</span> <span class="n">await</span> <span class="n">AsyncMinHashLSH</span><span class="p">(</span><span class="n">storage_config</span><span class="o">=</span><span class="n">_storage_config_redis</span><span class="p">,</span> <span class="n">threshold</span><span class="o">=</span><span class="mf">0.5</span><span class="p">,</span> <span class="n">num_perm</span><span class="o">=</span><span class="mi">16</span><span class="p">)</span>
+<span class="n">m1</span> <span class="o">=</span> <span class="n">MinHash</span><span class="p">(</span><span class="mi">16</span><span class="p">)</span>
+<span class="n">m1</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="s1">&#39;a&#39;</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="s1">&#39;utf8&#39;</span><span class="p">))</span>
+<span class="n">m2</span> <span class="o">=</span> <span class="n">MinHash</span><span class="p">(</span><span class="mi">16</span><span class="p">)</span>
+<span class="n">m2</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="s1">&#39;b&#39;</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="s1">&#39;utf8&#39;</span><span class="p">))</span>
+<span class="n">await</span> <span class="n">lsh</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="s1">&#39;a&#39;</span><span class="p">,</span> <span class="n">m1</span><span class="p">)</span>
+<span class="n">await</span> <span class="n">lsh</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="s1">&#39;b&#39;</span><span class="p">,</span> <span class="n">m2</span><span class="p">)</span>
+<span class="k">print</span><span class="p">(</span><span class="n">await</span> <span class="n">lsh</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">m1</span><span class="p">))</span>
+<span class="k">print</span><span class="p">(</span><span class="n">await</span> <span class="n">lsh</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">m2</span><span class="p">))</span>
+<span class="n">lsh</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+</pre></div>
+</div>
+</div></blockquote>
+</li>
+<li><p class="first">Context Manager style:</p>
+<blockquote>
+<div><div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">datasketch.experimental.async</span> <span class="kn">import</span> <span class="n">AsyncMinHashLSH</span>
+
+<span class="n">_storage_config_redis</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;type&#39;</span><span class="p">:</span> <span class="s1">&#39;aioredis&#39;</span><span class="p">,</span> <span class="s1">&#39;redis&#39;</span><span class="p">:</span> <span class="p">{</span><span class="s1">&#39;host&#39;</span><span class="p">:</span> <span class="s1">&#39;localhost&#39;</span><span class="p">,</span> <span class="s1">&#39;port&#39;</span><span class="p">:</span> <span class="mi">6379</span><span class="p">}}</span>
+
+<span class="n">async</span> <span class="k">with</span> <span class="n">AsyncMinHashLSH</span><span class="p">(</span><span class="n">storage_config</span><span class="o">=</span><span class="n">_storage_config_redis</span><span class="p">,</span> <span class="n">threshold</span><span class="o">=</span><span class="mf">0.5</span><span class="p">,</span> <span class="n">num_perm</span><span class="o">=</span><span class="mi">16</span><span class="p">)</span> <span class="k">as</span> <span class="n">lsh</span><span class="p">:</span>
+    <span class="n">m1</span> <span class="o">=</span> <span class="n">MinHash</span><span class="p">(</span><span class="mi">16</span><span class="p">)</span>
+    <span class="n">m1</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="s1">&#39;a&#39;</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="s1">&#39;utf8&#39;</span><span class="p">))</span>
+    <span class="n">m2</span> <span class="o">=</span> <span class="n">MinHash</span><span class="p">(</span><span class="mi">16</span><span class="p">)</span>
+    <span class="n">m2</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="s1">&#39;b&#39;</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="s1">&#39;utf8&#39;</span><span class="p">))</span>
+    <span class="n">await</span> <span class="n">lsh</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="s1">&#39;a&#39;</span><span class="p">,</span> <span class="n">m1</span><span class="p">)</span>
+    <span class="n">await</span> <span class="n">lsh</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="s1">&#39;b&#39;</span><span class="p">,</span> <span class="n">m2</span><span class="p">)</span>
+    <span class="k">print</span><span class="p">(</span><span class="n">await</span> <span class="n">lsh</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">m1</span><span class="p">))</span>
+    <span class="k">print</span><span class="p">(</span><span class="n">await</span> <span class="n">lsh</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">m2</span><span class="p">))</span>
+</pre></div>
+</div>
+</div></blockquote>
+</li>
+</ol>
+</dd>
+</dl>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">For details see <a class="reference internal" href="lsh.html#minhash-lsh-at-scale"><span class="std std-ref">MinHash LSH at scale</span></a> and <a class="reference internal" href="lsh.html#minhash-lsh-async"><span class="std std-ref">Asynchronous MinHash LSH</span></a></p>
+</div>
+<dl class="method">
+<dt id="datasketch.experimental.async.AsyncMinHashLSH.__init__">
+<code class="descname">__init__</code><span class="sig-paren">(</span><em>threshold=0.9</em>, <em>num_perm=128</em>, <em>weights=(0.5</em>, <em>0.5)</em>, <em>params=None</em>, <em>storage_config=None</em>, <em>prepickle=None</em>, <em>batch_size=10000</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/datasketch/experimental/async/lsh.html#AsyncMinHashLSH.__init__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#datasketch.experimental.async.AsyncMinHashLSH.__init__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Initialize self.  See help(type(self)) for accurate signature.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="datasketch.experimental.async.AsyncMinHashLSH.insertion_session">
+<code class="descname">insertion_session</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/datasketch/experimental/async/lsh.html#AsyncMinHashLSH.insertion_session"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#datasketch.experimental.async.AsyncMinHashLSH.insertion_session" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create a asynchronous context manager for fast insertion into this index.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">datasketch.experimental.async.lsh.AsyncMinHashLSHInsertionSession</td>
+</tr>
+</tbody>
+</table>
+<p class="rubric">Example</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">datasketch.experimental.async</span> <span class="kn">import</span> <span class="n">AsyncMinHashLSH</span>
+
+<span class="k">def</span> <span class="nf">chunk</span><span class="p">(</span><span class="n">it</span><span class="p">,</span> <span class="n">size</span><span class="p">):</span>
+    <span class="n">it</span> <span class="o">=</span> <span class="nb">iter</span><span class="p">(</span><span class="n">it</span><span class="p">)</span>
+    <span class="k">return</span> <span class="nb">iter</span><span class="p">(</span><span class="k">lambda</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">islice</span><span class="p">(</span><span class="n">it</span><span class="p">,</span> <span class="n">size</span><span class="p">)),</span> <span class="p">())</span>
+
+<span class="n">_chunked_str</span> <span class="o">=</span> <span class="n">chunk</span><span class="p">((</span><span class="n">random</span><span class="o">.</span><span class="n">choice</span><span class="p">(</span><span class="n">string</span><span class="o">.</span><span class="n">ascii_lowercase</span><span class="p">)</span> <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">10000</span><span class="p">)),</span> <span class="mi">4</span><span class="p">)</span>
+<span class="n">seq</span> <span class="o">=</span> <span class="nb">frozenset</span><span class="p">(</span><span class="n">chain</span><span class="p">((</span><span class="s1">&#39;&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">s</span><span class="p">)</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">_chunked_str</span><span class="p">),</span> <span class="p">(</span><span class="s1">&#39;aahhb&#39;</span><span class="p">,</span> <span class="s1">&#39;aahh&#39;</span><span class="p">,</span> <span class="s1">&#39;aahhc&#39;</span><span class="p">,</span> <span class="s1">&#39;aac&#39;</span><span class="p">,</span> <span class="s1">&#39;kld&#39;</span><span class="p">,</span> <span class="s1">&#39;bhg&#39;</span><span class="p">,</span> <span class="s1">&#39;kkd&#39;</span><span class="p">,</span> <span class="s1">&#39;yow&#39;</span><span class="p">,</span> <span class="s1">&#39;ppi&#39;</span><span class="p">,</span> <span class="s1">&#39;eer&#39;</span><span class="p">)))</span>
+<span class="n">objs</span> <span class="o">=</span> <span class="p">[</span><span class="n">MinHash</span><span class="p">(</span><span class="mi">16</span><span class="p">)</span> <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">seq</span><span class="p">))]</span>
+<span class="k">for</span> <span class="n">e</span><span class="p">,</span> <span class="n">obj</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">seq</span><span class="p">,</span> <span class="n">objs</span><span class="p">):</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">e</span><span class="p">:</span>
+        <span class="n">obj</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">i</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="s1">&#39;utf-8&#39;</span><span class="p">))</span>
+<span class="n">data</span> <span class="o">=</span> <span class="p">[(</span><span class="n">e</span><span class="p">,</span> <span class="n">m</span><span class="p">)</span> <span class="k">for</span> <span class="n">e</span><span class="p">,</span> <span class="n">m</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">seq</span><span class="p">,</span> <span class="n">objs</span><span class="p">)]</span>
+
+<span class="n">_storage_config_redis</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;type&#39;</span><span class="p">:</span> <span class="s1">&#39;aioredis&#39;</span><span class="p">,</span> <span class="s1">&#39;redis&#39;</span><span class="p">:</span> <span class="p">{</span><span class="s1">&#39;host&#39;</span><span class="p">:</span> <span class="s1">&#39;localhost&#39;</span><span class="p">,</span> <span class="s1">&#39;port&#39;</span><span class="p">:</span> <span class="mi">6379</span><span class="p">}}</span>
+<span class="n">async</span> <span class="k">with</span> <span class="n">AsyncMinHashLSH</span><span class="p">(</span><span class="n">storage_config</span><span class="o">=</span><span class="n">_storage_config_redis</span><span class="p">,</span> <span class="n">threshold</span><span class="o">=</span><span class="mf">0.5</span><span class="p">,</span> <span class="n">num_perm</span><span class="o">=</span><span class="mi">16</span><span class="p">,</span> <span class="n">batch_size</span><span class="o">=</span><span class="mi">1000</span><span class="p">)</span> <span class="k">as</span> <span class="n">lsh</span><span class="p">:</span>
+    <span class="n">async</span> <span class="k">with</span> <span class="n">lsh</span><span class="o">.</span><span class="n">insertion_session</span><span class="p">()</span> <span class="k">as</span> <span class="n">session</span><span class="p">:</span>
+        <span class="n">fs</span> <span class="o">=</span> <span class="p">(</span><span class="n">session</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="n">minhash</span><span class="p">,</span> <span class="n">check_duplication</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span> <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">minhash</span> <span class="ow">in</span> <span class="n">data</span><span class="p">)</span>
+        <span class="n">await</span> <span class="n">asyncio</span><span class="o">.</span><span class="n">gather</span><span class="p">(</span><span class="o">*</span><span class="n">fs</span><span class="p">)</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="datasketch.experimental.async.AsyncMinHashLSH.__weakref__">
+<code class="descname">__weakref__</code><a class="headerlink" href="#datasketch.experimental.async.AsyncMinHashLSH.__weakref__" title="Permalink to this definition">¶</a></dt>
+<dd><p>list of weak references to the object (if defined)</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="datasketch.experimental.async.AsyncMinHashLSH.close">
+<code class="descname">close</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/datasketch/experimental/async/lsh.html#AsyncMinHashLSH.close"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#datasketch.experimental.async.AsyncMinHashLSH.close" title="Permalink to this definition">¶</a></dt>
+<dd><p>Cleanup client resources and disconnect from AsyncMinHashLSH storage.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="datasketch.experimental.async.AsyncMinHashLSH.get_counts">
+<code class="descname">get_counts</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/datasketch/experimental/async/lsh.html#AsyncMinHashLSH.get_counts"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#datasketch.experimental.async.AsyncMinHashLSH.get_counts" title="Permalink to this definition">¶</a></dt>
+<dd><p>see <a class="reference internal" href="#datasketch.MinHashLSH" title="datasketch.MinHashLSH"><code class="xref py py-class docutils literal notranslate"><span class="pre">datasketch.MinHashLSH</span></code></a>.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="datasketch.experimental.async.AsyncMinHashLSH.get_subset_counts">
+<code class="descname">get_subset_counts</code><span class="sig-paren">(</span><em>*keys</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/datasketch/experimental/async/lsh.html#AsyncMinHashLSH.get_subset_counts"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#datasketch.experimental.async.AsyncMinHashLSH.get_subset_counts" title="Permalink to this definition">¶</a></dt>
+<dd><p>see <a class="reference internal" href="#datasketch.MinHashLSH" title="datasketch.MinHashLSH"><code class="xref py py-class docutils literal notranslate"><span class="pre">datasketch.MinHashLSH</span></code></a>.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="datasketch.experimental.async.AsyncMinHashLSH.has_key">
+<code class="descname">has_key</code><span class="sig-paren">(</span><em>key</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/datasketch/experimental/async/lsh.html#AsyncMinHashLSH.has_key"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#datasketch.experimental.async.AsyncMinHashLSH.has_key" title="Permalink to this definition">¶</a></dt>
+<dd><p>see <a class="reference internal" href="#datasketch.MinHashLSH" title="datasketch.MinHashLSH"><code class="xref py py-class docutils literal notranslate"><span class="pre">datasketch.MinHashLSH</span></code></a>.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="datasketch.experimental.async.AsyncMinHashLSH.insert">
+<code class="descname">insert</code><span class="sig-paren">(</span><em>key</em>, <em>minhash</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/datasketch/experimental/async/lsh.html#AsyncMinHashLSH.insert"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#datasketch.experimental.async.AsyncMinHashLSH.insert" title="Permalink to this definition">¶</a></dt>
+<dd><p>see <a class="reference internal" href="#datasketch.MinHashLSH" title="datasketch.MinHashLSH"><code class="xref py py-class docutils literal notranslate"><span class="pre">datasketch.MinHashLSH</span></code></a>.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="datasketch.experimental.async.AsyncMinHashLSH.is_empty">
+<code class="descname">is_empty</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/datasketch/experimental/async/lsh.html#AsyncMinHashLSH.is_empty"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#datasketch.experimental.async.AsyncMinHashLSH.is_empty" title="Permalink to this definition">¶</a></dt>
+<dd><p>see <a class="reference internal" href="#datasketch.MinHashLSH" title="datasketch.MinHashLSH"><code class="xref py py-class docutils literal notranslate"><span class="pre">datasketch.MinHashLSH</span></code></a>.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="datasketch.experimental.async.AsyncMinHashLSH.query">
+<code class="descname">query</code><span class="sig-paren">(</span><em>minhash</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/datasketch/experimental/async/lsh.html#AsyncMinHashLSH.query"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#datasketch.experimental.async.AsyncMinHashLSH.query" title="Permalink to this definition">¶</a></dt>
+<dd><p>see <a class="reference internal" href="#datasketch.MinHashLSH" title="datasketch.MinHashLSH"><code class="xref py py-class docutils literal notranslate"><span class="pre">datasketch.MinHashLSH</span></code></a>.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="datasketch.experimental.async.AsyncMinHashLSH.remove">
+<code class="descname">remove</code><span class="sig-paren">(</span><em>key</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/datasketch/experimental/async/lsh.html#AsyncMinHashLSH.remove"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#datasketch.experimental.async.AsyncMinHashLSH.remove" title="Permalink to this definition">¶</a></dt>
+<dd><p>see <a class="reference internal" href="#datasketch.MinHashLSH" title="datasketch.MinHashLSH"><code class="xref py py-class docutils literal notranslate"><span class="pre">datasketch.MinHashLSH</span></code></a>.</p>
 </dd></dl>
 
 </dd></dl>
@@ -877,6 +1100,12 @@ paper.</li>
 and weighted MinHash without modification.</p>
 </div>
 <dl class="method">
+<dt id="datasketch.MinHashLSHForest.__init__">
+<code class="descname">__init__</code><span class="sig-paren">(</span><em>num_perm=128</em>, <em>l=8</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/datasketch/lshforest.html#MinHashLSHForest.__init__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#datasketch.MinHashLSHForest.__init__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Initialize self.  See help(type(self)) for accurate signature.</p>
+</dd></dl>
+
+<dl class="method">
 <dt id="datasketch.MinHashLSHForest.add">
 <code class="descname">add</code><span class="sig-paren">(</span><em>key</em>, <em>minhash</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/datasketch/lshforest.html#MinHashLSHForest.add"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#datasketch.MinHashLSHForest.add" title="Permalink to this definition">¶</a></dt>
 <dd><p>Add a unique key, together
@@ -884,7 +1113,7 @@ with a MinHash (or weighted MinHash) of the set referenced by the key.</p>
 <div class="admonition note">
 <p class="first admonition-title">Note</p>
 <p class="last">The key won’t be searchbale until the
-<a class="reference internal" href="#datasketch.MinHashLSHForest.index" title="datasketch.MinHashLSHForest.index"><code class="xref py py-func docutils literal"><span class="pre">datasketch.MinHashLSHForest.index()</span></code></a> method is called.</p>
+<a class="reference internal" href="#datasketch.MinHashLSHForest.index" title="datasketch.MinHashLSHForest.index"><code class="xref py py-func docutils literal notranslate"><span class="pre">datasketch.MinHashLSHForest.index()</span></code></a> method is called.</p>
 </div>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
@@ -996,7 +1225,7 @@ sets indexed. The higher the <cite>m</cite> the better the accuracy.</li>
 <li><strong>weights</strong> (<em>tuple</em><em>, </em><em>optional</em>) – Used to adjust the relative importance of
 minizing false positive and false negative when optimizing
 for the Containment threshold. Similar to the <cite>weights</cite> parameter
-in <a class="reference internal" href="#datasketch.MinHashLSH" title="datasketch.MinHashLSH"><code class="xref py py-class docutils literal"><span class="pre">datasketch.MinHashLSH</span></code></a>.</li>
+in <a class="reference internal" href="#datasketch.MinHashLSH" title="datasketch.MinHashLSH"><code class="xref py py-class docutils literal notranslate"><span class="pre">datasketch.MinHashLSH</span></code></a>.</li>
 </ul>
 </td>
 </tr>
@@ -1016,6 +1245,12 @@ due to parallelism.</p>
 <a class="reference external" href="https://github.com/ekzhu/lshensemble">Go implementation</a>
 of LSH Ensemble, in which <cite>m</cite> is named <cite>MaxK</cite>.</p>
 </div>
+<dl class="method">
+<dt id="datasketch.MinHashLSHEnsemble.__init__">
+<code class="descname">__init__</code><span class="sig-paren">(</span><em>threshold=0.9</em>, <em>num_perm=128</em>, <em>num_part=16</em>, <em>m=8</em>, <em>weights=(0.5</em>, <em>0.5)</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/datasketch/lshensemble.html#MinHashLSHEnsemble.__init__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#datasketch.MinHashLSHEnsemble.__init__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Initialize self.  See help(type(self)) for accurate signature.</p>
+</dd></dl>
+
 <dl class="method">
 <dt id="datasketch.MinHashLSHEnsemble.index">
 <code class="descname">index</code><span class="sig-paren">(</span><em>entries</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/datasketch/lshensemble.html#MinHashLSHEnsemble.index"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#datasketch.MinHashLSHEnsemble.index" title="Permalink to this definition">¶</a></dt>
@@ -1132,6 +1367,12 @@ as <cite>hashlib.sha1</cite>.</li>
 </tbody>
 </table>
 <dl class="method">
+<dt id="datasketch.HyperLogLog.__init__">
+<code class="descname">__init__</code><span class="sig-paren">(</span><em>p=8</em>, <em>reg=None</em>, <em>hashobj=&lt;built-in function openssl_sha1&gt;</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/datasketch/hyperloglog.html#HyperLogLog.__init__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#datasketch.HyperLogLog.__init__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Initialize self.  See help(type(self)) for accurate signature.</p>
+</dd></dl>
+
+<dl class="method">
 <dt id="datasketch.HyperLogLog.update">
 <code class="descname">update</code><span class="sig-paren">(</span><em>b</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/datasketch/hyperloglog.html#HyperLogLog.update"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#datasketch.HyperLogLog.update" title="Permalink to this definition">¶</a></dt>
 <dd><p>Update the HyperLogLog with a new data value in bytes.</p>
@@ -1145,7 +1386,7 @@ as <cite>hashlib.sha1</cite>.</li>
 </table>
 <p class="rubric">Example</p>
 <p>To update with a new string value:</p>
-<div class="highlight-python"><div class="highlight"><pre><span></span><span class="n">hyperloglog</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="s2">&quot;new value&quot;</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="s1">&#39;utf-8&#39;</span><span class="p">))</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">hyperloglog</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="s2">&quot;new value&quot;</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="s1">&#39;utf-8&#39;</span><span class="p">))</span>
 </pre></div>
 </div>
 </dd></dl>
@@ -1287,11 +1528,27 @@ Main changes from the original HyperLogLog:</p>
 <li>Sparse representation (not implemented here)</li>
 </ol>
 <p>This class has the same set of methods as
-<a class="reference internal" href="#datasketch.HyperLogLog" title="datasketch.HyperLogLog"><code class="xref py py-class docutils literal"><span class="pre">datasketch.HyperLogLog</span></code></a>.</p>
+<a class="reference internal" href="#datasketch.HyperLogLog" title="datasketch.HyperLogLog"><code class="xref py py-class docutils literal notranslate"><span class="pre">datasketch.HyperLogLog</span></code></a>.</p>
 <dl class="attribute">
 <dt id="datasketch.HyperLogLogPlusPlus.__weakref__">
 <code class="descname">__weakref__</code><a class="headerlink" href="#datasketch.HyperLogLogPlusPlus.__weakref__" title="Permalink to this definition">¶</a></dt>
 <dd><p>list of weak references to the object (if defined)</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="datasketch.HyperLogLogPlusPlus.count">
+<code class="descname">count</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/datasketch/hyperloglog.html#HyperLogLogPlusPlus.count"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#datasketch.HyperLogLogPlusPlus.count" title="Permalink to this definition">¶</a></dt>
+<dd><p>Estimate the cardinality of the data values seen so far.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">The estimated cardinality.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body">int</td>
+</tr>
+</tbody>
+</table>
 </dd></dl>
 
 </dd></dl>
@@ -1301,16 +1558,17 @@ Main changes from the original HyperLogLog:</p>
 
 
           </div>
+          
         </div>
       </div>
     <div class="clearer"></div>
   </div>
     <div class="footer">
-      &copy;2017, Eric Zhu.
+      &copy;2018, Eric Zhu.
       
       |
-      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.6.3</a>
-      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.10</a>
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.7.5</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.11</a>
       
       |
       <a href="_sources/documentation.rst.txt"

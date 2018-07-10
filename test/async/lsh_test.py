@@ -10,12 +10,12 @@ import motor.motor_asyncio
 import aiounittest
 import numpy as np
 
-from datasketch.async.lsh import AsyncMinHashLSH
+from datasketch.experimental.async import AsyncMinHashLSH
 from datasketch.minhash import MinHash
 from datasketch.weighted_minhash import WeightedMinHashGenerator
 
 STORAGE_CONFIG_REDIS = {'type': 'aioredis', 'redis': {'host': 'localhost', 'port': 6379}}
-STORAGE_CONFIG_MONGO = {'type': 'aiomongo', 'mongo': {'host': '10.216.20.31', 'port': 27017, 'db': 'lsh_test'}}
+STORAGE_CONFIG_MONGO = {'type': 'aiomongo', 'mongo': {'host': 'localhost', 'port': 27017, 'db': 'lsh_test'}}
 
 
 class AsyncTestCase(aiounittest.AsyncTestCase):

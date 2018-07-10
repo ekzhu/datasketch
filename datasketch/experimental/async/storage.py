@@ -83,29 +83,27 @@ if aioredis is not None:
     class AsyncRedisStorage(object):
         """Base class for asynchronous Redis-based storage containers.
 
-        Args:
-            config (dict): Redis storage units require a configuration
-                of the form::
+        :param dict config: Redis storage units require a configuration
+            of the form::
 
-                    storage_config={
-                        'type': 'aioredis',
-                        'redis': {'host': 'localhost', 'port': 6379}
+                storage_config={
+                    'type': 'aioredis',
+                    'redis': {'host': 'localhost', 'port': 6379}
+                }
+
+            one can refer to system environment variables via::
+
+                storage_config={
+                    'type': 'aioredis',
+                    'redis': {
+                        'host': {'env': 'REDIS_HOSTNAME',
+                                 'default':'localhost'},
+                        'port': 6379}
                     }
+                }
 
-                one can refer to system environment variables via::
-
-                    storage_config={
-                        'type': 'aioredis',
-                        'redis': {
-                            'host': {'env': 'REDIS_HOSTNAME',
-                                     'default':'localhost'},
-                            'port': 6379}
-                        }
-                    }
-
-            name (bytes, optional): A prefix to namespace all keys in
-                the database pertaining to this storage container.
-                If None, a random name will be chosen.
+        :param bytes name: see :class:`datasketch.storage.RedisStorage` (default = None).
+        :param int batch_size: the size of chunks to use in buffered mode (default = 50000).
         """
 
         def __init__(self, config, name=None, batch_size=50000):
@@ -165,12 +163,6 @@ if aioredis is not None:
         def _parse_config(config):
             cfg = {}
             for key, value in config.items():
-                # If the value is a plain str, we will use the value
-                # If the value is a dict, we will extract the name of an
-                # environment variable stored under 'env' and optionally
-                # a default, stored under 'default'.
-                # (This is useful if the database relocates to a different host
-                # during the lifetime of the LSH object)
                 if isinstance(value, dict):
                     if 'env' in value:
                         value = os.getenv(value['env'], value.get('default', None))
@@ -179,8 +171,6 @@ if aioredis is not None:
 
         def __getstate__(self):
             state = self.__dict__.copy()
-            # We cannot pickle the connection objects, they get recreated
-            # upon unpickling
             state.pop('_redis')
             state.pop('_buffer')
             state.pop('_lock')
@@ -319,37 +309,34 @@ if motor is not None and ReturnDocument is not None:
 
 
     class AsyncMongoStorage(object):
-        """Base class for asynchronous Mongo-based storage containers.
+        """Base class for asynchronous MongoDB-based storage containers.
 
-        Args:
-            config (dict): Redis storage units require a configuration
-                of the form::
+        :param dict config: MongoDB storage units require a configuration
+            of the form::
 
-                    storage_config={
-                        'type': 'aiomongo',
-                        'mongo': {'host': 'localhost', 'port': 27017}
+                storage_config={
+                    'type': 'aiomongo',
+                    'mongo': {'host': 'localhost', 'port': 27017}
+                }
+
+            one can refer to system environment variables via::
+
+                storage_config={
+                    'type': 'aiomongo',
+                    'mongo': {
+                        'host': {'env': 'MONGO_HOSTNAME',
+                                 'default':'localhost'},
+                        'port': 27017}
                     }
+                }
 
-                one can refer to system environment variables via::
-
-                    storage_config={
-                        'type': 'aiomongo',
-                        'mongo': {
-                            'host': {'env': 'MONGO_HOSTNAME',
-                                     'default':'localhost'},
-                            'port': 27017}
-                        }
-                    }
-
-            name (bytes, optional): A prefix to namespace all keys in
-                the database pertaining to this storage container.
-                If None, a random name will be chosen.
+        :param bytes name: see :class:`datasketch.storage.RedisStorage` (default = None).
+        :param int batch_size: the size of chunks to use in buffered mode (default = 1000).
         """
 
         def __init__(self, config, name=None, batch_size=1000):
             assert config['type'] == 'aiomongo', 'Storage type <{}> not supported'.format(config['type'])
             self._config = config
-            # self._batch_size = batch_size
             self._mongo_param = self._parse_config(self._config['mongo'])
 
             self._name = name if name else _random_name(11).decode('utf-8')
@@ -382,12 +369,6 @@ if motor is not None and ReturnDocument is not None:
         def _parse_config(config):
             cfg = {}
             for key, value in config.items():
-                # If the value is a plain str, we will use the value
-                # If the value is a dict, we will extract the name of an environment
-                # variable stored under 'env' and optionally a default, stored under
-                # 'default'.
-                # (This is useful if the database relocates to a different host
-                # during the lifetime of the LSH object)
                 if isinstance(value, dict):
                     if 'env' in value:
                         value = os.getenv(value['env'], value.get('default', None))

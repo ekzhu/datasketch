@@ -1,8 +1,7 @@
 import asyncio
 import pickle
 from itertools import chain
-from datasketch.async.storage import (async_ordered_storage,
-                                      async_unordered_storage, )
+from datasketch.experimental.async.storage import (async_ordered_storage, async_unordered_storage, )
 
 from datasketch.lsh import _optimal_param
 from datasketch.storage import unordered_storage, _random_name
@@ -10,42 +9,63 @@ from datasketch.storage import unordered_storage, _random_name
 
 class AsyncMinHashLSH(object):
     """
-    The :ref:`minhash_lsh` index.
-    It supports query with `Jaccard similarity`_ threshold.
-    Reference: `Chapter 3, Mining of Massive Datasets
-    <http://www.mmds.org/>`_.
+    Asynchronous MinHashLSH index.
+    For main functionality of LSH algorithm see :class:`datasketch.MinHashLSH`.
 
-    Args:
-        threshold (float): The Jaccard similarity threshold between 0.0 and
-            1.0. The initialized AsyncMinHash LSH will be optimized for the
-            threshold by minizing the false positive and false negative.
-        num_perm (int, optional): The number of permutation functions used
-            by the AsyncMinHash to be indexed. For weighted AsyncMinHash, this
-            is the sample size (`sample_size`).
-        weights (tuple, optional): Used to adjust the relative importance of
-            minimizing false positive and false negative when optimizing
-            for the Jaccard similarity threshold.
-            `weights` is a tuple in the format of
-            :code:`(false_positive_weight, false_negative_weight)`.
-        params (tuple, optional): The LSH parameters (i.e., number of bands and
-            size of each bands). This is used to bypass the parameter
-            optimization step in the constructor. `threshold` and `weights`
-            will be ignored if this is given.
-        storage_config (dict, optional): Type of storage service to use for
-            storing hashtables and keys.
+    :param float threshold: see :class:`datasketch.MinHashLSH`.
+    :param int num_perm: see :class:`datasketch.MinHashLSH`.
+    :param weights: see :class:`datasketch.MinHashLSH`.
+    :type weights: tuple(float, float)
+    :param tuple params: see :class:`datasketch.MinHashLSH`.
+    :param dict storage_config: New types of storage service (aioredis, aiomongo) to use for storing hashtables and keys are implemented. If storage_config is None aioredis storage will be used.
+    :param bool prepickle: for redis type storage use bytes as keys.
+    :param int batch_size: the size of chunks to use in insert_session mode.
 
-    Note:
-        `weights` must sum to 1.0, and the format is
-        (false positive weight, false negative weight).
-        For example, if minimizing false negative (or maintaining high recall)
-        is more important, assign more weight toward false negative:
-        weights=(0.4, 0.6). Try to live with a small difference between weights
-        (i.e. < 0.5).
+    Example:
+        There is two ways to create a AsyncMinHash index.
+            1. Usual way:
+
+                .. code-block:: python
+
+                    from datasketch.experimental.async import AsyncMinHashLSH
+
+                    _storage_config_redis = {'type': 'aioredis', 'redis': {'host': 'localhost', 'port': 6379}}
+
+                    lsh = await AsyncMinHashLSH(storage_config=_storage_config_redis, threshold=0.5, num_perm=16)
+                    m1 = MinHash(16)
+                    m1.update('a'.encode('utf8'))
+                    m2 = MinHash(16)
+                    m2.update('b'.encode('utf8'))
+                    await lsh.insert('a', m1)
+                    await lsh.insert('b', m2)
+                    print(await lsh.query(m1))
+                    print(await lsh.query(m2))
+                    lsh.close()
+
+            2. Context Manager style:
+
+                .. code-block:: python
+
+                    from datasketch.experimental.async import AsyncMinHashLSH
+
+                    _storage_config_redis = {'type': 'aioredis', 'redis': {'host': 'localhost', 'port': 6379}}
+
+                    async with AsyncMinHashLSH(storage_config=_storage_config_redis, threshold=0.5, num_perm=16) as lsh:
+                        m1 = MinHash(16)
+                        m1.update('a'.encode('utf8'))
+                        m2 = MinHash(16)
+                        m2.update('b'.encode('utf8'))
+                        await lsh.insert('a', m1)
+                        await lsh.insert('b', m2)
+                        print(await lsh.query(m1))
+                        print(await lsh.query(m2))
+
+    .. note::
+        For details see :ref:`minhash_lsh_at_scale` and :ref:`minhash_lsh_async`
     """
 
     def __init__(self, threshold=0.9, num_perm=128, weights=(0.5, 0.5),
                  params=None, storage_config=None, prepickle=None, batch_size=10000):
-
         if storage_config is None:
             storage_config = {
                 'type': 'aioredis',
@@ -158,6 +178,9 @@ class AsyncMinHashLSH(object):
         await asyncio.gather(*fs)
 
     async def close(self):
+        """
+        Cleanup client resources and disconnect from AsyncMinHashLSH storage.
+        """
         async with self._lock:
             for t in self.hashtables:
                 await t.close()
@@ -169,23 +192,39 @@ class AsyncMinHashLSH(object):
 
     async def insert(self, key, minhash):
         """
-        Insert a unique key to the index, together
-        with a AsyncMinHash (or weighted AsyncMinHash) of the set referenced by
-        the key.
-
-        Args:
-            key (hashable): The unique identifier of the set.
-            minhash (datasketch.AsyncMinHash): The AsyncMinHash of the set.
+        see :class:`datasketch.MinHashLSH`.
         """
         await self._insert(key, minhash, check_duplication=True, buffer=False)
 
     def insertion_session(self):
         """
-        Create a asynchronous context manager for fast insertion into this
-        index.
+        Create a asynchronous context manager for fast insertion into this index.
 
-        Returns:
-            datasketch.lsh.AsyncMinHashLSHInsertionSession
+        :return: datasketch.experimental.async.lsh.AsyncMinHashLSHInsertionSession
+
+        Example:
+            .. code-block:: python
+
+                from datasketch.experimental.async import AsyncMinHashLSH
+
+                def chunk(it, size):
+                    it = iter(it)
+                    return iter(lambda: tuple(islice(it, size)), ())
+
+                _chunked_str = chunk((random.choice(string.ascii_lowercase) for _ in range(10000)), 4)
+                seq = frozenset(chain((''.join(s) for s in _chunked_str), ('aahhb', 'aahh', 'aahhc', 'aac', 'kld', 'bhg', 'kkd', 'yow', 'ppi', 'eer')))
+                objs = [MinHash(16) for _ in range(len(seq))]
+                for e, obj in zip(seq, objs):
+                    for i in e:
+                        obj.update(i.encode('utf-8'))
+                data = [(e, m) for e, m in zip(seq, objs)]
+
+                _storage_config_redis = {'type': 'aioredis', 'redis': {'host': 'localhost', 'port': 6379}}
+                async with AsyncMinHashLSH(storage_config=_storage_config_redis, threshold=0.5, num_perm=16, batch_size=1000) as lsh:
+                    async with lsh.insertion_session() as session:
+                        fs = (session.insert(key, minhash, check_duplication=False) for key, minhash in data)
+                        await asyncio.gather(*fs)
+
         """
         return AsyncMinHashLSHInsertionSession(self)
 
@@ -205,15 +244,7 @@ class AsyncMinHashLSH(object):
 
     async def query(self, minhash):
         """
-        Giving the AsyncMinHash of the query set, retrieve
-        the keys that references sets with Jaccard
-        similarities greater than the threshold.
-
-        Args:
-            minhash (datasketch.AsyncMinHash): The AsyncMinHash of the query set.
-
-        Returns:
-            `list` of keys.
+        see :class:`datasketch.MinHashLSH`.
         """
         if len(minhash) != self.h:
             raise ValueError("Expecting minhash with length %d, "
@@ -230,11 +261,7 @@ class AsyncMinHashLSH(object):
 
     async def has_key(self, key):
         """
-        Args:
-            key (hashable): The unique identifier of a set.
-
-        Returns:
-            bool: True only if the key exists in the index.
+        see :class:`datasketch.MinHashLSH`.
         """
         if self.prepickle:
             key = pickle.dumps(key)
@@ -242,11 +269,7 @@ class AsyncMinHashLSH(object):
 
     async def remove(self, key):
         """
-        Remove the key from the index.
-
-        Args:
-            key (hashable): The unique identifier of a set.
-
+        see :class:`datasketch.MinHashLSH`.
         """
         if not await self.has_key(key):
             raise ValueError("The given key does not exist")
@@ -260,8 +283,7 @@ class AsyncMinHashLSH(object):
 
     async def is_empty(self):
         """
-        Returns:
-            bool: Check if the index is empty.
+        see :class:`datasketch.MinHashLSH`.
         """
         for t in self.hashtables:
             if await t.size() == 0:
@@ -293,20 +315,14 @@ class AsyncMinHashLSH(object):
 
     async def get_counts(self):
         """
-        Returns a list of length ``self.b`` with elements representing the
-        number of keys stored under each bucket for the given permutation.
+        see :class:`datasketch.MinHashLSH`.
         """
         fs = (hashtable.itemcounts() for hashtable in self.hashtables)
         return await asyncio.gather(*fs)
 
     async def get_subset_counts(self, *keys):
         """
-        Returns the bucket allocation counts (see :ref:`get_counts` above)
-        restricted to the list of keys given.
-
-        Args:
-            keys (hashable) : the keys for which to get the bucket allocation
-                counts
+        see :class:`datasketch.MinHashLSH`.
         """
         if self.prepickle:
             key_set = [pickle.dumps(key) for key in set(keys)]
@@ -322,8 +338,7 @@ class AsyncMinHashLSH(object):
 
 class AsyncMinHashLSHInsertionSession:
     """
-    Asynchronous Context manager for batch insertion of documents
-    into a MinHashLSH.
+    see :func:`~datasketch.experimental.async.lsh.AsyncMinHashLSH.insertion_session`
     """
 
     def __init__(self, lsh):
@@ -342,15 +357,7 @@ class AsyncMinHashLSHInsertionSession:
 
     async def insert(self, key, minhash, check_duplication=True):
         """
-        Insert a unique key to the index, together
-        with a AsyncMinHash (or weighted AsyncMinHash) of the set referenced by
-        the key.
-
-        Args:
-            :param minhash: (datasketch.AsyncMinHash) The AsyncMinHash
-                of the set.
-            :param key: (hashable) The unique identifier of the set.
-            :param check_duplication: (default=True)
+        see :class:`datasketch.MinHashLSH`.
         """
         await self.lsh._insert(key, minhash,
                                check_duplication=check_duplication, buffer=True)

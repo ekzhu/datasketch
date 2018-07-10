@@ -4,20 +4,12 @@
 
 <html xmlns="http://www.w3.org/1999/xhtml">
   <head>
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     <title>datasketch.lshensemble &#8212; datasketch 1.0.0 documentation</title>
     <link rel="stylesheet" href="../../_static/alabaster.css" type="text/css" />
     <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
-    <script type="text/javascript">
-      var DOCUMENTATION_OPTIONS = {
-        URL_ROOT:    '../../',
-        VERSION:     '1.0.0',
-        COLLAPSE_INDEX: false,
-        FILE_SUFFIX: '.html',
-        HAS_SOURCE:  true,
-        SOURCELINK_SUFFIX: '.txt'
-      };
-    </script>
+    <script type="text/javascript" id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
     <script type="text/javascript" src="../../_static/jquery.js"></script>
     <script type="text/javascript" src="../../_static/underscore.js"></script>
     <script type="text/javascript" src="../../_static/doctools.js"></script>
@@ -30,8 +22,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
 
-  </head>
-  <body>
+  </head><body>
   <div class="document">
     
       <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
@@ -77,18 +68,22 @@
 </div>
 <div id="searchbox" style="display: none" role="search">
   <h3>Quick search</h3>
+    <div class="searchformwrapper">
     <form class="search" action="../../search.html" method="get">
-      <div><input type="text" name="q" /></div>
-      <div><input type="submit" value="Go" /></div>
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
       <input type="hidden" name="check_keywords" value="yes" />
       <input type="hidden" name="area" value="default" />
     </form>
+    </div>
 </div>
 <script type="text/javascript">$('#searchbox').show(0);</script>
         </div>
       </div>
       <div class="documentwrapper">
         <div class="bodywrapper">
+          
+
           <div class="body" role="main">
             
   <h1>Source code for datasketch.lshensemble</h1><div class="highlight"><pre>
@@ -185,7 +180,7 @@
 <span class="sd">    .. _`the paper`: http://www.vldb.org/pvldb/vol9/p1185-zhu.pdf</span>
 <span class="sd">    &#39;&#39;&#39;</span>
 
-    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">threshold</span><span class="o">=</span><span class="mf">0.9</span><span class="p">,</span> <span class="n">num_perm</span><span class="o">=</span><span class="mi">128</span><span class="p">,</span> <span class="n">num_part</span><span class="o">=</span><span class="mi">16</span><span class="p">,</span> <span class="n">m</span><span class="o">=</span><span class="mi">8</span><span class="p">,</span> <span class="n">weights</span><span class="o">=</span><span class="p">(</span><span class="mf">0.5</span><span class="p">,</span><span class="mf">0.5</span><span class="p">)):</span>
+<div class="viewcode-block" id="MinHashLSHEnsemble.__init__"><a class="viewcode-back" href="../../documentation.html#datasketch.MinHashLSHEnsemble.__init__">[docs]</a>    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">threshold</span><span class="o">=</span><span class="mf">0.9</span><span class="p">,</span> <span class="n">num_perm</span><span class="o">=</span><span class="mi">128</span><span class="p">,</span> <span class="n">num_part</span><span class="o">=</span><span class="mi">16</span><span class="p">,</span> <span class="n">m</span><span class="o">=</span><span class="mi">8</span><span class="p">,</span> <span class="n">weights</span><span class="o">=</span><span class="p">(</span><span class="mf">0.5</span><span class="p">,</span><span class="mf">0.5</span><span class="p">)):</span>
         <span class="k">if</span> <span class="n">threshold</span> <span class="o">&gt;</span> <span class="mf">1.0</span> <span class="ow">or</span> <span class="n">threshold</span> <span class="o">&lt;</span> <span class="mf">0.0</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;threshold must be in [0.0, 1.0]&quot;</span><span class="p">)</span> 
         <span class="k">if</span> <span class="n">num_perm</span> <span class="o">&lt;</span> <span class="mi">2</span><span class="p">:</span>
@@ -205,7 +200,7 @@
         <span class="c1"># Initialize multiple LSH indexes for each partition</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">indexes</span> <span class="o">=</span> <span class="p">[</span><span class="nb">dict</span><span class="p">((</span><span class="n">r</span><span class="p">,</span> <span class="n">MinHashLSH</span><span class="p">(</span><span class="n">num_perm</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">h</span><span class="p">,</span> <span class="n">params</span><span class="o">=</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">h</span><span class="o">/</span><span class="n">r</span><span class="p">),</span> <span class="n">r</span><span class="p">)))</span> <span class="k">for</span> <span class="n">r</span> <span class="ow">in</span> <span class="n">rs</span><span class="p">)</span>
                         <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">num_part</span><span class="p">)]</span> 
-        <span class="bp">self</span><span class="o">.</span><span class="n">lowers</span> <span class="o">=</span> <span class="p">[</span><span class="kc">None</span> <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">indexes</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">lowers</span> <span class="o">=</span> <span class="p">[</span><span class="kc">None</span> <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">indexes</span><span class="p">]</span></div>
 
     <span class="k">def</span> <span class="nf">_init_optimal_params</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">weights</span><span class="p">):</span>
         <span class="n">false_positive_weight</span><span class="p">,</span> <span class="n">false_negative_weight</span> <span class="o">=</span> <span class="n">weights</span>
@@ -319,16 +314,17 @@
 </pre></div>
 
           </div>
+          
         </div>
       </div>
     <div class="clearer"></div>
   </div>
     <div class="footer">
-      &copy;2017, Eric Zhu.
+      &copy;2018, Eric Zhu.
       
       |
-      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.6.3</a>
-      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.10</a>
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.7.5</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.11</a>
       
     </div>
 

@@ -247,7 +247,7 @@ class MinHashLSH(object):
 
     def get_subset_counts(self, *keys):
         '''
-        Returns the bucket allocation counts (see :ref:`get_counts` above)
+        Returns the bucket allocation counts (see :func:`~datasketch.MinHashLSH.get_counts` above)
         restricted to the list of keys given.
 
         Args:
