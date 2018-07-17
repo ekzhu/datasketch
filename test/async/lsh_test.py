@@ -16,34 +16,11 @@ from datasketch.weighted_minhash import WeightedMinHashGenerator
 
 STORAGE_CONFIG_REDIS = {'type': 'aioredis', 'redis': {'host': 'localhost', 'port': 6379}}
 STORAGE_CONFIG_MONGO = {'type': 'aiomongo', 'mongo': {'host': 'localhost', 'port': 27017, 'db': 'lsh_test'}}
+DO_TEST_REDIS = False
+DO_TEST_MONGO = True
 
 
-class AsyncTestCase(aiounittest.AsyncTestCase):
-    def get_event_loop(self):
-        return asyncio.get_event_loop()
-
-    async def setUpAsync(self):
-        pass
-
-    async def tearDownAsync(self):
-        pass
-
-    def setUp(self):
-        if hasattr(super(), 'setUp'):
-            super().setUp()
-
-        loop = self.get_event_loop()
-        loop.run_until_complete(self.setUpAsync())
-
-    def tearDown(self):
-        if hasattr(super(), 'tearDown'):
-            super().tearDown()
-
-        loop = self.get_event_loop()
-        loop.run_until_complete(self.tearDownAsync())
-
-
-class TestAsyncMinHashLSH(AsyncTestCase):
+class TestAsyncMinHashLSH(aiounittest.AsyncTestCase):
     """
         For tests Redis should be installed on local machine or set right host.
 
@@ -51,20 +28,22 @@ class TestAsyncMinHashLSH(AsyncTestCase):
     """
 
     def setUp(self):
-        super().setUp()
         self._storage_config_redis = STORAGE_CONFIG_REDIS
         self._storage_config_mongo = STORAGE_CONFIG_MONGO
 
     async def tearDownAsync(self):
-        dsn = 'redis://{host}:{port}'.format(**self._storage_config_redis['redis'])
-        redis = await aioredis.create_redis(dsn, loop=self.get_event_loop())
-        await redis.flushdb()
-        redis.close()
-        await redis.wait_closed()
+        if DO_TEST_REDIS:
+            dsn = 'redis://{host}:{port}'.format(**self._storage_config_redis['redis'])
+            redis = await aioredis.create_redis(dsn, loop=self.get_event_loop())
+            await redis.flushdb()
+            redis.close()
+            await redis.wait_closed()
 
-        dsn = 'mongodb://{host}:{port}'.format(**self._storage_config_mongo['mongo'])
-        motor.motor_asyncio.AsyncIOMotorClient(dsn).drop_database(self._storage_config_mongo['mongo']['db'])
+        if DO_TEST_MONGO:
+            dsn = 'mongodb://{host}:{port}'.format(**self._storage_config_mongo['mongo'])
+            motor.motor_asyncio.AsyncIOMotorClient(dsn).drop_database(self._storage_config_mongo['mongo']['db'])
 
+    @unittest.skipIf(not DO_TEST_REDIS, "Skipping test_init_redis")
     async def test_init_redis(self):
         async with AsyncMinHashLSH(storage_config=self._storage_config_redis,
                                    threshold=0.8) as lsh:
@@ -77,6 +56,7 @@ class TestAsyncMinHashLSH(AsyncTestCase):
         self.assertTrue(b1 < b2)
         self.assertTrue(r1 > r2)
 
+    @unittest.skipIf(not DO_TEST_REDIS, "Skipping test__H_redis")
     async def test__H_redis(self):
         """
         Check _H output consistent bytes length given
@@ -93,6 +73,7 @@ class TestAsyncMinHashLSH(AsyncTestCase):
                          await ht.keys()]
                 self.assertTrue(all(sizes[0] == s for s in sizes))
 
+    @unittest.skipIf(not DO_TEST_REDIS, "Skipping test_insert_redis")
     async def test_insert_redis(self):
         async with AsyncMinHashLSH(storage_config=self._storage_config_redis,
                                    threshold=0.5, num_perm=16) as lsh:
@@ -119,6 +100,7 @@ class TestAsyncMinHashLSH(AsyncTestCase):
             with self.assertRaises(ValueError):
                 await lsh.insert("c", m3)
 
+    @unittest.skipIf(not DO_TEST_REDIS, "Skipping test_query_redis")
     async def test_query_redis(self):
         async with AsyncMinHashLSH(storage_config=self._storage_config_redis,
                                    threshold=0.5, num_perm=16) as lsh:
@@ -137,6 +119,7 @@ class TestAsyncMinHashLSH(AsyncTestCase):
             with self.assertRaises(ValueError):
                 await lsh.query(m3)
 
+    @unittest.skipIf(not DO_TEST_REDIS, "Skipping test_remove_redis")
     async def test_remove_redis(self):
         async with AsyncMinHashLSH(storage_config=self._storage_config_redis,
                                    threshold=0.5, num_perm=16) as lsh:
@@ -157,6 +140,7 @@ class TestAsyncMinHashLSH(AsyncTestCase):
             with self.assertRaises(ValueError):
                 await lsh.remove("c")
 
+    @unittest.skipIf(not DO_TEST_REDIS, "Skipping test_pickle_redis")
     async def test_pickle_redis(self):
         async with AsyncMinHashLSH(storage_config=self._storage_config_redis,
                                    threshold=0.5, num_perm=16) as lsh:
@@ -174,6 +158,7 @@ class TestAsyncMinHashLSH(AsyncTestCase):
             result = await lsh2.query(m2)
             self.assertTrue("b" in result)
 
+    @unittest.skipIf(not DO_TEST_REDIS, "Skipping test_insertion_session_redis")
     async def test_insertion_session_redis(self):
         async with AsyncMinHashLSH(storage_config=self._storage_config_redis,
                                    threshold=0.5, num_perm=16) as lsh:
@@ -198,6 +183,7 @@ class TestAsyncMinHashLSH(AsyncTestCase):
                 res = await lsh.hashtables[i].get(H)
                 self.assertTrue(pickle.dumps("a") in res)
 
+    @unittest.skipIf(not DO_TEST_REDIS, "Skipping test_get_counts_redis")
     async def test_get_counts_redis(self):
         async with AsyncMinHashLSH(storage_config=self._storage_config_redis,
                                    threshold=0.5, num_perm=16) as lsh:
@@ -212,6 +198,7 @@ class TestAsyncMinHashLSH(AsyncTestCase):
             for table in counts:
                 self.assertEqual(sum(table.values()), 2)
 
+    @unittest.skipIf(not DO_TEST_MONGO, "Skipping test_init_mongo")
     async def test_init_mongo(self):
         async with AsyncMinHashLSH(storage_config=self._storage_config_mongo,
                                    threshold=0.8) as lsh:
@@ -225,6 +212,7 @@ class TestAsyncMinHashLSH(AsyncTestCase):
         self.assertTrue(b1 < b2)
         self.assertTrue(r1 > r2)
 
+    @unittest.skipIf(not DO_TEST_MONGO, "Skipping test__H_mongo")
     async def test__H_mongo(self):
         """
         Check _H output consistent bytes length given
@@ -240,6 +228,7 @@ class TestAsyncMinHashLSH(AsyncTestCase):
                 sizes = [len(H) for ht in lsh.hashtables for H in await ht.keys()]
                 self.assertTrue(all(sizes[0] == s for s in sizes))
 
+    @unittest.skipIf(not DO_TEST_MONGO, "Skipping test_insert_mongo")
     async def test_insert_mongo(self):
         async with AsyncMinHashLSH(storage_config=self._storage_config_mongo,
                                    threshold=0.5, num_perm=16) as lsh:
@@ -268,6 +257,7 @@ class TestAsyncMinHashLSH(AsyncTestCase):
             with self.assertRaises(ValueError):
                 await lsh.insert("c", m3)
 
+    @unittest.skipIf(not DO_TEST_MONGO, "Skipping test_query_mongo")
     async def test_query_mongo(self):
         async with AsyncMinHashLSH(storage_config=self._storage_config_mongo,
                                    threshold=0.5, num_perm=16) as lsh:
@@ -286,6 +276,7 @@ class TestAsyncMinHashLSH(AsyncTestCase):
             with self.assertRaises(ValueError):
                 await lsh.query(m3)
 
+    @unittest.skipIf(not DO_TEST_MONGO, "Skipping test_remove_mongo")
     async def test_remove_mongo(self):
         async with AsyncMinHashLSH(storage_config=self._storage_config_mongo,
                                    threshold=0.5, num_perm=16) as lsh:
@@ -306,6 +297,7 @@ class TestAsyncMinHashLSH(AsyncTestCase):
             with self.assertRaises(ValueError):
                 await lsh.remove("c")
 
+    @unittest.skipIf(not DO_TEST_MONGO, "Skipping test_pickle_mongo")
     async def test_pickle_mongo(self):
         async with AsyncMinHashLSH(storage_config=self._storage_config_mongo, threshold=0.5, num_perm=16) as lsh:
             m1 = MinHash(16)
@@ -323,6 +315,7 @@ class TestAsyncMinHashLSH(AsyncTestCase):
             self.assertTrue("b" in result)
             await lsh2.close()
 
+    @unittest.skipIf(not DO_TEST_MONGO, "Skipping test_insertion_session_mongo")
     async def test_insertion_session_mongo(self):
         def chunk(it, size):
             it = iter(it)
@@ -356,6 +349,7 @@ class TestAsyncMinHashLSH(AsyncTestCase):
             for i, H in enumerate(await lsh.keys.get('aahh')):
                 self.assertTrue('aahh' in await lsh.hashtables[i].get(H))
 
+    @unittest.skipIf(not DO_TEST_MONGO, "Skipping test_get_counts_mongo")
     async def test_get_counts_mongo(self):
         async with AsyncMinHashLSH(storage_config=self._storage_config_mongo,
                                    threshold=0.5, num_perm=16) as lsh:
@@ -371,7 +365,7 @@ class TestAsyncMinHashLSH(AsyncTestCase):
                 self.assertEqual(sum(table.values()), 2)
 
 
-class TestWeightedMinHashLSH(AsyncTestCase):
+class TestWeightedMinHashLSH(aiounittest.AsyncTestCase):
     """For tests Redis should be installed on local machine.
     Don't forget to clean Redis DB=0."""
 
@@ -381,13 +375,16 @@ class TestWeightedMinHashLSH(AsyncTestCase):
         self._storage_config_mongo = STORAGE_CONFIG_MONGO
 
     async def tearDownAsync(self):
-        dsn = 'redis://{host}:{port}'.format(**self._storage_config_redis['redis'])
-        redis = await aioredis.create_redis(dsn, loop=self.get_event_loop())
-        await redis.flushall()
+        if DO_TEST_REDIS:
+            dsn = 'redis://{host}:{port}'.format(**self._storage_config_redis['redis'])
+            redis = await aioredis.create_redis(dsn, loop=self.get_event_loop())
+            await redis.flushall()
 
-        dsn = 'mongodb://{host}:{port}'.format(**self._storage_config_mongo['mongo'])
-        motor.motor_asyncio.AsyncIOMotorClient(dsn).drop_database(self._storage_config_mongo['mongo']['db'])
+        if DO_TEST_MONGO:
+            dsn = 'mongodb://{host}:{port}'.format(**self._storage_config_mongo['mongo'])
+            motor.motor_asyncio.AsyncIOMotorClient(dsn).drop_database(self._storage_config_mongo['mongo']['db'])
 
+    @unittest.skipIf(not DO_TEST_REDIS, "Skipping test_init_redis")
     async def test_init_redis(self):
         async with AsyncMinHashLSH(storage_config=self._storage_config_redis,
                                    threshold=0.8) as lsh:
@@ -399,6 +396,7 @@ class TestWeightedMinHashLSH(AsyncTestCase):
         self.assertTrue(b1 < b2)
         self.assertTrue(r1 > r2)
 
+    @unittest.skipIf(not DO_TEST_REDIS, "Skipping test__H_redis")
     async def test__H_redis(self):
         """
         Check _H output consistent bytes length given
@@ -415,6 +413,7 @@ class TestWeightedMinHashLSH(AsyncTestCase):
                 sizes = [len(H) for H in hashtables]
                 self.assertTrue(all(sizes[0] == s for s in sizes))
 
+    @unittest.skipIf(not DO_TEST_REDIS, "Skipping test_insert_redis")
     async def test_insert_redis(self):
         async with AsyncMinHashLSH(storage_config=self._storage_config_redis,
                                    threshold=0.5, num_perm=4) as lsh:
@@ -440,6 +439,7 @@ class TestWeightedMinHashLSH(AsyncTestCase):
             with self.assertRaises(ValueError):
                 await lsh.insert("c", m3)
 
+    @unittest.skipIf(not DO_TEST_REDIS, "Skipping test_query_redis")
     async def test_query_redis(self):
         async with AsyncMinHashLSH(storage_config=self._storage_config_redis,
                                    threshold=0.5, num_perm=4) as lsh:
@@ -459,6 +459,7 @@ class TestWeightedMinHashLSH(AsyncTestCase):
             with self.assertRaises(ValueError):
                 await lsh.query(m3)
 
+    @unittest.skipIf(not DO_TEST_REDIS, "Skipping test_remove_redis")
     async def test_remove_redis(self):
         async with AsyncMinHashLSH(storage_config=self._storage_config_redis,
                                    threshold=0.5, num_perm=4) as lsh:
@@ -478,6 +479,7 @@ class TestWeightedMinHashLSH(AsyncTestCase):
             with self.assertRaises(ValueError):
                 await lsh.remove("c")
 
+    @unittest.skipIf(not DO_TEST_REDIS, "Skipping test_pickle_redis")
     async def test_pickle_redis(self):
         async with AsyncMinHashLSH(storage_config=self._storage_config_redis,
                                    threshold=0.5, num_perm=4) as lsh:
@@ -494,6 +496,7 @@ class TestWeightedMinHashLSH(AsyncTestCase):
             result = await lsh2.query(m2)
             self.assertTrue("b" in result)
 
+    @unittest.skipIf(not DO_TEST_MONGO, "Skipping test_init_mongo")
     async def test_init_mongo(self):
         async with AsyncMinHashLSH(storage_config=self._storage_config_mongo,
                                    threshold=0.8) as lsh:
@@ -505,6 +508,7 @@ class TestWeightedMinHashLSH(AsyncTestCase):
         self.assertTrue(b1 < b2)
         self.assertTrue(r1 > r2)
 
+    @unittest.skipIf(not DO_TEST_MONGO, "Skipping test__H_mongo")
     async def test__H_mongo(self):
         """
         Check _H output consistent bytes length given
@@ -521,6 +525,7 @@ class TestWeightedMinHashLSH(AsyncTestCase):
                 sizes = [len(H) for H in hashtables]
                 self.assertTrue(all(sizes[0] == s for s in sizes))
 
+    @unittest.skipIf(not DO_TEST_MONGO, "Skipping test_insert_mongo")
     async def test_insert_mongo(self):
         async with AsyncMinHashLSH(storage_config=self._storage_config_mongo,
                                    threshold=0.5, num_perm=4) as lsh:
@@ -546,6 +551,7 @@ class TestWeightedMinHashLSH(AsyncTestCase):
             with self.assertRaises(ValueError):
                 await lsh.insert("c", m3)
 
+    @unittest.skipIf(not DO_TEST_MONGO, "Skipping test_query_mongo")
     async def test_query_mongo(self):
         async with AsyncMinHashLSH(storage_config=self._storage_config_mongo,
                                    threshold=0.5, num_perm=4) as lsh:
@@ -565,6 +571,7 @@ class TestWeightedMinHashLSH(AsyncTestCase):
             with self.assertRaises(ValueError):
                 await lsh.query(m3)
 
+    @unittest.skipIf(not DO_TEST_MONGO, "Skipping test_remove_mongo")
     async def test_remove_mongo(self):
         async with AsyncMinHashLSH(storage_config=self._storage_config_mongo,
                                    threshold=0.5, num_perm=4) as lsh:
@@ -584,6 +591,7 @@ class TestWeightedMinHashLSH(AsyncTestCase):
             with self.assertRaises(ValueError):
                 await lsh.remove("c")
 
+    @unittest.skipIf(not DO_TEST_MONGO, "Skipping test_pickle_mongo")
     async def test_pickle_mongo(self):
         async with AsyncMinHashLSH(storage_config=self._storage_config_mongo,
                                    threshold=0.5, num_perm=4) as lsh:

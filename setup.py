@@ -22,7 +22,7 @@ setup(
     # Versions should comply with PEP440.  For a discussion on single-sourcing
     # the version across setup.py and the project code, see
     # https://packaging.python.org/en/latest/single_source_version.html
-    version='1.2.16',
+    version='1.2.17',
 
     description='Probabilistic data structures for processing and searching very large datasets',
     long_description=long_description,
@@ -85,7 +85,7 @@ setup(
     extras_require={
         'dev': ['check-manifest'],
         'test': test_requires + ['mockredispy', ],
-        'async': ['aioredis>=1.1.0', 'motor>=1.2.2', 'pymongo>=3.6.1'],
+        'experimental': ['aioredis>=1.1.0', 'motor>=2.0.0', 'pymongo>=3.6.1'],
         'async_test': test_requires + ['aiounittest', ]
     },
 

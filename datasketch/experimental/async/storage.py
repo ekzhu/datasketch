@@ -286,26 +286,22 @@ if motor is not None and ReturnDocument is not None:
     class AsyncMongoBuffer:
         def __init__(self, aio_mongo_collection, batch_size):
             self.batch_size = batch_size
-            self._commands_col = 0
+            self._commands_stack = tuple()
             self._mongo_coll = aio_mongo_collection
-            self._bulk = self._mongo_coll.initialize_unordered_bulk_op(bypass_document_validation=True)
 
-        async def execute_command(self, command_name, **kwargs):
-            if self._commands_col >= self.batch_size:
+        async def execute_command(self, **kwargs):
+            if len(self._commands_stack) >= self.batch_size:
                 await self.execute()
-            self._commands_col += 1
-            if command_name == 'insert_one':
-                self._bulk.insert(kwargs['document'])
+            self._commands_stack += (kwargs['document'],)
 
         async def execute(self):
-            if self._commands_col:
-                task = self._bulk.execute()
-                self._bulk = self._mongo_coll.initialize_unordered_bulk_op(bypass_document_validation=True)
-                self._commands_col = 0
-                await asyncio.gather(task)
+            if self._commands_stack:
+                buffer = self._commands_stack
+                self._commands_stack = tuple()
+                await self._mongo_coll.insert_many(buffer, ordered=False)
 
         async def insert_one(self, **kwargs):
-            await self.execute_command('insert_one', **kwargs)
+            await self.execute_command(**kwargs)
 
 
     class AsyncMongoStorage(object):
@@ -419,7 +415,7 @@ if motor is not None and ReturnDocument is not None:
                                                               return_document=ReturnDocument.AFTER)
 
         async def size(self):
-            return await self._collection.count()
+            return await self._collection.count_documents({})
 
         async def itemcounts(self):
             return {doc['_id']: doc['count'] async for doc in
