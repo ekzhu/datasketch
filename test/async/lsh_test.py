@@ -4,6 +4,7 @@ import unittest
 import random
 import string
 from itertools import chain, islice
+import redis
 
 import aioredis
 import motor.motor_asyncio

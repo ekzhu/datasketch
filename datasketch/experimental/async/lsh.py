@@ -65,7 +65,7 @@ class AsyncMinHashLSH(object):
     """
 
     def __init__(self, threshold=0.9, num_perm=128, weights=(0.5, 0.5),
-                 params=None, storage_config=None, prepickle=None, batch_size=10000):
+                 params=None, storage_config=None, prepickle=None, batch_size=10000, name=None):
         if storage_config is None:
             storage_config = {
                 'type': 'aioredis',
@@ -73,28 +73,33 @@ class AsyncMinHashLSH(object):
             }
         self._storage_config = storage_config
         self._batch_size = batch_size
-        if threshold > 1.0 or threshold < 0.0:
+        self._threshold = threshold
+        self._num_perm = num_perm
+        self._weights = weights
+        self._params = params
+        if prepickle is None:
+            self._prepickle = storage_config['type'] == 'aioredis'
+        else:
+            self._prepickle = prepickle
+
+        if self._threshold > 1.0 or self._threshold < 0.0:
             raise ValueError("threshold must be in [0.0, 1.0]")
-        if num_perm < 2:
+        if self._num_perm < 2:
             raise ValueError("Too few permutation functions")
-        if any(w < 0.0 or w > 1.0 for w in weights):
+        if any(w < 0.0 or w > 1.0 for w in self._weights):
             raise ValueError("Weight must be in [0.0, 1.0]")
-        if sum(weights) != 1.0:
+        if sum(self._weights) != 1.0:
             raise ValueError("Weights must sum to 1.0")
-        self.h = num_perm
-        if params is not None:
-            self.b, self.r = params
-            if self.b * self.r > num_perm:
+        self.h = self._num_perm
+        if self._params is not None:
+            self.b, self.r = self._params
+            if self.b * self.r > self._num_perm:
                 raise ValueError("The product of b and r must be less than "
                                  "num_perm")
         else:
-            false_positive_weight, false_negative_weight = weights
-            self.b, self.r = _optimal_param(threshold, num_perm, false_positive_weight, false_negative_weight)
-
-        if prepickle is None:
-            self.prepickle = storage_config['type'] == 'aioredis'
-        else:
-            self.prepickle = prepickle
+            false_positive_weight, false_negative_weight = self._weights
+            self.b, self.r = _optimal_param(self._threshold, self._num_perm,
+                                            false_positive_weight, false_negative_weight)
 
         self.hashranges = [(i * self.r, (i + 1) * self.r)
                            for i in range(self.b)]
@@ -103,7 +108,9 @@ class AsyncMinHashLSH(object):
 
         self._lock = asyncio.Lock()
         self._initialized = False
-        self._basename = _random_name(11)
+        if name is None:
+            name = _random_name(11)
+        self._basename = name
 
     async def __async_init(self):
         async with self._lock:
@@ -125,11 +132,16 @@ class AsyncMinHashLSH(object):
         state = self.__dict__.copy()
         state['_initialized'] = False
         state.pop('_lock')
+        state.pop('hashranges')
+        state.pop('hashtables')
+        state.pop('keys')
         return state
 
     def __setstate__(self, state):
         state['_lock'] = asyncio.Lock()
         self.__dict__ = state
+        self.__init__(self._threshold, self._num_perm, self._weights, self._params, self._storage_config,
+                      self._prepickle,  self._batch_size, self._basename)
 
     @property
     def batch_size(self):
@@ -236,7 +248,7 @@ class AsyncMinHashLSH(object):
             raise ValueError("The given key already exists")
         Hs = [self._H(minhash.hashvalues[start:end])
               for start, end in self.hashranges]
-        if self.prepickle:
+        if self._prepickle:
             key = pickle.dumps(key)
         fs = chain((self.keys.insert(key, *Hs, buffer=buffer),),
                    (hashtable.insert(H, key, buffer=buffer) for H, hashtable in zip(Hs, self.hashtables)))
@@ -254,7 +266,7 @@ class AsyncMinHashLSH(object):
               for (start, end), hashtable in zip(self.hashranges, self.hashtables))
         candidates = frozenset(chain.from_iterable(await asyncio.gather(*fs)))
 
-        if self.prepickle:
+        if self._prepickle:
             return [pickle.loads(key) for key in candidates]
         else:
             return list(candidates)
@@ -263,7 +275,7 @@ class AsyncMinHashLSH(object):
         """
         see :class:`datasketch.MinHashLSH`.
         """
-        if self.prepickle:
+        if self._prepickle:
             key = pickle.dumps(key)
         return await self.keys.has_key(key)
 
@@ -273,7 +285,7 @@ class AsyncMinHashLSH(object):
         """
         if not await self.has_key(key):
             raise ValueError("The given key does not exist")
-        if self.prepickle:
+        if self._prepickle:
             key = pickle.dumps(key)
 
         fs = chain.from_iterable((hashtable.remove_val(H, key), hashtable.remove(H))
@@ -308,7 +320,7 @@ class AsyncMinHashLSH(object):
                 fs.append(hashtable.get(H))
         candidates = set(chain.from_iterable(await asyncio.gather(*fs)))
 
-        if self.prepickle:
+        if self._prepickle:
             return {pickle.loads(key) for key in candidates}
         else:
             return candidates
@@ -324,7 +336,7 @@ class AsyncMinHashLSH(object):
         """
         see :class:`datasketch.MinHashLSH`.
         """
-        if self.prepickle:
+        if self._prepickle:
             key_set = [pickle.dumps(key) for key in set(keys)]
         else:
             key_set = list(set(keys))

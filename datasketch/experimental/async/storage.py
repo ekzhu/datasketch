@@ -128,9 +128,10 @@ if aioredis is not None:
             return self
 
         async def create_redis(self):
-            db = self.redis_param['db'] if 'db' in self.redis_param else None
+            db = self.redis_param['db'] if 'db' in self.redis_param else 0
             dsn = 'redis://{host}:{port}'.format(**self.redis_param)
-            self._redis = await aioredis.create_redis(dsn, db=db)
+            # self._redis = await aioredis.create_redis(dsn, db=db)
+            self._redis = await aioredis.create_redis_pool(dsn, db=db)
             self._buffer = AsyncRedisBuffer(self._redis, self._batch_size)
 
         def __await__(self):
@@ -179,7 +180,7 @@ if aioredis is not None:
 
         def __setstate__(self, state):
             self.__dict__ = state
-            self.__init__(self.config, name=self._name)
+            self.__init__(self.config, name=self._name, batch_size=self._batch_size)
 
         async def __aenter__(self):
             return await self
@@ -344,10 +345,11 @@ if motor is not None and ReturnDocument is not None:
             else:
                 dsn = 'mongodb://{host}:{port}'.format(**self.mongo_param)
 
+            self._batch_size = batch_size
             self._mongo_client = motor.motor_asyncio.AsyncIOMotorClient(dsn)
             self._collection = self._mongo_client[db_lsh][self._collection_name]
             self._initialized = True
-            self._buffer = AsyncMongoBuffer(self._collection, batch_size)
+            self._buffer = AsyncMongoBuffer(self._collection, self._batch_size)
 
         async def close(self):
             await self._buffer.execute()
@@ -381,7 +383,7 @@ if motor is not None and ReturnDocument is not None:
 
         def __setstate__(self, state):
             self.__dict__ = state
-            self.__init__(self._config, name=self._name)
+            self.__init__(self._config, name=self._name, batch_size=self._batch_size)
 
 
     class AsyncMongoListStorage(OrderedStorage, AsyncMongoStorage):
