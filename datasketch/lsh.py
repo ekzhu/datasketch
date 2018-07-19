@@ -111,7 +111,10 @@ class MinHashLSH(object):
             self.prepickle = storage_config['type'] == 'redis'
         else:
             self.prepickle = prepickle
-        basename = _random_name(11)
+        if 'basename' in storage_config:
+            basename = storage_config['basename']
+        else:
+            basename = _random_name(11)
         self.hashtables = [
             unordered_storage(storage_config, name=basename + b'_bucket_' + bytes([i]))
             for i in range(self.b)]
