@@ -4,7 +4,6 @@ import unittest
 import random
 import string
 from itertools import chain, islice
-import redis
 
 import aioredis
 import motor.motor_asyncio
@@ -17,7 +16,7 @@ from datasketch.weighted_minhash import WeightedMinHashGenerator
 
 STORAGE_CONFIG_REDIS = {'type': 'aioredis', 'redis': {'host': 'localhost', 'port': 6379}}
 STORAGE_CONFIG_MONGO = {'type': 'aiomongo', 'mongo': {'host': 'localhost', 'port': 27017, 'db': 'lsh_test'}}
-DO_TEST_REDIS = False
+DO_TEST_REDIS = True
 DO_TEST_MONGO = True
 
 

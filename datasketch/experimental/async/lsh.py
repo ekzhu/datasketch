@@ -20,6 +20,7 @@ class AsyncMinHashLSH(object):
     :param dict storage_config: New types of storage service (aioredis, aiomongo) to use for storing hashtables and keys are implemented. If storage_config is None aioredis storage will be used.
     :param bool prepickle: for redis type storage use bytes as keys.
     :param int batch_size: the size of chunks to use in insert_session mode.
+    :param byte name: basename. Useful if you want pickle LSH class and spread it into different workers.
 
     Example:
         There is two ways to create a AsyncMinHash index.

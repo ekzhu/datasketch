@@ -900,7 +900,7 @@ counts</td>
 <h2>Asynchronous MinHash LSH<a class="headerlink" href="#asynchronous-minhash-lsh" title="Permalink to this headline">¶</a></h2>
 <dl class="class">
 <dt id="datasketch.experimental.async.AsyncMinHashLSH">
-<em class="property">class </em><code class="descclassname">datasketch.experimental.async.</code><code class="descname">AsyncMinHashLSH</code><span class="sig-paren">(</span><em>threshold=0.9</em>, <em>num_perm=128</em>, <em>weights=(0.5</em>, <em>0.5)</em>, <em>params=None</em>, <em>storage_config=None</em>, <em>prepickle=None</em>, <em>batch_size=10000</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/datasketch/experimental/async/lsh.html#AsyncMinHashLSH"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#datasketch.experimental.async.AsyncMinHashLSH" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="descclassname">datasketch.experimental.async.</code><code class="descname">AsyncMinHashLSH</code><span class="sig-paren">(</span><em>threshold=0.9</em>, <em>num_perm=128</em>, <em>weights=(0.5</em>, <em>0.5)</em>, <em>params=None</em>, <em>storage_config=None</em>, <em>prepickle=None</em>, <em>batch_size=10000</em>, <em>name=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/datasketch/experimental/async/lsh.html#AsyncMinHashLSH"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#datasketch.experimental.async.AsyncMinHashLSH" title="Permalink to this definition">¶</a></dt>
 <dd><p>Asynchronous MinHashLSH index.
 For main functionality of LSH algorithm see <a class="reference internal" href="#datasketch.MinHashLSH" title="datasketch.MinHashLSH"><code class="xref py py-class docutils literal notranslate"><span class="pre">datasketch.MinHashLSH</span></code></a>.</p>
 <table class="docutils field-list" frame="void" rules="none">
@@ -915,6 +915,7 @@ For main functionality of LSH algorithm see <a class="reference internal" href="
 <li><strong>storage_config</strong> (<em>dict</em>) – New types of storage service (aioredis, aiomongo) to use for storing hashtables and keys are implemented. If storage_config is None aioredis storage will be used.</li>
 <li><strong>prepickle</strong> (<em>bool</em>) – for redis type storage use bytes as keys.</li>
 <li><strong>batch_size</strong> (<em>int</em>) – the size of chunks to use in insert_session mode.</li>
+<li><strong>name</strong> (<em>byte</em>) – basename. Useful if you want pickle LSH class and spread it into different workers.</li>
 </ul>
 </td>
 </tr>
@@ -972,7 +973,7 @@ For main functionality of LSH algorithm see <a class="reference internal" href="
 </div>
 <dl class="method">
 <dt id="datasketch.experimental.async.AsyncMinHashLSH.__init__">
-<code class="descname">__init__</code><span class="sig-paren">(</span><em>threshold=0.9</em>, <em>num_perm=128</em>, <em>weights=(0.5</em>, <em>0.5)</em>, <em>params=None</em>, <em>storage_config=None</em>, <em>prepickle=None</em>, <em>batch_size=10000</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/datasketch/experimental/async/lsh.html#AsyncMinHashLSH.__init__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#datasketch.experimental.async.AsyncMinHashLSH.__init__" title="Permalink to this definition">¶</a></dt>
+<code class="descname">__init__</code><span class="sig-paren">(</span><em>threshold=0.9</em>, <em>num_perm=128</em>, <em>weights=(0.5</em>, <em>0.5)</em>, <em>params=None</em>, <em>storage_config=None</em>, <em>prepickle=None</em>, <em>batch_size=10000</em>, <em>name=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/datasketch/experimental/async/lsh.html#AsyncMinHashLSH.__init__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#datasketch.experimental.async.AsyncMinHashLSH.__init__" title="Permalink to this definition">¶</a></dt>
 <dd><p>Initialize self.  See help(type(self)) for accurate signature.</p>
 </dd></dl>
 
