@@ -76,7 +76,7 @@ class MinHashLSH(object):
             if this is given.
         storage_config (dict, optional): Type of storage service to use for storing
             hashtables and keys.
-            `basename` is an optional property which value will be used as the prefix to 
+            `basename` is an optional property whose value will be used as the prefix to 
             stored keys. If this is not set, a random string will be generated instead. If you 
             set this, you will be responsible for ensuring there are no key collisions.
         prepickle (bool, optional): If True, all keys are pickled to bytes before
