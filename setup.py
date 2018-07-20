@@ -9,10 +9,6 @@ from codecs import open
 from os import path
 import sys
 
-# install_requires_additional = []
-# if sys.version_info >= (3, 6):
-#    install_requires_additional = ['aioredis', 'motor', 'pymongo']
-
 here = path.abspath(path.dirname(__file__))
 
 # Get the long description from the relevant file
@@ -80,7 +76,7 @@ setup(
     # your project is installed. For an analysis of "install_requires" vs pip's
     # requirements files see:
     # https://packaging.python.org/en/latest/requirements.html
-    install_requires=['numpy>=1.11', 'redis>=2.10.0'], # + install_requires_additional,
+    install_requires=['numpy>=1.11', 'redis>=2.10.0'],
 
     # List additional groups of dependencies here (e.g. development
     # dependencies). You can install these using the following syntax,
@@ -89,6 +85,7 @@ setup(
     extras_require={
         'dev': ['check-manifest'],
         'test': test_requires + ['mockredispy', "aiounittest ; python_version>='3.6'", "aioredis ; python_version>='3.6'", "motor ; python_version>='3.6'", "pymongo ; python_version>='3.6'"],
+        'experimental_aio': ["aiounittest ; python_version>='3.6'", "aioredis ; python_version>='3.6'", "motor ; python_version>='3.6'", "pymongo ; python_version>='3.6'"],
     },
 
     # If there are data files included in your packages that need to be
