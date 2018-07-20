@@ -79,6 +79,7 @@ class MinHashLSH(object):
         prepickle (bool, optional): If True, all keys are pickled to bytes before
             insertion. If None, a default value is chosen based on the
             `storage_config`.
+        buffer_size (int): The buffer size for insert_session mode.
 
     Note: 
         `weights` must sum to 1.0, and the format is 
@@ -89,7 +90,8 @@ class MinHashLSH(object):
     '''
 
     def __init__(self, threshold=0.9, num_perm=128, weights=(0.5,0.5),
-                 params=None, storage_config={'type': 'dict'}, prepickle=None):
+                 params=None, storage_config={'type': 'dict'}, prepickle=None, buffer_size=10000):
+        self._buffer_size = buffer_size
         if threshold > 1.0 or threshold < 0.0:
             raise ValueError("threshold must be in [0.0, 1.0]") 
         if num_perm < 2:
@@ -113,12 +115,12 @@ class MinHashLSH(object):
             self.prepickle = prepickle
         basename = _random_name(11)
         self.hashtables = [
-            unordered_storage(storage_config, name=basename + b'_bucket_' + bytes([i]))
+            unordered_storage(storage_config, name=basename + b'_bucket_' + bytes([i]), buffer_size=self._buffer_size)
             for i in range(self.b)]
         self.hashranges = [(i*self.r, (i+1)*self.r) for i in range(self.b)]
-        self.keys = ordered_storage(storage_config, name=basename + b'_keys')
+        self.keys = ordered_storage(storage_config, name=basename + b'_keys', buffer_size=self._buffer_size)
 
-    def insert(self, key, minhash):
+    def insert(self, key, minhash, check_duplication=True):
         '''
         Insert a unique key to the index, together
         with a MinHash (or weighted MinHash) of the set referenced by 
@@ -126,9 +128,10 @@ class MinHashLSH(object):
 
         Args:
             key (hashable): The unique identifier of the set. 
-            minhash (datasketch.MinHash): The MinHash of the set. 
+            minhash (datasketch.MinHash): The MinHash of the set.
+            check_duplication (bool): check duplication.
         '''
-        self._insert(key, minhash, check_duplication=True, buffer=False)
+        self._insert(key, minhash, check_duplication=check_duplication, buffer=False)
 
     def insertion_session(self):
         '''

@@ -10,7 +10,7 @@ except ImportError:
     redis = None
 
 
-def ordered_storage(config, name=None):
+def ordered_storage(config, name=None, buffer_size=50000):
     '''Return ordered storage system based on the specified config.
 
     The canonical example of such a storage container is
@@ -43,10 +43,10 @@ def ordered_storage(config, name=None):
     if tp == 'dict':
         return DictListStorage(config)
     if tp == 'redis':
-        return RedisListStorage(config, name=name)
+        return RedisListStorage(config, name=name, buffer_size=buffer_size)
 
 
-def unordered_storage(config, name=None):
+def unordered_storage(config, name=None, buffer_size=50000):
     '''Return an unordered storage system based on the specified config.
 
     The canonical example of such a storage container is
@@ -78,7 +78,7 @@ def unordered_storage(config, name=None):
     if tp == 'dict':
         return DictSetStorage(config)
     if tp == 'redis':
-        return RedisSetStorage(config, name=name)
+        return RedisSetStorage(config, name=name, buffer_size=buffer_size)
 
 
 class Storage(ABC):
@@ -263,13 +263,14 @@ if redis is not None:
                 If None, a random name will be chosen.
         '''
 
-        def __init__(self, config, name=None):
+        def __init__(self, config, name=None, buffer_size=50000):
             self.config = config
             redis_param = self._parse_config(self.config['redis'])
             self._redis = redis.Redis(**redis_param)
             self._buffer = RedisBuffer(self._redis.connection_pool,
                                        self._redis.response_callbacks,
-                                       transaction=True)
+                                       transaction=True,
+                                       buffer_size=buffer_size)
             if name is None:
                 name = _random_name(11)
             self._name = name
@@ -308,8 +309,8 @@ if redis is not None:
 
     class RedisListStorage(OrderedStorage, RedisStorage):
 
-        def __init__(self, config, name=None):
-            RedisStorage.__init__(self, config, name=name)
+        def __init__(self, config, name=None, buffer_size=50000):
+            RedisStorage.__init__(self, config, name=name, buffer_size=buffer_size)
 
         def keys(self):
             return self._redis.hkeys(self._name)
@@ -390,8 +391,8 @@ if redis is not None:
 
     class RedisSetStorage(UnorderedStorage, RedisListStorage):
 
-        def __init__(self, config, name=None):
-            RedisListStorage.__init__(self, config, name=name)
+        def __init__(self, config, name=None, buffer_size=50000):
+            RedisListStorage.__init__(self, config, name=name, buffer_size=buffer_size)
 
         @staticmethod
         def _get_items(r, k):

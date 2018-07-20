@@ -1,3 +1,4 @@
+import sys
 import asyncio
 import pickle
 import unittest
@@ -14,12 +15,13 @@ from datasketch.experimental.async import AsyncMinHashLSH
 from datasketch.minhash import MinHash
 from datasketch.weighted_minhash import WeightedMinHashGenerator
 
-STORAGE_CONFIG_REDIS = {'type': 'aioredis', 'redis': {'host': 'localhost', 'port': 6379}}
+STORAGE_CONFIG_REDIS = {'type': 'aioredis', 'redis': {'host': '192.168.99.101', 'port': 6379}}
 STORAGE_CONFIG_MONGO = {'type': 'aiomongo', 'mongo': {'host': 'localhost', 'port': 27017, 'db': 'lsh_test'}}
 DO_TEST_REDIS = True
-DO_TEST_MONGO = True
+DO_TEST_MONGO = False
 
 
+@unittest.skipIf(sys.version_info < (3, 6), "Skipping TestAsyncMinHashLSH. Supported Python version >= 3.6")
 class TestAsyncMinHashLSH(aiounittest.AsyncTestCase):
     """
         For tests Redis should be installed on local machine or set right host.
@@ -365,6 +367,7 @@ class TestAsyncMinHashLSH(aiounittest.AsyncTestCase):
                 self.assertEqual(sum(table.values()), 2)
 
 
+@unittest.skipIf(sys.version_info < (3, 6), "Skipping TestAsyncMinHashLSH. Supported Python version >= 3.6")
 class TestWeightedMinHashLSH(aiounittest.AsyncTestCase):
     """For tests Redis should be installed on local machine.
     Don't forget to clean Redis DB=0."""

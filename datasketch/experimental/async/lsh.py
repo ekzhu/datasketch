@@ -10,7 +10,6 @@ from datasketch.storage import unordered_storage, _random_name
 class AsyncMinHashLSH(object):
     """
     Asynchronous MinHashLSH index.
-    For main functionality of LSH algorithm see :class:`datasketch.MinHashLSH`.
 
     :param float threshold: see :class:`datasketch.MinHashLSH`.
     :param int num_perm: see :class:`datasketch.MinHashLSH`.
@@ -62,7 +61,9 @@ class AsyncMinHashLSH(object):
                         print(await lsh.query(m2))
 
     .. note::
-        For details see :ref:`minhash_lsh_at_scale` and :ref:`minhash_lsh_async`
+        * The module supports Python version >=3.6, and is currently experimental. So the interface may change slightly in the future.
+        * For main functionality of LSH algorithm see :class:`datasketch.MinHashLSH`.
+        * For additional information see :ref:`minhash_lsh_at_scale` and :ref:`minhash_lsh_async`
     """
 
     def __init__(self, threshold=0.9, num_perm=128, weights=(0.5, 0.5),
@@ -203,11 +204,11 @@ class AsyncMinHashLSH(object):
 
             self._initialized = False
 
-    async def insert(self, key, minhash):
+    async def insert(self, key, minhash, check_duplication=True):
         """
         see :class:`datasketch.MinHashLSH`.
         """
-        await self._insert(key, minhash, check_duplication=True, buffer=False)
+        await self._insert(key, minhash, check_duplication=check_duplication, buffer=False)
 
     def insertion_session(self):
         """

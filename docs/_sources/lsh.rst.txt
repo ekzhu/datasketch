@@ -126,26 +126,83 @@ inconsistency.
 
 .. _minhash_lsh_async:
 
-Asynchronous MinHash LSH
-------------------------
-For those who don't have enough RAM for fast MinHash LSH index, you can try use Asynchronous MinHash LSH.
-It supports:
+Asynchronous MinHash LSH at scale
+---------------------------------
+.. note::
+    The module supports Python version >=3.6, and is currently experimental. So the interface may change slightly in the future.
 
+Supports:
 * Asynchronous Redis storage (*python aioredis package*)
-
 * Asynchronous MongoDB storage (*python motor package*)
 
+You should think twice about using Asynchronous Redis storage.
 
-.. note::
+Our experiment:
+    | **Number of objects (insert, query):** 12500
+    | **Pool:** ``concurrent.futures.ThreadPoolExecutor(max_workers=100)``
+    | **check_duplication:** false
+    | **buffer_size:** 500
 
-    You should think twice about using Asynchronous Redis storage.
-    Actually, using synchronous Redis storage described in :ref:`minhash_lsh_at_scale` is double faster
-    in insert_session mode than this implementation.
+Results:
+    +-------------------------+-------------------------------+------------------------+------------------------+
+    |                         | Synchronous tests, sec        | Asynchronous tests, sec                         |
+    |                         |                               +------------------------+------------------------+
+    |                         | *MinHashLSH*                  |*AsyncMinHashLSH*       || *ThreadPoolExecutor*  |
+    |                         | *redis storage*               |                        || *MinHashLSH*          |
+    |                         |                               |                        || *redis storage*       |
+    +=========================+===============================+========================+========================+
+    | **Insert**              |                               | 30.626                 | 41.023                 |
+    +-------------------------+-------------------------------+------------------------+------------------------+
+    || **Insert session**     | 6.729                         | 39.274                 |                        |
+    +-------------------------+-------------------------------+------------------------+------------------------+
+    | **Query**               | 112.155                       | 60.509                 | 68.283                 |
+    +-------------------------+-------------------------------+------------------------+------------------------+
 
-    But, if you consider using MongoDB storage, the asynchronous implementation
-    is double faster then synchronous MongoDB (*python pymongo package*). Though, obviously, it's slower than Redis storage.
+Summary:
+    - For faster querying consider use AsyncMinHashLSH module
+    - For faster inserting consider use MinHashLSH module
 
-    All other comments about sharing across different Python processes see in :ref:`minhash_lsh_at_scale`
+| If you consider using MongoDB storage, the asynchronous implementation is faster then synchronous MongoDB (*python pymongo package*). Though, obviously, it's slower than Redis storage.
+| All other comments about sharing across different Python processes see in :ref:`minhash_lsh_at_scale`
+
+#. The Asynchronous Redis storage storage option can be configured using:
+
+    * Usual way:
+
+    .. code:: python
+
+        from datasketch.experimental.async import AsyncMinHashLSH
+
+        _storage = {'type': 'aioredis', 'redis': {'host': 'localhost', 'port': 6379}}
+
+        lsh = await AsyncMinHashLSH(storage_config=_storage, threshold=0.5, num_perm=16)
+        m1 = MinHash(16)
+        m1.update('a'.encode('utf8'))
+        m2 = MinHash(16)
+        m2.update('b'.encode('utf8'))
+        await lsh.insert('a', m1)
+        await lsh.insert('b', m2)
+        print(await lsh.query(m1))
+        print(await lsh.query(m2))
+        lsh.close()
+
+    * Context Manager style:
+
+    .. code:: python
+
+        from datasketch.experimental.async import AsyncMinHashLSH
+
+        _storage = {'type': 'aioredis', 'redis': {'host': 'localhost', 'port': 6379}}
+
+        async with AsyncMinHashLSH(storage_config=_storage, threshold=0.5, num_perm=16) as lsh:
+            m1 = MinHash(16)
+            m1.update('a'.encode('utf8'))
+            m2 = MinHash(16)
+            m2.update('b'.encode('utf8'))
+            await lsh.insert('a', m1)
+            await lsh.insert('b', m2)
+            print(await lsh.query(m1))
+            print(await lsh.query(m2))
 
 #. The Asynchronous MongoDB storage storage option can be configured using:
 
@@ -186,44 +243,6 @@ It supports:
             print(await lsh.query(m1))
             print(await lsh.query(m2))
 
-#. The Asynchronous Redis storage storage option can be configured using:
-
-    * Usual way:
-
-    .. code:: python
-
-        from datasketch.experimental.async import AsyncMinHashLSH
-
-        _storage = {'type': 'aioredis', 'redis': {'host': 'localhost', 'port': 6379}}
-
-        lsh = await AsyncMinHashLSH(storage_config=_storage, threshold=0.5, num_perm=16)
-        m1 = MinHash(16)
-        m1.update('a'.encode('utf8'))
-        m2 = MinHash(16)
-        m2.update('b'.encode('utf8'))
-        await lsh.insert('a', m1)
-        await lsh.insert('b', m2)
-        print(await lsh.query(m1))
-        print(await lsh.query(m2))
-        lsh.close()
-
-    * Context Manager style:
-
-    .. code:: python
-
-        from datasketch.experimental.async import AsyncMinHashLSH
-
-        _storage = {'type': 'aioredis', 'redis': {'host': 'localhost', 'port': 6379}}
-
-        async with AsyncMinHashLSH(storage_config=_storage, threshold=0.5, num_perm=16) as lsh:
-            m1 = MinHash(16)
-            m1.update('a'.encode('utf8'))
-            m2 = MinHash(16)
-            m2.update('b'.encode('utf8'))
-            await lsh.insert('a', m1)
-            await lsh.insert('b', m2)
-            print(await lsh.query(m1))
-            print(await lsh.query(m2))
 
 To insert a large number of MinHashes in sequence.
 

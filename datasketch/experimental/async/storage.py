@@ -62,22 +62,22 @@ if aioredis is not None:
         async def execute_command(self, func, *args, **kwargs):
             if len(self._command_stack) >= self.batch_size:
                 await self.execute()
-            self._command_stack += (func(*args, **kwargs),)
+            self._command_stack += (self._redis.execute(func, *args, **kwargs),)
 
         async def execute(self):
             if self._command_stack:
-                _buffer = tuple(self._command_stack)
+                buffer = self._command_stack
                 self._command_stack = tuple()
-                await asyncio.gather(*_buffer)
+                await asyncio.gather(*buffer)
 
         async def hset(self, *args, **kwargs):
-            await self.execute_command(self._redis.hset, *args, **kwargs)
+            await self.execute_command('hset', *args, **kwargs)
 
         async def rpush(self, *args, **kwargs):
-            await self.execute_command(self._redis.rpush, *args, **kwargs)
+            await self.execute_command('rpush', *args, **kwargs)
 
         async def sadd(self, *args, **kwargs):
-            await self.execute_command(self._redis.sadd, *args, **kwargs)
+            await self.execute_command('sadd', *args, **kwargs)
 
 
     class AsyncRedisStorage(object):
@@ -130,8 +130,7 @@ if aioredis is not None:
         async def create_redis(self):
             db = self.redis_param['db'] if 'db' in self.redis_param else 0
             dsn = 'redis://{host}:{port}'.format(**self.redis_param)
-            # self._redis = await aioredis.create_redis(dsn, db=db)
-            self._redis = await aioredis.create_redis_pool(dsn, db=db)
+            self._redis = await aioredis.create_redis(dsn, db=db)
             self._buffer = AsyncRedisBuffer(self._redis, self._batch_size)
 
         def __await__(self):
@@ -224,10 +223,6 @@ if aioredis is not None:
                 await self._redis.hdel(self._name, redis_key)
 
         async def insert(self, key, *vals, **kwargs):
-            # Using buffer=True outside of an `insertion_session`
-            # could lead to inconsistencies, because those
-            # insertion will not be processed until the
-            # buffer is cleared
             buffer = kwargs.pop('buffer', False)
             if buffer:
                 await self._insert(self._buffer, key, *vals)
@@ -236,8 +231,8 @@ if aioredis is not None:
 
         async def _insert(self, r, key, *values):
             redis_key = self.redis_key(key)
-            await r.hset(self._name, key, redis_key)
-            await r.rpush(redis_key, *values)
+            fs = (r.hset(self._name, key, redis_key), r.rpush(redis_key, *values))
+            await asyncio.gather(*fs)
 
         async def size(self):
             return await self._redis.hlen(self._name)
@@ -275,8 +270,8 @@ if aioredis is not None:
 
         async def _insert(self, r, key, *values):
             redis_key = self.redis_key(key)
-            await r.hset(self._name, key, redis_key)
-            await r.sadd(redis_key, *values)
+            fs = (r.hset(self._name, key, redis_key), r.sadd(redis_key, *values))
+            await asyncio.gather(*fs)
 
         @staticmethod
         async def _get_len(r, k):
