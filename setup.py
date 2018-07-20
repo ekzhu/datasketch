@@ -7,6 +7,11 @@ from setuptools import setup, find_packages
 # To use a consistent encoding
 from codecs import open
 from os import path
+import sys
+
+install_requires_additional = []
+if sys.version_info >= (3, 6):
+    install_requires_additional = ['aioredis', 'motor', 'pymongo']
 
 here = path.abspath(path.dirname(__file__))
 
@@ -69,14 +74,13 @@ setup(
 
     # You can just specify the packages manually here if your project is
     # simple. Or you can use find_packages().
-    packages=find_packages(exclude=['contrib', 'docs', 'test*', 'benchmarks',
-            'examples', 'docsrc']),
+    packages=find_packages(exclude=['contrib', 'docs', 'test*', 'benchmarks', 'examples', 'docsrc']),
 
     # List run-time dependencies here.  These will be installed by pip when
     # your project is installed. For an analysis of "install_requires" vs pip's
     # requirements files see:
     # https://packaging.python.org/en/latest/requirements.html
-    install_requires=['numpy>=1.11', 'redis>=2.10.0', 'aioredis', 'motor', 'pymongo'],
+    install_requires=['numpy>=1.11', 'redis>=2.10.0'] + install_requires_additional,
 
     # List additional groups of dependencies here (e.g. development
     # dependencies). You can install these using the following syntax,
