@@ -1,7 +1,8 @@
 import sys
 
-if sys.version_info >= (3, 6):
-    python_version_supported = True
+python_version_supported = True if sys.version_info >= (3, 6) else False
+
+if python_version_supported:
     import asyncio
     import pickle
     from itertools import chain
@@ -9,10 +10,7 @@ if sys.version_info >= (3, 6):
 
     from datasketch.lsh import _optimal_param
     from datasketch.storage import unordered_storage, _random_name
-else:
-    python_version_supported = False
 
-if python_version_supported:
     class AsyncMinHashLSH(object):
         """
         Asynchronous MinHashLSH index.
