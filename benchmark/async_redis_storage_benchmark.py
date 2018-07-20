@@ -9,7 +9,7 @@ import concurrent.futures
 from functools import partial
 import aioredis
 from itertools import islice, chain
-from datasketch.experimental.async import AsyncMinHashLSH
+from datasketch.experimental.aio import AsyncMinHashLSH
 from datasketch import MinHashLSH, MinHash
 
 aioSTORAGE_CONFIG_REDIS = {'type': 'aioredis', 'redis': {'host': 'localhost', 'port': 6379}}

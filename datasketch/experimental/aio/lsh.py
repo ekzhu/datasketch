@@ -5,7 +5,7 @@ if sys.version_info >= (3, 6):
     import asyncio
     import pickle
     from itertools import chain
-    from datasketch.experimental.async.storage import (async_ordered_storage, async_unordered_storage, )
+    from datasketch.experimental.aio.storage import (async_ordered_storage, async_unordered_storage, )
 
     from datasketch.lsh import _optimal_param
     from datasketch.storage import unordered_storage, _random_name
@@ -33,7 +33,7 @@ if python_version_supported:
 
                     .. code-block:: python
 
-                        from datasketch.experimental.async import AsyncMinHashLSH
+                        from datasketch.experimental.aio import AsyncMinHashLSH
 
                         _storage_config_redis = {'type': 'aioredis', 'redis': {'host': 'localhost', 'port': 6379}}
 
@@ -52,11 +52,11 @@ if python_version_supported:
 
                     .. code-block:: python
 
-                        from datasketch.experimental.async import AsyncMinHashLSH
+                        from datasketch.experimental.aio import AsyncMinHashLSH
 
                         _storage_config_redis = {'type': 'aioredis', 'redis': {'host': 'localhost', 'port': 6379}}
 
-                        async with AsyncMinHashLSH(storage_config=_storage_config_redis, threshold=0.5, num_perm=16) as lsh:
+                        aio with AsyncMinHashLSH(storage_config=_storage_config_redis, threshold=0.5, num_perm=16) as lsh:
                             m1 = MinHash(16)
                             m1.update('a'.encode('utf8'))
                             m2 = MinHash(16)
@@ -220,12 +220,12 @@ if python_version_supported:
             """
             Create a asynchronous context manager for fast insertion into this index.
 
-            :return: datasketch.experimental.async.lsh.AsyncMinHashLSHInsertionSession
+            :return: datasketch.experimental.aio.lsh.AsyncMinHashLSHInsertionSession
 
             Example:
                 .. code-block:: python
 
-                    from datasketch.experimental.async import AsyncMinHashLSH
+                    from datasketch.experimental.aio import AsyncMinHashLSH
 
                     def chunk(it, size):
                         it = iter(it)
@@ -240,8 +240,8 @@ if python_version_supported:
                     data = [(e, m) for e, m in zip(seq, objs)]
 
                     _storage_config_redis = {'type': 'aioredis', 'redis': {'host': 'localhost', 'port': 6379}}
-                    async with AsyncMinHashLSH(storage_config=_storage_config_redis, threshold=0.5, num_perm=16, batch_size=1000) as lsh:
-                        async with lsh.insertion_session() as session:
+                    aio with AsyncMinHashLSH(storage_config=_storage_config_redis, threshold=0.5, num_perm=16, batch_size=1000) as lsh:
+                        aio with lsh.insertion_session() as session:
                             fs = (session.insert(key, minhash, check_duplication=False) for key, minhash in data)
                             await asyncio.gather(*fs)
 
@@ -358,7 +358,7 @@ if python_version_supported:
 
     class AsyncMinHashLSHInsertionSession:
         """
-        see :func:`~datasketch.experimental.async.lsh.AsyncMinHashLSH.insertion_session`
+        see :func:`~datasketch.experimental.aio.lsh.AsyncMinHashLSH.insertion_session`
         """
 
         def __init__(self, lsh):
