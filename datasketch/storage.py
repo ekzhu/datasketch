@@ -330,7 +330,7 @@ if redis is not None:
             pipe = self._redis.pipeline()
             pipe.multi()
             for key in keys:
-                pipe.lrange(self.redis_key(key), 0, -1)
+                self._get_items(pipe, self.redis_key(key))
             return pipe.execute()
 
         @staticmethod
