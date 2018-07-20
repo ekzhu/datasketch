@@ -12,8 +12,8 @@ from itertools import islice, chain
 from datasketch.experimental.async import AsyncMinHashLSH
 from datasketch import MinHashLSH, MinHash
 
-aioSTORAGE_CONFIG_REDIS = {'type': 'aioredis', 'redis': {'host': '192.168.99.101', 'port': 6379}}
-syncSTORAGE_CONFIG_REDIS = {'type': 'redis', 'redis': {'host': '192.168.99.101', 'port': 6379}}
+aioSTORAGE_CONFIG_REDIS = {'type': 'aioredis', 'redis': {'host': 'localhost', 'port': 6379}}
+syncSTORAGE_CONFIG_REDIS = {'type': 'redis', 'redis': {'host': 'localhost', 'port': 6379}}
 
 
 def timeit(func):
