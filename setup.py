@@ -89,7 +89,7 @@ setup(
     extras_require={
         'dev': ['check-manifest'],
         'test': test_requires + ['mockredispy', 'aiounittest'],
-        'experimental': ['aioredis>=1.1.0', 'motor>=2.0.0', 'pymongo>=3.6.1'],
+        'experimental': ['aioredis', 'motor', 'pymongo'],
     },
 
     # If there are data files included in your packages that need to be
