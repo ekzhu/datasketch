@@ -86,7 +86,7 @@ setup(
         'dev': ['check-manifest'],
         'test': test_requires + ['mockredispy', ],
         'experimental': ['aioredis>=1.1.0', 'motor>=2.0.0', 'pymongo>=3.6.1'],
-        'async_test': test_requires + ['aiounittest', ]
+        'experimental_test': test_requires + ['aiounittest', ]
     },
 
     # If there are data files included in your packages that need to be
