@@ -14,7 +14,7 @@ here = path.abspath(path.dirname(__file__))
 with open(path.join(here, 'DESCRIPTION.rst'), encoding='utf-8') as f:
     long_description = f.read()
 
-test_requires = ['coverage', 'mock>=2.0.0', ]
+test_requires = ['coverage', 'mock>=2.0.0', 'aiounittest']
 
 setup(
     name='datasketch',
@@ -86,7 +86,7 @@ setup(
         'dev': ['check-manifest'],
         'test': test_requires + ['mockredispy', ],
         'experimental': ['aioredis>=1.1.0', 'motor>=2.0.0', 'pymongo>=3.6.1'],
-        'experimental_test': test_requires + ['aiounittest', ]
+        'experimental_test': test_requires
     },
 
     # If there are data files included in your packages that need to be
