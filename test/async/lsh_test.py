@@ -11,7 +11,7 @@ import motor.motor_asyncio
 import aiounittest
 import numpy as np
 
-from datasketch.experimental.async import AsyncMinHashLSH
+from datasketch.experimental.async.lsh import AsyncMinHashLSH
 from datasketch.minhash import MinHash
 from datasketch.weighted_minhash import WeightedMinHashGenerator
 
