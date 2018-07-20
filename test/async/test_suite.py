@@ -9,14 +9,14 @@ from test.async.lsh_test import TestAsyncMinHashLSH, TestWeightedMinHashLSH, DO_
 
 def test_suite_minhashlsh_aioredis():
     suite = unittest.TestSuite()
-    # suite.addTest(TestAsyncMinHashLSH('test_init_redis'))
-    # suite.addTest(TestAsyncMinHashLSH('test__H_redis'))
-    # suite.addTest(TestAsyncMinHashLSH('test_insert_redis'))
-    # suite.addTest(TestAsyncMinHashLSH('test_query_redis'))
-    # suite.addTest(TestAsyncMinHashLSH('test_remove_redis'))
-    # suite.addTest(TestAsyncMinHashLSH('test_pickle_redis'))
+    suite.addTest(TestAsyncMinHashLSH('test_init_redis'))
+    suite.addTest(TestAsyncMinHashLSH('test__H_redis'))
+    suite.addTest(TestAsyncMinHashLSH('test_insert_redis'))
+    suite.addTest(TestAsyncMinHashLSH('test_query_redis'))
+    suite.addTest(TestAsyncMinHashLSH('test_remove_redis'))
+    suite.addTest(TestAsyncMinHashLSH('test_pickle_redis'))
     suite.addTest(TestAsyncMinHashLSH('test_insertion_session_redis'))
-    # suite.addTest(TestAsyncMinHashLSH('test_get_counts_redis'))
+    suite.addTest(TestAsyncMinHashLSH('test_get_counts_redis'))
     return suite
 
 
