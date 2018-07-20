@@ -1,4 +1,6 @@
-from datasketch.experimental.async.lsh import AsyncMinHashLSH
+import sys
 
-# Alias
-AsyncWeightedMinHashLSH = AsyncMinHashLSH
+if sys.version_info < (3, 6):
+    from datasketch.experimental.async.lsh import AsyncMinHashLSH
+    # Alias
+    AsyncWeightedMinHashLSH = AsyncMinHashLSH
