@@ -1,17 +1,15 @@
 import sys
 
-if sys.version_info >= (3, 6):
-    python_version_supported = True
+python_version_supported = True if sys.version_info >= (3, 6) else False
+
+if python_version_supported:
     import os
     import asyncio
     from itertools import chain
 
     from datasketch.storage import UnorderedStorage, OrderedStorage, _random_name
     from abc import ABCMeta
-else:
-    python_version_supported = False
 
-if python_version_supported:
     ABC = ABCMeta('ABC', (object,), {})  # compatible with Python 2 *and* 3
 
     try:
