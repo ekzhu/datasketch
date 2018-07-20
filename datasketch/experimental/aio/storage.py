@@ -1,8 +1,6 @@
 import sys
 
-python_version_supported = True if sys.version_info >= (3, 6) else False
-
-if python_version_supported:
+if sys.version_info >= (3, 6):
     import os
     import asyncio
     from itertools import chain
