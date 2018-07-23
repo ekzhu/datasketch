@@ -88,8 +88,9 @@ class MinHashLSH(object):
         Try to live with a small difference between weights (i.e. < 0.5).
     '''
 
-    def __init__(self, threshold=0.9, num_perm=128, weights=(0.5,0.5),
-                 params=None, storage_config={'type': 'dict'}, prepickle=None):
+    def __init__(self, threshold=0.9, num_perm=128, weights=(0.5, 0.5),
+                 params=None, storage_config=None, prepickle=None):
+        storage_config = {'type': 'dict'} if not storage_config else storage_config
         self._buffer_size = 50000
         if threshold > 1.0 or threshold < 0.0:
             raise ValueError("threshold must be in [0.0, 1.0]") 
@@ -286,7 +287,7 @@ class MinHashLSHInsertionSession:
     '''Context manager for batch insertion of documents into a MinHashLSH.
     '''
 
-    def __init__(self, lsh: MinHashLSH, buffer_size):
+    def __init__(self, lsh, buffer_size):
         self.lsh = lsh
         self.lsh.buffer_size = buffer_size
 
