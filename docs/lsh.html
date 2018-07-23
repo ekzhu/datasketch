@@ -203,14 +203,18 @@ inconsistency.</p>
 </div>
 <div class="section" id="asynchronous-minhash-lsh-at-scale">
 <span id="minhash-lsh-async"></span><h2>Asynchronous MinHash LSH at scale<a class="headerlink" href="#asynchronous-minhash-lsh-at-scale" title="Permalink to this headline">¶</a></h2>
+<p>You can use:</p>
+<ul class="simple">
+<li>Asynchronous Redis storage (<em>python aioredis package</em>)</li>
+<li>Asynchronous MongoDB storage (<em>python motor package</em>)</li>
+</ul>
 <div class="admonition note">
 <p class="first admonition-title">Note</p>
 <p class="last">The module supports Python version &gt;=3.6, and is currently experimental. So the interface may change slightly in the future.</p>
 </div>
-<p>Supports:
-* Asynchronous Redis storage (<em>python aioredis package</em>)
-* Asynchronous MongoDB storage (<em>python motor package</em>)</p>
-<p>You should think twice about using Asynchronous Redis storage.</p>
+<p>This module could be useful if you consider to process millions texts in streaming/batch streaming mode using asynchronous RESTful API for clustering tasks, and you expecting to support maximum throughput of your service. For example, you can use it with <cite>aiohttp</cite> web-server.
+You can separate your web-server on inserting - Indexing and query - Quering endpoints.
+If you’ll try to use synchronous module MinHashLSH you will be faced to blocking insertions. You can avoid this by using, for example, <cite>asyncio.run_in_executor</cite>, but don’t hurry, see below some benchmarks to chose better way to do your tasks.</p>
 <dl class="docutils">
 <dt>Our experiment:</dt>
 <dd><div class="first last line-block">
@@ -378,8 +382,8 @@ inconsistency.</p>
 <span class="n">data</span> <span class="o">=</span> <span class="p">[(</span><span class="n">e</span><span class="p">,</span> <span class="n">m</span><span class="p">)</span> <span class="k">for</span> <span class="n">e</span><span class="p">,</span> <span class="n">m</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">seq</span><span class="p">,</span> <span class="n">objs</span><span class="p">)]</span>
 
 <span class="n">_storage</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;type&#39;</span><span class="p">:</span> <span class="s1">&#39;aiomongo&#39;</span><span class="p">,</span> <span class="s1">&#39;mongo&#39;</span><span class="p">:</span> <span class="p">{</span><span class="s1">&#39;host&#39;</span><span class="p">:</span> <span class="s1">&#39;localhost&#39;</span><span class="p">,</span> <span class="s1">&#39;port&#39;</span><span class="p">:</span> <span class="mi">27017</span><span class="p">,</span> <span class="s1">&#39;db&#39;</span><span class="p">:</span> <span class="s1">&#39;lsh_test&#39;</span><span class="p">}}</span>
-<span class="k">async</span> <span class="k">with</span> <span class="n">AsyncMinHashLSH</span><span class="p">(</span><span class="n">storage_config</span><span class="o">=</span><span class="n">_storage</span><span class="p">,</span> <span class="n">threshold</span><span class="o">=</span><span class="mf">0.5</span><span class="p">,</span> <span class="n">num_perm</span><span class="o">=</span><span class="mi">16</span><span class="p">,</span> <span class="n">batch_size</span><span class="o">=</span><span class="mi">1000</span><span class="p">)</span> <span class="k">as</span> <span class="n">lsh</span><span class="p">:</span>
-    <span class="k">async</span> <span class="k">with</span> <span class="n">lsh</span><span class="o">.</span><span class="n">insertion_session</span><span class="p">()</span> <span class="k">as</span> <span class="n">session</span><span class="p">:</span>
+<span class="k">async</span> <span class="k">with</span> <span class="n">AsyncMinHashLSH</span><span class="p">(</span><span class="n">storage_config</span><span class="o">=</span><span class="n">_storage</span><span class="p">,</span> <span class="n">threshold</span><span class="o">=</span><span class="mf">0.5</span><span class="p">,</span> <span class="n">num_perm</span><span class="o">=</span><span class="mi">16</span><span class="p">)</span> <span class="k">as</span> <span class="n">lsh</span><span class="p">:</span>
+    <span class="k">async</span> <span class="k">with</span> <span class="n">lsh</span><span class="o">.</span><span class="n">insertion_session</span><span class="p">(</span><span class="n">batch_size</span><span class="o">=</span><span class="mi">1000</span><span class="p">)</span> <span class="k">as</span> <span class="n">session</span><span class="p">:</span>
         <span class="n">fs</span> <span class="o">=</span> <span class="p">(</span><span class="n">session</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="n">minhash</span><span class="p">,</span> <span class="n">check_duplication</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span> <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">minhash</span> <span class="ow">in</span> <span class="n">data</span><span class="p">)</span>
         <span class="k">await</span> <span class="n">asyncio</span><span class="o">.</span><span class="n">gather</span><span class="p">(</span><span class="o">*</span><span class="n">fs</span><span class="p">)</span>
 </pre></div>

@@ -10,7 +10,7 @@ except ImportError:
     redis = None
 
 
-def ordered_storage(config, name=None, buffer_size=50000):
+def ordered_storage(config, name=None):
     '''Return ordered storage system based on the specified config.
 
     The canonical example of such a storage container is
@@ -43,10 +43,10 @@ def ordered_storage(config, name=None, buffer_size=50000):
     if tp == 'dict':
         return DictListStorage(config)
     if tp == 'redis':
-        return RedisListStorage(config, name=name, buffer_size=buffer_size)
+        return RedisListStorage(config, name=name)
 
 
-def unordered_storage(config, name=None, buffer_size=50000):
+def unordered_storage(config, name=None):
     '''Return an unordered storage system based on the specified config.
 
     The canonical example of such a storage container is
@@ -78,7 +78,7 @@ def unordered_storage(config, name=None, buffer_size=50000):
     if tp == 'dict':
         return DictSetStorage(config)
     if tp == 'redis':
-        return RedisSetStorage(config, name=name, buffer_size=buffer_size)
+        return RedisSetStorage(config, name=name)
 
 
 class Storage(ABC):
@@ -218,19 +218,27 @@ if redis is not None:
         '''A bufferized version of `redis.pipeline.Pipeline`.
 
         The only difference from the conventional pipeline object is the
-        ``buffer_size``. Once the buffer is longer than the buffer size,
+        ``_buffer_size``. Once the buffer is longer than the buffer size,
         the pipeline is automatically executed, and the buffer cleared.
         '''
 
-        def __init__(self, connection_pool, response_callbacks, transaction,
-                     shard_hint=None, buffer_size=50000):
-            self.buffer_size = buffer_size
+        def __init__(self, connection_pool, response_callbacks, transaction, buffer_size,
+                     shard_hint=None):
+            self._buffer_size = buffer_size
             super(RedisBuffer, self).__init__(
                 connection_pool, response_callbacks, transaction,
                 shard_hint=shard_hint)
 
+        @property
+        def buffer_size(self):
+            return self._buffer_size
+
+        @buffer_size.setter
+        def buffer_size(self, value):
+            self._buffer_size = value
+
         def execute_command(self, *args, **kwargs):
-            if len(self.command_stack) >= self.buffer_size:
+            if len(self.command_stack) >= self._buffer_size:
                 self.execute()
             super(RedisBuffer, self).execute_command(*args, **kwargs)
 
@@ -263,17 +271,27 @@ if redis is not None:
                 If None, a random name will be chosen.
         '''
 
-        def __init__(self, config, name=None, buffer_size=50000):
+        def __init__(self, config, name=None):
             self.config = config
+            self._buffer_size = 50000
             redis_param = self._parse_config(self.config['redis'])
             self._redis = redis.Redis(**redis_param)
             self._buffer = RedisBuffer(self._redis.connection_pool,
                                        self._redis.response_callbacks,
                                        transaction=True,
-                                       buffer_size=buffer_size)
+                                       buffer_size=self._buffer_size)
             if name is None:
                 name = _random_name(11)
             self._name = name
+
+        @property
+        def buffer_size(self):
+            return self._buffer_size
+
+        @buffer_size.setter
+        def buffer_size(self, value):
+            self._buffer_size = value
+            self._buffer.buffer_size = value
 
         def redis_key(self, key):
             return self._name + key
@@ -308,9 +326,6 @@ if redis is not None:
 
 
     class RedisListStorage(OrderedStorage, RedisStorage):
-
-        def __init__(self, config, name=None, buffer_size=50000):
-            RedisStorage.__init__(self, config, name=name, buffer_size=buffer_size)
 
         def keys(self):
             return self._redis.hkeys(self._name)
@@ -390,9 +405,6 @@ if redis is not None:
 
 
     class RedisSetStorage(UnorderedStorage, RedisListStorage):
-
-        def __init__(self, config, name=None, buffer_size=50000):
-            RedisListStorage.__init__(self, config, name=name, buffer_size=buffer_size)
 
         @staticmethod
         def _get_items(r, k):

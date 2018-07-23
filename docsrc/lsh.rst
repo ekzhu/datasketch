@@ -128,14 +128,17 @@ inconsistency.
 
 Asynchronous MinHash LSH at scale
 ---------------------------------
-.. note::
-    The module supports Python version >=3.6, and is currently experimental. So the interface may change slightly in the future.
+You can use:
 
-Supports:
 * Asynchronous Redis storage (*python aioredis package*)
 * Asynchronous MongoDB storage (*python motor package*)
 
-You should think twice about using Asynchronous Redis storage.
+.. note::
+    The module supports Python version >=3.6, and is currently experimental. So the interface may change slightly in the future.
+
+This module could be useful if you consider to process millions texts in streaming/batch streaming mode using asynchronous RESTful API for clustering tasks, and you expecting to support maximum throughput of your service. For example, you can use it with `aiohttp` web-server.
+You can separate your web-server on inserting - Indexing and query - Quering endpoints.
+If you'll try to use synchronous module MinHashLSH you will be faced to blocking insertions. You can avoid this by using, for example, `asyncio.run_in_executor`, but don't hurry, see below some benchmarks to chose better way to do your tasks.
 
 Our experiment:
     | **Number of objects (insert, query):** 12500
@@ -263,7 +266,7 @@ To insert a large number of MinHashes in sequence.
     data = [(e, m) for e, m in zip(seq, objs)]
 
     _storage = {'type': 'aiomongo', 'mongo': {'host': 'localhost', 'port': 27017, 'db': 'lsh_test'}}
-    async with AsyncMinHashLSH(storage_config=_storage, threshold=0.5, num_perm=16, batch_size=1000) as lsh:
-        async with lsh.insertion_session() as session:
+    async with AsyncMinHashLSH(storage_config=_storage, threshold=0.5, num_perm=16) as lsh:
+        async with lsh.insertion_session(batch_size=1000) as session:
             fs = (session.insert(key, minhash, check_duplication=False) for key, minhash in data)
             await asyncio.gather(*fs)

@@ -17,8 +17,8 @@ from datasketch.weighted_minhash import WeightedMinHashGenerator
 
 STORAGE_CONFIG_REDIS = {'type': 'aioredis', 'redis': {'host': 'localhost', 'port': 6379}}
 STORAGE_CONFIG_MONGO = {'type': 'aiomongo', 'mongo': {'host': 'localhost', 'port': 27017, 'db': 'lsh_test'}}
-DO_TEST_REDIS = False
-DO_TEST_MONGO = False
+DO_TEST_REDIS = True
+DO_TEST_MONGO = True
 
 
 @unittest.skipIf(sys.version_info < (3, 6), "Skipping TestAsyncMinHashLSH. Supported Python version >= 3.6")
@@ -334,8 +334,8 @@ class TestAsyncMinHashLSH(aiounittest.AsyncTestCase):
         data = [(e, m) for e, m in zip(seq, objs)]
 
         async with AsyncMinHashLSH(storage_config=self._storage_config_mongo,
-                                   threshold=0.5, num_perm=16, batch_size=1000) as lsh:
-            async with lsh.insertion_session() as session:
+                                   threshold=0.5, num_perm=16) as lsh:
+            async with lsh.insertion_session(batch_size=1000) as session:
                 fs = (session.insert(key, minhash, check_duplication=False) for key, minhash in data)
                 await asyncio.gather(*fs)
 

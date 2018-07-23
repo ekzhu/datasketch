@@ -286,5 +286,6 @@ class TestWeightedMinHashLSH(unittest.TestCase):
         result = lsh2.query(m2)
         self.assertTrue("b" in result)
 
+
 if __name__ == "__main__":
     unittest.main()

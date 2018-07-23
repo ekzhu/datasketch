@@ -79,7 +79,6 @@ class MinHashLSH(object):
         prepickle (bool, optional): If True, all keys are pickled to bytes before
             insertion. If None, a default value is chosen based on the
             `storage_config`.
-        buffer_size (int): The buffer size for insert_session mode.
 
     Note: 
         `weights` must sum to 1.0, and the format is 
@@ -90,8 +89,8 @@ class MinHashLSH(object):
     '''
 
     def __init__(self, threshold=0.9, num_perm=128, weights=(0.5,0.5),
-                 params=None, storage_config={'type': 'dict'}, prepickle=None, buffer_size=10000):
-        self._buffer_size = buffer_size
+                 params=None, storage_config={'type': 'dict'}, prepickle=None):
+        self._buffer_size = 50000
         if threshold > 1.0 or threshold < 0.0:
             raise ValueError("threshold must be in [0.0, 1.0]") 
         if num_perm < 2:
@@ -115,10 +114,21 @@ class MinHashLSH(object):
             self.prepickle = prepickle
         basename = _random_name(11)
         self.hashtables = [
-            unordered_storage(storage_config, name=basename + b'_bucket_' + bytes([i]), buffer_size=self._buffer_size)
+            unordered_storage(storage_config, name=basename + b'_bucket_' + bytes([i]))
             for i in range(self.b)]
         self.hashranges = [(i*self.r, (i+1)*self.r) for i in range(self.b)]
-        self.keys = ordered_storage(storage_config, name=basename + b'_keys', buffer_size=self._buffer_size)
+        self.keys = ordered_storage(storage_config, name=basename + b'_keys')
+
+    @property
+    def buffer_size(self):
+        return self._buffer_size
+
+    @buffer_size.setter
+    def buffer_size(self, value):
+        self.keys.buffer_size = value
+        for t in self.hashtables:
+            t.buffer_size = value
+        self._buffer_size = value
 
     def insert(self, key, minhash, check_duplication=True):
         '''
@@ -133,14 +143,16 @@ class MinHashLSH(object):
         '''
         self._insert(key, minhash, check_duplication=check_duplication, buffer=False)
 
-    def insertion_session(self):
+    def insertion_session(self, buffer_size: int = 50000):
         '''
         Create a context manager for fast insertion into this index.
+
+        :param: int buffer_size: The buffer size for insert_session mode (default=50000).
 
         Returns:
             datasketch.lsh.MinHashLSHInsertionSession
         '''
-        return MinHashLSHInsertionSession(self)
+        return MinHashLSHInsertionSession(self, buffer_size=buffer_size)
 
     def _insert(self, key, minhash, check_duplication=True, buffer=False):
         if len(minhash) != self.h:
@@ -274,13 +286,17 @@ class MinHashLSHInsertionSession:
     '''Context manager for batch insertion of documents into a MinHashLSH.
     '''
 
-    def __init__(self, lsh):
+    def __init__(self, lsh: MinHashLSH, buffer_size: int):
         self.lsh = lsh
+        self.lsh.buffer_size = buffer_size
 
     def __enter__(self):
         return self
 
     def __exit__(self, exc_type, exc_val, exc_tb):
+        self.close()
+
+    def close(self):
         self.lsh.keys.empty_buffer()
         for hashtable in self.lsh.hashtables:
             hashtable.empty_buffer()

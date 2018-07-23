@@ -38,7 +38,7 @@ MinHash LSH
 Asynchronous MinHash LSH
 ------------------------
 
-.. autoclass:: datasketch.experimental.async.AsyncMinHashLSH
+.. autoclass:: datasketch.experimental.aio.AsyncMinHashLSH
     :members:
     :special-members:
 
