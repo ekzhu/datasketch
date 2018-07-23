@@ -9,3 +9,5 @@ To add a new class or function, register it here in this file. For example:
 
 from new_module import NewModuleClass
 """
+
+from datasketch.experimental.aio.lsh import AsyncMinHashLSH
