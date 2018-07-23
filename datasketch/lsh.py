@@ -143,7 +143,7 @@ class MinHashLSH(object):
         '''
         self._insert(key, minhash, check_duplication=check_duplication, buffer=False)
 
-    def insertion_session(self, buffer_size: int = 50000):
+    def insertion_session(self, buffer_size=50000):
         '''
         Create a context manager for fast insertion into this index.
 
@@ -286,7 +286,7 @@ class MinHashLSHInsertionSession:
     '''Context manager for batch insertion of documents into a MinHashLSH.
     '''
 
-    def __init__(self, lsh: MinHashLSH, buffer_size: int):
+    def __init__(self, lsh: MinHashLSH, buffer_size):
         self.lsh = lsh
         self.lsh.buffer_size = buffer_size
 
