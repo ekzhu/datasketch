@@ -6,6 +6,8 @@ import random
 import string
 from itertools import chain, islice
 
+import redis
+from pymongo import MongoClient
 import aioredis
 import motor.motor_asyncio
 import aiounittest
@@ -15,10 +17,10 @@ from datasketch.experimental.aio.lsh import AsyncMinHashLSH
 from datasketch.minhash import MinHash
 from datasketch.weighted_minhash import WeightedMinHashGenerator
 
-STORAGE_CONFIG_REDIS = {'type': 'aioredis', 'redis': {'host': 'localhost', 'port': 6379}}
-STORAGE_CONFIG_MONGO = {'type': 'aiomongo', 'mongo': {'host': 'localhost', 'port': 27017, 'db': 'lsh_test'}}
-DO_TEST_REDIS = False
-DO_TEST_MONGO = False
+STORAGE_CONFIG_REDIS = {'type': 'aioredis', 'redis': {'host': '192.168.99.100', 'port': 6379}}
+STORAGE_CONFIG_MONGO = {'type': 'aiomongo', 'mongo': {'host': '192.168.99.100', 'port': 27017, 'db': 'lsh_test'}}
+DO_TEST_REDIS = True
+DO_TEST_MONGO = True
 
 
 @unittest.skipIf(sys.version_info < (3, 6), "Skipping TestAsyncMinHashLSH. Supported Python version >= 3.6")
@@ -33,17 +35,14 @@ class TestAsyncMinHashLSH(aiounittest.AsyncTestCase):
         self._storage_config_redis = STORAGE_CONFIG_REDIS
         self._storage_config_mongo = STORAGE_CONFIG_MONGO
 
-    async def tearDownAsync(self):
+    def tearDown(self):
         if DO_TEST_REDIS:
-            dsn = 'redis://{host}:{port}'.format(**self._storage_config_redis['redis'])
-            redis = await aioredis.create_redis(dsn, loop=self.get_event_loop())
-            await redis.flushdb()
-            redis.close()
-            await redis.wait_closed()
+            _redis = redis.StrictRedis(**self._storage_config_redis['redis'])
+            _redis.flushdb()
 
         if DO_TEST_MONGO:
             dsn = 'mongodb://{host}:{port}'.format(**self._storage_config_mongo['mongo'])
-            motor.motor_asyncio.AsyncIOMotorClient(dsn).drop_database(self._storage_config_mongo['mongo']['db'])
+            MongoClient(dsn).drop_database(self._storage_config_mongo['mongo']['db'])
 
     @unittest.skipIf(not DO_TEST_REDIS, "Skipping test_init_redis")
     async def test_init_redis(self):
@@ -110,8 +109,11 @@ class TestAsyncMinHashLSH(aiounittest.AsyncTestCase):
             m1.update("a".encode("utf8"))
             m2 = MinHash(16)
             m2.update("b".encode("utf8"))
-            await lsh.insert("a", m1)
-            await lsh.insert("b", m2)
+            m3 = MinHash(16)
+            m3.update("b".encode("utf8"))
+            fs = (lsh.insert("a", m1, check_duplication=False), lsh.insert("b", m2, check_duplication=False),
+                  lsh.insert("b", m3, check_duplication=False))
+            await asyncio.gather(*fs)
             result = await lsh.query(m1)
             self.assertTrue("a" in result)
             result = await lsh.query(m2)
@@ -227,7 +229,11 @@ class TestAsyncMinHashLSH(aiounittest.AsyncTestCase):
             async with AsyncMinHashLSH(storage_config=self._storage_config_mongo,
                                        num_perm=128) as lsh:
                 await lsh.insert("m", m)
-                sizes = [len(H) for ht in lsh.hashtables for H in await ht.keys()]
+                sizes = []
+                for ht in lsh.hashtables:
+                    keys = await ht.keys()
+                    for H in keys:
+                        sizes.append(len(H))
                 self.assertTrue(all(sizes[0] == s for s in sizes))
 
     @unittest.skipIf(not DO_TEST_MONGO, "Skipping test_insert_mongo")
@@ -267,8 +273,11 @@ class TestAsyncMinHashLSH(aiounittest.AsyncTestCase):
             m1.update("a".encode("utf8"))
             m2 = MinHash(16)
             m2.update("b".encode("utf8"))
-            await lsh.insert("a", m1)
-            await lsh.insert("b", m2)
+            m3 = MinHash(16)
+            m3.update("b".encode("utf8"))
+            fs = (lsh.insert("a", m1, check_duplication=False), lsh.insert("b", m2, check_duplication=False),
+                  lsh.insert("b", m3, check_duplication=False))
+            await asyncio.gather(*fs)
             result = await lsh.query(m1)
             self.assertTrue("a" in result)
             result = await lsh.query(m2)
@@ -325,7 +334,7 @@ class TestAsyncMinHashLSH(aiounittest.AsyncTestCase):
 
         _chunked_str = chunk((random.choice(string.ascii_lowercase) for _ in range(10000)), 4)
         seq = frozenset(chain((''.join(s) for s in _chunked_str),
-                          ('aahhb', 'aahh', 'aahhc', 'aac', 'kld', 'bhg', 'kkd', 'yow', 'ppi', 'eer')))
+                              ('aahhb', 'aahh', 'aahhc', 'aac', 'kld', 'bhg', 'kkd', 'yow', 'ppi', 'eer')))
         objs = [MinHash(16) for _ in range(len(seq))]
         for e, obj in zip(seq, objs):
             for i in e:
@@ -377,15 +386,14 @@ class TestWeightedMinHashLSH(aiounittest.AsyncTestCase):
         self._storage_config_redis = STORAGE_CONFIG_REDIS
         self._storage_config_mongo = STORAGE_CONFIG_MONGO
 
-    async def tearDownAsync(self):
+    def tearDown(self):
         if DO_TEST_REDIS:
-            dsn = 'redis://{host}:{port}'.format(**self._storage_config_redis['redis'])
-            redis = await aioredis.create_redis(dsn, loop=self.get_event_loop())
-            await redis.flushall()
+            _redis = redis.StrictRedis(**self._storage_config_redis['redis'])
+            _redis.flushdb()
 
         if DO_TEST_MONGO:
             dsn = 'mongodb://{host}:{port}'.format(**self._storage_config_mongo['mongo'])
-            motor.motor_asyncio.AsyncIOMotorClient(dsn).drop_database(self._storage_config_mongo['mongo']['db'])
+            MongoClient(dsn).drop_database(self._storage_config_mongo['mongo']['db'])
 
     @unittest.skipIf(not DO_TEST_REDIS, "Skipping test_init_redis")
     async def test_init_redis(self):

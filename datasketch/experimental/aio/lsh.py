@@ -23,7 +23,7 @@ class AsyncMinHashLSH(object):
     :param tuple params: see :class:`datasketch.MinHashLSH`.
     :param dict storage_config: New types of storage service (aioredis, aiomongo) to use for storing hashtables and keys are implemented. If storage_config is None aioredis storage will be used.
     :param bool prepickle: for redis type storage use bytes as keys.
-    :param byte name: basename. Useful if you want pickle LSH class and spread it into different workers.
+    :param byte base_name: basename. Useful if you want pickle LSH class and spread it into different workers.
 
     Example:
         There is two ways to create a AsyncMinHash index.
@@ -71,7 +71,7 @@ class AsyncMinHashLSH(object):
     """
 
     def __init__(self, threshold=0.9, num_perm=128, weights=(0.5, 0.5),
-                 params=None, storage_config=None, prepickle=None, name=None):
+                 params=None, storage_config=None, prepickle=None, base_name=None):
         if storage_config is None:
             storage_config = {
                 'type': 'aioredis',
@@ -114,9 +114,9 @@ class AsyncMinHashLSH(object):
 
         self._lock = asyncio.Lock()
         self._initialized = False
-        if name is None:
-            name = _random_name(11)
-        self._basename = name
+        if base_name is None:
+            base_name = _random_name(11)
+        self._basename = base_name
 
     async def __async_init(self):
         async with self._lock:

@@ -177,8 +177,9 @@
 <span class="sd">        Try to live with a small difference between weights (i.e. &lt; 0.5).</span>
 <span class="sd">    &#39;&#39;&#39;</span>
 
-<div class="viewcode-block" id="MinHashLSH.__init__"><a class="viewcode-back" href="../../documentation.html#datasketch.MinHashLSH.__init__">[docs]</a>    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">threshold</span><span class="o">=</span><span class="mf">0.9</span><span class="p">,</span> <span class="n">num_perm</span><span class="o">=</span><span class="mi">128</span><span class="p">,</span> <span class="n">weights</span><span class="o">=</span><span class="p">(</span><span class="mf">0.5</span><span class="p">,</span><span class="mf">0.5</span><span class="p">),</span>
-                 <span class="n">params</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">storage_config</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;type&#39;</span><span class="p">:</span> <span class="s1">&#39;dict&#39;</span><span class="p">},</span> <span class="n">prepickle</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<div class="viewcode-block" id="MinHashLSH.__init__"><a class="viewcode-back" href="../../documentation.html#datasketch.MinHashLSH.__init__">[docs]</a>    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">threshold</span><span class="o">=</span><span class="mf">0.9</span><span class="p">,</span> <span class="n">num_perm</span><span class="o">=</span><span class="mi">128</span><span class="p">,</span> <span class="n">weights</span><span class="o">=</span><span class="p">(</span><span class="mf">0.5</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">),</span>
+                 <span class="n">params</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">storage_config</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">prepickle</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="n">storage_config</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;type&#39;</span><span class="p">:</span> <span class="s1">&#39;dict&#39;</span><span class="p">}</span> <span class="k">if</span> <span class="ow">not</span> <span class="n">storage_config</span> <span class="k">else</span> <span class="n">storage_config</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_buffer_size</span> <span class="o">=</span> <span class="mi">50000</span>
         <span class="k">if</span> <span class="n">threshold</span> <span class="o">&gt;</span> <span class="mf">1.0</span> <span class="ow">or</span> <span class="n">threshold</span> <span class="o">&lt;</span> <span class="mf">0.0</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;threshold must be in [0.0, 1.0]&quot;</span><span class="p">)</span> 
@@ -221,18 +222,24 @@
 
 <div class="viewcode-block" id="MinHashLSH.insert"><a class="viewcode-back" href="../../documentation.html#datasketch.MinHashLSH.insert">[docs]</a>    <span class="k">def</span> <span class="nf">insert</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">,</span> <span class="n">minhash</span><span class="p">,</span> <span class="n">check_duplication</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
         <span class="sd">&#39;&#39;&#39;</span>
-<span class="sd">        Insert a unique key to the index, together</span>
+<span class="sd">        Insert a key to the index, together</span>
 <span class="sd">        with a MinHash (or weighted MinHash) of the set referenced by </span>
 <span class="sd">        the key.</span>
 
-<span class="sd">        Args:</span>
-<span class="sd">            key (hashable): The unique identifier of the set. </span>
-<span class="sd">            minhash (datasketch.MinHash): The MinHash of the set.</span>
-<span class="sd">            check_duplication (bool): check duplication.</span>
+<span class="sd">        :param str key: The identifier of the set.</span>
+<span class="sd">        :param datasketch.MinHash minhash: The MinHash of the set.</span>
+<span class="sd">        :param bool check_duplication: To avoid duplications by the key in the storage (`default=True`).</span>
+<span class="sd">                                       It&#39;s recommended to store unique keys in LSH index, but</span>
+<span class="sd">                                       if you don&#39;t want overhead in inserting on searching by key</span>
+<span class="sd">                                       you can use `check_duplication = False`.</span>
+<span class="sd">                                       In this case you wouldn&#39;t get any exceptions</span>
+<span class="sd">                                       and :func:`~datasketch.MinHashLSH.query` would always return unique keys.</span>
+<span class="sd">                                       Check your storage don&#39;t having any constrains on key (unique index and etc.)</span>
+<span class="sd">                                       if you can&#39;t guarantee distinct keys before inserting.</span>
 <span class="sd">        &#39;&#39;&#39;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_insert</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="n">minhash</span><span class="p">,</span> <span class="n">check_duplication</span><span class="o">=</span><span class="n">check_duplication</span><span class="p">,</span> <span class="n">buffer</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span></div>
 
-<div class="viewcode-block" id="MinHashLSH.insertion_session"><a class="viewcode-back" href="../../documentation.html#datasketch.MinHashLSH.insertion_session">[docs]</a>    <span class="k">def</span> <span class="nf">insertion_session</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">buffer_size</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">50000</span><span class="p">):</span>
+<div class="viewcode-block" id="MinHashLSH.insertion_session"><a class="viewcode-back" href="../../documentation.html#datasketch.MinHashLSH.insertion_session">[docs]</a>    <span class="k">def</span> <span class="nf">insertion_session</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">buffer_size</span><span class="o">=</span><span class="mi">50000</span><span class="p">):</span>
         <span class="sd">&#39;&#39;&#39;</span>
 <span class="sd">        Create a context manager for fast insertion into this index.</span>
 
@@ -375,7 +382,7 @@
     <span class="sd">&#39;&#39;&#39;Context manager for batch insertion of documents into a MinHashLSH.</span>
 <span class="sd">    &#39;&#39;&#39;</span>
 
-    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">lsh</span><span class="p">:</span> <span class="n">MinHashLSH</span><span class="p">,</span> <span class="n">buffer_size</span><span class="p">:</span> <span class="nb">int</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">lsh</span><span class="p">,</span> <span class="n">buffer_size</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">lsh</span> <span class="o">=</span> <span class="n">lsh</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">lsh</span><span class="o">.</span><span class="n">buffer_size</span> <span class="o">=</span> <span class="n">buffer_size</span>
 

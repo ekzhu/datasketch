@@ -9,11 +9,11 @@ import concurrent.futures
 from functools import partial
 import aioredis
 from itertools import islice, chain
-from datasketch.experimental.aio import AsyncMinHashLSH
+from datasketch.experimental.aio.lsh import AsyncMinHashLSH
 from datasketch import MinHashLSH, MinHash
 
-aioSTORAGE_CONFIG_REDIS = {'type': 'aioredis', 'redis': {'host': 'localhost', 'port': 6379}}
-syncSTORAGE_CONFIG_REDIS = {'type': 'redis', 'redis': {'host': 'localhost', 'port': 6379}}
+aioSTORAGE_CONFIG_REDIS = {'type': 'aioredis', 'redis': {'host': '192.168.99.100', 'port': 6379}}
+syncSTORAGE_CONFIG_REDIS = {'type': 'redis', 'redis': {'host': '192.168.99.100', 'port': 6379}}
 
 
 def timeit(func):
@@ -51,8 +51,8 @@ def prepare_data(length: int):
 
 
 @timeit
-async def insertion_session_aioredis(aiolsh: AsyncMinHashLSH, data: list):
-    async with aiolsh.insertion_session() as session:
+async def insertion_session_aioredis(aiolsh: AsyncMinHashLSH, data: list, batch_size: int):
+    async with aiolsh.insertion_session(batch_size=batch_size) as session:
         fs = (session.insert(key, minhash, check_duplication=False) for key, minhash in data)
         await asyncio.gather(*fs)
 
@@ -70,8 +70,8 @@ async def insert_aioredis(aiolsh: AsyncMinHashLSH, data: list):
 
 
 @timeit
-def insertion_session_syncredis(lsh: MinHashLSH, data: list):
-    with lsh.insertion_session() as session:
+def insertion_session_syncredis(lsh: MinHashLSH, data: list, buffer_size: int):
+    with lsh.insertion_session(buffer_size=buffer_size) as session:
         for key, minhash in data:
             session.insert(key, minhash, check_duplication=False)
 
@@ -100,17 +100,17 @@ def query_syncredis(lsh: MinHashLSH, data: list):
 async def run_async_test(data: list, batch_size: int):
     executor = concurrent.futures.ThreadPoolExecutor(max_workers=100)
     lsh = MinHashLSH(storage_config=syncSTORAGE_CONFIG_REDIS,
-                     threshold=0.5, num_perm=16, buffer_size=batch_size)
+                     threshold=0.5, num_perm=16)
     await aioinsert_syncredis_with_executor(lsh, data, executor)
     await aioquery_syncredis(lsh, data, executor)
 
     async with AsyncMinHashLSH(storage_config=aioSTORAGE_CONFIG_REDIS,
-                               threshold=0.5, num_perm=16, batch_size=batch_size) as lsh2:
+                               threshold=0.5, num_perm=16) as lsh2:
         await insert_aioredis(lsh2, data)
 
     async with AsyncMinHashLSH(storage_config=aioSTORAGE_CONFIG_REDIS,
-                               threshold=0.5, num_perm=16, batch_size=batch_size) as lsh3:
-        await insertion_session_aioredis(lsh3, data)
+                               threshold=0.5, num_perm=16) as lsh3:
+        await insertion_session_aioredis(lsh3, data, batch_size)
         await query_aioredis(lsh3, data)
 
     dsn = 'redis://{host}:{port}'.format(**aioSTORAGE_CONFIG_REDIS['redis'])
@@ -122,8 +122,8 @@ async def run_async_test(data: list, batch_size: int):
 
 def run_sync_test(data: list, batch_size: int):
     lsh = MinHashLSH(storage_config=syncSTORAGE_CONFIG_REDIS,
-                     threshold=0.5, num_perm=16, buffer_size=batch_size)
-    insertion_session_syncredis(lsh, data)
+                     threshold=0.5, num_perm=16)
+    insertion_session_syncredis(lsh, data, buffer_size=batch_size)
     query_syncredis(lsh, data)
 
 
