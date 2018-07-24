@@ -243,7 +243,7 @@
         <span class="sd">&#39;&#39;&#39;</span>
 <span class="sd">        Create a context manager for fast insertion into this index.</span>
 
-<span class="sd">        :param: int buffer_size: The buffer size for insert_session mode (default=50000).</span>
+<span class="sd">        :param int buffer_size: The buffer size for insert_session mode (default=50000).</span>
 
 <span class="sd">        Returns:</span>
 <span class="sd">            datasketch.lsh.MinHashLSHInsertionSession</span>
@@ -274,7 +274,7 @@
 <span class="sd">            minhash (datasketch.MinHash): The MinHash of the query set. </span>
 
 <span class="sd">        Returns:</span>
-<span class="sd">            `list` of keys.</span>
+<span class="sd">            `list` of unique keys.</span>
 <span class="sd">        &#39;&#39;&#39;</span>
         <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">minhash</span><span class="p">)</span> <span class="o">!=</span> <span class="bp">self</span><span class="o">.</span><span class="n">h</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Expecting minhash with length </span><span class="si">%d</span><span class="s2">, got </span><span class="si">%d</span><span class="s2">&quot;</span>

@@ -802,7 +802,7 @@ if you can’t guarantee distinct keys before inserting.</li>
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Param:</th><td class="field-body">int buffer_size: The buffer size for insert_session mode (default=50000).</td>
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>buffer_size</strong> (<em>int</em>) – The buffer size for insert_session mode (default=50000).</td>
 </tr>
 <tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">datasketch.lsh.MinHashLSHInsertionSession</td>
 </tr>
@@ -822,7 +822,7 @@ similarities greater than the threshold.</p>
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>minhash</strong> (<a class="reference internal" href="#datasketch.MinHash" title="datasketch.MinHash"><em>datasketch.MinHash</em></a>) – The MinHash of the query set.</td>
 </tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><cite>list</cite> of keys.</td>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><cite>list</cite> of unique keys.</td>
 </tr>
 </tbody>
 </table>

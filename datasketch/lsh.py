@@ -154,7 +154,7 @@ class MinHashLSH(object):
         '''
         Create a context manager for fast insertion into this index.
 
-        :param: int buffer_size: The buffer size for insert_session mode (default=50000).
+        :param int buffer_size: The buffer size for insert_session mode (default=50000).
 
         Returns:
             datasketch.lsh.MinHashLSHInsertionSession
@@ -185,7 +185,7 @@ class MinHashLSH(object):
             minhash (datasketch.MinHash): The MinHash of the query set. 
 
         Returns:
-            `list` of keys.
+            `list` of unique keys.
         '''
         if len(minhash) != self.h:
             raise ValueError("Expecting minhash with length %d, got %d"
