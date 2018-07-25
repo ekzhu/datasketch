@@ -76,6 +76,9 @@ class MinHashLSH(object):
             if this is given.
         storage_config (dict, optional): Type of storage service to use for storing
             hashtables and keys.
+            `basename` is an optional property whose value will be used as the prefix to 
+            stored keys. If this is not set, a random string will be generated instead. If you 
+            set this, you will be responsible for ensuring there are no key collisions.
         prepickle (bool, optional): If True, all keys are pickled to bytes before
             insertion. If None, a default value is chosen based on the
             `storage_config`.
@@ -113,7 +116,10 @@ class MinHashLSH(object):
             self.prepickle = storage_config['type'] == 'redis'
         else:
             self.prepickle = prepickle
-        basename = _random_name(11)
+        if 'basename' in storage_config:
+            basename = storage_config['basename']
+        else:
+            basename = _random_name(11)
         self.hashtables = [
             unordered_storage(storage_config, name=basename + b'_bucket_' + bytes([i]))
             for i in range(self.b)]
