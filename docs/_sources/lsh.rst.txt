@@ -173,7 +173,7 @@ implementation is faster then synchronous MongoDB
 For sharing across different Python
 processes see :ref:`minhash_lsh_at_scale`.
 
-#. The Asynchronous Redis storage storage option can be configured using:
+The Asynchronous Redis storage storage option can be configured using:
 
 * Usual way:
 
@@ -212,7 +212,7 @@ processes see :ref:`minhash_lsh_at_scale`.
             print(await lsh.query(m1))
             print(await lsh.query(m2))
 
-#. The Asynchronous MongoDB storage storage option can be configured using:
+The Asynchronous MongoDB storage storage option can be configured using:
 
 * Usual way:
 
