@@ -128,25 +128,27 @@ inconsistency.
 
 Asynchronous MinHash LSH at scale
 ---------------------------------
-You can use:
 
+.. note::
+    The module supports Python version >=3.6, and is currently experimental. 
+    So the interface may change slightly in the future.
+
+This module may be useful if you want to process millions of text documents 
+in streaming/batch mode using asynchronous RESTful API for clustering tasks, 
+and you expecting to maximize the throughput of your service.
+For example, this module allows your code to not get blocked by insertion. 
+
+We currently provide two implementations:
 * Asynchronous Redis storage (*python aioredis package*)
 * Asynchronous MongoDB storage (*python motor package*)
 
-.. note::
-    The module supports Python version >=3.6, and is currently experimental. So the interface may change slightly in the future.
+Experimental result
 
-This module could be useful if you consider to process millions texts in streaming/batch streaming mode using asynchronous RESTful API for clustering tasks, and you expecting to support maximum throughput of your service. For example, you can use it with `aiohttp` web-server.
-You can separate your web-server on inserting - Indexing and query - Quering endpoints.
-If you'll try to use synchronous module MinHashLSH you will be faced to blocking insertions. You can avoid this by using, for example, `asyncio.run_in_executor`, but don't hurry, see below some benchmarks to chose better way to do your tasks.
+* Number of objects (insert, query): 12500
+* Pool: `concurrent.futures.ThreadPoolExecutor(max_workers=100)`
+* check_duplication: false
+* buffer_size: 500
 
-Our experiment:
-    | **Number of objects (insert, query):** 12500
-    | **Pool:** ``concurrent.futures.ThreadPoolExecutor(max_workers=100)``
-    | **check_duplication:** false
-    | **buffer_size:** 500
-
-Results:
     +-------------------------+-------------------------------+------------------------+------------------------+
     |                         | Synchronous tests, sec        | Asynchronous tests, sec                         |
     |                         |                               +------------------------+------------------------+
@@ -161,18 +163,21 @@ Results:
     | **Query**               | 112.155                       | 60.509                 | 68.283                 |
     +-------------------------+-------------------------------+------------------------+------------------------+
 
-Summary:
-    - For faster querying consider use AsyncMinHashLSH module
-    - For faster inserting consider use MinHashLSH module
+In summary, for faster querying use AsyncMinHashLSH module, 
+and for faster insertion consider use MinHashLSH module.
 
-| If you consider using MongoDB storage, the asynchronous implementation is faster then synchronous MongoDB (*python pymongo package*). Though, obviously, it's slower than Redis storage.
-| All other comments about sharing across different Python processes see in :ref:`minhash_lsh_at_scale`
+If you consider using MongoDB storage, the asynchronous 
+implementation is faster then synchronous MongoDB 
+(*python pymongo package*). Though, it's slower than Redis storage.
+
+For sharing across different Python
+processes see :ref:`minhash_lsh_at_scale`.
 
 #. The Asynchronous Redis storage storage option can be configured using:
 
-    * Usual way:
+* Usual way:
 
-    .. code:: python
+.. code:: python
 
         from datasketch.experimental.async import AsyncMinHashLSH
 
@@ -189,9 +194,9 @@ Summary:
         print(await lsh.query(m2))
         lsh.close()
 
-    * Context Manager style:
+* Context Manager style:
 
-    .. code:: python
+.. code:: python
 
         from datasketch.experimental.async import AsyncMinHashLSH
 
@@ -209,9 +214,9 @@ Summary:
 
 #. The Asynchronous MongoDB storage storage option can be configured using:
 
-    * Usual way:
+* Usual way:
 
-    .. code:: python
+.. code:: python
 
         from datasketch.experimental.async import AsyncMinHashLSH
 
@@ -228,9 +233,9 @@ Summary:
         print(await lsh.query(m2))
         lsh.close()
 
-    * Context Manager style:
+* Context Manager style:
 
-    .. code:: python
+.. code:: python
 
         from datasketch.experimental.async import AsyncMinHashLSH
 
