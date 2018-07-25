@@ -8,8 +8,6 @@ from itertools import chain, islice
 
 import redis
 from pymongo import MongoClient
-import aioredis
-import motor.motor_asyncio
 import aiounittest
 import numpy as np
 
@@ -17,8 +15,8 @@ from datasketch.experimental.aio.lsh import AsyncMinHashLSH
 from datasketch.minhash import MinHash
 from datasketch.weighted_minhash import WeightedMinHashGenerator
 
-STORAGE_CONFIG_REDIS = {'type': 'aioredis', 'redis': {'host': '192.168.99.100', 'port': 6379}}
-STORAGE_CONFIG_MONGO = {'type': 'aiomongo', 'mongo': {'host': '192.168.99.100', 'port': 27017, 'db': 'lsh_test'}}
+STORAGE_CONFIG_REDIS = {'type': 'aioredis', 'redis': {'host': 'localhost', 'port': 6379}}
+STORAGE_CONFIG_MONGO = {'type': 'aiomongo', 'mongo': {'host': 'localhost', 'port': 27017, 'db': 'lsh_test'}}
 DO_TEST_REDIS = True
 DO_TEST_MONGO = True
 
@@ -63,7 +61,7 @@ class TestAsyncMinHashLSH(aiounittest.AsyncTestCase):
         Check _H output consistent bytes length given
         the same concatenated hash value size
         """
-        for l in range(2, 128 + 1, 16):
+        for _ in range(2, 128 + 1, 16):
             m = MinHash()
             m.update("abcdefg".encode("utf8"))
             m.update("1234567".encode("utf8"))

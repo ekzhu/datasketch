@@ -112,19 +112,15 @@ class MinHashLSH(object):
             false_positive_weight, false_negative_weight = weights
             self.b, self.r = _optimal_param(threshold, num_perm,
                     false_positive_weight, false_negative_weight)
-        if prepickle is None:
-            self.prepickle = storage_config['type'] == 'redis'
-        else:
-            self.prepickle = prepickle
-        if 'basename' in storage_config:
-            basename = storage_config['basename']
-        else:
-            basename = _random_name(11)
+
+        self.prepickle = storage_config['type'] == 'redis' if prepickle is None else prepickle
+
+        basename = storage_config.get('basename', _random_name(11))
         self.hashtables = [
-            unordered_storage(storage_config, name=basename + b'_bucket_' + bytes([i]))
+            unordered_storage(storage_config, name=b''.join([basename, b'_bucket_', bytes([i])]))
             for i in range(self.b)]
         self.hashranges = [(i*self.r, (i+1)*self.r) for i in range(self.b)]
-        self.keys = ordered_storage(storage_config, name=basename + b'_keys')
+        self.keys = ordered_storage(storage_config, name=b''.join([basename, b'_keys']))
 
     @property
     def buffer_size(self):

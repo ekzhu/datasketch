@@ -165,6 +165,9 @@
 <span class="sd">            if this is given.</span>
 <span class="sd">        storage_config (dict, optional): Type of storage service to use for storing</span>
 <span class="sd">            hashtables and keys.</span>
+<span class="sd">            `basename` is an optional property whose value will be used as the prefix to </span>
+<span class="sd">            stored keys. If this is not set, a random string will be generated instead. If you </span>
+<span class="sd">            set this, you will be responsible for ensuring there are no key collisions.</span>
 <span class="sd">        prepickle (bool, optional): If True, all keys are pickled to bytes before</span>
 <span class="sd">            insertion. If None, a default value is chosen based on the</span>
 <span class="sd">            `storage_config`.</span>
@@ -198,16 +201,15 @@
             <span class="n">false_positive_weight</span><span class="p">,</span> <span class="n">false_negative_weight</span> <span class="o">=</span> <span class="n">weights</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">b</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">r</span> <span class="o">=</span> <span class="n">_optimal_param</span><span class="p">(</span><span class="n">threshold</span><span class="p">,</span> <span class="n">num_perm</span><span class="p">,</span>
                     <span class="n">false_positive_weight</span><span class="p">,</span> <span class="n">false_negative_weight</span><span class="p">)</span>
-        <span class="k">if</span> <span class="n">prepickle</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">prepickle</span> <span class="o">=</span> <span class="n">storage_config</span><span class="p">[</span><span class="s1">&#39;type&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="s1">&#39;redis&#39;</span>
-        <span class="k">else</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">prepickle</span> <span class="o">=</span> <span class="n">prepickle</span>
-        <span class="n">basename</span> <span class="o">=</span> <span class="n">_random_name</span><span class="p">(</span><span class="mi">11</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">prepickle</span> <span class="o">=</span> <span class="n">storage_config</span><span class="p">[</span><span class="s1">&#39;type&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="s1">&#39;redis&#39;</span> <span class="k">if</span> <span class="n">prepickle</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">prepickle</span>
+
+        <span class="n">basename</span> <span class="o">=</span> <span class="n">storage_config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;basename&#39;</span><span class="p">,</span> <span class="n">_random_name</span><span class="p">(</span><span class="mi">11</span><span class="p">))</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">hashtables</span> <span class="o">=</span> <span class="p">[</span>
-            <span class="n">unordered_storage</span><span class="p">(</span><span class="n">storage_config</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="n">basename</span> <span class="o">+</span> <span class="sa">b</span><span class="s1">&#39;_bucket_&#39;</span> <span class="o">+</span> <span class="nb">bytes</span><span class="p">([</span><span class="n">i</span><span class="p">]))</span>
+            <span class="n">unordered_storage</span><span class="p">(</span><span class="n">storage_config</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="sa">b</span><span class="s1">&#39;&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="n">basename</span><span class="p">,</span> <span class="sa">b</span><span class="s1">&#39;_bucket_&#39;</span><span class="p">,</span> <span class="nb">bytes</span><span class="p">([</span><span class="n">i</span><span class="p">])]))</span>
             <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">b</span><span class="p">)]</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">hashranges</span> <span class="o">=</span> <span class="p">[(</span><span class="n">i</span><span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">r</span><span class="p">,</span> <span class="p">(</span><span class="n">i</span><span class="o">+</span><span class="mi">1</span><span class="p">)</span><span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">r</span><span class="p">)</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">b</span><span class="p">)]</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">keys</span> <span class="o">=</span> <span class="n">ordered_storage</span><span class="p">(</span><span class="n">storage_config</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="n">basename</span> <span class="o">+</span> <span class="sa">b</span><span class="s1">&#39;_keys&#39;</span><span class="p">)</span></div>
+        <span class="bp">self</span><span class="o">.</span><span class="n">keys</span> <span class="o">=</span> <span class="n">ordered_storage</span><span class="p">(</span><span class="n">storage_config</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="sa">b</span><span class="s1">&#39;&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="n">basename</span><span class="p">,</span> <span class="sa">b</span><span class="s1">&#39;_keys&#39;</span><span class="p">]))</span></div>
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">buffer_size</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
@@ -228,14 +230,10 @@
 
 <span class="sd">        :param str key: The identifier of the set.</span>
 <span class="sd">        :param datasketch.MinHash minhash: The MinHash of the set.</span>
-<span class="sd">        :param bool check_duplication: To avoid duplications by the key in the storage (`default=True`).</span>
-<span class="sd">                                       It&#39;s recommended to store unique keys in LSH index, but</span>
-<span class="sd">                                       if you don&#39;t want overhead in inserting on searching by key</span>
-<span class="sd">                                       you can use `check_duplication = False`.</span>
-<span class="sd">                                       In this case you wouldn&#39;t get any exceptions</span>
-<span class="sd">                                       and :func:`~datasketch.MinHashLSH.query` would always return unique keys.</span>
-<span class="sd">                                       Check your storage don&#39;t having any constrains on key (unique index and etc.)</span>
-<span class="sd">                                       if you can&#39;t guarantee distinct keys before inserting.</span>
+<span class="sd">        :param bool check_duplication: To avoid duplicate keys in the storage (`default=True`).</span>
+<span class="sd">                                       It&#39;s recommended to not change the default, but</span>
+<span class="sd">                                       if you want to avoid the overhead during insert</span>
+<span class="sd">                                       you can set `check_duplication = False`.</span>
 <span class="sd">        &#39;&#39;&#39;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_insert</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="n">minhash</span><span class="p">,</span> <span class="n">check_duplication</span><span class="o">=</span><span class="n">check_duplication</span><span class="p">,</span> <span class="n">buffer</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span></div>
 

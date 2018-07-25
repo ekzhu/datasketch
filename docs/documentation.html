@@ -743,7 +743,10 @@ of each bands). This is used to bypass the parameter optimization
 step in the constructor. <cite>threshold</cite> and <cite>weights</cite> will be ignored
 if this is given.</li>
 <li><strong>storage_config</strong> (<em>dict</em><em>, </em><em>optional</em>) – Type of storage service to use for storing
-hashtables and keys.</li>
+hashtables and keys.
+<cite>basename</cite> is an optional property whose value will be used as the prefix to
+stored keys. If this is not set, a random string will be generated instead. If you
+set this, you will be responsible for ensuring there are no key collisions.</li>
 <li><strong>prepickle</strong> (<em>bool</em><em>, </em><em>optional</em>) – If True, all keys are pickled to bytes before
 insertion. If None, a default value is chosen based on the
 <cite>storage_config</cite>.</li>
@@ -779,14 +782,10 @@ the key.</p>
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
 <li><strong>key</strong> (<em>str</em>) – The identifier of the set.</li>
 <li><strong>minhash</strong> (<a class="reference internal" href="#datasketch.MinHash" title="datasketch.MinHash"><em>datasketch.MinHash</em></a>) – The MinHash of the set.</li>
-<li><strong>check_duplication</strong> (<em>bool</em>) – To avoid duplications by the key in the storage (<cite>default=True</cite>).
-It’s recommended to store unique keys in LSH index, but
-if you don’t want overhead in inserting on searching by key
-you can use <cite>check_duplication = False</cite>.
-In this case you wouldn’t get any exceptions
-and <a class="reference internal" href="#datasketch.MinHashLSH.query" title="datasketch.MinHashLSH.query"><code class="xref py py-func docutils literal notranslate"><span class="pre">query()</span></code></a> would always return unique keys.
-Check your storage don’t having any constrains on key (unique index and etc.)
-if you can’t guarantee distinct keys before inserting.</li>
+<li><strong>check_duplication</strong> (<em>bool</em>) – To avoid duplicate keys in the storage (<cite>default=True</cite>).
+It’s recommended to not change the default, but
+if you want to avoid the overhead during insert
+you can set <cite>check_duplication = False</cite>.</li>
 </ul>
 </td>
 </tr>
@@ -910,7 +909,7 @@ counts</td>
 <h2>Asynchronous MinHash LSH<a class="headerlink" href="#asynchronous-minhash-lsh" title="Permalink to this headline">¶</a></h2>
 <dl class="class">
 <dt id="datasketch.experimental.aio.lsh.AsyncMinHashLSH">
-<em class="property">class </em><code class="descclassname">datasketch.experimental.aio.lsh.</code><code class="descname">AsyncMinHashLSH</code><span class="sig-paren">(</span><em>threshold=0.9</em>, <em>num_perm=128</em>, <em>weights=(0.5</em>, <em>0.5)</em>, <em>params=None</em>, <em>storage_config=None</em>, <em>prepickle=None</em>, <em>base_name=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/datasketch/experimental/aio/lsh.html#AsyncMinHashLSH"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#datasketch.experimental.aio.lsh.AsyncMinHashLSH" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="descclassname">datasketch.experimental.aio.lsh.</code><code class="descname">AsyncMinHashLSH</code><span class="sig-paren">(</span><em>threshold=0.9</em>, <em>num_perm=128</em>, <em>weights=(0.5</em>, <em>0.5)</em>, <em>params=None</em>, <em>storage_config=None</em>, <em>prepickle=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/datasketch/experimental/aio/lsh.html#AsyncMinHashLSH"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#datasketch.experimental.aio.lsh.AsyncMinHashLSH" title="Permalink to this definition">¶</a></dt>
 <dd><p>Asynchronous MinHashLSH index.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
@@ -985,7 +984,7 @@ counts</td>
 </div>
 <dl class="method">
 <dt id="datasketch.experimental.aio.lsh.AsyncMinHashLSH.__init__">
-<code class="descname">__init__</code><span class="sig-paren">(</span><em>threshold=0.9</em>, <em>num_perm=128</em>, <em>weights=(0.5</em>, <em>0.5)</em>, <em>params=None</em>, <em>storage_config=None</em>, <em>prepickle=None</em>, <em>base_name=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/datasketch/experimental/aio/lsh.html#AsyncMinHashLSH.__init__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#datasketch.experimental.aio.lsh.AsyncMinHashLSH.__init__" title="Permalink to this definition">¶</a></dt>
+<code class="descname">__init__</code><span class="sig-paren">(</span><em>threshold=0.9</em>, <em>num_perm=128</em>, <em>weights=(0.5</em>, <em>0.5)</em>, <em>params=None</em>, <em>storage_config=None</em>, <em>prepickle=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/datasketch/experimental/aio/lsh.html#AsyncMinHashLSH.__init__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#datasketch.experimental.aio.lsh.AsyncMinHashLSH.__init__" title="Permalink to this definition">¶</a></dt>
 <dd><p>Initialize self.  See help(type(self)) for accurate signature.</p>
 </dd></dl>
 

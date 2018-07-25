@@ -71,22 +71,21 @@ class AsyncMinHashLSH(object):
     """
 
     def __init__(self, threshold=0.9, num_perm=128, weights=(0.5, 0.5),
-                 params=None, storage_config=None, prepickle=None, base_name=None):
+                 params=None, storage_config=None, prepickle=None):
         if storage_config is None:
             storage_config = {
                 'type': 'aioredis',
                 'redis': {'host': 'localhost', 'port': 6379}
             }
-        self._storage_config = storage_config
+        self._storage_config = storage_config.copy()
+        self._storage_config['basename'] = self._storage_config.get('basename', _random_name(11))
+        self._basename = self._storage_config['basename']
         self._batch_size = 10000
         self._threshold = threshold
         self._num_perm = num_perm
         self._weights = weights
         self._params = params
-        if prepickle is None:
-            self._prepickle = storage_config['type'] == 'aioredis'
-        else:
-            self._prepickle = prepickle
+        self._prepickle = storage_config['type'] == 'aioredis' if prepickle is None else prepickle
 
         if self._threshold > 1.0 or self._threshold < 0.0:
             raise ValueError("threshold must be in [0.0, 1.0]")
@@ -114,9 +113,6 @@ class AsyncMinHashLSH(object):
 
         self._lock = asyncio.Lock()
         self._initialized = False
-        if base_name is None:
-            base_name = _random_name(11)
-        self._basename = base_name
 
     async def __async_init(self):
         async with self._lock:
@@ -147,7 +143,7 @@ class AsyncMinHashLSH(object):
         state['_lock'] = asyncio.Lock()
         self.__dict__ = state
         self.__init__(self._threshold, self._num_perm, self._weights, self._params, self._storage_config,
-                      self._prepickle, self._basename)
+                      self._prepickle)
 
     @property
     def batch_size(self):
@@ -167,11 +163,11 @@ class AsyncMinHashLSH(object):
 
     async def _create_storages(self):
         if self._storage_config['type'] == 'aioredis':
-            name_ordered = self._basename + b'_keys'
+            name_ordered = b''.join([self._basename, b'_keys'])
             fs = (
                 async_unordered_storage(
                     config=self._storage_config,
-                    name=self._basename + b'_bucket_' + bytes([i]),
+                    name=b''.join([self._basename, b'_bucket_', bytes([i])]),
                 )
                 for i in range(self.b)
             )
