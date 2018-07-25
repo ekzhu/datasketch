@@ -145,14 +145,10 @@ class MinHashLSH(object):
 
         :param str key: The identifier of the set.
         :param datasketch.MinHash minhash: The MinHash of the set.
-        :param bool check_duplication: To avoid duplications by the key in the storage (`default=True`).
-                                       It's recommended to store unique keys in LSH index, but
-                                       if you don't want overhead in inserting on searching by key
-                                       you can use `check_duplication = False`.
-                                       In this case you wouldn't get any exceptions
-                                       and :func:`~datasketch.MinHashLSH.query` would always return unique keys.
-                                       Check your storage don't having any constrains on key (unique index and etc.)
-                                       if you can't guarantee distinct keys before inserting.
+        :param bool check_duplication: To avoid duplicate keys in the storage (`default=True`).
+                                       It's recommended to not change the default, but
+                                       if you want to avoid the overhead during insert
+                                       you can set `check_duplication = False`.
         '''
         self._insert(key, minhash, check_duplication=check_duplication, buffer=False)
 
