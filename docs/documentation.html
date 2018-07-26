@@ -920,9 +920,10 @@ counts</td>
 <li><strong>num_perm</strong> (<em>int</em>) – see <a class="reference internal" href="#datasketch.MinHashLSH" title="datasketch.MinHashLSH"><code class="xref py py-class docutils literal notranslate"><span class="pre">datasketch.MinHashLSH</span></code></a>.</li>
 <li><strong>weights</strong> (<em>tuple</em><em>(</em><em>float</em><em>, </em><em>float</em><em>)</em>) – see <a class="reference internal" href="#datasketch.MinHashLSH" title="datasketch.MinHashLSH"><code class="xref py py-class docutils literal notranslate"><span class="pre">datasketch.MinHashLSH</span></code></a>.</li>
 <li><strong>params</strong> (<em>tuple</em>) – see <a class="reference internal" href="#datasketch.MinHashLSH" title="datasketch.MinHashLSH"><code class="xref py py-class docutils literal notranslate"><span class="pre">datasketch.MinHashLSH</span></code></a>.</li>
-<li><strong>storage_config</strong> (<em>dict</em>) – New types of storage service (aioredis, aiomongo) to use for storing hashtables and keys are implemented. If storage_config is None aioredis storage will be used.</li>
+<li><strong>storage_config</strong> (<em>dict</em>) – New types of storage service (aioredis, aiomongo) to use for storing
+hashtables and keys are implemented.
+If storage_config is None aioredis storage will be used.</li>
 <li><strong>prepickle</strong> (<em>bool</em>) – for redis type storage use bytes as keys.</li>
-<li><strong>base_name</strong> (<em>byte</em>) – basename. Useful if you want pickle LSH class and spread it into different workers.</li>
 </ul>
 </td>
 </tr>
@@ -947,7 +948,7 @@ counts</td>
 <span class="n">await</span> <span class="n">lsh</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="s1">&#39;b&#39;</span><span class="p">,</span> <span class="n">m2</span><span class="p">)</span>
 <span class="k">print</span><span class="p">(</span><span class="n">await</span> <span class="n">lsh</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">m1</span><span class="p">))</span>
 <span class="k">print</span><span class="p">(</span><span class="n">await</span> <span class="n">lsh</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">m2</span><span class="p">))</span>
-<span class="n">lsh</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+<span class="n">await</span> <span class="n">lsh</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
 </pre></div>
 </div>
 </div></blockquote>
@@ -958,7 +959,7 @@ counts</td>
 
 <span class="n">_storage_config_redis</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;type&#39;</span><span class="p">:</span> <span class="s1">&#39;aioredis&#39;</span><span class="p">,</span> <span class="s1">&#39;redis&#39;</span><span class="p">:</span> <span class="p">{</span><span class="s1">&#39;host&#39;</span><span class="p">:</span> <span class="s1">&#39;localhost&#39;</span><span class="p">,</span> <span class="s1">&#39;port&#39;</span><span class="p">:</span> <span class="mi">6379</span><span class="p">}}</span>
 
-<span class="n">aio</span> <span class="k">with</span> <span class="n">AsyncMinHashLSH</span><span class="p">(</span><span class="n">storage_config</span><span class="o">=</span><span class="n">_storage_config_redis</span><span class="p">,</span> <span class="n">threshold</span><span class="o">=</span><span class="mf">0.5</span><span class="p">,</span> <span class="n">num_perm</span><span class="o">=</span><span class="mi">16</span><span class="p">)</span> <span class="k">as</span> <span class="n">lsh</span><span class="p">:</span>
+<span class="n">async</span> <span class="k">with</span> <span class="n">AsyncMinHashLSH</span><span class="p">(</span><span class="n">storage_config</span><span class="o">=</span><span class="n">_storage_config_redis</span><span class="p">,</span> <span class="n">threshold</span><span class="o">=</span><span class="mf">0.5</span><span class="p">,</span> <span class="n">num_perm</span><span class="o">=</span><span class="mi">16</span><span class="p">)</span> <span class="k">as</span> <span class="n">lsh</span><span class="p">:</span>
     <span class="n">m1</span> <span class="o">=</span> <span class="n">MinHash</span><span class="p">(</span><span class="mi">16</span><span class="p">)</span>
     <span class="n">m1</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="s1">&#39;a&#39;</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="s1">&#39;utf8&#39;</span><span class="p">))</span>
     <span class="n">m2</span> <span class="o">=</span> <span class="n">MinHash</span><span class="p">(</span><span class="mi">16</span><span class="p">)</span>
@@ -974,6 +975,11 @@ counts</td>
 </ol>
 </dd>
 </dl>
+<p>Example of supported storage configuration:</p>
+<ul class="simple">
+<li><cite>REDIS = {‘type’: ‘aioredis’, ‘basename’: ‘base_name_1’, ‘redis’: {‘host’: ‘localhost’, ‘port’: 6379}}</cite></li>
+<li><cite>MONGO = {‘type’: ‘aiomongo’, ‘basename’: ‘base_name_1’, ‘mongo’: {‘host’: ‘localhost’, ‘port’: 27017}}</cite></li>
+</ul>
 <div class="admonition note">
 <p class="first admonition-title">Note</p>
 <ul class="last simple">

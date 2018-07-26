@@ -21,9 +21,10 @@ class AsyncMinHashLSH(object):
     :param weights: see :class:`datasketch.MinHashLSH`.
     :type weights: tuple(float, float)
     :param tuple params: see :class:`datasketch.MinHashLSH`.
-    :param dict storage_config: New types of storage service (aioredis, aiomongo) to use for storing hashtables and keys are implemented. If storage_config is None aioredis storage will be used.
+    :param dict storage_config: New types of storage service (aioredis, aiomongo) to use for storing
+                                hashtables and keys are implemented.
+                                If storage_config is None aioredis storage will be used.
     :param bool prepickle: for redis type storage use bytes as keys.
-    :param byte base_name: basename. Useful if you want pickle LSH class and spread it into different workers.
 
     Example:
         There is two ways to create a AsyncMinHash index.
@@ -44,7 +45,7 @@ class AsyncMinHashLSH(object):
                     await lsh.insert('b', m2)
                     print(await lsh.query(m1))
                     print(await lsh.query(m2))
-                    lsh.close()
+                    await lsh.close()
 
             2. Context Manager style:
 
@@ -54,7 +55,7 @@ class AsyncMinHashLSH(object):
 
                     _storage_config_redis = {'type': 'aioredis', 'redis': {'host': 'localhost', 'port': 6379}}
 
-                    aio with AsyncMinHashLSH(storage_config=_storage_config_redis, threshold=0.5, num_perm=16) as lsh:
+                    async with AsyncMinHashLSH(storage_config=_storage_config_redis, threshold=0.5, num_perm=16) as lsh:
                         m1 = MinHash(16)
                         m1.update('a'.encode('utf8'))
                         m2 = MinHash(16)
@@ -63,6 +64,11 @@ class AsyncMinHashLSH(object):
                         await lsh.insert('b', m2)
                         print(await lsh.query(m1))
                         print(await lsh.query(m2))
+
+    Example of supported storage configuration:
+
+    * `REDIS = {'type': 'aioredis', 'basename': 'base_name_1', 'redis': {'host': 'localhost', 'port': 6379}}`
+    * `MONGO = {'type': 'aiomongo', 'basename': 'base_name_1', 'mongo': {'host': 'localhost', 'port': 27017}}`
 
     .. note::
         * The module supports Python version >=3.6, and is currently experimental. So the interface may change slightly in the future.
