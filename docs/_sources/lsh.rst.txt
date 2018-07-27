@@ -105,10 +105,6 @@ The Redis storage option can be configured using:
             'redis': {'host': 'localhost', 'port': 6379}
          })
 
-Starting multiple MinHash LSH objects across different Python processes sharing 
-the same storage layer can be achieved through "pickling" of an initialized
-LSH object. You can also persist the index connection using `pickle`.
-
 To insert a large number of MinHashes in sequence, it is advisable to use
 an insertion session. This reduces the number of network calls during
 bulk insertion.
@@ -123,6 +119,49 @@ bulk insertion.
 
 Note that querying the LSH object during an open insertion session may result in
 inconsistency.
+
+Connecting to Existing MinHash LSH
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+If you are using an external storage layer (e.g., Redis) for your LSH, you can 
+share it across multiple processes. Ther are two ways to do it:
+
+The recommended way is to use "pickling". The MinHash LSH object is serializable
+so you can call `pickle`:
+
+.. code:: python
+
+    import pickle
+
+    # Create your LSH object
+    lsh = ...
+    # Serialize the LSH
+    data = pickle.dumps(lsh)
+    # Now you can pass it as an argument to a forked process or simply save it
+    # in an external storage.
+
+    # In a different process, deserialize the LSH
+    lsh = pickle.loads(data)
+
+Using pickle allows you to preserve everything you need to know about the LSH
+such as various parameter settings in a single location.
+
+Alternatively you can specify a unique `base_name` in the storage config when
+you first creating the LSH. For example:
+
+.. code:: python
+    
+    lsh = MinHashLSH(
+     threshold=0.5, num_perm=128, storage_config={
+        'type': 'redis',
+        'base_name': 'unique_name_6ac4fg',
+        'redis': {'host': 'localhost', 'port': 6379}
+     })
+
+The `base_name` will be used to generate key prefixes in the storage layer to
+uniquely identify data associated with this LSH. Thus, if you create a new
+LSH object with the same `base_name`, you will be using the same underlying
+data in the storage layer associated with the old LSH.
 
 .. _minhash_lsh_async:
 
