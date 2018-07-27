@@ -26,49 +26,14 @@ class AsyncMinHashLSH(object):
                                 If storage_config is None aioredis storage will be used.
     :param bool prepickle: for redis type storage use bytes as keys.
 
-    Example:
-        There is two ways to create a AsyncMinHash index.
-            1. Usual way:
-
-                .. code-block:: python
-
-                    from datasketch.experimental.aio import AsyncMinHashLSH
-
-                    _storage_config_redis = {'type': 'aioredis', 'redis': {'host': 'localhost', 'port': 6379}}
-
-                    lsh = await AsyncMinHashLSH(storage_config=_storage_config_redis, threshold=0.5, num_perm=16)
-                    m1 = MinHash(16)
-                    m1.update('a'.encode('utf8'))
-                    m2 = MinHash(16)
-                    m2.update('b'.encode('utf8'))
-                    await lsh.insert('a', m1)
-                    await lsh.insert('b', m2)
-                    print(await lsh.query(m1))
-                    print(await lsh.query(m2))
-                    await lsh.close()
-
-            2. Context Manager style:
-
-                .. code-block:: python
-
-                    from datasketch.experimental.aio import AsyncMinHashLSH
-
-                    _storage_config_redis = {'type': 'aioredis', 'redis': {'host': 'localhost', 'port': 6379}}
-
-                    async with AsyncMinHashLSH(storage_config=_storage_config_redis, threshold=0.5, num_perm=16) as lsh:
-                        m1 = MinHash(16)
-                        m1.update('a'.encode('utf8'))
-                        m2 = MinHash(16)
-                        m2.update('b'.encode('utf8'))
-                        await lsh.insert('a', m1)
-                        await lsh.insert('b', m2)
-                        print(await lsh.query(m1))
-                        print(await lsh.query(m2))
+    For example usage see :ref:`minhash_lsh_async`.
 
     Example of supported storage configuration:
 
-    * `REDIS = {'type': 'aioredis', 'basename': 'base_name_1', 'redis': {'host': 'localhost', 'port': 6379}}`
-    * `MONGO = {'type': 'aiomongo', 'basename': 'base_name_1', 'mongo': {'host': 'localhost', 'port': 27017}}`
+    .. code-block:: python
+
+        REDIS = {'type': 'aioredis', 'basename': 'base_name_1', 'redis': {'host': 'localhost', 'port': 6379}}
+        MONGO = {'type': 'aiomongo', 'basename': 'base_name_1', 'mongo': {'host': 'localhost', 'port': 27017}}
 
     .. note::
         * The module supports Python version >=3.6, and is currently experimental. So the interface may change slightly in the future.
