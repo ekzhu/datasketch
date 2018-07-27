@@ -123,3 +123,122 @@ bulk insertion.
 
 Note that querying the LSH object during an open insertion session may result in
 inconsistency.
+
+.. _minhash_lsh_async:
+
+Asynchronous MinHash LSH at scale
+---------------------------------
+
+.. note::
+    The module supports Python version >=3.6, and is currently experimental. 
+    So the interface may change slightly in the future.
+
+This module may be useful if you want to process millions of text documents 
+in streaming/batch mode using asynchronous RESTful API for clustering tasks, 
+and you expecting to maximize the throughput of your service.
+For example, this module allows your code to not get blocked by insertion. 
+
+We currently provide two implementations:
+
+* Asynchronous Redis storage (*python aioredis package*)
+* Asynchronous MongoDB storage (*python motor package*)
+
+Experimental result
+
+* Number of objects (insert, query): 12500
+* Pool: `concurrent.futures.ThreadPoolExecutor(max_workers=100)`
+* check_duplication: false
+* buffer_size: 500
+
++-------------------------+-------------------------------+------------------------+------------------------+
+|                         | Synchronous tests, sec        | Asynchronous tests, sec                         |
+|                         |                               +------------------------+------------------------+
+|                         | *MinHashLSH*                  |*AsyncMinHashLSH*       || *ThreadPoolExecutor*  |
+|                         | *redis storage*               |                        || *MinHashLSH*          |
+|                         |                               |                        || *redis storage*       |
++=========================+===============================+========================+========================+
+| **Insert**              |                               | 30.626                 | 41.023                 |
++-------------------------+-------------------------------+------------------------+------------------------+
+|| **Insert session**     | 6.729                         | 39.274                 |                        |
++-------------------------+-------------------------------+------------------------+------------------------+
+| **Query**               | 112.155                       | 60.509                 | 68.283                 |
++-------------------------+-------------------------------+------------------------+------------------------+
+
+In summary, for faster querying use AsyncMinHashLSH module, 
+and for faster insertion consider use MinHashLSH module.
+
+If you consider using MongoDB storage, the asynchronous 
+implementation is faster then synchronous MongoDB 
+(*python pymongo package*). Though, it's slower than Redis storage.
+
+For sharing across different Python
+processes see :ref:`minhash_lsh_at_scale`.
+
+The Asynchronous Redis storage option can be configured using:
+
+* Usual way:
+
+.. code:: python
+
+        from datasketch.experimental.async import AsyncMinHashLSH
+
+        _storage = {'type': 'aioredis', 'redis': {'host': 'localhost', 'port': 6379}}
+
+        lsh = await AsyncMinHashLSH(storage_config=_storage, threshold=0.5, num_perm=16)
+        m1 = MinHash(16)
+        m1.update('a'.encode('utf8'))
+        m2 = MinHash(16)
+        m2.update('b'.encode('utf8'))
+        await lsh.insert('a', m1)
+        await lsh.insert('b', m2)
+        print(await lsh.query(m1))
+        print(await lsh.query(m2))
+        lsh.close()
+
+* Context Manager style:
+
+.. code:: python
+
+        from datasketch.experimental.async import AsyncMinHashLSH
+
+        _storage = {'type': 'aioredis', 'redis': {'host': 'localhost', 'port': 6379}}
+
+        async with AsyncMinHashLSH(storage_config=_storage, threshold=0.5, num_perm=16) as lsh:
+            m1 = MinHash(16)
+            m1.update('a'.encode('utf8'))
+            m2 = MinHash(16)
+            m2.update('b'.encode('utf8'))
+            await lsh.insert('a', m1)
+            await lsh.insert('b', m2)
+            print(await lsh.query(m1))
+            print(await lsh.query(m2))
+
+To configure Asynchronous MongoDB storage, use:
+
+.. code:: python
+
+        _storage = {'type': 'aiomongo', 'mongo': {'host': 'localhost', 'port': 27017, 'db': 'lsh_test'}}
+        
+To index a large number of MinHashes using asynchronous MinHash LSH.
+
+.. code:: python
+
+    from datasketch.experimental.async import AsyncMinHashLSH
+
+    def chunk(it, size):
+        it = iter(it)
+        return iter(lambda: tuple(islice(it, size)), ())
+
+    _chunked_str = chunk((random.choice(string.ascii_lowercase) for _ in range(10000)), 4)
+    seq = frozenset(chain((''.join(s) for s in _chunked_str), ('aahhb', 'aahh', 'aahhc', 'aac', 'kld', 'bhg', 'kkd', 'yow', 'ppi', 'eer')))
+    objs = [MinHash(16) for _ in range(len(seq))]
+    for e, obj in zip(seq, objs):
+        for i in e:
+            obj.update(i.encode('utf-8'))
+    data = [(e, m) for e, m in zip(seq, objs)]
+
+    _storage = {'type': 'aiomongo', 'mongo': {'host': 'localhost', 'port': 27017, 'db': 'lsh_test'}}
+    async with AsyncMinHashLSH(storage_config=_storage, threshold=0.5, num_perm=16) as lsh:
+        async with lsh.insertion_session(batch_size=1000) as session:
+            fs = (session.insert(key, minhash, check_duplication=False) for key, minhash in data)
+            await asyncio.gather(*fs)

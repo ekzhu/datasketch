@@ -248,7 +248,7 @@ html_sidebars = {
 # html_search_language = 'en'
 
 # A dictionary with options for the search language support, empty by default.
-# 'ja' uses this config value.
+# 'ja' uses this _config value.
 # 'zh' user can custom change `jieba` dictionary path.
 #
 # html_search_options = {'type': 'default'}

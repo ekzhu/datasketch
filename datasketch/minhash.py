@@ -179,25 +179,20 @@ class MinHash(object):
 
     def copy(self):
         '''
-        Returns:
-            datasketch.MinHash: A copy of this MinHash by exporting its
-                state.
+        :returns: datasketch.MinHash -- A copy of this MinHash by exporting its state.
         '''
         return MinHash(seed=self.seed, hashvalues=self.digest(),
                 permutations=self.permutations)
 
     def __len__(self):
         '''
-        Returns:
-            int: The number of hash values.
+        :returns: int -- The number of hash values.
         '''
         return len(self.hashvalues)
 
     def __eq__(self, other):
         '''
-        Returns:
-            bool: If their seeds and hash values are both equal then two
-                are equivalent.
+        :returns: bool -- If their seeds and hash values are both equal then two are equivalent.
         '''
         return self.seed == other.seed and \
                 np.array_equal(self.hashvalues, other.hashvalues)

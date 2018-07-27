@@ -7,6 +7,7 @@ from setuptools import setup, find_packages
 # To use a consistent encoding
 from codecs import open
 from os import path
+import sys
 
 here = path.abspath(path.dirname(__file__))
 
@@ -14,14 +15,17 @@ here = path.abspath(path.dirname(__file__))
 with open(path.join(here, 'DESCRIPTION.rst'), encoding='utf-8') as f:
     long_description = f.read()
 
+test_requires = ['coverage', 'mock>=2.0.0']
+
 setup(
     name='datasketch',
 
     # Versions should comply with PEP440.  For a discussion on single-sourcing
     # the version across setup.py and the project code, see
     # https://packaging.python.org/en/latest/single_source_version.html
-    version='1.2.6',
 
+    version='1.2.7',
+  
     description='Probabilistic data structures for processing and searching very large datasets',
     long_description=long_description,
 
@@ -67,8 +71,7 @@ setup(
 
     # You can just specify the packages manually here if your project is
     # simple. Or you can use find_packages().
-    packages=find_packages(exclude=['contrib', 'docs', 'test*', 'benchmarks',
-            'examples', 'docsrc']),
+    packages=find_packages(exclude=['contrib', 'docs', 'test*', 'benchmarks', 'examples', 'docsrc']),
 
     # List run-time dependencies here.  These will be installed by pip when
     # your project is installed. For an analysis of "install_requires" vs pip's
@@ -79,10 +82,11 @@ setup(
     # List additional groups of dependencies here (e.g. development
     # dependencies). You can install these using the following syntax,
     # for example:
-    # $ pip install -e .[dev,test]
+    # $ pip install -e .[dev,test,aio,aio-test]
     extras_require={
         'dev': ['check-manifest'],
-        'test': ['coverage', 'mock>=2.0.0', 'mockredispy'],
+        'test': test_requires + ['mockredispy', "aiounittest ; python_version>='3.6'", "aioredis ; python_version>='3.6'", "motor ; python_version>='3.6'", "pymongo ; python_version>='3.6'"],
+        'experimental_aio': ["aiounittest ; python_version>='3.6'", "aioredis ; python_version>='3.6'", "motor ; python_version>='3.6'", "pymongo ; python_version>='3.6'"],
     },
 
     # If there are data files included in your packages that need to be

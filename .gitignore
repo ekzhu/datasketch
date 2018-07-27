@@ -63,3 +63,6 @@ target/
 .doctrees
 _build
 doctrees
+
+# Jetbrains
+.idea

@@ -91,8 +91,10 @@ class MinHashLSH(object):
         Try to live with a small difference between weights (i.e. < 0.5).
     '''
 
-    def __init__(self, threshold=0.9, num_perm=128, weights=(0.5,0.5),
-                 params=None, storage_config={'type': 'dict'}, prepickle=None):
+    def __init__(self, threshold=0.9, num_perm=128, weights=(0.5, 0.5),
+                 params=None, storage_config=None, prepickle=None):
+        storage_config = {'type': 'dict'} if not storage_config else storage_config
+        self._buffer_size = 50000
         if threshold > 1.0 or threshold < 0.0:
             raise ValueError("threshold must be in [0.0, 1.0]") 
         if num_perm < 2:
@@ -110,40 +112,52 @@ class MinHashLSH(object):
             false_positive_weight, false_negative_weight = weights
             self.b, self.r = _optimal_param(threshold, num_perm,
                     false_positive_weight, false_negative_weight)
-        if prepickle is None:
-            self.prepickle = storage_config['type'] == 'redis'
-        else:
-            self.prepickle = prepickle
-        if 'basename' in storage_config:
-            basename = storage_config['basename']
-        else:
-            basename = _random_name(11)
+
+        self.prepickle = storage_config['type'] == 'redis' if prepickle is None else prepickle
+
+        basename = storage_config.get('basename', _random_name(11))
         self.hashtables = [
-            unordered_storage(storage_config, name=basename + b'_bucket_' + bytes([i]))
+            unordered_storage(storage_config, name=b''.join([basename, b'_bucket_', bytes([i])]))
             for i in range(self.b)]
         self.hashranges = [(i*self.r, (i+1)*self.r) for i in range(self.b)]
-        self.keys = ordered_storage(storage_config, name=basename + b'_keys')
+        self.keys = ordered_storage(storage_config, name=b''.join([basename, b'_keys']))
 
-    def insert(self, key, minhash):
+    @property
+    def buffer_size(self):
+        return self._buffer_size
+
+    @buffer_size.setter
+    def buffer_size(self, value):
+        self.keys.buffer_size = value
+        for t in self.hashtables:
+            t.buffer_size = value
+        self._buffer_size = value
+
+    def insert(self, key, minhash, check_duplication=True):
         '''
-        Insert a unique key to the index, together
+        Insert a key to the index, together
         with a MinHash (or weighted MinHash) of the set referenced by 
         the key.
 
-        Args:
-            key (hashable): The unique identifier of the set. 
-            minhash (datasketch.MinHash): The MinHash of the set. 
+        :param str key: The identifier of the set.
+        :param datasketch.MinHash minhash: The MinHash of the set.
+        :param bool check_duplication: To avoid duplicate keys in the storage (`default=True`).
+                                       It's recommended to not change the default, but
+                                       if you want to avoid the overhead during insert
+                                       you can set `check_duplication = False`.
         '''
-        self._insert(key, minhash, check_duplication=True, buffer=False)
+        self._insert(key, minhash, check_duplication=check_duplication, buffer=False)
 
-    def insertion_session(self):
+    def insertion_session(self, buffer_size=50000):
         '''
         Create a context manager for fast insertion into this index.
+
+        :param int buffer_size: The buffer size for insert_session mode (default=50000).
 
         Returns:
             datasketch.lsh.MinHashLSHInsertionSession
         '''
-        return MinHashLSHInsertionSession(self)
+        return MinHashLSHInsertionSession(self, buffer_size=buffer_size)
 
     def _insert(self, key, minhash, check_duplication=True, buffer=False):
         if len(minhash) != self.h:
@@ -169,7 +183,7 @@ class MinHashLSH(object):
             minhash (datasketch.MinHash): The MinHash of the query set. 
 
         Returns:
-            `list` of keys.
+            `list` of unique keys.
         '''
         if len(minhash) != self.h:
             raise ValueError("Expecting minhash with length %d, got %d"
@@ -253,7 +267,7 @@ class MinHashLSH(object):
 
     def get_subset_counts(self, *keys):
         '''
-        Returns the bucket allocation counts (see :ref:`get_counts` above)
+        Returns the bucket allocation counts (see :func:`~datasketch.MinHashLSH.get_counts` above)
         restricted to the list of keys given.
 
         Args:
@@ -277,13 +291,17 @@ class MinHashLSHInsertionSession:
     '''Context manager for batch insertion of documents into a MinHashLSH.
     '''
 
-    def __init__(self, lsh):
+    def __init__(self, lsh, buffer_size):
         self.lsh = lsh
+        self.lsh.buffer_size = buffer_size
 
     def __enter__(self):
         return self
 
     def __exit__(self, exc_type, exc_val, exc_tb):
+        self.close()
+
+    def close(self):
         self.lsh.keys.empty_buffer()
         for hashtable in self.lsh.hashtables:
             hashtable.empty_buffer()
