@@ -146,7 +146,7 @@ so you can call `pickle`:
 Using pickle allows you to preserve everything you need to know about the LSH
 such as various parameter settings in a single location.
 
-Alternatively you can specify a unique `base_name` in the storage config when
+Alternatively you can specify `base_name` in the storage config when
 you first creating the LSH. For example:
 
 .. code:: python
@@ -162,6 +162,9 @@ The `base_name` will be used to generate key prefixes in the storage layer to
 uniquely identify data associated with this LSH. Thus, if you create a new
 LSH object with the same `base_name`, you will be using the same underlying
 data in the storage layer associated with the old LSH.
+
+If you don't specify `base_name`, MinHash LSH will generate a random string
+as the base name, and collision is extremely unlikely.
 
 .. _minhash_lsh_async:
 
@@ -256,7 +259,7 @@ To configure Asynchronous MongoDB storage, use:
 
 .. code:: python
 
-        _storage = {'type': 'aiomongo', 'mongo': {'host': 'localhost', 'port': 27017, 'db': 'lsh_test'}}
+    _storage = {'type': 'aiomongo', 'mongo': {'host': 'localhost', 'port': 27017, 'db': 'lsh_test'}}
         
 To index a large number of MinHashes using asynchronous MinHash LSH.
 
