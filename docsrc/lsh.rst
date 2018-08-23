@@ -146,7 +146,7 @@ so you can call `pickle`:
 Using pickle allows you to preserve everything you need to know about the LSH
 such as various parameter settings in a single location.
 
-Alternatively you can specify `base_name` in the storage config when
+Alternatively you can specify `basename` in the storage config when
 you first creating the LSH. For example:
 
 .. code:: python
@@ -154,16 +154,16 @@ you first creating the LSH. For example:
     lsh = MinHashLSH(
      threshold=0.5, num_perm=128, storage_config={
         'type': 'redis',
-        'base_name': 'unique_name_6ac4fg',
+        'basename': b'unique_name_6ac4fg',
         'redis': {'host': 'localhost', 'port': 6379}
      })
 
-The `base_name` will be used to generate key prefixes in the storage layer to
+The `basename` will be used to generate key prefixes in the storage layer to
 uniquely identify data associated with this LSH. Thus, if you create a new
-LSH object with the same `base_name`, you will be using the same underlying
+LSH object with the same `basename`, you will be using the same underlying
 data in the storage layer associated with the old LSH.
 
-If you don't specify `base_name`, MinHash LSH will generate a random string
+If you don't specify `basename`, MinHash LSH will generate a random string
 as the base name, and collision is extremely unlikely.
 
 .. _minhash_lsh_async:

@@ -221,21 +221,21 @@ so you can call <cite>pickle</cite>:</p>
 </div>
 <p>Using pickle allows you to preserve everything you need to know about the LSH
 such as various parameter settings in a single location.</p>
-<p>Alternatively you can specify <cite>base_name</cite> in the storage config when
+<p>Alternatively you can specify <cite>basename</cite> in the storage config when
 you first creating the LSH. For example:</p>
 <div class="code python highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">lsh</span> <span class="o">=</span> <span class="n">MinHashLSH</span><span class="p">(</span>
  <span class="n">threshold</span><span class="o">=</span><span class="mf">0.5</span><span class="p">,</span> <span class="n">num_perm</span><span class="o">=</span><span class="mi">128</span><span class="p">,</span> <span class="n">storage_config</span><span class="o">=</span><span class="p">{</span>
     <span class="s1">&#39;type&#39;</span><span class="p">:</span> <span class="s1">&#39;redis&#39;</span><span class="p">,</span>
-    <span class="s1">&#39;base_name&#39;</span><span class="p">:</span> <span class="s1">&#39;unique_name_6ac4fg&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;basename&#39;</span><span class="p">:</span> <span class="sa">b</span><span class="s1">&#39;unique_name_6ac4fg&#39;</span><span class="p">,</span>
     <span class="s1">&#39;redis&#39;</span><span class="p">:</span> <span class="p">{</span><span class="s1">&#39;host&#39;</span><span class="p">:</span> <span class="s1">&#39;localhost&#39;</span><span class="p">,</span> <span class="s1">&#39;port&#39;</span><span class="p">:</span> <span class="mi">6379</span><span class="p">}</span>
  <span class="p">})</span>
 </pre></div>
 </div>
-<p>The <cite>base_name</cite> will be used to generate key prefixes in the storage layer to
+<p>The <cite>basename</cite> will be used to generate key prefixes in the storage layer to
 uniquely identify data associated with this LSH. Thus, if you create a new
-LSH object with the same <cite>base_name</cite>, you will be using the same underlying
+LSH object with the same <cite>basename</cite>, you will be using the same underlying
 data in the storage layer associated with the old LSH.</p>
-<p>If you don’t specify <cite>base_name</cite>, MinHash LSH will generate a random string
+<p>If you don’t specify <cite>basename</cite>, MinHash LSH will generate a random string
 as the base name, and collision is extremely unlikely.</p>
 </div>
 </div>
