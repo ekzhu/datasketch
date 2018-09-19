@@ -113,7 +113,7 @@ class MinHashLSH(object):
             self.b, self.r = _optimal_param(threshold, num_perm,
                     false_positive_weight, false_negative_weight)
 
-        self.prepickle = storage_config['type'] == 'redis' if prepickle is None else prepickle
+        self.prepickle = storage_config['type'] == 'redis' or storage_config['type'] == 'postgres' if prepickle is None else prepickle
 
         basename = storage_config.get('basename', _random_name(11))
         self.hashtables = [
@@ -163,12 +163,12 @@ class MinHashLSH(object):
         if len(minhash) != self.h:
             raise ValueError("Expecting minhash with length %d, got %d"
                     % (self.h, len(minhash)))
+        if self.prepickle:
+            key = pickle.dumps(key)
         if check_duplication and key in self.keys:
             raise ValueError("The given key already exists")
         Hs = [self._H(minhash.hashvalues[start:end])
               for start, end in self.hashranges]
-        if self.prepickle:
-            key = pickle.dumps(key)
         self.keys.insert(key, *Hs, buffer=buffer)
         for H, hashtable in zip(Hs, self.hashtables):
             hashtable.insert(H, key, buffer=buffer)

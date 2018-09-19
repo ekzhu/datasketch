@@ -2,6 +2,10 @@ from collections import defaultdict
 import os
 import random
 import string
+import psycopg2
+import pickle
+from pymemcache.client.base import Client
+
 from abc import ABCMeta, abstractmethod
 ABC = ABCMeta('ABC', (object,), {}) # compatible with Python 2 *and* 3
 try:
@@ -44,6 +48,10 @@ def ordered_storage(config, name=None):
         return DictListStorage(config)
     if tp == 'redis':
         return RedisListStorage(config, name=name)
+    if tp == 'postgres':
+        return PostgresListStorage(config, name=name)
+    if tp == 'memcached':
+        return MemcachedListStorage(config, name=name)
 
 
 def unordered_storage(config, name=None):
@@ -79,6 +87,10 @@ def unordered_storage(config, name=None):
         return DictSetStorage(config)
     if tp == 'redis':
         return RedisSetStorage(config, name=name)
+    if tp == 'postgres':
+        return PostgresSetStorage(config, name=name)
+    if tp == 'memcached':
+        return MemcachedSetStorage(config, name=name)
 
 
 class Storage(ABC):
@@ -429,6 +441,326 @@ if redis is not None:
         def _get_len(r, k):
             return r.scard(k)
 
+
+class PostgresStorage:
+    def __init__(self, config, name=None):
+        self._name = name
+        self._postgres_param = self._parse_config(config['postgres'])
+        self._db_connection = psycopg2.connect(**self._postgres_param)
+
+    def _postgres_key(self, key):
+        newkey = self._name + key
+        return newkey
+
+    def _keys(self, table):
+        sql = "SELECT KEY FROM {0}"
+        with self._db_connection.cursor() as cursor:
+            cursor.itersize = 100
+            cursor.execute(sql.format(table),)
+            for res in cursor:
+                # Internal datasketch API requires keys method
+                # to return key without basename
+                yield bytes(res[0]).replace(self._name, b'')
+        self._db_connection.commit()
+
+    def _get(self, key, table):
+        sql = "SELECT VALUE FROM {0} WHERE KEY=%s"
+        with self._db_connection.cursor() as cursor:
+            cursor.execute(sql.format(table), (self._postgres_key(key),))
+            res = cursor.fetchone()
+        self._db_connection.commit()
+        if res is None:
+            return list()
+        res = [bytes(r) for r in res[0]]
+        return res
+
+    def _remove(self, table, *keys):
+        sql = "DELETE FROM {0} WHERE KEY in (%s)"
+        with self._db_connection.cursor() as cursor:
+            cursor.execute(sql.format(table), (*[self._postgres_key(key) for key in keys],))
+        self._db_connection.commit()
+
+    def _remove_val(self, key, val, table):
+        sql = "UPDATE {0} SET VALUE = array_remove(VALUE, %s) WHERE KEY = %s"
+        with self._db_connection.cursor() as cursor:
+            cursor.execute(sql.format(table), (val, self._postgres_key(key)))
+        self._db_connection.commit()
+
+    def _insert(self, key, table, *vals, **kwargs):
+        sql = "INSERT INTO {0} VALUES (%s, %s)"
+        with self._db_connection.cursor() as cursor:
+            cursor.execute(sql.format(table),
+                           (self._postgres_key(key), list(vals)))
+        self._db_connection.commit()
+
+    def _size(self, table):
+        sql = "SELECT count(*) FROM {0}"
+        with self._db_connection.cursor() as cursor:
+            cursor.execute(sql.format(table),)
+            res = int(cursor.fetchone()[0])
+        self._db_connection.commit()
+        return res
+
+    def itemcounts(self, table, **kwargs):
+        '''Returns a dict where the keys are the keys of the container.
+        The values are the *lengths* of the value sequences stored
+        in this container.
+        '''
+        # result = dict()
+        # with self._db_connection.cursor(
+        #         name="datasketch_named_cursor") as cursor:
+        #     cursor.itersize = 100
+        #     cursor.execute("SELECT KEY, array_length(VALUE, 1) "
+        #                    "FROM DATASKETCH_BUCKETS")
+        #     for record in cursor:
+        #         result[bytes(record[0])] = record[1]
+        # self._db_connection.commit()
+        raise NotImplementedError
+
+    def _has_key(self, key, table):
+        sql = "SELECT KEY FROM {0} WHERE KEY=%s"
+        if not type(key) is bytes:
+            key = pickle.dumps(key)
+        with self._db_connection.cursor() as cursor:
+            cursor.execute(sql.format(table),
+                           (self._postgres_key(key),))
+            res = cursor.fetchall()
+        self._db_connection.commit()
+        if res:
+            return True
+        else:
+            return False
+
+    def _parse_config(self, config):
+        cfg = {}
+        for key, value in config.items():
+            # If the value is a plain str, we will use the value
+            # If the value is a dict, we will extract the name of an environment
+            # variable stored under 'env' and optionally a default, stored under
+            # 'default'.
+            # (This is useful if the database relocates to a different host
+            # during the lifetime of the LSH object)
+            if isinstance(value, dict):
+                if 'env' in value:
+                    value = os.getenv(value['env'], value.get('default', None))
+            cfg[key] = value
+        return cfg
+
+
+class PostgresListStorage(PostgresStorage, OrderedStorage):
+    '''This is a wrapper class around ``defaultdict(list)`` enabling
+    it to support an API consistent with `Storage`
+    '''
+
+    def __init__(self, config, name=None):
+        PostgresStorage.__init__(self, config, name=name)
+        self._table = "LSH_BUCKETS_ORDERED"
+
+    def keys(self):
+        for res in self._keys(self._table):
+            yield res
+
+    def get(self, key):
+        return self._get(key, self._table)
+
+    def remove(self, *keys):
+        self._remove( self._table, *keys)
+
+    def remove_val(self, key, val):
+        self._remove_val(key, val, self._table)
+
+    def insert(self, key, *vals, **kwargs):
+        self._insert(key, self._table, *vals, **kwargs)
+
+    def size(self):
+        return self._size(self._table)
+
+    def itemcounts(self, table, **kwargs):
+        '''Returns a dict where the keys are the keys of the container.
+        The values are the *lengths* of the value sequences stored
+        in this container.
+        '''
+
+        raise NotImplementedError
+
+    def has_key(self, key):
+        return self._has_key(key, self._table)
+
+
+class PostgresSetStorage(PostgresListStorage, OrderedStorage):
+    '''This is a wrapper class around ``defaultdict(list)`` enabling
+    it to support an API consistent with `Storage`
+    '''
+    def __init__(self, config, name=None):
+        PostgresStorage.__init__(self, config, name=name)
+        self._table = "LSH_BUCKETS_UNORDERED"
+
+    def keys(self):
+        for res in self._keys(self._table):
+            yield res
+
+    def get(self, key):
+        return self._get(key, self._table)
+
+    def remove(self, *keys):
+        self._remove( self._table, *keys)
+
+    def remove_val(self, key, val):
+        self._remove_val(key, val, self._table)
+
+    def insert(self, key, *vals, **kwargs):
+        if self.has_key(key):
+            bu = self.get(key)
+            bu = set(bu) | set(vals)
+            sql = "UPDATE {0} SET VALUE = %s WHERE KEY = %s"
+            with self._db_connection.cursor() as cursor:
+                cursor.execute(sql.format(self._table),
+                               (list(bu), self._postgres_key(key)))
+            self._db_connection.commit()
+        else:
+            self._insert(key, self._table, *vals, **kwargs)
+
+    def size(self):
+        return self._size(self._table)
+
+    def itemcounts(self, **kwargs):
+        '''Returns a dict where the keys are the keys of the container.
+        The values are the *lengths* of the value sequences stored
+        in this container.
+        '''
+        raise NotImplementedError
+
+    def has_key(self, key):
+        return self._has_key(key, self._table)
+
+
+class MemcachedListStorage(OrderedStorage):
+    def __init__(self, config, name=None):
+        self._name = str(name)
+        self._memcached_param = self._parse_config(config['memcached'])
+        self._client = Client(self._memcached_param)
+
+    def _memcached_key(self, key):
+        if type(key) is bytes:
+            key = key.hex()
+        elif not type(key) is str:
+            key = str(key)
+        newkey = self._name + key
+        return newkey
+
+    def keys(self):
+        hkeys = self._client.get(self._name)
+        if hkeys is None:
+            return []
+        else:
+            hkeys = pickle.loads(hkeys)
+            return hkeys
+
+    def get(self, key):
+        values = self._client.get(self._memcached_key(key))
+        if values is None:
+            return []
+        else:
+            values = pickle.loads(values)
+            return values
+
+    def remove(self, *keys):
+        self._client.delete_many(
+            [self._memcached_key(key) for key in keys])
+        hkeys = self._client.get(self._name)
+        if hkeys is None:
+            return
+        else:
+            hkeys = pickle.loads(hkeys)
+            hkeys = [hkey for hkey in hkeys if hkey not in keys]
+            hkeys = pickle.dumps(hkeys)
+            self._client.set(self._name, hkeys)
+
+    def remove_val(self, key, val):
+        values = self._client.get(self._memcached_key(key))
+        if values is None:
+            return
+        else:
+            values = pickle.loads(values)
+            values.remove(val)
+            values = pickle.dumps(values)
+            self._client.set(self._memcached_key(key), values)
+
+    def insert(self, key, *vals, **kwargs):
+        values = self._client.get(self._memcached_key(key))
+        if values is None:
+            self._client.set(self._memcached_key(key), vals)
+            hkeys = self._client.get(self._name)
+            if hkeys is None:
+                hkeys = [key]
+                hkeys = pickle.dumps(hkeys)
+                self._client.set(self._name, hkeys)
+            else:
+                hkeys = pickle.loads(hkeys)
+                hkeys.append(key)
+                hkeys = pickle.dumps(hkeys)
+                self._client.set(self._name, hkeys)
+        else:
+            values = pickle.loads(values)
+            values.extend(vals)
+
+    def size(self):
+        return len(self.keys())
+
+    def itemcounts(self, **kwargs):
+        '''Returns a dict where the keys are the keys of the container.
+        The values are the *lengths* of the value sequences stored
+        in this container.
+        '''
+
+        raise NotImplementedError
+
+    def has_key(self, key):
+        return not self._client.get(self._memcached_key(key)) is None
+
+    def _parse_config(self, config):
+        cfg_tuple = (config['host'], config['port'])
+        return cfg_tuple
+
+
+class MemcachedSetStorage(MemcachedListStorage):
+    def __init__(self, config, name=None):
+        MemcachedListStorage.__init__(self, config, name=name)
+
+    def get(self, key):
+        values = self._client.get(self._memcached_key(key))
+        if values is None:
+            return {}
+        else:
+            values = pickle.loads(values)
+            return values
+
+    def remove(self, *keys):
+        self._client.delete_many(
+            [self._memcached_key(key) for key in keys])
+        hkeys = self._client.get(self._name)
+        hkeys = pickle.loads(hkeys)
+        hkeys = hkeys - keys
+        hkeys = pickle.dumps(hkeys)
+        self._client.set(self._name, hkeys)
+
+    def insert(self, key, *vals, **kwargs):
+        values = self._client.get(self._memcached_key(key))
+        if values is None:
+            self._client.set(self._memcached_key(key), pickle.dumps(set(vals)))
+            hkeys = self._client.get(self._name)
+            if hkeys is None:
+                hkeys = [key]
+                hkeys = pickle.dumps(hkeys)
+                self._client.set(self._name, hkeys)
+            else:
+                hkeys = pickle.loads(hkeys)
+                hkeys.append(key)
+                hkeys = pickle.dumps(hkeys)
+                self._client.set(self._name, hkeys)
+        else:
+            values = pickle.loads(values)
+            values.update(vals)
 
 def _random_name(length):
     # For use with Redis, we return bytes
