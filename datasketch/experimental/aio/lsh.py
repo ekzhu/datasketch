@@ -268,10 +268,12 @@ class AsyncMinHashLSH(object):
         if self._prepickle:
             key = pickle.dumps(key)
 
-        fs = chain.from_iterable((hashtable.remove_val(H, key), hashtable.remove(H))
-                                 for H, hashtable in zip(await self.keys.get(key), self.hashtables))
-        fs = chain((self.keys.remove(key),), fs)
-        await asyncio.gather(*fs)
+        for H, hashtable in zip(await self.keys.get(key), self.hashtables):
+            await hashtable.remove_val(H, key)
+            if not await hashtable.get(H):
+                await hashtable.remove(H)
+
+        await self.keys.remove(key)
 
     async def is_empty(self):
         """
