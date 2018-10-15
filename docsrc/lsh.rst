@@ -222,30 +222,12 @@ The Asynchronous Redis storage option can be configured using:
 
 .. code:: python
 
-        from datasketch.experimental.async import AsyncMinHashLSH
+        from datasketch.experimental.aio.lsh import AsyncMinHashLSH
 
         _storage = {'type': 'aioredis', 'redis': {'host': 'localhost', 'port': 6379}}
 
-        lsh = await AsyncMinHashLSH(storage_config=_storage, threshold=0.5, num_perm=16)
-        m1 = MinHash(16)
-        m1.update('a'.encode('utf8'))
-        m2 = MinHash(16)
-        m2.update('b'.encode('utf8'))
-        await lsh.insert('a', m1)
-        await lsh.insert('b', m2)
-        print(await lsh.query(m1))
-        print(await lsh.query(m2))
-        lsh.close()
-
-* Context Manager style:
-
-.. code:: python
-
-        from datasketch.experimental.async import AsyncMinHashLSH
-
-        _storage = {'type': 'aioredis', 'redis': {'host': 'localhost', 'port': 6379}}
-
-        async with AsyncMinHashLSH(storage_config=_storage, threshold=0.5, num_perm=16) as lsh:
+        async def func():
+            lsh = await AsyncMinHashLSH(storage_config=_storage, threshold=0.5, num_perm=16)
             m1 = MinHash(16)
             m1.update('a'.encode('utf8'))
             m2 = MinHash(16)
@@ -254,6 +236,26 @@ The Asynchronous Redis storage option can be configured using:
             await lsh.insert('b', m2)
             print(await lsh.query(m1))
             print(await lsh.query(m2))
+            lsh.close()
+
+* Context Manager style:
+
+.. code:: python
+
+        from datasketch.experimental.aio.lsh import AsyncMinHashLSH
+
+        _storage = {'type': 'aioredis', 'redis': {'host': 'localhost', 'port': 6379}}
+
+        async def func():
+            async with AsyncMinHashLSH(storage_config=_storage, threshold=0.5, num_perm=16) as lsh:
+                m1 = MinHash(16)
+                m1.update('a'.encode('utf8'))
+                m2 = MinHash(16)
+                m2.update('b'.encode('utf8'))
+                await lsh.insert('a', m1)
+                await lsh.insert('b', m2)
+                print(await lsh.query(m1))
+                print(await lsh.query(m2))
 
 To configure Asynchronous MongoDB storage, use:
 
@@ -261,11 +263,11 @@ To configure Asynchronous MongoDB storage, use:
 
     _storage = {'type': 'aiomongo', 'mongo': {'host': 'localhost', 'port': 27017, 'db': 'lsh_test'}}
         
-To index a large number of MinHashes using asynchronous MinHash LSH.
+To create index for a large number of MinHashes using asynchronous MinHash LSH.
 
 .. code:: python
 
-    from datasketch.experimental.async import AsyncMinHashLSH
+    from datasketch.experimental.aio.lsh import AsyncMinHashLSH
 
     def chunk(it, size):
         it = iter(it)
@@ -280,7 +282,8 @@ To index a large number of MinHashes using asynchronous MinHash LSH.
     data = [(e, m) for e, m in zip(seq, objs)]
 
     _storage = {'type': 'aiomongo', 'mongo': {'host': 'localhost', 'port': 27017, 'db': 'lsh_test'}}
-    async with AsyncMinHashLSH(storage_config=_storage, threshold=0.5, num_perm=16) as lsh:
-        async with lsh.insertion_session(batch_size=1000) as session:
-            fs = (session.insert(key, minhash, check_duplication=False) for key, minhash in data)
+    async def func():
+        async with AsyncMinHashLSH(storage_config=_storage, threshold=0.5, num_perm=16) as lsh:
+            async with lsh.insertion_session(batch_size=1000) as session:
+                fs = (session.insert(key, minhash, check_duplication=False) for key, minhash in data)
             await asyncio.gather(*fs)

@@ -357,10 +357,12 @@
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_prepickle</span><span class="p">:</span>
             <span class="n">key</span> <span class="o">=</span> <span class="n">pickle</span><span class="o">.</span><span class="n">dumps</span><span class="p">(</span><span class="n">key</span><span class="p">)</span>
 
-        <span class="n">fs</span> <span class="o">=</span> <span class="n">chain</span><span class="o">.</span><span class="n">from_iterable</span><span class="p">((</span><span class="n">hashtable</span><span class="o">.</span><span class="n">remove_val</span><span class="p">(</span><span class="n">H</span><span class="p">,</span> <span class="n">key</span><span class="p">),</span> <span class="n">hashtable</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="n">H</span><span class="p">))</span>
-                                 <span class="k">for</span> <span class="n">H</span><span class="p">,</span> <span class="n">hashtable</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">keys</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">key</span><span class="p">),</span> <span class="bp">self</span><span class="o">.</span><span class="n">hashtables</span><span class="p">))</span>
-        <span class="n">fs</span> <span class="o">=</span> <span class="n">chain</span><span class="p">((</span><span class="bp">self</span><span class="o">.</span><span class="n">keys</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="n">key</span><span class="p">),),</span> <span class="n">fs</span><span class="p">)</span>
-        <span class="k">await</span> <span class="n">asyncio</span><span class="o">.</span><span class="n">gather</span><span class="p">(</span><span class="o">*</span><span class="n">fs</span><span class="p">)</span></div>
+        <span class="k">for</span> <span class="n">H</span><span class="p">,</span> <span class="n">hashtable</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">keys</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">key</span><span class="p">),</span> <span class="bp">self</span><span class="o">.</span><span class="n">hashtables</span><span class="p">):</span>
+            <span class="k">await</span> <span class="n">hashtable</span><span class="o">.</span><span class="n">remove_val</span><span class="p">(</span><span class="n">H</span><span class="p">,</span> <span class="n">key</span><span class="p">)</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="k">await</span> <span class="n">hashtable</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">H</span><span class="p">):</span>
+                <span class="k">await</span> <span class="n">hashtable</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="n">H</span><span class="p">)</span>
+
+        <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">keys</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="n">key</span><span class="p">)</span></div>
 
 <div class="viewcode-block" id="AsyncMinHashLSH.is_empty"><a class="viewcode-back" href="../../../../documentation.html#datasketch.experimental.aio.lsh.AsyncMinHashLSH.is_empty">[docs]</a>    <span class="k">async</span> <span class="k">def</span> <span class="nf">is_empty</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
@@ -455,7 +457,7 @@
       &copy;2018, Eric Zhu.
       
       |
-      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.7.6</a>
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.7.5</a>
       &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.11</a>
       
     </div>

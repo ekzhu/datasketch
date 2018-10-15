@@ -112,7 +112,6 @@ if aioredis is not None:
                 }
 
         :param bytes name: see :class:`datasketch.storage.RedisStorage` (default = None).
-        :param int _batch_size: the size of chunks to use in buffered mode (default = 50000).
         """
 
         def __init__(self, config, name=None):
@@ -345,7 +344,6 @@ if motor is not None and ReturnDocument is not None:
                 }
 
         :param bytes name: see :class:`datasketch.storage.RedisStorage` (default = None).
-        :param int batch_size: the size of chunks to use in buffered mode (default = 1000).
         """
 
         def __init__(self, config, name=None):
