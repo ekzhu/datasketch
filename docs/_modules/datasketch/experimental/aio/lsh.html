@@ -286,7 +286,8 @@
 <span class="sd">        Example:</span>
 <span class="sd">            .. code-block:: python</span>
 
-<span class="sd">                from datasketch.experimental.aio import AsyncMinHashLSH</span>
+<span class="sd">                from datasketch.experimental.aio.lsh import AsyncMinHashLSH</span>
+<span class="sd">                from datasketch import MinHash</span>
 
 <span class="sd">                def chunk(it, size):</span>
 <span class="sd">                    it = iter(it)</span>
@@ -301,10 +302,11 @@
 <span class="sd">                data = [(e, m) for e, m in zip(seq, objs)]</span>
 
 <span class="sd">                _storage_config_redis = {&#39;type&#39;: &#39;aioredis&#39;, &#39;redis&#39;: {&#39;host&#39;: &#39;localhost&#39;, &#39;port&#39;: 6379}}</span>
-<span class="sd">                aio with AsyncMinHashLSH(storage_config=_storage_config_redis, threshold=0.5, num_perm=16) as lsh:</span>
-<span class="sd">                    aio with lsh.insertion_session() as session:</span>
-<span class="sd">                        fs = (session.insert(key, minhash, check_duplication=False) for key, minhash in data)</span>
-<span class="sd">                        await asyncio.gather(*fs)</span>
+<span class="sd">                async def func():</span>
+<span class="sd">                    async with AsyncMinHashLSH(storage_config=_storage_config_redis, threshold=0.5, num_perm=16) as lsh:</span>
+<span class="sd">                        async with lsh.insertion_session() as session:</span>
+<span class="sd">                            fs = (session.insert(key, minhash, check_duplication=False) for key, minhash in data)</span>
+<span class="sd">                            await asyncio.gather(*fs)</span>
 
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="n">AsyncMinHashLSHInsertionSession</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">batch_size</span><span class="o">=</span><span class="n">batch_size</span><span class="p">)</span></div>

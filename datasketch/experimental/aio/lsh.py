@@ -197,7 +197,8 @@ class AsyncMinHashLSH(object):
         Example:
             .. code-block:: python
 
-                from datasketch.experimental.aio import AsyncMinHashLSH
+                from datasketch.experimental.aio.lsh import AsyncMinHashLSH
+                from datasketch import MinHash
 
                 def chunk(it, size):
                     it = iter(it)
@@ -212,10 +213,11 @@ class AsyncMinHashLSH(object):
                 data = [(e, m) for e, m in zip(seq, objs)]
 
                 _storage_config_redis = {'type': 'aioredis', 'redis': {'host': 'localhost', 'port': 6379}}
-                aio with AsyncMinHashLSH(storage_config=_storage_config_redis, threshold=0.5, num_perm=16) as lsh:
-                    aio with lsh.insertion_session() as session:
-                        fs = (session.insert(key, minhash, check_duplication=False) for key, minhash in data)
-                        await asyncio.gather(*fs)
+                async def func():
+                    async with AsyncMinHashLSH(storage_config=_storage_config_redis, threshold=0.5, num_perm=16) as lsh:
+                        async with lsh.insertion_session() as session:
+                            fs = (session.insert(key, minhash, check_duplication=False) for key, minhash in data)
+                            await asyncio.gather(*fs)
 
         """
         return AsyncMinHashLSHInsertionSession(self, batch_size=batch_size)

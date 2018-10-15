@@ -223,6 +223,7 @@ The Asynchronous Redis storage option can be configured using:
 .. code:: python
 
         from datasketch.experimental.aio.lsh import AsyncMinHashLSH
+        from datasketch import MinHash
 
         _storage = {'type': 'aioredis', 'redis': {'host': 'localhost', 'port': 6379}}
 
@@ -243,6 +244,7 @@ The Asynchronous Redis storage option can be configured using:
 .. code:: python
 
         from datasketch.experimental.aio.lsh import AsyncMinHashLSH
+        from datasketch import MinHash
 
         _storage = {'type': 'aioredis', 'redis': {'host': 'localhost', 'port': 6379}}
 
@@ -268,6 +270,7 @@ To create index for a large number of MinHashes using asynchronous MinHash LSH.
 .. code:: python
 
     from datasketch.experimental.aio.lsh import AsyncMinHashLSH
+    from datasketch import MinHash
 
     def chunk(it, size):
         it = iter(it)
