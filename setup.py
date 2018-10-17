@@ -7,7 +7,6 @@ from setuptools import setup, find_packages
 # To use a consistent encoding
 from codecs import open
 from os import path
-import sys
 
 here = path.abspath(path.dirname(__file__))
 
@@ -24,7 +23,7 @@ setup(
     # the version across setup.py and the project code, see
     # https://packaging.python.org/en/latest/single_source_version.html
 
-    version='1.2.7',
+    version='1.2.8',
   
     description='Probabilistic data structures for processing and searching very large datasets',
     long_description=long_description,

@@ -129,15 +129,24 @@ class TestAsyncMinHashLSH(aiounittest.AsyncTestCase):
             m1.update("a".encode("utf8"))
             m2 = MinHash(16)
             m2.update("b".encode("utf8"))
+            m3 = MinHash(16)
+            m3.update("a".encode("utf8"))
             await lsh.insert("a", m1)
             await lsh.insert("b", m2)
+            await lsh.insert("a1", m3)
 
             await lsh.remove("a")
             self.assertTrue(not await lsh.has_key("a"))
+            self.assertTrue(await lsh.has_key("a1"))
+            hashtable_correct = False
             for table in lsh.hashtables:
                 for H in await table.keys():
-                    self.assertGreater(len(await table.get(H)), 0)
-                    self.assertTrue("a" not in await table.get(H))
+                    table_vals = list(map(lambda x: pickle.loads(x), await table.get(H)))
+                    self.assertGreater(len(table_vals), 0)
+                    self.assertTrue("a" not in table_vals)
+                    if 'a1' in table_vals:
+                        hashtable_correct = True
+            self.assertTrue(hashtable_correct, 'Hashtable broken')
 
             with self.assertRaises(ValueError):
                 await lsh.remove("c")
@@ -293,15 +302,24 @@ class TestAsyncMinHashLSH(aiounittest.AsyncTestCase):
             m1.update("a".encode("utf8"))
             m2 = MinHash(16)
             m2.update("b".encode("utf8"))
+            m3 = MinHash(16)
+            m3.update("a".encode("utf8"))
             await lsh.insert("a", m1)
             await lsh.insert("b", m2)
+            await lsh.insert("a1", m3)
 
             await lsh.remove("a")
             self.assertTrue(not await lsh.has_key("a"))
+            self.assertTrue(await lsh.has_key('a1'))
+            hashtable_correct = False
             for table in lsh.hashtables:
                 for H in await table.keys():
-                    self.assertGreater(len(await table.get(H)), 0)
-                    self.assertTrue("a" not in await table.get(H))
+                    table_vals = await table.get(H)
+                    self.assertGreater(len(table_vals), 0)
+                    self.assertTrue("a" not in table_vals)
+                    if 'a1' in table_vals:
+                        hashtable_correct = True
+            self.assertTrue(hashtable_correct, 'Hashtable broken')
 
             with self.assertRaises(ValueError):
                 await lsh.remove("c")

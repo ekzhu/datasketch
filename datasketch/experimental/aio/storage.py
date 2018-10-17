@@ -112,7 +112,6 @@ if aioredis is not None:
                 }
 
         :param bytes name: see :class:`datasketch.storage.RedisStorage` (default = None).
-        :param int _batch_size: the size of chunks to use in buffered mode (default = 50000).
         """
 
         def __init__(self, config, name=None):
@@ -345,7 +344,6 @@ if motor is not None and ReturnDocument is not None:
                 }
 
         :param bytes name: see :class:`datasketch.storage.RedisStorage` (default = None).
-        :param int batch_size: the size of chunks to use in buffered mode (default = 1000).
         """
 
         def __init__(self, config, name=None):
@@ -433,14 +431,10 @@ if motor is not None and ReturnDocument is not None:
             await obj.insert_one(document={'key': key, 'vals': values})
 
         async def remove(self, *keys):
-            fs = (self._collection.delete_many({'key': key}) for key in keys)
-            await asyncio.gather(*fs)
+            await self._collection.delete_many({'key': {'$in': keys}})
 
-        async def remove_val(self, key: str, val):
-            return await self._collection.find_one_and_update({'key': key},
-                                                              {'$pull': {'vals': val}},
-                                                              projection={'_id': False},
-                                                              return_document=ReturnDocument.AFTER)
+        async def remove_val(self, key, val):
+            pass
 
         async def size(self):
             return await self._collection.count_documents({})
@@ -469,6 +463,9 @@ if motor is not None and ReturnDocument is not None:
 
         async def _insert(self, obj, key, *values):
             await obj.insert_one(document={'key': key, 'vals': values[0]})
+
+        async def remove(self, *keys):
+            pass
 
         async def remove_val(self, key: str, val):
             return await self._collection.find_one_and_delete({'key': key, 'vals': val},
