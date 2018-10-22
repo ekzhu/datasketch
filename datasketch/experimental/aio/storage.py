@@ -356,7 +356,7 @@ if motor is not None and ReturnDocument is not None:
 
             db_lsh = self.mongo_param['db'] if 'db' in self.mongo_param else 'db_0'
             if 'replica_set' in self.mongo_param:
-                dsn = 'mongodb://{replica_set_nodes}/replicaSet={replica_set}'.format(**self.mongo_param)
+                dsn = 'mongodb://{replica_set_nodes}/?replicaSet={replica_set}'.format(**self.mongo_param)
             elif 'username' in self.mongo_param or 'password' in self.mongo_param:
                 dsn = 'mongodb://{username}:{password}@{host}:{port}'.format(**self.mongo_param)
             else:
