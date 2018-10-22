@@ -18,7 +18,7 @@ alternative is to use Locality Sensitive Hashing (LSH) index. LSH can be
 used with MinHash to achieve sub-linear query cost - that is a huge
 improvement. The details of the algorithm can be found in `Chapter 3,
 Mining of Massive
-Datasets <http://infolab.stanford.edu/~ullman/mmds/ch3.pdf>`__,
+Datasets <http://infolab.stanford.edu/~ullman/mmds/ch3.pdf>`__.
 
 This package includes the classic version of MinHash LSH. It is
 important to note that the query does not give you the exact result, due
@@ -264,6 +264,12 @@ To configure Asynchronous MongoDB storage, use:
 .. code:: python
 
     _storage = {'type': 'aiomongo', 'mongo': {'host': 'localhost', 'port': 27017, 'db': 'lsh_test'}}
+
+To configure Asynchronous MongoDB storage that will connect to a `replica set <http://api.mongodb.com/python/current/examples/high_availability.html#id1>`__ of three nodes, use:
+
+.. code:: python
+
+    _storage = {'type': 'aiomongo', 'mongo': {'replica_set': 'rs0', 'replica_set_nodes': 'node1:port1,node2:port2,node3:port3'}}
         
 To create index for a large number of MinHashes using asynchronous MinHash LSH.
 
