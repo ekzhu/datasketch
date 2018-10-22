@@ -91,8 +91,6 @@
       </div>
       <div class="documentwrapper">
         <div class="bodywrapper">
-          
-
           <div class="body" role="main">
             
   <div class="section" id="minhash-lsh">
@@ -111,7 +109,7 @@ alternative is to use Locality Sensitive Hashing (LSH) index. LSH can be
 used with MinHash to achieve sub-linear query cost - that is a huge
 improvement. The details of the algorithm can be found in <a class="reference external" href="http://infolab.stanford.edu/~ullman/mmds/ch3.pdf">Chapter 3,
 Mining of Massive
-Datasets</a>,</p>
+Datasets</a>.</p>
 <p>This package includes the classic version of MinHash LSH. It is
 important to note that the query does not give you the exact result, due
 to the use of MinHash and LSH. There will be false positives - sets that
@@ -360,6 +358,10 @@ processes see <a class="reference internal" href="#minhash-lsh-at-scale"><span c
 <div class="code python highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">_storage</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;type&#39;</span><span class="p">:</span> <span class="s1">&#39;aiomongo&#39;</span><span class="p">,</span> <span class="s1">&#39;mongo&#39;</span><span class="p">:</span> <span class="p">{</span><span class="s1">&#39;host&#39;</span><span class="p">:</span> <span class="s1">&#39;localhost&#39;</span><span class="p">,</span> <span class="s1">&#39;port&#39;</span><span class="p">:</span> <span class="mi">27017</span><span class="p">,</span> <span class="s1">&#39;db&#39;</span><span class="p">:</span> <span class="s1">&#39;lsh_test&#39;</span><span class="p">}}</span>
 </pre></div>
 </div>
+<p>To configure Asynchronous MongoDB storage that will connect to a <a class="reference external" href="http://api.mongodb.com/python/current/examples/high_availability.html#id1">replica set</a> of three nodes, use:</p>
+<div class="code python highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">_storage</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;type&#39;</span><span class="p">:</span> <span class="s1">&#39;aiomongo&#39;</span><span class="p">,</span> <span class="s1">&#39;mongo&#39;</span><span class="p">:</span> <span class="p">{</span><span class="s1">&#39;replica_set&#39;</span><span class="p">:</span> <span class="s1">&#39;rs0&#39;</span><span class="p">,</span> <span class="s1">&#39;replica_set_nodes&#39;</span><span class="p">:</span> <span class="s1">&#39;node1:port1,node2:port2,node3:port3&#39;</span><span class="p">}}</span>
+</pre></div>
+</div>
 <p>To create index for a large number of MinHashes using asynchronous MinHash LSH.</p>
 <div class="code python highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">datasketch.experimental.aio.lsh</span> <span class="k">import</span> <span class="n">AsyncMinHashLSH</span>
 <span class="kn">from</span> <span class="nn">datasketch</span> <span class="k">import</span> <span class="n">MinHash</span>
@@ -389,7 +391,6 @@ processes see <a class="reference internal" href="#minhash-lsh-at-scale"><span c
 
 
           </div>
-          
         </div>
       </div>
     <div class="clearer"></div>
@@ -399,7 +400,7 @@ processes see <a class="reference internal" href="#minhash-lsh-at-scale"><span c
       
       |
       Powered by <a href="http://sphinx-doc.org/">Sphinx 1.8.1</a>
-      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.11</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.10</a>
       
       |
       <a href="_sources/lsh.rst.txt"
