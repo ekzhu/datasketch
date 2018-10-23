@@ -365,7 +365,7 @@ if redis is not None:
                 self._redis.hdel(self._name, redis_key)
 
         def insert(self, key, *vals, **kwargs):
-            # Using buffer=True outside of an `insertion_session`
+            # Using buffer=True outside of an `session`
             # could lead to inconsistencies, because those
             # insertion will not be processed until the
             # buffer is cleared

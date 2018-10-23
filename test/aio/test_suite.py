@@ -4,7 +4,7 @@
 
 import unittest
 
-from lsh_test import TestAsyncMinHashLSH, TestWeightedMinHashLSH, DO_TEST_REDIS, DO_TEST_MONGO
+from test.aio.lsh_test import TestAsyncMinHashLSH, TestWeightedMinHashLSH, DO_TEST_REDIS, DO_TEST_MONGO
 
 
 def test_suite_minhashlsh_aioredis():
@@ -29,6 +29,7 @@ def test_suite_minhashlsh_aiomongo():
     suite.addTest(TestAsyncMinHashLSH('test_remove_mongo'))
     suite.addTest(TestAsyncMinHashLSH('test_pickle_mongo'))
     suite.addTest(TestAsyncMinHashLSH('test_insertion_session_mongo'))
+    suite.addTest(TestAsyncMinHashLSH('test_remove_session_mongo'))
     suite.addTest(TestAsyncMinHashLSH('test_get_counts_mongo'))
     return suite
 
@@ -62,4 +63,4 @@ if __name__ == '__main__':
         runner.run(test_suite_weightedminhashlsh_aioredis())
     if DO_TEST_MONGO:
         runner.run(test_suite_minhashlsh_aiomongo())
-        runner.run(test_suite_weightedminhashlsh_aiomongo())
+        # runner.run(test_suite_weightedminhashlsh_aiomongo())

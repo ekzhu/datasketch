@@ -15,8 +15,8 @@ from datasketch.experimental.aio.lsh import AsyncMinHashLSH
 from datasketch.minhash import MinHash
 from datasketch.weighted_minhash import WeightedMinHashGenerator
 
-STORAGE_CONFIG_REDIS = {'type': 'aioredis', 'redis': {'host': 'localhost', 'port': 6379}}
-STORAGE_CONFIG_MONGO = {'type': 'aiomongo', 'mongo': {'host': 'localhost', 'port': 27017, 'db': 'lsh_test'}}
+STORAGE_CONFIG_REDIS = {'type': 'aioredis', 'redis': {'host': '192.168.99.100', 'port': 6379}}
+STORAGE_CONFIG_MONGO = {'type': 'aiomongo', 'mongo': {'host': '192.168.99.100', 'port': 27017, 'db': 'lsh_test'}}
 DO_TEST_REDIS = True
 DO_TEST_MONGO = True
 
@@ -178,7 +178,7 @@ class TestAsyncMinHashLSH(aiounittest.AsyncTestCase):
             m2 = MinHash(16)
             m2.update("b".encode("utf8"))
             data = [("a", m1), ("b", m2)]
-            async with lsh.insertion_session() as session:
+            async with lsh.session() as session:
                 for key, minhash in data:
                     await session.insert(key, minhash)
             for t in lsh.hashtables:
@@ -360,7 +360,7 @@ class TestAsyncMinHashLSH(aiounittest.AsyncTestCase):
 
         async with AsyncMinHashLSH(storage_config=self._storage_config_mongo,
                                    threshold=0.5, num_perm=16) as lsh:
-            async with lsh.insertion_session(batch_size=1000) as session:
+            async with lsh.session(batch_size=1000) as session:
                 fs = (session.insert(key, minhash, check_duplication=False) for key, minhash in data)
                 await asyncio.gather(*fs)
 
@@ -375,6 +375,49 @@ class TestAsyncMinHashLSH(aiounittest.AsyncTestCase):
             self.assertTrue(await lsh.has_key('kld'))
             for i, H in enumerate(await lsh.keys.get('aahh')):
                 self.assertTrue('aahh' in await lsh.hashtables[i].get(H))
+
+    @unittest.skipIf(not DO_TEST_MONGO, "Skipping test_insertion_session_mongo")
+    async def test_remove_session_mongo(self):
+        def chunk(it, size):
+            it = iter(it)
+            return iter(lambda: tuple(islice(it, size)), ())
+
+        _chunked_str = chunk((random.choice(string.ascii_lowercase) for _ in range(10000)), 4)
+        seq = frozenset(chain((''.join(s) for s in _chunked_str),
+                              ('aahhb', 'aahh', 'aahhc', 'aac', 'kld', 'bhg', 'kkd', 'yow', 'ppi', 'eer')))
+        objs = [MinHash(16) for _ in range(len(seq))]
+        for e, obj in zip(seq, objs):
+            for i in e:
+                obj.update(i.encode('utf-8'))
+
+        data = [(e, m) for e, m in zip(seq, objs)]
+        keys_to_remove = ('aahhb', 'aahh', 'aahhc', 'aac', 'kld', 'bhg', 'kkd', 'yow', 'ppi', 'eer')
+        keys_left = frozenset(seq) - frozenset(keys_to_remove)
+
+        async with AsyncMinHashLSH(storage_config=self._storage_config_mongo,
+                                   threshold=0.5, num_perm=16) as lsh:
+            async with lsh.session(batch_size=1000) as session:
+                fs = (session.insert(key, minhash, check_duplication=False) for key, minhash in data)
+                await asyncio.gather(*fs)
+
+            async with lsh.session(batch_size=3) as session:
+                fs = (session.remove(key) for key in keys_to_remove)
+                await asyncio.gather(*fs)
+
+            for t in lsh.hashtables:
+                self.assertTrue(await t.size() >= 1)
+                items = []
+                for H in await t.keys():
+                    items.extend(await t.get(H))
+                for key in keys_to_remove:
+                    self.assertTrue(key not in items, '{0} in items, but should not be'.format(key))
+                for key in keys_left:
+                    self.assertTrue(key in items, '{0} not in items, but should be'.format(key))
+
+            for key in keys_to_remove:
+                self.assertTrue(not (await lsh.has_key(key)), '<{0}> key should not be in LSH index'.format(key))
+            for key in keys_left:
+                self.assertTrue(await lsh.has_key(key), '<{0}> key should be in LSH index'.format(key))
 
     @unittest.skipIf(not DO_TEST_MONGO, "Skipping test_get_counts_mongo")
     async def test_get_counts_mongo(self):

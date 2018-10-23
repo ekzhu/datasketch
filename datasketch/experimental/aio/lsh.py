@@ -186,13 +186,13 @@ class AsyncMinHashLSH(object):
         """
         await self._insert(key, minhash, check_duplication=check_duplication, buffer=False)
 
-    def insertion_session(self, batch_size=10000):
+    def session(self, batch_size=10000):
         """
-        Create a asynchronous context manager for fast insertion into this index.
+        Create a asynchronous context manager for fast insertion or removing in index.
 
         :param int batch_size: the size of chunks to use in insert_session mode (default=10000).
 
-        :return: datasketch.experimental.aio.lsh.AsyncMinHashLSHInsertionSession
+        :return: datasketch.experimental.aio.lsh.AsyncMinHashLSHSession
 
         Example:
             .. code-block:: python
@@ -215,12 +215,16 @@ class AsyncMinHashLSH(object):
                 _storage_config_redis = {'type': 'aioredis', 'redis': {'host': 'localhost', 'port': 6379}}
                 async def func():
                     async with AsyncMinHashLSH(storage_config=_storage_config_redis, threshold=0.5, num_perm=16) as lsh:
-                        async with lsh.insertion_session() as session:
-                            fs = (session.insert(key, minhash, check_duplication=False) for key, minhash in data)
+                        async with lsh.session(batch_size=1000) as session:
+                            fs = (session.insert(key, minhash, check_duplication=True) for key, minhash in data)
+                            await asyncio.gather(*fs)
+
+                        async with lsh.session(batch_size=3) as session:
+                            fs = (session.remove(key) for key in keys_to_remove)
                             await asyncio.gather(*fs)
 
         """
-        return AsyncMinHashLSHInsertionSession(self, batch_size=batch_size)
+        return AsyncMinHashLSHSession(self, batch_size=batch_size)
 
     async def _insert(self, key, minhash, check_duplication=True, buffer=False):
         if len(minhash) != self.h:
@@ -265,17 +269,20 @@ class AsyncMinHashLSH(object):
         """
         see :class:`datasketch.MinHashLSH`.
         """
+        await self._remove(key, buffer=False)
+
+    async def _remove(self, key, buffer=False):
         if not await self.has_key(key):
             raise ValueError("The given key does not exist")
         if self._prepickle:
             key = pickle.dumps(key)
 
         for H, hashtable in zip(await self.keys.get(key), self.hashtables):
-            await hashtable.remove_val(H, key)
+            await hashtable.remove_val(H, key, buffer=buffer)
             if not await hashtable.get(H):
-                await hashtable.remove(H)
+                await hashtable.remove(H, buffer=buffer)
 
-        await self.keys.remove(key)
+        await self.keys.remove(key, buffer=buffer)
 
     async def is_empty(self):
         """
@@ -332,9 +339,9 @@ class AsyncMinHashLSH(object):
         return [hashtable.itemcounts() for hashtable in hashtables]
 
 
-class AsyncMinHashLSHInsertionSession:
+class AsyncMinHashLSHSession:
     """
-    see :func:`~datasketch.experimental.aio.lsh.AsyncMinHashLSH.insertion_session`
+    Context manager for batch insertion and removing of documents into a MinHashLSH.
     """
 
     def __init__(self, lsh: AsyncMinHashLSH, batch_size: int):
@@ -358,3 +365,9 @@ class AsyncMinHashLSHInsertionSession:
         """
         await self.lsh._insert(key, minhash,
                                check_duplication=check_duplication, buffer=True)
+
+    async def remove(self, key):
+        """
+        Remove key from LSH index
+        """
+        await self.lsh._remove(key, buffer=True)

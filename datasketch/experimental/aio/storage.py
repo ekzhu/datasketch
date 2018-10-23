@@ -225,11 +225,11 @@ if aioredis is not None:
         async def _get_items(r, k):
             return await r.lrange(k, 0, -1)
 
-        async def remove(self, *keys):
+        async def remove(self, *keys, **kwargs):
             await self._redis.hdel(self._name, *keys)
             await self._redis.delete(*(self.redis_key(key) for key in keys))
 
-        async def remove_val(self, key, val):
+        async def remove_val(self, key, val, **kwargs):
             redis_key = self.redis_key(key)
             await self._redis.lrem(redis_key, val)
             if not await self._redis.exists(redis_key):
@@ -275,7 +275,7 @@ if aioredis is not None:
         async def _get_items(r, k):
             return await r.smembers(k)
 
-        async def remove_val(self, key, val):
+        async def remove_val(self, key, val, **kwargs):
             redis_key = self.redis_key(key)
             await self._redis.srem(redis_key, val)
             if not await self._redis.exists(redis_key):
@@ -295,7 +295,9 @@ if motor is not None and ReturnDocument is not None:
     class AsyncMongoBuffer:
         def __init__(self, aio_mongo_collection, batch_size):
             self._batch_size = batch_size
-            self._commands_stack = tuple()
+            self._insert_documents_stack = tuple()
+            self._delete_by_key_documents_stack = tuple()
+            self._delete_by_val_documents_stack = tuple()
             self._mongo_coll = aio_mongo_collection
 
         @property
@@ -307,18 +309,42 @@ if motor is not None and ReturnDocument is not None:
             self._batch_size = value
 
         async def execute_command(self, **kwargs):
-            if len(self._commands_stack) >= self.batch_size:
-                await self.execute()
-            self._commands_stack += (kwargs['document'],)
+            command = kwargs.pop('command')
+            if command == 'insert':
+                if len(self._insert_documents_stack) >= self.batch_size:
+                    await self.execute(command)
+                self._insert_documents_stack += (kwargs['obj'],)
+            elif command == 'delete_by_key':
+                if len(self._delete_by_key_documents_stack) >= self.batch_size:
+                    await self.execute(command)
+                self._delete_by_key_documents_stack += (kwargs['key'],)
+            elif command == 'delete_by_val':
+                if len(self._delete_by_val_documents_stack) >= self.batch_size:
+                    await self.execute(command)
+                self._delete_by_val_documents_stack += (kwargs['val'],)
 
-        async def execute(self):
-            if self._commands_stack:
-                buffer = self._commands_stack
-                self._commands_stack = tuple()
+        async def execute(self, command):
+            if command == 'insert' and self._insert_documents_stack:
+                buffer = self._insert_documents_stack
+                self._insert_documents_stack = tuple()
                 await self._mongo_coll.insert_many(buffer, ordered=False)
+            elif command == 'delete_by_key' and self._delete_by_key_documents_stack:
+                buffer = self._delete_by_key_documents_stack
+                self._delete_by_key_documents_stack = tuple()
+                await self._mongo_coll.delete_many({'key': {'$in': buffer}})
+            elif command == 'delete_by_val' and self._delete_by_val_documents_stack:
+                buffer = self._delete_by_val_documents_stack
+                self._delete_by_val_documents_stack = tuple()
+                await self._mongo_coll.delete_many({'vals': {'$in': buffer}})
 
         async def insert_one(self, **kwargs):
-            await self.execute_command(**kwargs)
+            await self.execute_command(obj=kwargs['document'], command='insert')
+
+        async def delete_many_by_key(self, **kwargs):
+            await self.execute_command(key=kwargs['key'], command='delete_by_key')
+
+        async def delete_many_by_val(self, **kwargs):
+            await self.execute_command(val=kwargs['val'], command='delete_by_val')
 
 
     class AsyncMongoStorage(object):
@@ -369,7 +395,8 @@ if motor is not None and ReturnDocument is not None:
             self._buffer = AsyncMongoBuffer(self._collection, self._batch_size)
 
         async def close(self):
-            await self._buffer.execute()
+            fs = (self._buffer.execute(command) for command in ('insert', 'delete_by_key', 'delete_by_val'))
+            await asyncio.gather(*fs)
             self._mongo_client.close()
 
         @property
@@ -432,10 +459,15 @@ if motor is not None and ReturnDocument is not None:
         async def _insert(self, obj, key, *values):
             await obj.insert_one(document={'key': key, 'vals': values})
 
-        async def remove(self, *keys):
-            await self._collection.delete_many({'key': {'$in': keys}})
+        async def remove(self, *keys, **kwargs):
+            buffer = kwargs.pop('buffer', False)
+            if buffer:
+                fs = (self._buffer.delete_many_by_key(key=key) for key in keys)
+                await asyncio.gather(*fs)
+            else:
+                await self._collection.delete_many({'key': {'$in': keys}})
 
-        async def remove_val(self, key, val):
+        async def remove_val(self, key, val, **kwargs):
             pass
 
         async def size(self):
@@ -454,7 +486,8 @@ if motor is not None and ReturnDocument is not None:
             return status
 
         async def empty_buffer(self):
-            await self._buffer.execute()
+            fs = (self._buffer.execute(command) for command in ('insert', 'delete_by_key', 'delete_by_val'))
+            await asyncio.gather(*fs)
 
 
     class AsyncMongoSetStorage(UnorderedStorage, AsyncMongoListStorage):
@@ -466,9 +499,12 @@ if motor is not None and ReturnDocument is not None:
         async def _insert(self, obj, key, *values):
             await obj.insert_one(document={'key': key, 'vals': values[0]})
 
-        async def remove(self, *keys):
+        async def remove(self, *keys, **kwargs):
             pass
 
-        async def remove_val(self, key: str, val):
-            return await self._collection.find_one_and_delete({'key': key, 'vals': val},
-                                                              projection={'_id': False})
+        async def remove_val(self, key, val, **kwargs):
+            buffer = kwargs.pop('buffer', False)
+            if buffer:
+                await self._buffer.delete_many_by_val(val=val)
+            else:
+                await self._collection.find_one_and_delete({'key': key, 'vals': val})

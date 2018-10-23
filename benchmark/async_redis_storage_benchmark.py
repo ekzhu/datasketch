@@ -52,7 +52,7 @@ def prepare_data(length: int):
 
 @timeit
 async def insertion_session_aioredis(aiolsh: AsyncMinHashLSH, data: list, batch_size: int):
-    async with aiolsh.insertion_session(batch_size=batch_size) as session:
+    async with aiolsh.session(batch_size=batch_size) as session:
         fs = (session.insert(key, minhash, check_duplication=False) for key, minhash in data)
         await asyncio.gather(*fs)
 
