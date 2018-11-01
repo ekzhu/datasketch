@@ -1,10 +1,11 @@
 import sys
 
 if sys.version_info < (3, 6):
-    raise ImportError("Can't use AsyncMinHash module. Python version should be >=3.6")
+    raise ImportError("Can't use AsyncMinHashLSH module. Python version should be >=3.6")
 
 import asyncio
-import pickle
+
+from typing import Tuple, Dict
 from itertools import chain
 from datasketch.experimental.aio.storage import (async_ordered_storage, async_unordered_storage, )
 
@@ -21,10 +22,9 @@ class AsyncMinHashLSH(object):
     :param weights: see :class:`datasketch.MinHashLSH`.
     :type weights: tuple(float, float)
     :param tuple params: see :class:`datasketch.MinHashLSH`.
-    :param dict storage_config: New types of storage service (aioredis, aiomongo) to use for storing
+    :param dict storage_config: New type of storage service - aiomongo - to use for storing
                                 hashtables and keys are implemented.
-                                If storage_config is None aioredis storage will be used.
-    :param bool prepickle: for redis type storage use bytes as keys.
+                                If storage_config is None aiomongo storage will be used.
 
     For example usage see :ref:`minhash_lsh_async`.
 
@@ -32,7 +32,6 @@ class AsyncMinHashLSH(object):
 
     .. code-block:: python
 
-        REDIS = {'type': 'aioredis', 'basename': 'base_name_1', 'redis': {'host': 'localhost', 'port': 6379}}
         MONGO = {'type': 'aiomongo', 'basename': 'base_name_1', 'mongo': {'host': 'localhost', 'port': 27017}}
 
     .. note::
@@ -41,22 +40,21 @@ class AsyncMinHashLSH(object):
         * For additional information see :ref:`minhash_lsh_at_scale` and :ref:`minhash_lsh_async`
     """
 
-    def __init__(self, threshold=0.9, num_perm=128, weights=(0.5, 0.5),
-                 params=None, storage_config=None, prepickle=None):
+    def __init__(self, threshold: float=0.9, num_perm: int=128, weights: Tuple[float, float] =(0.5, 0.5),
+                 params: Tuple[int, int]=None, storage_config: Dict=None):
         if storage_config is None:
             storage_config = {
-                'type': 'aioredis',
-                'redis': {'host': 'localhost', 'port': 6379}
+                'type': 'aiomongo',
+                'mongo': {'host': 'localhost', 'port': 27017}
             }
         self._storage_config = storage_config.copy()
         self._storage_config['basename'] = self._storage_config.get('basename', _random_name(11))
-        self._basename = self._storage_config['basename']
+
         self._batch_size = 10000
         self._threshold = threshold
         self._num_perm = num_perm
         self._weights = weights
         self._params = params
-        self._prepickle = storage_config['type'] == 'aioredis' if prepickle is None else prepickle
 
         if self._threshold > 1.0 or self._threshold < 0.0:
             raise ValueError("threshold must be in [0.0, 1.0]")
@@ -113,8 +111,7 @@ class AsyncMinHashLSH(object):
     def __setstate__(self, state):
         state['_lock'] = asyncio.Lock()
         self.__dict__ = state
-        self.__init__(self._threshold, self._num_perm, self._weights, self._params, self._storage_config,
-                      self._prepickle)
+        self.__init__(self._threshold, self._num_perm, self._weights, self._params, self._storage_config)
 
     @property
     def batch_size(self):
@@ -186,9 +183,9 @@ class AsyncMinHashLSH(object):
         """
         await self._insert(key, minhash, check_duplication=check_duplication, buffer=False)
 
-    def session(self, batch_size=10000):
+    def insert_session(self, batch_size=10000):
         """
-        Create a asynchronous context manager for fast insertion or removing in index.
+        Create a asynchronous context manager for fast insertion in index.
 
         :param int batch_size: the size of chunks to use in insert_session mode (default=10000).
 
@@ -212,19 +209,54 @@ class AsyncMinHashLSH(object):
                         obj.update(i.encode('utf-8'))
                 data = [(e, m) for e, m in zip(seq, objs)]
 
-                _storage_config_redis = {'type': 'aioredis', 'redis': {'host': 'localhost', 'port': 6379}}
+                _storage_config_redis = {'type': 'aiomongo', 'mongo': {'host': 'localhost', 'port': 27017}}
                 async def func():
                     async with AsyncMinHashLSH(storage_config=_storage_config_redis, threshold=0.5, num_perm=16) as lsh:
-                        async with lsh.session(batch_size=1000) as session:
+                        async with lsh.insert_session(batch_size=1000) as session:
+                            fs = (session.insert(key, minhash, check_duplication=True) for key, minhash in data)
+                            await asyncio.gather(*fs)
+        """
+        return AsyncMinHashLSHInsertionSession(self, batch_size=batch_size)
+
+    def delete_session(self, batch_size=10000):
+        """
+        Create a asynchronous context manager for fast removing in index.
+
+        :param int batch_size: the size of chunks to use in insert_session mode (default=10000).
+
+        :return: datasketch.experimental.aio.lsh.AsyncMinHashLSHSession
+
+        Example:
+            .. code-block:: python
+
+                from datasketch.experimental.aio.lsh import AsyncMinHashLSH
+                from datasketch import MinHash
+
+                def chunk(it, size):
+                    it = iter(it)
+                    return iter(lambda: tuple(islice(it, size)), ())
+
+                _chunked_str = chunk((random.choice(string.ascii_lowercase) for _ in range(10000)), 4)
+                seq = frozenset(chain((''.join(s) for s in _chunked_str), ('aahhb', 'aahh', 'aahhc', 'aac', 'kld', 'bhg', 'kkd', 'yow', 'ppi', 'eer')))
+                objs = [MinHash(16) for _ in range(len(seq))]
+                for e, obj in zip(seq, objs):
+                    for i in e:
+                        obj.update(i.encode('utf-8'))
+                data = [(e, m) for e, m in zip(seq, objs)]
+
+                _storage_config_redis = {'type': 'aiomongo', 'mongo': {'host': 'localhost', 'port': 27017}}
+                async def func():
+                    async with AsyncMinHashLSH(storage_config=_storage_config_redis, threshold=0.5, num_perm=16) as lsh:
+                        async with lsh.insert_session(batch_size=1000) as session:
                             fs = (session.insert(key, minhash, check_duplication=True) for key, minhash in data)
                             await asyncio.gather(*fs)
 
-                        async with lsh.session(batch_size=3) as session:
+                        async with lsh.delete_session(batch_size=3) as session:
                             fs = (session.remove(key) for key in keys_to_remove)
                             await asyncio.gather(*fs)
 
         """
-        return AsyncMinHashLSHSession(self, batch_size=batch_size)
+        return AsyncMinHashLSHDeleteSession(self, batch_size=batch_size)
 
     async def _insert(self, key, minhash, check_duplication=True, buffer=False):
         if len(minhash) != self.h:
@@ -234,8 +266,7 @@ class AsyncMinHashLSH(object):
             raise ValueError("The given key already exists")
         Hs = [self._H(minhash.hashvalues[start:end])
               for start, end in self.hashranges]
-        if self._prepickle:
-            key = pickle.dumps(key)
+
         fs = chain((self.keys.insert(key, *Hs, buffer=buffer),),
                    (hashtable.insert(H, key, buffer=buffer) for H, hashtable in zip(Hs, self.hashtables)))
         await asyncio.gather(*fs)
@@ -252,17 +283,12 @@ class AsyncMinHashLSH(object):
               for (start, end), hashtable in zip(self.hashranges, self.hashtables))
         candidates = frozenset(chain.from_iterable(await asyncio.gather(*fs)))
 
-        if self._prepickle:
-            return [pickle.loads(key) for key in candidates]
-        else:
-            return list(candidates)
+        return list(candidates)
 
     async def has_key(self, key):
         """
         see :class:`datasketch.MinHashLSH`.
         """
-        if self._prepickle:
-            key = pickle.dumps(key)
         return await self.keys.has_key(key)
 
     async def remove(self, key):
@@ -274,8 +300,6 @@ class AsyncMinHashLSH(object):
     async def _remove(self, key, buffer=False):
         if not await self.has_key(key):
             raise ValueError("The given key does not exist")
-        if self._prepickle:
-            key = pickle.dumps(key)
 
         for H, hashtable in zip(await self.keys.get(key), self.hashtables):
             await hashtable.remove_val(H, key, buffer=buffer)
@@ -311,10 +335,7 @@ class AsyncMinHashLSH(object):
                 fs.append(hashtable.get(H))
         candidates = set(chain.from_iterable(await asyncio.gather(*fs)))
 
-        if self._prepickle:
-            return {pickle.loads(key) for key in candidates}
-        else:
-            return candidates
+        return candidates
 
     async def get_counts(self):
         """
@@ -327,10 +348,7 @@ class AsyncMinHashLSH(object):
         """
         see :class:`datasketch.MinHashLSH`.
         """
-        if self._prepickle:
-            key_set = [pickle.dumps(key) for key in set(keys)]
-        else:
-            key_set = list(set(keys))
+        key_set = list(set(keys))
         hashtables = [unordered_storage({'type': 'dict'}) for _ in range(self.b)]
         Hss = await self.keys.getmany(*key_set)
         for key, Hs in zip(key_set, Hss):
@@ -339,7 +357,7 @@ class AsyncMinHashLSH(object):
         return [hashtable.itemcounts() for hashtable in hashtables]
 
 
-class AsyncMinHashLSHSession:
+class AsyncMinHashLSHInsertionSession:
     """
     Context manager for batch insertion and removing of documents into a MinHashLSH.
     """
@@ -365,6 +383,27 @@ class AsyncMinHashLSHSession:
         """
         await self.lsh._insert(key, minhash,
                                check_duplication=check_duplication, buffer=True)
+
+
+class AsyncMinHashLSHDeleteSession:
+    """
+    Context manager for batch insertion and removing of documents into a MinHashLSH.
+    """
+
+    def __init__(self, lsh: AsyncMinHashLSH, batch_size: int):
+        self.lsh = lsh
+        self.lsh.batch_size = batch_size
+
+    async def __aenter__(self):
+        return self
+
+    async def __aexit__(self, exc_type, exc_val, exc_tb):
+        await self.close()
+
+    async def close(self):
+        fs = chain((self.lsh.keys.empty_buffer(),),
+                   (hashtable.empty_buffer() for hashtable in self.lsh.hashtables))
+        await asyncio.gather(*fs)
 
     async def remove(self, key):
         """
