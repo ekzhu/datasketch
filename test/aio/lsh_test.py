@@ -14,7 +14,7 @@ from datasketch.experimental.aio.lsh import AsyncMinHashLSH
 from datasketch.minhash import MinHash
 from datasketch.weighted_minhash import WeightedMinHashGenerator
 
-STORAGE_CONFIG_MONGO = {'type': 'aiomongo', 'mongo': {'host': '192.168.99.100', 'port': 27017, 'db': 'lsh_test'}}
+STORAGE_CONFIG_MONGO = {'type': 'aiomongo', 'mongo': {'host': 'localhost', 'port': 27017, 'db': 'lsh_test'}}
 DO_TEST_MONGO = True
 
 

@@ -1,6 +1,9 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+import sys
+if sys.version_info < (3, 6):
+    raise ImportError("Can't run asyncio tests. Python version should be >=3.6")
 
 import unittest
 
