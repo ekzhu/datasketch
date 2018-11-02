@@ -15,7 +15,7 @@ from datasketch.minhash import MinHash
 from datasketch.weighted_minhash import WeightedMinHashGenerator
 
 STORAGE_CONFIG_MONGO = {'type': 'aiomongo', 'mongo': {'host': 'localhost', 'port': 27017, 'db': 'lsh_test'}}
-DO_TEST_MONGO = False
+DO_TEST_MONGO = True
 
 
 @unittest.skipIf(sys.version_info < (3, 6), "Skipping TestAsyncMinHashLSH. Supported Python version >= 3.6")
