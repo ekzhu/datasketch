@@ -3,7 +3,8 @@
 
 import unittest
 
-from lsh_test import TestAsyncMinHashLSH, TestWeightedMinHashLSH, DO_TEST_MONGO
+from test.aio.lsh_test import TestAsyncMinHashLSH, TestWeightedMinHashLSH, DO_TEST_MONGO
+
 
 def test_suite_minhashlsh_aiomongo():
     suite = unittest.TestSuite()

@@ -85,8 +85,7 @@ setup(
     extras_require={
         'dev': ['check-manifest'],
         'test': test_requires + ['mockredispy', 'nose-exclude'],
-        'experimental_aio': ["aiounittest ; python_version>='3.6'", "motor ; python_version>='3.6'",
-                             "pymongo ; python_version>='3.6'"],
+        'experimental_aio': ["aiounittest ; python_version>='3.6'", "motor ; python_version>='3.6'"],
     },
 
     # If there are data files included in your packages that need to be
