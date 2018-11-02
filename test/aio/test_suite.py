@@ -36,4 +36,4 @@ if __name__ == '__main__':
     runner = unittest.TextTestRunner(verbosity=2)
     if DO_TEST_MONGO:
         runner.run(test_suite_minhashlsh_aiomongo())
-        # runner.run(test_suite_weightedminhashlsh_aiomongo())
+        runner.run(test_suite_weightedminhashlsh_aiomongo())

@@ -185,7 +185,7 @@ class TestAsyncMinHashLSH(aiounittest.AsyncTestCase):
 
         async with AsyncMinHashLSH(storage_config=self._storage_config_mongo,
                                    threshold=0.5, num_perm=16) as lsh:
-            async with lsh.insert_session(batch_size=1000) as session:
+            async with lsh.insertion_session(batch_size=1000) as session:
                 fs = (session.insert(key, minhash, check_duplication=False) for key, minhash in data)
                 await asyncio.gather(*fs)
 
@@ -221,7 +221,7 @@ class TestAsyncMinHashLSH(aiounittest.AsyncTestCase):
 
         async with AsyncMinHashLSH(storage_config=self._storage_config_mongo,
                                    threshold=0.5, num_perm=16) as lsh:
-            async with lsh.insert_session(batch_size=1000) as session:
+            async with lsh.insertion_session(batch_size=1000) as session:
                 fs = (session.insert(key, minhash, check_duplication=False) for key, minhash in data)
                 await asyncio.gather(*fs)
 

@@ -113,7 +113,7 @@ bulk insertion.
 
       data_list = [("m1", m1), ("m2", m2), ("m3", m3)]
 
-      with lsh.session() as session:
+      with lsh.insertion_session() as session:
          for key, minhash in data_list:
             session.insert(key, minhash)
 
@@ -176,47 +176,15 @@ Asynchronous MinHash LSH at scale
     So the interface may change slightly in the future.
 
 This module may be useful if you want to process millions of text documents 
-in streaming/batch mode using asynchronous RESTful API for clustering tasks, 
+in streaming/batch mode using asynchronous RESTful API (for example, aiohttp) for clustering tasks,
 and you expecting to maximize the throughput of your service.
-For example, this module allows your code to not get blocked by insertion. 
 
-We currently provide two implementations:
-
-* Asynchronous Redis storage (*python aioredis package*)
-* Asynchronous MongoDB storage (*python motor package*)
-
-Experimental result
-
-* Number of objects (insert, query): 12500
-* Pool: `concurrent.futures.ThreadPoolExecutor(max_workers=100)`
-* check_duplication: false
-* buffer_size: 500
-
-+-------------------------+-------------------------------+------------------------+------------------------+
-|                         | Synchronous tests, sec        | Asynchronous tests, sec                         |
-|                         |                               +------------------------+------------------------+
-|                         | *MinHashLSH*                  |*AsyncMinHashLSH*       || *ThreadPoolExecutor*  |
-|                         | *redis storage*               |                        || *MinHashLSH*          |
-|                         |                               |                        || *redis storage*       |
-+=========================+===============================+========================+========================+
-| **Insert**              |                               | 30.626                 | 41.023                 |
-+-------------------------+-------------------------------+------------------------+------------------------+
-|| **Insert session**     | 6.729                         | 39.274                 |                        |
-+-------------------------+-------------------------------+------------------------+------------------------+
-| **Query**               | 112.155                       | 60.509                 | 68.283                 |
-+-------------------------+-------------------------------+------------------------+------------------------+
-
-In summary, for faster querying use AsyncMinHashLSH module, 
-and for faster insertion consider use MinHashLSH module.
-
-If you consider using MongoDB storage, the asynchronous 
-implementation is faster then synchronous MongoDB 
-(*python pymongo package*). Though, it's slower than Redis storage.
+We currently provide asynchronous MongoDB storage (*python motor package*)
 
 For sharing across different Python
 processes see :ref:`minhash_lsh_at_scale`.
 
-The Asynchronous Redis storage option can be configured using:
+The Asynchronous MongoDB storage option can be configured using:
 
 * Usual way:
 
@@ -225,7 +193,7 @@ The Asynchronous Redis storage option can be configured using:
         from datasketch.experimental.aio.lsh import AsyncMinHashLSH
         from datasketch import MinHash
 
-        _storage = {'type': 'aioredis', 'redis': {'host': 'localhost', 'port': 6379}}
+        _storage = {'type': 'aiomongo', 'mongo': {'host': 'localhost', 'port': 27017, 'db': 'lsh_test'}}
 
         async def func():
             lsh = await AsyncMinHashLSH(storage_config=_storage, threshold=0.5, num_perm=16)
@@ -246,7 +214,7 @@ The Asynchronous Redis storage option can be configured using:
         from datasketch.experimental.aio.lsh import AsyncMinHashLSH
         from datasketch import MinHash
 
-        _storage = {'type': 'aioredis', 'redis': {'host': 'localhost', 'port': 6379}}
+        _storage = {'type': 'aiomongo', 'mongo': {'host': 'localhost', 'port': 27017, 'db': 'lsh_test'}}
 
         async def func():
             async with AsyncMinHashLSH(storage_config=_storage, threshold=0.5, num_perm=16) as lsh:
@@ -258,12 +226,6 @@ The Asynchronous Redis storage option can be configured using:
                 await lsh.insert('b', m2)
                 print(await lsh.query(m1))
                 print(await lsh.query(m2))
-
-To configure Asynchronous MongoDB storage, use:
-
-.. code:: python
-
-    _storage = {'type': 'aiomongo', 'mongo': {'host': 'localhost', 'port': 27017, 'db': 'lsh_test'}}
 
 To configure Asynchronous MongoDB storage that will connect to a `replica set <http://api.mongodb.com/python/current/examples/high_availability.html#id1>`__ of three nodes, use:
 
@@ -293,7 +255,7 @@ To create index for a large number of MinHashes using asynchronous MinHash LSH.
     _storage = {'type': 'aiomongo', 'mongo': {'host': 'localhost', 'port': 27017, 'db': 'lsh_test'}}
     async def func():
         async with AsyncMinHashLSH(storage_config=_storage, threshold=0.5, num_perm=16) as lsh:
-            async with lsh.session(batch_size=1000) as session:
+            async with lsh.insertion_session(batch_size=1000) as session:
                 fs = (session.insert(key, minhash, check_duplication=False) for key, minhash in data)
             await asyncio.gather(*fs)
 
@@ -319,10 +281,10 @@ To bulk remove keys from LSH index using asynchronous MinHash LSH.
     _storage = {'type': 'aiomongo', 'mongo': {'host': 'localhost', 'port': 27017, 'db': 'lsh_test'}}
     async def func():
         async with AsyncMinHashLSH(storage_config=_storage, threshold=0.5, num_perm=16) as lsh:
-            async with lsh.session(batch_size=1000) as session:
+            async with lsh.insertion_session(batch_size=1000) as session:
                 fs = (session.insert(key, minhash, check_duplication=False) for key, minhash in data)
             await asyncio.gather(*fs)
 
-            async with lsh.session(batch_size=3) as session:
+            async with lsh.delete_session(batch_size=3) as session:
                 fs = (session.remove(key) for key in keys_to_remove)
                 await asyncio.gather(*fs)

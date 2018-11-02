@@ -49,7 +49,7 @@ class AsyncMinHashLSH(object):
             }
         self._storage_config = storage_config.copy()
         self._storage_config['basename'] = self._storage_config.get('basename', _random_name(11))
-
+        self._basename = self._storage_config['basename']
         self._batch_size = 10000
         self._threshold = threshold
         self._num_perm = num_perm
@@ -183,7 +183,7 @@ class AsyncMinHashLSH(object):
         """
         await self._insert(key, minhash, check_duplication=check_duplication, buffer=False)
 
-    def insert_session(self, batch_size=10000):
+    def insertion_session(self, batch_size=10000):
         """
         Create a asynchronous context manager for fast insertion in index.
 
@@ -212,7 +212,7 @@ class AsyncMinHashLSH(object):
                 _storage_config_redis = {'type': 'aiomongo', 'mongo': {'host': 'localhost', 'port': 27017}}
                 async def func():
                     async with AsyncMinHashLSH(storage_config=_storage_config_redis, threshold=0.5, num_perm=16) as lsh:
-                        async with lsh.insert_session(batch_size=1000) as session:
+                        async with lsh.insertion_session(batch_size=1000) as session:
                             fs = (session.insert(key, minhash, check_duplication=True) for key, minhash in data)
                             await asyncio.gather(*fs)
         """
@@ -247,7 +247,7 @@ class AsyncMinHashLSH(object):
                 _storage_config_redis = {'type': 'aiomongo', 'mongo': {'host': 'localhost', 'port': 27017}}
                 async def func():
                     async with AsyncMinHashLSH(storage_config=_storage_config_redis, threshold=0.5, num_perm=16) as lsh:
-                        async with lsh.insert_session(batch_size=1000) as session:
+                        async with lsh.insertion_session(batch_size=1000) as session:
                             fs = (session.insert(key, minhash, check_duplication=True) for key, minhash in data)
                             await asyncio.gather(*fs)
 
@@ -359,7 +359,7 @@ class AsyncMinHashLSH(object):
 
 class AsyncMinHashLSHInsertionSession:
     """
-    Context manager for batch insertion and removing of documents into a MinHashLSH.
+    Context manager for batch insertion of documents into a MinHashLSH.
     """
 
     def __init__(self, lsh: AsyncMinHashLSH, batch_size: int):
@@ -387,7 +387,7 @@ class AsyncMinHashLSHInsertionSession:
 
 class AsyncMinHashLSHDeleteSession:
     """
-    Context manager for batch insertion and removing of documents into a MinHashLSH.
+    Context manager for batch removing the documents from a MinHashLSH.
     """
 
     def __init__(self, lsh: AsyncMinHashLSH, batch_size: int):

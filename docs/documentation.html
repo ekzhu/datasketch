@@ -909,7 +909,7 @@ counts</td>
 <h2>Asynchronous MinHash LSH<a class="headerlink" href="#asynchronous-minhash-lsh" title="Permalink to this headline">¶</a></h2>
 <dl class="class">
 <dt id="datasketch.experimental.aio.lsh.AsyncMinHashLSH">
-<em class="property">class </em><code class="descclassname">datasketch.experimental.aio.lsh.</code><code class="descname">AsyncMinHashLSH</code><span class="sig-paren">(</span><em>threshold=0.9</em>, <em>num_perm=128</em>, <em>weights=(0.5</em>, <em>0.5)</em>, <em>params=None</em>, <em>storage_config=None</em>, <em>prepickle=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/datasketch/experimental/aio/lsh.html#AsyncMinHashLSH"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#datasketch.experimental.aio.lsh.AsyncMinHashLSH" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="descclassname">datasketch.experimental.aio.lsh.</code><code class="descname">AsyncMinHashLSH</code><span class="sig-paren">(</span><em>threshold: float = 0.9</em>, <em>num_perm: int = 128</em>, <em>weights: Tuple[float</em>, <em>float] = (0.5</em>, <em>0.5)</em>, <em>params: Tuple[int</em>, <em>int] = None</em>, <em>storage_config: Dict = None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/datasketch/experimental/aio/lsh.html#AsyncMinHashLSH"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#datasketch.experimental.aio.lsh.AsyncMinHashLSH" title="Permalink to this definition">¶</a></dt>
 <dd><p>Asynchronous MinHashLSH index.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
@@ -920,10 +920,9 @@ counts</td>
 <li><strong>num_perm</strong> (<em>int</em>) – see <a class="reference internal" href="#datasketch.MinHashLSH" title="datasketch.MinHashLSH"><code class="xref py py-class docutils literal notranslate"><span class="pre">datasketch.MinHashLSH</span></code></a>.</li>
 <li><strong>weights</strong> (<em>tuple</em><em>(</em><em>float</em><em>, </em><em>float</em><em>)</em>) – see <a class="reference internal" href="#datasketch.MinHashLSH" title="datasketch.MinHashLSH"><code class="xref py py-class docutils literal notranslate"><span class="pre">datasketch.MinHashLSH</span></code></a>.</li>
 <li><strong>params</strong> (<em>tuple</em>) – see <a class="reference internal" href="#datasketch.MinHashLSH" title="datasketch.MinHashLSH"><code class="xref py py-class docutils literal notranslate"><span class="pre">datasketch.MinHashLSH</span></code></a>.</li>
-<li><strong>storage_config</strong> (<em>dict</em>) – New types of storage service (aioredis, aiomongo) to use for storing
+<li><strong>storage_config</strong> (<em>dict</em>) – New type of storage service - aiomongo - to use for storing
 hashtables and keys are implemented.
-If storage_config is None aioredis storage will be used.</li>
-<li><strong>prepickle</strong> (<em>bool</em>) – for redis type storage use bytes as keys.</li>
+If storage_config is None aiomongo storage will be used.</li>
 </ul>
 </td>
 </tr>
@@ -931,8 +930,7 @@ If storage_config is None aioredis storage will be used.</li>
 </table>
 <p>For example usage see <a class="reference internal" href="lsh.html#minhash-lsh-async"><span class="std std-ref">Asynchronous MinHash LSH at scale</span></a>.</p>
 <p>Example of supported storage configuration:</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">REDIS</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;type&#39;</span><span class="p">:</span> <span class="s1">&#39;aioredis&#39;</span><span class="p">,</span> <span class="s1">&#39;basename&#39;</span><span class="p">:</span> <span class="s1">&#39;base_name_1&#39;</span><span class="p">,</span> <span class="s1">&#39;redis&#39;</span><span class="p">:</span> <span class="p">{</span><span class="s1">&#39;host&#39;</span><span class="p">:</span> <span class="s1">&#39;localhost&#39;</span><span class="p">,</span> <span class="s1">&#39;port&#39;</span><span class="p">:</span> <span class="mi">6379</span><span class="p">}}</span>
-<span class="n">MONGO</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;type&#39;</span><span class="p">:</span> <span class="s1">&#39;aiomongo&#39;</span><span class="p">,</span> <span class="s1">&#39;basename&#39;</span><span class="p">:</span> <span class="s1">&#39;base_name_1&#39;</span><span class="p">,</span> <span class="s1">&#39;mongo&#39;</span><span class="p">:</span> <span class="p">{</span><span class="s1">&#39;host&#39;</span><span class="p">:</span> <span class="s1">&#39;localhost&#39;</span><span class="p">,</span> <span class="s1">&#39;port&#39;</span><span class="p">:</span> <span class="mi">27017</span><span class="p">}}</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">MONGO</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;type&#39;</span><span class="p">:</span> <span class="s1">&#39;aiomongo&#39;</span><span class="p">,</span> <span class="s1">&#39;basename&#39;</span><span class="p">:</span> <span class="s1">&#39;base_name_1&#39;</span><span class="p">,</span> <span class="s1">&#39;mongo&#39;</span><span class="p">:</span> <span class="p">{</span><span class="s1">&#39;host&#39;</span><span class="p">:</span> <span class="s1">&#39;localhost&#39;</span><span class="p">,</span> <span class="s1">&#39;port&#39;</span><span class="p">:</span> <span class="mi">27017</span><span class="p">}}</span>
 </pre></div>
 </div>
 <div class="admonition note">
@@ -945,14 +943,14 @@ If storage_config is None aioredis storage will be used.</li>
 </div>
 <dl class="method">
 <dt id="datasketch.experimental.aio.lsh.AsyncMinHashLSH.__init__">
-<code class="descname">__init__</code><span class="sig-paren">(</span><em>threshold=0.9</em>, <em>num_perm=128</em>, <em>weights=(0.5</em>, <em>0.5)</em>, <em>params=None</em>, <em>storage_config=None</em>, <em>prepickle=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/datasketch/experimental/aio/lsh.html#AsyncMinHashLSH.__init__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#datasketch.experimental.aio.lsh.AsyncMinHashLSH.__init__" title="Permalink to this definition">¶</a></dt>
+<code class="descname">__init__</code><span class="sig-paren">(</span><em>threshold: float = 0.9</em>, <em>num_perm: int = 128</em>, <em>weights: Tuple[float</em>, <em>float] = (0.5</em>, <em>0.5)</em>, <em>params: Tuple[int</em>, <em>int] = None</em>, <em>storage_config: Dict = None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/datasketch/experimental/aio/lsh.html#AsyncMinHashLSH.__init__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#datasketch.experimental.aio.lsh.AsyncMinHashLSH.__init__" title="Permalink to this definition">¶</a></dt>
 <dd><p>Initialize self.  See help(type(self)) for accurate signature.</p>
 </dd></dl>
 
 <dl class="method">
-<dt id="datasketch.experimental.aio.lsh.AsyncMinHashLSH.session">
-<code class="descname">session</code><span class="sig-paren">(</span><em>batch_size=10000</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/datasketch/experimental/aio/lsh.html#AsyncMinHashLSH.session"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#datasketch.experimental.aio.lsh.AsyncMinHashLSH.session" title="Permalink to this definition">¶</a></dt>
-<dd><p>Create a asynchronous context manager for fast insertion or removing in index.</p>
+<dt id="datasketch.experimental.aio.lsh.AsyncMinHashLSH.insertion_session">
+<code class="descname">insertion_session</code><span class="sig-paren">(</span><em>batch_size=10000</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/datasketch/experimental/aio/lsh.html#AsyncMinHashLSH.insertion_session"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#datasketch.experimental.aio.lsh.AsyncMinHashLSH.insertion_session" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create a asynchronous context manager for fast insertion in index.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
@@ -979,14 +977,54 @@ If storage_config is None aioredis storage will be used.</li>
         <span class="n">obj</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">i</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="s1">&#39;utf-8&#39;</span><span class="p">))</span>
 <span class="n">data</span> <span class="o">=</span> <span class="p">[(</span><span class="n">e</span><span class="p">,</span> <span class="n">m</span><span class="p">)</span> <span class="k">for</span> <span class="n">e</span><span class="p">,</span> <span class="n">m</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">seq</span><span class="p">,</span> <span class="n">objs</span><span class="p">)]</span>
 
-<span class="n">_storage_config_redis</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;type&#39;</span><span class="p">:</span> <span class="s1">&#39;aioredis&#39;</span><span class="p">,</span> <span class="s1">&#39;redis&#39;</span><span class="p">:</span> <span class="p">{</span><span class="s1">&#39;host&#39;</span><span class="p">:</span> <span class="s1">&#39;localhost&#39;</span><span class="p">,</span> <span class="s1">&#39;port&#39;</span><span class="p">:</span> <span class="mi">6379</span><span class="p">}}</span>
+<span class="n">_storage_config_redis</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;type&#39;</span><span class="p">:</span> <span class="s1">&#39;aiomongo&#39;</span><span class="p">,</span> <span class="s1">&#39;mongo&#39;</span><span class="p">:</span> <span class="p">{</span><span class="s1">&#39;host&#39;</span><span class="p">:</span> <span class="s1">&#39;localhost&#39;</span><span class="p">,</span> <span class="s1">&#39;port&#39;</span><span class="p">:</span> <span class="mi">27017</span><span class="p">}}</span>
 <span class="n">async</span> <span class="k">def</span> <span class="nf">func</span><span class="p">():</span>
     <span class="n">async</span> <span class="k">with</span> <span class="n">AsyncMinHashLSH</span><span class="p">(</span><span class="n">storage_config</span><span class="o">=</span><span class="n">_storage_config_redis</span><span class="p">,</span> <span class="n">threshold</span><span class="o">=</span><span class="mf">0.5</span><span class="p">,</span> <span class="n">num_perm</span><span class="o">=</span><span class="mi">16</span><span class="p">)</span> <span class="k">as</span> <span class="n">lsh</span><span class="p">:</span>
-        <span class="n">async</span> <span class="k">with</span> <span class="n">lsh</span><span class="o">.</span><span class="n">session</span><span class="p">(</span><span class="n">batch_size</span><span class="o">=</span><span class="mi">1000</span><span class="p">)</span> <span class="k">as</span> <span class="n">session</span><span class="p">:</span>
+        <span class="n">async</span> <span class="k">with</span> <span class="n">lsh</span><span class="o">.</span><span class="n">insertion_session</span><span class="p">(</span><span class="n">batch_size</span><span class="o">=</span><span class="mi">1000</span><span class="p">)</span> <span class="k">as</span> <span class="n">session</span><span class="p">:</span>
+            <span class="n">fs</span> <span class="o">=</span> <span class="p">(</span><span class="n">session</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="n">minhash</span><span class="p">,</span> <span class="n">check_duplication</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span> <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">minhash</span> <span class="ow">in</span> <span class="n">data</span><span class="p">)</span>
+            <span class="n">await</span> <span class="n">asyncio</span><span class="o">.</span><span class="n">gather</span><span class="p">(</span><span class="o">*</span><span class="n">fs</span><span class="p">)</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="method">
+<dt id="datasketch.experimental.aio.lsh.AsyncMinHashLSH.delete_session">
+<code class="descname">delete_session</code><span class="sig-paren">(</span><em>batch_size=10000</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/datasketch/experimental/aio/lsh.html#AsyncMinHashLSH.delete_session"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#datasketch.experimental.aio.lsh.AsyncMinHashLSH.delete_session" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create a asynchronous context manager for fast removing in index.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>batch_size</strong> (<em>int</em>) – the size of chunks to use in insert_session mode (default=10000).</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">datasketch.experimental.aio.lsh.AsyncMinHashLSHSession</td>
+</tr>
+</tbody>
+</table>
+<p class="rubric">Example</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">datasketch.experimental.aio.lsh</span> <span class="kn">import</span> <span class="n">AsyncMinHashLSH</span>
+<span class="kn">from</span> <span class="nn">datasketch</span> <span class="kn">import</span> <span class="n">MinHash</span>
+
+<span class="k">def</span> <span class="nf">chunk</span><span class="p">(</span><span class="n">it</span><span class="p">,</span> <span class="n">size</span><span class="p">):</span>
+    <span class="n">it</span> <span class="o">=</span> <span class="nb">iter</span><span class="p">(</span><span class="n">it</span><span class="p">)</span>
+    <span class="k">return</span> <span class="nb">iter</span><span class="p">(</span><span class="k">lambda</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">islice</span><span class="p">(</span><span class="n">it</span><span class="p">,</span> <span class="n">size</span><span class="p">)),</span> <span class="p">())</span>
+
+<span class="n">_chunked_str</span> <span class="o">=</span> <span class="n">chunk</span><span class="p">((</span><span class="n">random</span><span class="o">.</span><span class="n">choice</span><span class="p">(</span><span class="n">string</span><span class="o">.</span><span class="n">ascii_lowercase</span><span class="p">)</span> <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">10000</span><span class="p">)),</span> <span class="mi">4</span><span class="p">)</span>
+<span class="n">seq</span> <span class="o">=</span> <span class="nb">frozenset</span><span class="p">(</span><span class="n">chain</span><span class="p">((</span><span class="s1">&#39;&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">s</span><span class="p">)</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">_chunked_str</span><span class="p">),</span> <span class="p">(</span><span class="s1">&#39;aahhb&#39;</span><span class="p">,</span> <span class="s1">&#39;aahh&#39;</span><span class="p">,</span> <span class="s1">&#39;aahhc&#39;</span><span class="p">,</span> <span class="s1">&#39;aac&#39;</span><span class="p">,</span> <span class="s1">&#39;kld&#39;</span><span class="p">,</span> <span class="s1">&#39;bhg&#39;</span><span class="p">,</span> <span class="s1">&#39;kkd&#39;</span><span class="p">,</span> <span class="s1">&#39;yow&#39;</span><span class="p">,</span> <span class="s1">&#39;ppi&#39;</span><span class="p">,</span> <span class="s1">&#39;eer&#39;</span><span class="p">)))</span>
+<span class="n">objs</span> <span class="o">=</span> <span class="p">[</span><span class="n">MinHash</span><span class="p">(</span><span class="mi">16</span><span class="p">)</span> <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">seq</span><span class="p">))]</span>
+<span class="k">for</span> <span class="n">e</span><span class="p">,</span> <span class="n">obj</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">seq</span><span class="p">,</span> <span class="n">objs</span><span class="p">):</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">e</span><span class="p">:</span>
+        <span class="n">obj</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">i</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="s1">&#39;utf-8&#39;</span><span class="p">))</span>
+<span class="n">data</span> <span class="o">=</span> <span class="p">[(</span><span class="n">e</span><span class="p">,</span> <span class="n">m</span><span class="p">)</span> <span class="k">for</span> <span class="n">e</span><span class="p">,</span> <span class="n">m</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">seq</span><span class="p">,</span> <span class="n">objs</span><span class="p">)]</span>
+
+<span class="n">_storage_config_redis</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;type&#39;</span><span class="p">:</span> <span class="s1">&#39;aiomongo&#39;</span><span class="p">,</span> <span class="s1">&#39;mongo&#39;</span><span class="p">:</span> <span class="p">{</span><span class="s1">&#39;host&#39;</span><span class="p">:</span> <span class="s1">&#39;localhost&#39;</span><span class="p">,</span> <span class="s1">&#39;port&#39;</span><span class="p">:</span> <span class="mi">27017</span><span class="p">}}</span>
+<span class="n">async</span> <span class="k">def</span> <span class="nf">func</span><span class="p">():</span>
+    <span class="n">async</span> <span class="k">with</span> <span class="n">AsyncMinHashLSH</span><span class="p">(</span><span class="n">storage_config</span><span class="o">=</span><span class="n">_storage_config_redis</span><span class="p">,</span> <span class="n">threshold</span><span class="o">=</span><span class="mf">0.5</span><span class="p">,</span> <span class="n">num_perm</span><span class="o">=</span><span class="mi">16</span><span class="p">)</span> <span class="k">as</span> <span class="n">lsh</span><span class="p">:</span>
+        <span class="n">async</span> <span class="k">with</span> <span class="n">lsh</span><span class="o">.</span><span class="n">insertion_session</span><span class="p">(</span><span class="n">batch_size</span><span class="o">=</span><span class="mi">1000</span><span class="p">)</span> <span class="k">as</span> <span class="n">session</span><span class="p">:</span>
             <span class="n">fs</span> <span class="o">=</span> <span class="p">(</span><span class="n">session</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="n">minhash</span><span class="p">,</span> <span class="n">check_duplication</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span> <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">minhash</span> <span class="ow">in</span> <span class="n">data</span><span class="p">)</span>
             <span class="n">await</span> <span class="n">asyncio</span><span class="o">.</span><span class="n">gather</span><span class="p">(</span><span class="o">*</span><span class="n">fs</span><span class="p">)</span>
 
-        <span class="n">async</span> <span class="k">with</span> <span class="n">lsh</span><span class="o">.</span><span class="n">session</span><span class="p">(</span><span class="n">batch_size</span><span class="o">=</span><span class="mi">3</span><span class="p">)</span> <span class="k">as</span> <span class="n">session</span><span class="p">:</span>
+        <span class="n">async</span> <span class="k">with</span> <span class="n">lsh</span><span class="o">.</span><span class="n">delete_session</span><span class="p">(</span><span class="n">batch_size</span><span class="o">=</span><span class="mi">3</span><span class="p">)</span> <span class="k">as</span> <span class="n">session</span><span class="p">:</span>
             <span class="n">fs</span> <span class="o">=</span> <span class="p">(</span><span class="n">session</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="n">key</span><span class="p">)</span> <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">keys_to_remove</span><span class="p">)</span>
             <span class="n">await</span> <span class="n">asyncio</span><span class="o">.</span><span class="n">gather</span><span class="p">(</span><span class="o">*</span><span class="n">fs</span><span class="p">)</span>
 </pre></div>
@@ -1549,7 +1587,7 @@ Main changes from the original HyperLogLog:</p>
       
       |
       Powered by <a href="http://sphinx-doc.org/">Sphinx 1.8.1</a>
-      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.11</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
       
       |
       <a href="_sources/documentation.rst.txt"

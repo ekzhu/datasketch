@@ -193,7 +193,7 @@ an insertion session. This reduces the number of network calls during
 bulk insertion.</p>
 <div class="code python highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">data_list</span> <span class="o">=</span> <span class="p">[(</span><span class="s2">&quot;m1&quot;</span><span class="p">,</span> <span class="n">m1</span><span class="p">),</span> <span class="p">(</span><span class="s2">&quot;m2&quot;</span><span class="p">,</span> <span class="n">m2</span><span class="p">),</span> <span class="p">(</span><span class="s2">&quot;m3&quot;</span><span class="p">,</span> <span class="n">m3</span><span class="p">)]</span>
 
-<span class="k">with</span> <span class="n">lsh</span><span class="o">.</span><span class="n">session</span><span class="p">()</span> <span class="k">as</span> <span class="n">session</span><span class="p">:</span>
+<span class="k">with</span> <span class="n">lsh</span><span class="o">.</span><span class="n">insertion_session</span><span class="p">()</span> <span class="k">as</span> <span class="n">session</span><span class="p">:</span>
    <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">minhash</span> <span class="ow">in</span> <span class="n">data_list</span><span class="p">:</span>
       <span class="n">session</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="n">minhash</span><span class="p">)</span>
 </pre></div>
@@ -247,81 +247,19 @@ as the base name, and collision is extremely unlikely.</p>
 So the interface may change slightly in the future.</p>
 </div>
 <p>This module may be useful if you want to process millions of text documents
-in streaming/batch mode using asynchronous RESTful API for clustering tasks,
-and you expecting to maximize the throughput of your service.
-For example, this module allows your code to not get blocked by insertion.</p>
-<p>We currently provide two implementations:</p>
-<ul class="simple">
-<li>Asynchronous Redis storage (<em>python aioredis package</em>)</li>
-<li>Asynchronous MongoDB storage (<em>python motor package</em>)</li>
-</ul>
-<p>Experimental result</p>
-<ul class="simple">
-<li>Number of objects (insert, query): 12500</li>
-<li>Pool: <cite>concurrent.futures.ThreadPoolExecutor(max_workers=100)</cite></li>
-<li>check_duplication: false</li>
-<li>buffer_size: 500</li>
-</ul>
-<table border="1" class="docutils">
-<colgroup>
-<col width="24%" />
-<col width="30%" />
-<col width="23%" />
-<col width="23%" />
-</colgroup>
-<thead valign="bottom">
-<tr class="row-odd"><th class="head" rowspan="2">&#160;</th>
-<th class="head" rowspan="2"><p class="first">Synchronous tests, sec</p>
-<p class="last"><em>MinHashLSH</em>
-<em>redis storage</em></p>
-</th>
-<th class="head" colspan="2">Asynchronous tests, sec</th>
-</tr>
-<tr class="row-even"><th class="head"><em>AsyncMinHashLSH</em></th>
-<th class="head"><div class="first last line-block">
-<div class="line"><em>ThreadPoolExecutor</em></div>
-<div class="line"><em>MinHashLSH</em></div>
-<div class="line"><em>redis storage</em></div>
-</div>
-</th>
-</tr>
-</thead>
-<tbody valign="top">
-<tr class="row-odd"><td><strong>Insert</strong></td>
-<td>&#160;</td>
-<td>30.626</td>
-<td>41.023</td>
-</tr>
-<tr class="row-even"><td><div class="first last line-block">
-<div class="line"><strong>Insert session</strong></div>
-</div>
-</td>
-<td>6.729</td>
-<td>39.274</td>
-<td>&#160;</td>
-</tr>
-<tr class="row-odd"><td><strong>Query</strong></td>
-<td>112.155</td>
-<td>60.509</td>
-<td>68.283</td>
-</tr>
-</tbody>
-</table>
-<p>In summary, for faster querying use AsyncMinHashLSH module,
-and for faster insertion consider use MinHashLSH module.</p>
-<p>If you consider using MongoDB storage, the asynchronous
-implementation is faster then synchronous MongoDB
-(<em>python pymongo package</em>). Though, it’s slower than Redis storage.</p>
+in streaming/batch mode using asynchronous RESTful API (for example, aiohttp) for clustering tasks,
+and you expecting to maximize the throughput of your service.</p>
+<p>We currently provide asynchronous MongoDB storage (<em>python motor package</em>)</p>
 <p>For sharing across different Python
 processes see <a class="reference internal" href="#minhash-lsh-at-scale"><span class="std std-ref">MinHash LSH at scale</span></a>.</p>
-<p>The Asynchronous Redis storage option can be configured using:</p>
+<p>The Asynchronous MongoDB storage option can be configured using:</p>
 <ul class="simple">
 <li>Usual way:</li>
 </ul>
 <div class="code python highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">datasketch.experimental.aio.lsh</span> <span class="k">import</span> <span class="n">AsyncMinHashLSH</span>
 <span class="kn">from</span> <span class="nn">datasketch</span> <span class="k">import</span> <span class="n">MinHash</span>
 
-<span class="n">_storage</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;type&#39;</span><span class="p">:</span> <span class="s1">&#39;aioredis&#39;</span><span class="p">,</span> <span class="s1">&#39;redis&#39;</span><span class="p">:</span> <span class="p">{</span><span class="s1">&#39;host&#39;</span><span class="p">:</span> <span class="s1">&#39;localhost&#39;</span><span class="p">,</span> <span class="s1">&#39;port&#39;</span><span class="p">:</span> <span class="mi">6379</span><span class="p">}}</span>
+<span class="n">_storage</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;type&#39;</span><span class="p">:</span> <span class="s1">&#39;aiomongo&#39;</span><span class="p">,</span> <span class="s1">&#39;mongo&#39;</span><span class="p">:</span> <span class="p">{</span><span class="s1">&#39;host&#39;</span><span class="p">:</span> <span class="s1">&#39;localhost&#39;</span><span class="p">,</span> <span class="s1">&#39;port&#39;</span><span class="p">:</span> <span class="mi">27017</span><span class="p">,</span> <span class="s1">&#39;db&#39;</span><span class="p">:</span> <span class="s1">&#39;lsh_test&#39;</span><span class="p">}}</span>
 
 <span class="k">async</span> <span class="k">def</span> <span class="nf">func</span><span class="p">():</span>
     <span class="n">lsh</span> <span class="o">=</span> <span class="k">await</span> <span class="n">AsyncMinHashLSH</span><span class="p">(</span><span class="n">storage_config</span><span class="o">=</span><span class="n">_storage</span><span class="p">,</span> <span class="n">threshold</span><span class="o">=</span><span class="mf">0.5</span><span class="p">,</span> <span class="n">num_perm</span><span class="o">=</span><span class="mi">16</span><span class="p">)</span>
@@ -342,7 +280,7 @@ processes see <a class="reference internal" href="#minhash-lsh-at-scale"><span c
 <div class="code python highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">datasketch.experimental.aio.lsh</span> <span class="k">import</span> <span class="n">AsyncMinHashLSH</span>
 <span class="kn">from</span> <span class="nn">datasketch</span> <span class="k">import</span> <span class="n">MinHash</span>
 
-<span class="n">_storage</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;type&#39;</span><span class="p">:</span> <span class="s1">&#39;aioredis&#39;</span><span class="p">,</span> <span class="s1">&#39;redis&#39;</span><span class="p">:</span> <span class="p">{</span><span class="s1">&#39;host&#39;</span><span class="p">:</span> <span class="s1">&#39;localhost&#39;</span><span class="p">,</span> <span class="s1">&#39;port&#39;</span><span class="p">:</span> <span class="mi">6379</span><span class="p">}}</span>
+<span class="n">_storage</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;type&#39;</span><span class="p">:</span> <span class="s1">&#39;aiomongo&#39;</span><span class="p">,</span> <span class="s1">&#39;mongo&#39;</span><span class="p">:</span> <span class="p">{</span><span class="s1">&#39;host&#39;</span><span class="p">:</span> <span class="s1">&#39;localhost&#39;</span><span class="p">,</span> <span class="s1">&#39;port&#39;</span><span class="p">:</span> <span class="mi">27017</span><span class="p">,</span> <span class="s1">&#39;db&#39;</span><span class="p">:</span> <span class="s1">&#39;lsh_test&#39;</span><span class="p">}}</span>
 
 <span class="k">async</span> <span class="k">def</span> <span class="nf">func</span><span class="p">():</span>
     <span class="k">async</span> <span class="k">with</span> <span class="n">AsyncMinHashLSH</span><span class="p">(</span><span class="n">storage_config</span><span class="o">=</span><span class="n">_storage</span><span class="p">,</span> <span class="n">threshold</span><span class="o">=</span><span class="mf">0.5</span><span class="p">,</span> <span class="n">num_perm</span><span class="o">=</span><span class="mi">16</span><span class="p">)</span> <span class="k">as</span> <span class="n">lsh</span><span class="p">:</span>
@@ -354,10 +292,6 @@ processes see <a class="reference internal" href="#minhash-lsh-at-scale"><span c
         <span class="k">await</span> <span class="n">lsh</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="s1">&#39;b&#39;</span><span class="p">,</span> <span class="n">m2</span><span class="p">)</span>
         <span class="nb">print</span><span class="p">(</span><span class="k">await</span> <span class="n">lsh</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">m1</span><span class="p">))</span>
         <span class="nb">print</span><span class="p">(</span><span class="k">await</span> <span class="n">lsh</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">m2</span><span class="p">))</span>
-</pre></div>
-</div>
-<p>To configure Asynchronous MongoDB storage, use:</p>
-<div class="code python highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">_storage</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;type&#39;</span><span class="p">:</span> <span class="s1">&#39;aiomongo&#39;</span><span class="p">,</span> <span class="s1">&#39;mongo&#39;</span><span class="p">:</span> <span class="p">{</span><span class="s1">&#39;host&#39;</span><span class="p">:</span> <span class="s1">&#39;localhost&#39;</span><span class="p">,</span> <span class="s1">&#39;port&#39;</span><span class="p">:</span> <span class="mi">27017</span><span class="p">,</span> <span class="s1">&#39;db&#39;</span><span class="p">:</span> <span class="s1">&#39;lsh_test&#39;</span><span class="p">}}</span>
 </pre></div>
 </div>
 <p>To configure Asynchronous MongoDB storage that will connect to a <a class="reference external" href="http://api.mongodb.com/python/current/examples/high_availability.html#id1">replica set</a> of three nodes, use:</p>
@@ -383,7 +317,7 @@ processes see <a class="reference internal" href="#minhash-lsh-at-scale"><span c
 <span class="n">_storage</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;type&#39;</span><span class="p">:</span> <span class="s1">&#39;aiomongo&#39;</span><span class="p">,</span> <span class="s1">&#39;mongo&#39;</span><span class="p">:</span> <span class="p">{</span><span class="s1">&#39;host&#39;</span><span class="p">:</span> <span class="s1">&#39;localhost&#39;</span><span class="p">,</span> <span class="s1">&#39;port&#39;</span><span class="p">:</span> <span class="mi">27017</span><span class="p">,</span> <span class="s1">&#39;db&#39;</span><span class="p">:</span> <span class="s1">&#39;lsh_test&#39;</span><span class="p">}}</span>
 <span class="k">async</span> <span class="k">def</span> <span class="nf">func</span><span class="p">():</span>
     <span class="k">async</span> <span class="k">with</span> <span class="n">AsyncMinHashLSH</span><span class="p">(</span><span class="n">storage_config</span><span class="o">=</span><span class="n">_storage</span><span class="p">,</span> <span class="n">threshold</span><span class="o">=</span><span class="mf">0.5</span><span class="p">,</span> <span class="n">num_perm</span><span class="o">=</span><span class="mi">16</span><span class="p">)</span> <span class="k">as</span> <span class="n">lsh</span><span class="p">:</span>
-        <span class="k">async</span> <span class="k">with</span> <span class="n">lsh</span><span class="o">.</span><span class="n">session</span><span class="p">(</span><span class="n">batch_size</span><span class="o">=</span><span class="mi">1000</span><span class="p">)</span> <span class="k">as</span> <span class="n">session</span><span class="p">:</span>
+        <span class="k">async</span> <span class="k">with</span> <span class="n">lsh</span><span class="o">.</span><span class="n">insertion_session</span><span class="p">(</span><span class="n">batch_size</span><span class="o">=</span><span class="mi">1000</span><span class="p">)</span> <span class="k">as</span> <span class="n">session</span><span class="p">:</span>
             <span class="n">fs</span> <span class="o">=</span> <span class="p">(</span><span class="n">session</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="n">minhash</span><span class="p">,</span> <span class="n">check_duplication</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span> <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">minhash</span> <span class="ow">in</span> <span class="n">data</span><span class="p">)</span>
         <span class="k">await</span> <span class="n">asyncio</span><span class="o">.</span><span class="n">gather</span><span class="p">(</span><span class="o">*</span><span class="n">fs</span><span class="p">)</span>
 </pre></div>
@@ -407,11 +341,11 @@ processes see <a class="reference internal" href="#minhash-lsh-at-scale"><span c
 <span class="n">_storage</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;type&#39;</span><span class="p">:</span> <span class="s1">&#39;aiomongo&#39;</span><span class="p">,</span> <span class="s1">&#39;mongo&#39;</span><span class="p">:</span> <span class="p">{</span><span class="s1">&#39;host&#39;</span><span class="p">:</span> <span class="s1">&#39;localhost&#39;</span><span class="p">,</span> <span class="s1">&#39;port&#39;</span><span class="p">:</span> <span class="mi">27017</span><span class="p">,</span> <span class="s1">&#39;db&#39;</span><span class="p">:</span> <span class="s1">&#39;lsh_test&#39;</span><span class="p">}}</span>
 <span class="k">async</span> <span class="k">def</span> <span class="nf">func</span><span class="p">():</span>
     <span class="k">async</span> <span class="k">with</span> <span class="n">AsyncMinHashLSH</span><span class="p">(</span><span class="n">storage_config</span><span class="o">=</span><span class="n">_storage</span><span class="p">,</span> <span class="n">threshold</span><span class="o">=</span><span class="mf">0.5</span><span class="p">,</span> <span class="n">num_perm</span><span class="o">=</span><span class="mi">16</span><span class="p">)</span> <span class="k">as</span> <span class="n">lsh</span><span class="p">:</span>
-        <span class="k">async</span> <span class="k">with</span> <span class="n">lsh</span><span class="o">.</span><span class="n">session</span><span class="p">(</span><span class="n">batch_size</span><span class="o">=</span><span class="mi">1000</span><span class="p">)</span> <span class="k">as</span> <span class="n">session</span><span class="p">:</span>
+        <span class="k">async</span> <span class="k">with</span> <span class="n">lsh</span><span class="o">.</span><span class="n">insertion_session</span><span class="p">(</span><span class="n">batch_size</span><span class="o">=</span><span class="mi">1000</span><span class="p">)</span> <span class="k">as</span> <span class="n">session</span><span class="p">:</span>
             <span class="n">fs</span> <span class="o">=</span> <span class="p">(</span><span class="n">session</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="n">minhash</span><span class="p">,</span> <span class="n">check_duplication</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span> <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">minhash</span> <span class="ow">in</span> <span class="n">data</span><span class="p">)</span>
         <span class="k">await</span> <span class="n">asyncio</span><span class="o">.</span><span class="n">gather</span><span class="p">(</span><span class="o">*</span><span class="n">fs</span><span class="p">)</span>
 
-        <span class="k">async</span> <span class="k">with</span> <span class="n">lsh</span><span class="o">.</span><span class="n">session</span><span class="p">(</span><span class="n">batch_size</span><span class="o">=</span><span class="mi">3</span><span class="p">)</span> <span class="k">as</span> <span class="n">session</span><span class="p">:</span>
+        <span class="k">async</span> <span class="k">with</span> <span class="n">lsh</span><span class="o">.</span><span class="n">delete_session</span><span class="p">(</span><span class="n">batch_size</span><span class="o">=</span><span class="mi">3</span><span class="p">)</span> <span class="k">as</span> <span class="n">session</span><span class="p">:</span>
             <span class="n">fs</span> <span class="o">=</span> <span class="p">(</span><span class="n">session</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="n">key</span><span class="p">)</span> <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">keys_to_remove</span><span class="p">)</span>
             <span class="k">await</span> <span class="n">asyncio</span><span class="o">.</span><span class="n">gather</span><span class="p">(</span><span class="o">*</span><span class="n">fs</span><span class="p">)</span>
 </pre></div>
@@ -431,7 +365,7 @@ processes see <a class="reference internal" href="#minhash-lsh-at-scale"><span c
       
       |
       Powered by <a href="http://sphinx-doc.org/">Sphinx 1.8.1</a>
-      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.11</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
       
       |
       <a href="_sources/lsh.rst.txt"

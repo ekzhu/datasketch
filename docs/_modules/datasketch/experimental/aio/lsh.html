@@ -90,10 +90,11 @@
 <span></span><span class="kn">import</span> <span class="nn">sys</span>
 
 <span class="k">if</span> <span class="n">sys</span><span class="o">.</span><span class="n">version_info</span> <span class="o">&lt;</span> <span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="mi">6</span><span class="p">):</span>
-    <span class="k">raise</span> <span class="ne">ImportError</span><span class="p">(</span><span class="s2">&quot;Can&#39;t use AsyncMinHash module. Python version should be &gt;=3.6&quot;</span><span class="p">)</span>
+    <span class="k">raise</span> <span class="ne">ImportError</span><span class="p">(</span><span class="s2">&quot;Can&#39;t use AsyncMinHashLSH module. Python version should be &gt;=3.6&quot;</span><span class="p">)</span>
 
 <span class="kn">import</span> <span class="nn">asyncio</span>
-<span class="kn">import</span> <span class="nn">pickle</span>
+
+<span class="kn">from</span> <span class="nn">typing</span> <span class="k">import</span> <span class="n">Tuple</span><span class="p">,</span> <span class="n">Dict</span>
 <span class="kn">from</span> <span class="nn">itertools</span> <span class="k">import</span> <span class="n">chain</span>
 <span class="kn">from</span> <span class="nn">datasketch.experimental.aio.storage</span> <span class="k">import</span> <span class="p">(</span><span class="n">async_ordered_storage</span><span class="p">,</span> <span class="n">async_unordered_storage</span><span class="p">,</span> <span class="p">)</span>
 
@@ -110,10 +111,9 @@
 <span class="sd">    :param weights: see :class:`datasketch.MinHashLSH`.</span>
 <span class="sd">    :type weights: tuple(float, float)</span>
 <span class="sd">    :param tuple params: see :class:`datasketch.MinHashLSH`.</span>
-<span class="sd">    :param dict storage_config: New types of storage service (aioredis, aiomongo) to use for storing</span>
+<span class="sd">    :param dict storage_config: New type of storage service - aiomongo - to use for storing</span>
 <span class="sd">                                hashtables and keys are implemented.</span>
-<span class="sd">                                If storage_config is None aioredis storage will be used.</span>
-<span class="sd">    :param bool prepickle: for redis type storage use bytes as keys.</span>
+<span class="sd">                                If storage_config is None aiomongo storage will be used.</span>
 
 <span class="sd">    For example usage see :ref:`minhash_lsh_async`.</span>
 
@@ -121,7 +121,6 @@
 
 <span class="sd">    .. code-block:: python</span>
 
-<span class="sd">        REDIS = {&#39;type&#39;: &#39;aioredis&#39;, &#39;basename&#39;: &#39;base_name_1&#39;, &#39;redis&#39;: {&#39;host&#39;: &#39;localhost&#39;, &#39;port&#39;: 6379}}</span>
 <span class="sd">        MONGO = {&#39;type&#39;: &#39;aiomongo&#39;, &#39;basename&#39;: &#39;base_name_1&#39;, &#39;mongo&#39;: {&#39;host&#39;: &#39;localhost&#39;, &#39;port&#39;: 27017}}</span>
 
 <span class="sd">    .. note::</span>
@@ -130,12 +129,12 @@
 <span class="sd">        * For additional information see :ref:`minhash_lsh_at_scale` and :ref:`minhash_lsh_async`</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-<div class="viewcode-block" id="AsyncMinHashLSH.__init__"><a class="viewcode-back" href="../../../../documentation.html#datasketch.experimental.aio.lsh.AsyncMinHashLSH.__init__">[docs]</a>    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">threshold</span><span class="o">=</span><span class="mf">0.9</span><span class="p">,</span> <span class="n">num_perm</span><span class="o">=</span><span class="mi">128</span><span class="p">,</span> <span class="n">weights</span><span class="o">=</span><span class="p">(</span><span class="mf">0.5</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">),</span>
-                 <span class="n">params</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">storage_config</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">prepickle</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<div class="viewcode-block" id="AsyncMinHashLSH.__init__"><a class="viewcode-back" href="../../../../documentation.html#datasketch.experimental.aio.lsh.AsyncMinHashLSH.__init__">[docs]</a>    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">threshold</span><span class="p">:</span> <span class="nb">float</span><span class="o">=</span><span class="mf">0.9</span><span class="p">,</span> <span class="n">num_perm</span><span class="p">:</span> <span class="nb">int</span><span class="o">=</span><span class="mi">128</span><span class="p">,</span> <span class="n">weights</span><span class="p">:</span> <span class="n">Tuple</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">]</span> <span class="o">=</span><span class="p">(</span><span class="mf">0.5</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">),</span>
+                 <span class="n">params</span><span class="p">:</span> <span class="n">Tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">]</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">storage_config</span><span class="p">:</span> <span class="n">Dict</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
         <span class="k">if</span> <span class="n">storage_config</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="n">storage_config</span> <span class="o">=</span> <span class="p">{</span>
-                <span class="s1">&#39;type&#39;</span><span class="p">:</span> <span class="s1">&#39;aioredis&#39;</span><span class="p">,</span>
-                <span class="s1">&#39;redis&#39;</span><span class="p">:</span> <span class="p">{</span><span class="s1">&#39;host&#39;</span><span class="p">:</span> <span class="s1">&#39;localhost&#39;</span><span class="p">,</span> <span class="s1">&#39;port&#39;</span><span class="p">:</span> <span class="mi">6379</span><span class="p">}</span>
+                <span class="s1">&#39;type&#39;</span><span class="p">:</span> <span class="s1">&#39;aiomongo&#39;</span><span class="p">,</span>
+                <span class="s1">&#39;mongo&#39;</span><span class="p">:</span> <span class="p">{</span><span class="s1">&#39;host&#39;</span><span class="p">:</span> <span class="s1">&#39;localhost&#39;</span><span class="p">,</span> <span class="s1">&#39;port&#39;</span><span class="p">:</span> <span class="mi">27017</span><span class="p">}</span>
             <span class="p">}</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_storage_config</span> <span class="o">=</span> <span class="n">storage_config</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_storage_config</span><span class="p">[</span><span class="s1">&#39;basename&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_storage_config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;basename&#39;</span><span class="p">,</span> <span class="n">_random_name</span><span class="p">(</span><span class="mi">11</span><span class="p">))</span>
@@ -145,7 +144,6 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">_num_perm</span> <span class="o">=</span> <span class="n">num_perm</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_weights</span> <span class="o">=</span> <span class="n">weights</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_params</span> <span class="o">=</span> <span class="n">params</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_prepickle</span> <span class="o">=</span> <span class="n">storage_config</span><span class="p">[</span><span class="s1">&#39;type&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="s1">&#39;aioredis&#39;</span> <span class="k">if</span> <span class="n">prepickle</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">prepickle</span>
 
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_threshold</span> <span class="o">&gt;</span> <span class="mf">1.0</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">_threshold</span> <span class="o">&lt;</span> <span class="mf">0.0</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;threshold must be in [0.0, 1.0]&quot;</span><span class="p">)</span>
@@ -202,8 +200,7 @@
     <span class="k">def</span> <span class="nf">__setstate__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">state</span><span class="p">):</span>
         <span class="n">state</span><span class="p">[</span><span class="s1">&#39;_lock&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">asyncio</span><span class="o">.</span><span class="n">Lock</span><span class="p">()</span>
         <span class="bp">self</span><span class="o">.</span><span class="vm">__dict__</span> <span class="o">=</span> <span class="n">state</span>
-        <span class="bp">self</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_threshold</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_num_perm</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_weights</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_params</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_storage_config</span><span class="p">,</span>
-                      <span class="bp">self</span><span class="o">.</span><span class="n">_prepickle</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_threshold</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_num_perm</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_weights</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_params</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_storage_config</span><span class="p">)</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">batch_size</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
@@ -275,9 +272,9 @@
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">_insert</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="n">minhash</span><span class="p">,</span> <span class="n">check_duplication</span><span class="o">=</span><span class="n">check_duplication</span><span class="p">,</span> <span class="n">buffer</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span></div>
 
-<div class="viewcode-block" id="AsyncMinHashLSH.session"><a class="viewcode-back" href="../../../../documentation.html#datasketch.experimental.aio.lsh.AsyncMinHashLSH.session">[docs]</a>    <span class="k">def</span> <span class="nf">session</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">batch_size</span><span class="o">=</span><span class="mi">10000</span><span class="p">):</span>
+<div class="viewcode-block" id="AsyncMinHashLSH.insertion_session"><a class="viewcode-back" href="../../../../documentation.html#datasketch.experimental.aio.lsh.AsyncMinHashLSH.insertion_session">[docs]</a>    <span class="k">def</span> <span class="nf">insertion_session</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">batch_size</span><span class="o">=</span><span class="mi">10000</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Create a asynchronous context manager for fast insertion or removing in index.</span>
+<span class="sd">        Create a asynchronous context manager for fast insertion in index.</span>
 
 <span class="sd">        :param int batch_size: the size of chunks to use in insert_session mode (default=10000).</span>
 
@@ -301,19 +298,54 @@
 <span class="sd">                        obj.update(i.encode(&#39;utf-8&#39;))</span>
 <span class="sd">                data = [(e, m) for e, m in zip(seq, objs)]</span>
 
-<span class="sd">                _storage_config_redis = {&#39;type&#39;: &#39;aioredis&#39;, &#39;redis&#39;: {&#39;host&#39;: &#39;localhost&#39;, &#39;port&#39;: 6379}}</span>
+<span class="sd">                _storage_config_redis = {&#39;type&#39;: &#39;aiomongo&#39;, &#39;mongo&#39;: {&#39;host&#39;: &#39;localhost&#39;, &#39;port&#39;: 27017}}</span>
 <span class="sd">                async def func():</span>
 <span class="sd">                    async with AsyncMinHashLSH(storage_config=_storage_config_redis, threshold=0.5, num_perm=16) as lsh:</span>
-<span class="sd">                        async with lsh.session(batch_size=1000) as session:</span>
+<span class="sd">                        async with lsh.insertion_session(batch_size=1000) as session:</span>
+<span class="sd">                            fs = (session.insert(key, minhash, check_duplication=True) for key, minhash in data)</span>
+<span class="sd">                            await asyncio.gather(*fs)</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">AsyncMinHashLSHInsertionSession</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">batch_size</span><span class="o">=</span><span class="n">batch_size</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="AsyncMinHashLSH.delete_session"><a class="viewcode-back" href="../../../../documentation.html#datasketch.experimental.aio.lsh.AsyncMinHashLSH.delete_session">[docs]</a>    <span class="k">def</span> <span class="nf">delete_session</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">batch_size</span><span class="o">=</span><span class="mi">10000</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Create a asynchronous context manager for fast removing in index.</span>
+
+<span class="sd">        :param int batch_size: the size of chunks to use in insert_session mode (default=10000).</span>
+
+<span class="sd">        :return: datasketch.experimental.aio.lsh.AsyncMinHashLSHSession</span>
+
+<span class="sd">        Example:</span>
+<span class="sd">            .. code-block:: python</span>
+
+<span class="sd">                from datasketch.experimental.aio.lsh import AsyncMinHashLSH</span>
+<span class="sd">                from datasketch import MinHash</span>
+
+<span class="sd">                def chunk(it, size):</span>
+<span class="sd">                    it = iter(it)</span>
+<span class="sd">                    return iter(lambda: tuple(islice(it, size)), ())</span>
+
+<span class="sd">                _chunked_str = chunk((random.choice(string.ascii_lowercase) for _ in range(10000)), 4)</span>
+<span class="sd">                seq = frozenset(chain((&#39;&#39;.join(s) for s in _chunked_str), (&#39;aahhb&#39;, &#39;aahh&#39;, &#39;aahhc&#39;, &#39;aac&#39;, &#39;kld&#39;, &#39;bhg&#39;, &#39;kkd&#39;, &#39;yow&#39;, &#39;ppi&#39;, &#39;eer&#39;)))</span>
+<span class="sd">                objs = [MinHash(16) for _ in range(len(seq))]</span>
+<span class="sd">                for e, obj in zip(seq, objs):</span>
+<span class="sd">                    for i in e:</span>
+<span class="sd">                        obj.update(i.encode(&#39;utf-8&#39;))</span>
+<span class="sd">                data = [(e, m) for e, m in zip(seq, objs)]</span>
+
+<span class="sd">                _storage_config_redis = {&#39;type&#39;: &#39;aiomongo&#39;, &#39;mongo&#39;: {&#39;host&#39;: &#39;localhost&#39;, &#39;port&#39;: 27017}}</span>
+<span class="sd">                async def func():</span>
+<span class="sd">                    async with AsyncMinHashLSH(storage_config=_storage_config_redis, threshold=0.5, num_perm=16) as lsh:</span>
+<span class="sd">                        async with lsh.insertion_session(batch_size=1000) as session:</span>
 <span class="sd">                            fs = (session.insert(key, minhash, check_duplication=True) for key, minhash in data)</span>
 <span class="sd">                            await asyncio.gather(*fs)</span>
 
-<span class="sd">                        async with lsh.session(batch_size=3) as session:</span>
+<span class="sd">                        async with lsh.delete_session(batch_size=3) as session:</span>
 <span class="sd">                            fs = (session.remove(key) for key in keys_to_remove)</span>
 <span class="sd">                            await asyncio.gather(*fs)</span>
 
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">return</span> <span class="n">AsyncMinHashLSHSession</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">batch_size</span><span class="o">=</span><span class="n">batch_size</span><span class="p">)</span></div>
+        <span class="k">return</span> <span class="n">AsyncMinHashLSHDeleteSession</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">batch_size</span><span class="o">=</span><span class="n">batch_size</span><span class="p">)</span></div>
 
     <span class="k">async</span> <span class="k">def</span> <span class="nf">_insert</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">,</span> <span class="n">minhash</span><span class="p">,</span> <span class="n">check_duplication</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">buffer</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
         <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">minhash</span><span class="p">)</span> <span class="o">!=</span> <span class="bp">self</span><span class="o">.</span><span class="n">h</span><span class="p">:</span>
@@ -323,8 +355,7 @@
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;The given key already exists&quot;</span><span class="p">)</span>
         <span class="n">Hs</span> <span class="o">=</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">_H</span><span class="p">(</span><span class="n">minhash</span><span class="o">.</span><span class="n">hashvalues</span><span class="p">[</span><span class="n">start</span><span class="p">:</span><span class="n">end</span><span class="p">])</span>
               <span class="k">for</span> <span class="n">start</span><span class="p">,</span> <span class="n">end</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">hashranges</span><span class="p">]</span>
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_prepickle</span><span class="p">:</span>
-            <span class="n">key</span> <span class="o">=</span> <span class="n">pickle</span><span class="o">.</span><span class="n">dumps</span><span class="p">(</span><span class="n">key</span><span class="p">)</span>
+
         <span class="n">fs</span> <span class="o">=</span> <span class="n">chain</span><span class="p">((</span><span class="bp">self</span><span class="o">.</span><span class="n">keys</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="o">*</span><span class="n">Hs</span><span class="p">,</span> <span class="n">buffer</span><span class="o">=</span><span class="n">buffer</span><span class="p">),),</span>
                    <span class="p">(</span><span class="n">hashtable</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="n">H</span><span class="p">,</span> <span class="n">key</span><span class="p">,</span> <span class="n">buffer</span><span class="o">=</span><span class="n">buffer</span><span class="p">)</span> <span class="k">for</span> <span class="n">H</span><span class="p">,</span> <span class="n">hashtable</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">Hs</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">hashtables</span><span class="p">)))</span>
         <span class="k">await</span> <span class="n">asyncio</span><span class="o">.</span><span class="n">gather</span><span class="p">(</span><span class="o">*</span><span class="n">fs</span><span class="p">)</span>
@@ -341,17 +372,12 @@
               <span class="k">for</span> <span class="p">(</span><span class="n">start</span><span class="p">,</span> <span class="n">end</span><span class="p">),</span> <span class="n">hashtable</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">hashranges</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">hashtables</span><span class="p">))</span>
         <span class="n">candidates</span> <span class="o">=</span> <span class="nb">frozenset</span><span class="p">(</span><span class="n">chain</span><span class="o">.</span><span class="n">from_iterable</span><span class="p">(</span><span class="k">await</span> <span class="n">asyncio</span><span class="o">.</span><span class="n">gather</span><span class="p">(</span><span class="o">*</span><span class="n">fs</span><span class="p">)))</span>
 
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_prepickle</span><span class="p">:</span>
-            <span class="k">return</span> <span class="p">[</span><span class="n">pickle</span><span class="o">.</span><span class="n">loads</span><span class="p">(</span><span class="n">key</span><span class="p">)</span> <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">candidates</span><span class="p">]</span>
-        <span class="k">else</span><span class="p">:</span>
-            <span class="k">return</span> <span class="nb">list</span><span class="p">(</span><span class="n">candidates</span><span class="p">)</span></div>
+        <span class="k">return</span> <span class="nb">list</span><span class="p">(</span><span class="n">candidates</span><span class="p">)</span></div>
 
 <div class="viewcode-block" id="AsyncMinHashLSH.has_key"><a class="viewcode-back" href="../../../../documentation.html#datasketch.experimental.aio.lsh.AsyncMinHashLSH.has_key">[docs]</a>    <span class="k">async</span> <span class="k">def</span> <span class="nf">has_key</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        see :class:`datasketch.MinHashLSH`.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_prepickle</span><span class="p">:</span>
-            <span class="n">key</span> <span class="o">=</span> <span class="n">pickle</span><span class="o">.</span><span class="n">dumps</span><span class="p">(</span><span class="n">key</span><span class="p">)</span>
         <span class="k">return</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">keys</span><span class="o">.</span><span class="n">has_key</span><span class="p">(</span><span class="n">key</span><span class="p">)</span></div>
 
 <div class="viewcode-block" id="AsyncMinHashLSH.remove"><a class="viewcode-back" href="../../../../documentation.html#datasketch.experimental.aio.lsh.AsyncMinHashLSH.remove">[docs]</a>    <span class="k">async</span> <span class="k">def</span> <span class="nf">remove</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">):</span>
@@ -363,8 +389,6 @@
     <span class="k">async</span> <span class="k">def</span> <span class="nf">_remove</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">,</span> <span class="n">buffer</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">has_key</span><span class="p">(</span><span class="n">key</span><span class="p">):</span>
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;The given key does not exist&quot;</span><span class="p">)</span>
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_prepickle</span><span class="p">:</span>
-            <span class="n">key</span> <span class="o">=</span> <span class="n">pickle</span><span class="o">.</span><span class="n">dumps</span><span class="p">(</span><span class="n">key</span><span class="p">)</span>
 
         <span class="k">for</span> <span class="n">H</span><span class="p">,</span> <span class="n">hashtable</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">keys</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">key</span><span class="p">),</span> <span class="bp">self</span><span class="o">.</span><span class="n">hashtables</span><span class="p">):</span>
             <span class="k">await</span> <span class="n">hashtable</span><span class="o">.</span><span class="n">remove_val</span><span class="p">(</span><span class="n">H</span><span class="p">,</span> <span class="n">key</span><span class="p">,</span> <span class="n">buffer</span><span class="o">=</span><span class="n">buffer</span><span class="p">)</span>
@@ -400,10 +424,7 @@
                 <span class="n">fs</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">hashtable</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">H</span><span class="p">))</span>
         <span class="n">candidates</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">chain</span><span class="o">.</span><span class="n">from_iterable</span><span class="p">(</span><span class="k">await</span> <span class="n">asyncio</span><span class="o">.</span><span class="n">gather</span><span class="p">(</span><span class="o">*</span><span class="n">fs</span><span class="p">)))</span>
 
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_prepickle</span><span class="p">:</span>
-            <span class="k">return</span> <span class="p">{</span><span class="n">pickle</span><span class="o">.</span><span class="n">loads</span><span class="p">(</span><span class="n">key</span><span class="p">)</span> <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">candidates</span><span class="p">}</span>
-        <span class="k">else</span><span class="p">:</span>
-            <span class="k">return</span> <span class="n">candidates</span>
+        <span class="k">return</span> <span class="n">candidates</span>
 
 <div class="viewcode-block" id="AsyncMinHashLSH.get_counts"><a class="viewcode-back" href="../../../../documentation.html#datasketch.experimental.aio.lsh.AsyncMinHashLSH.get_counts">[docs]</a>    <span class="k">async</span> <span class="k">def</span> <span class="nf">get_counts</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
@@ -416,10 +437,7 @@
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        see :class:`datasketch.MinHashLSH`.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_prepickle</span><span class="p">:</span>
-            <span class="n">key_set</span> <span class="o">=</span> <span class="p">[</span><span class="n">pickle</span><span class="o">.</span><span class="n">dumps</span><span class="p">(</span><span class="n">key</span><span class="p">)</span> <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="nb">set</span><span class="p">(</span><span class="n">keys</span><span class="p">)]</span>
-        <span class="k">else</span><span class="p">:</span>
-            <span class="n">key_set</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">set</span><span class="p">(</span><span class="n">keys</span><span class="p">))</span>
+        <span class="n">key_set</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">set</span><span class="p">(</span><span class="n">keys</span><span class="p">))</span>
         <span class="n">hashtables</span> <span class="o">=</span> <span class="p">[</span><span class="n">unordered_storage</span><span class="p">({</span><span class="s1">&#39;type&#39;</span><span class="p">:</span> <span class="s1">&#39;dict&#39;</span><span class="p">})</span> <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">b</span><span class="p">)]</span>
         <span class="n">Hss</span> <span class="o">=</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">keys</span><span class="o">.</span><span class="n">getmany</span><span class="p">(</span><span class="o">*</span><span class="n">key_set</span><span class="p">)</span>
         <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">Hs</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">key_set</span><span class="p">,</span> <span class="n">Hss</span><span class="p">):</span>
@@ -428,9 +446,9 @@
         <span class="k">return</span> <span class="p">[</span><span class="n">hashtable</span><span class="o">.</span><span class="n">itemcounts</span><span class="p">()</span> <span class="k">for</span> <span class="n">hashtable</span> <span class="ow">in</span> <span class="n">hashtables</span><span class="p">]</span></div></div>
 
 
-<span class="k">class</span> <span class="nc">AsyncMinHashLSHSession</span><span class="p">:</span>
+<span class="k">class</span> <span class="nc">AsyncMinHashLSHInsertionSession</span><span class="p">:</span>
     <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Context manager for batch insertion and removing of documents into a MinHashLSH.</span>
+<span class="sd">    Context manager for batch insertion of documents into a MinHashLSH.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">lsh</span><span class="p">:</span> <span class="n">AsyncMinHashLSH</span><span class="p">,</span> <span class="n">batch_size</span><span class="p">:</span> <span class="nb">int</span><span class="p">):</span>
@@ -455,6 +473,27 @@
         <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">lsh</span><span class="o">.</span><span class="n">_insert</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="n">minhash</span><span class="p">,</span>
                                <span class="n">check_duplication</span><span class="o">=</span><span class="n">check_duplication</span><span class="p">,</span> <span class="n">buffer</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 
+
+<span class="k">class</span> <span class="nc">AsyncMinHashLSHDeleteSession</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Context manager for batch removing the documents from a MinHashLSH.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">lsh</span><span class="p">:</span> <span class="n">AsyncMinHashLSH</span><span class="p">,</span> <span class="n">batch_size</span><span class="p">:</span> <span class="nb">int</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">lsh</span> <span class="o">=</span> <span class="n">lsh</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">lsh</span><span class="o">.</span><span class="n">batch_size</span> <span class="o">=</span> <span class="n">batch_size</span>
+
+    <span class="k">async</span> <span class="k">def</span> <span class="nf">__aenter__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span>
+
+    <span class="k">async</span> <span class="k">def</span> <span class="nf">__aexit__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">exc_type</span><span class="p">,</span> <span class="n">exc_val</span><span class="p">,</span> <span class="n">exc_tb</span><span class="p">):</span>
+        <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+
+    <span class="k">async</span> <span class="k">def</span> <span class="nf">close</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">fs</span> <span class="o">=</span> <span class="n">chain</span><span class="p">((</span><span class="bp">self</span><span class="o">.</span><span class="n">lsh</span><span class="o">.</span><span class="n">keys</span><span class="o">.</span><span class="n">empty_buffer</span><span class="p">(),),</span>
+                   <span class="p">(</span><span class="n">hashtable</span><span class="o">.</span><span class="n">empty_buffer</span><span class="p">()</span> <span class="k">for</span> <span class="n">hashtable</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">lsh</span><span class="o">.</span><span class="n">hashtables</span><span class="p">))</span>
+        <span class="k">await</span> <span class="n">asyncio</span><span class="o">.</span><span class="n">gather</span><span class="p">(</span><span class="o">*</span><span class="n">fs</span><span class="p">)</span>
+
     <span class="k">async</span> <span class="k">def</span> <span class="nf">remove</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Remove key from LSH index</span>
@@ -473,7 +512,7 @@
       
       |
       Powered by <a href="http://sphinx-doc.org/">Sphinx 1.8.1</a>
-      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.11</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
       
     </div>
 
