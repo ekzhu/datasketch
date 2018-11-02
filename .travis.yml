@@ -6,7 +6,12 @@ python:
   - "3.6"
   - "nightly"
 # command to install dependencies
+services:
+  - mongodb
 install:
-    - "pip install -e .[test]"
+  - pip install -e .[test]
+  - if [[ $TRAVIS_PYTHON_VERSION == '3.6' || $TRAVIS_PYTHON_VERSION == 'nightly' ]]; then pip install -e .[experimental_aio]; fi
 # command to run tests
-script: nosetests
+script:
+  - nosetests --exclude-dir=test/aio
+  - if [[ $TRAVIS_PYTHON_VERSION == '3.6' || $TRAVIS_PYTHON_VERSION == 'nightly' ]]; then nosetests test/aio/lsh_test.py; fi

@@ -23,7 +23,7 @@ setup(
     # the version across setup.py and the project code, see
     # https://packaging.python.org/en/latest/single_source_version.html
 
-    version='1.2.9',
+    version='1.2.10',
 
     description='Probabilistic data structures for processing and searching very large datasets',
     long_description=long_description,
@@ -84,15 +84,15 @@ setup(
     # $ pip install -e .[dev,test,aio,aio-test]
     extras_require={
         'dev': ['check-manifest'],
-        'test': test_requires + ['mockredispy', "aiounittest ; python_version>='3.6'", "aioredis ; python_version>='3.6'", "motor ; python_version>='3.6'", "pymongo ; python_version>='3.6'"],
-        'experimental_aio': ["aiounittest ; python_version>='3.6'", "aioredis ; python_version>='3.6'", "motor ; python_version>='3.6'", "pymongo ; python_version>='3.6'"],
+        'test': test_requires + ['mockredispy', 'nose-exclude'],
+        'experimental_aio': ["aiounittest ; python_version>='3.6'", "motor ; python_version>='3.6'"],
     },
 
     # If there are data files included in your packages that need to be
     # installed, specify them here.  If using Python 2.6 or less, then these
     # have to be included in MANIFEST.in as well.
     package_data={
-    #    'sample': ['package_data.dat'],
+        #    'sample': ['package_data.dat'],
     },
 
     # Although 'package_data' is the preferred approach, in some case you may
@@ -105,8 +105,8 @@ setup(
     # "scripts" keyword. Entry points provide cross-platform support and allow
     # pip to create the appropriate form of executable for the target platform.
     entry_points={
-    #    'console_scripts': [
-    #        'sample=sample:main',
-    #    ],
+        #    'console_scripts': [
+        #        'sample=sample:main',
+        #    ],
     },
 )

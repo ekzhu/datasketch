@@ -82,6 +82,8 @@
       </div>
       <div class="documentwrapper">
         <div class="bodywrapper">
+          
+
           <div class="body" role="main">
             
   <h1>Source code for datasketch.minhash</h1><div class="highlight"><pre>
@@ -266,25 +268,20 @@
 
 <div class="viewcode-block" id="MinHash.copy"><a class="viewcode-back" href="../../documentation.html#datasketch.MinHash.copy">[docs]</a>    <span class="k">def</span> <span class="nf">copy</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="sd">&#39;&#39;&#39;</span>
-<span class="sd">        Returns:</span>
-<span class="sd">            datasketch.MinHash: A copy of this MinHash by exporting its</span>
-<span class="sd">                state.</span>
+<span class="sd">        :returns: datasketch.MinHash -- A copy of this MinHash by exporting its state.</span>
 <span class="sd">        &#39;&#39;&#39;</span>
         <span class="k">return</span> <span class="n">MinHash</span><span class="p">(</span><span class="n">seed</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">seed</span><span class="p">,</span> <span class="n">hashvalues</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">digest</span><span class="p">(),</span>
                 <span class="n">permutations</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">permutations</span><span class="p">)</span></div>
 
 <div class="viewcode-block" id="MinHash.__len__"><a class="viewcode-back" href="../../documentation.html#datasketch.MinHash.__len__">[docs]</a>    <span class="k">def</span> <span class="nf">__len__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="sd">&#39;&#39;&#39;</span>
-<span class="sd">        Returns:</span>
-<span class="sd">            int: The number of hash values.</span>
+<span class="sd">        :returns: int -- The number of hash values.</span>
 <span class="sd">        &#39;&#39;&#39;</span>
         <span class="k">return</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">hashvalues</span><span class="p">)</span></div>
 
 <div class="viewcode-block" id="MinHash.__eq__"><a class="viewcode-back" href="../../documentation.html#datasketch.MinHash.__eq__">[docs]</a>    <span class="k">def</span> <span class="nf">__eq__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
         <span class="sd">&#39;&#39;&#39;</span>
-<span class="sd">        Returns:</span>
-<span class="sd">            bool: If their seeds and hash values are both equal then two</span>
-<span class="sd">                are equivalent.</span>
+<span class="sd">        :returns: bool -- If their seeds and hash values are both equal then two are equivalent.</span>
 <span class="sd">        &#39;&#39;&#39;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">seed</span> <span class="o">==</span> <span class="n">other</span><span class="o">.</span><span class="n">seed</span> <span class="ow">and</span> \
                 <span class="n">np</span><span class="o">.</span><span class="n">array_equal</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">hashvalues</span><span class="p">,</span> <span class="n">other</span><span class="o">.</span><span class="n">hashvalues</span><span class="p">)</span></div>
@@ -314,6 +311,7 @@
 </pre></div>
 
           </div>
+          
         </div>
       </div>
     <div class="clearer"></div>
@@ -323,7 +321,7 @@
       
       |
       Powered by <a href="http://sphinx-doc.org/">Sphinx 1.8.1</a>
-      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.10</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
       
     </div>
 
