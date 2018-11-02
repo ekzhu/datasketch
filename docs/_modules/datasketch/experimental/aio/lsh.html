@@ -309,7 +309,8 @@
 
 <div class="viewcode-block" id="AsyncMinHashLSH.delete_session"><a class="viewcode-back" href="../../../../documentation.html#datasketch.experimental.aio.lsh.AsyncMinHashLSH.delete_session">[docs]</a>    <span class="k">def</span> <span class="nf">delete_session</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">batch_size</span><span class="o">=</span><span class="mi">10000</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Create a asynchronous context manager for fast removing in index.</span>
+<span class="sd">        Create a asynchronous context manager for fast removal of keys</span>
+<span class="sd">        from index.</span>
 
 <span class="sd">        :param int batch_size: the size of chunks to use in insert_session mode (default=10000).</span>
 
@@ -448,7 +449,7 @@
 
 <span class="k">class</span> <span class="nc">AsyncMinHashLSHInsertionSession</span><span class="p">:</span>
     <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Context manager for batch insertion of documents into a MinHashLSH.</span>
+<span class="sd">    Context manager for batch insertion.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">lsh</span><span class="p">:</span> <span class="n">AsyncMinHashLSH</span><span class="p">,</span> <span class="n">batch_size</span><span class="p">:</span> <span class="nb">int</span><span class="p">):</span>
@@ -476,7 +477,7 @@
 
 <span class="k">class</span> <span class="nc">AsyncMinHashLSHDeleteSession</span><span class="p">:</span>
     <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Context manager for batch removing the documents from a MinHashLSH.</span>
+<span class="sd">    Context manager for batch removal of keys.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">lsh</span><span class="p">:</span> <span class="n">AsyncMinHashLSH</span><span class="p">,</span> <span class="n">batch_size</span><span class="p">:</span> <span class="nb">int</span><span class="p">):</span>

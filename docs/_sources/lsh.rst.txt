@@ -177,7 +177,7 @@ Asynchronous MinHash LSH at scale
 
 This module may be useful if you want to process millions of text documents 
 in streaming/batch mode using asynchronous RESTful API (for example, aiohttp) for clustering tasks,
-and you expecting to maximize the throughput of your service.
+and maximize the throughput of your service.
 
 We currently provide asynchronous MongoDB storage (*python motor package*)
 

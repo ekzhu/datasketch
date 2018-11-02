@@ -220,7 +220,8 @@ class AsyncMinHashLSH(object):
 
     def delete_session(self, batch_size=10000):
         """
-        Create a asynchronous context manager for fast removing in index.
+        Create a asynchronous context manager for fast removal of keys
+        from index.
 
         :param int batch_size: the size of chunks to use in insert_session mode (default=10000).
 
@@ -359,7 +360,7 @@ class AsyncMinHashLSH(object):
 
 class AsyncMinHashLSHInsertionSession:
     """
-    Context manager for batch insertion of documents into a MinHashLSH.
+    Context manager for batch insertion.
     """
 
     def __init__(self, lsh: AsyncMinHashLSH, batch_size: int):
@@ -387,7 +388,7 @@ class AsyncMinHashLSHInsertionSession:
 
 class AsyncMinHashLSHDeleteSession:
     """
-    Context manager for batch removing the documents from a MinHashLSH.
+    Context manager for batch removal of keys.
     """
 
     def __init__(self, lsh: AsyncMinHashLSH, batch_size: int):

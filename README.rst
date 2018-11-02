@@ -41,7 +41,9 @@ datasketch must be used with Python 2.7 or above and NumPy 1.11 or
 above. Scipy is optional, but with it the LSH initialization can be much
 faster.
 
-Note that `MinHash LSH`_ also supports a Redis storage layer and have experimental asynchronous module with asynchronous interface to MongoDB storages.
+Note that `MinHash LSH`_ also supports a Redis storage layer as well 
+as an experimental module with asynchronous interface to 
+MongoDB.
 
 Install
 -------

@@ -909,7 +909,7 @@ counts</td>
 <h2>Asynchronous MinHash LSH<a class="headerlink" href="#asynchronous-minhash-lsh" title="Permalink to this headline">¶</a></h2>
 <dl class="class">
 <dt id="datasketch.experimental.aio.lsh.AsyncMinHashLSH">
-<em class="property">class </em><code class="descclassname">datasketch.experimental.aio.lsh.</code><code class="descname">AsyncMinHashLSH</code><span class="sig-paren">(</span><em>threshold: float = 0.9</em>, <em>num_perm: int = 128</em>, <em>weights: Tuple[float</em>, <em>float] = (0.5</em>, <em>0.5)</em>, <em>params: Tuple[int</em>, <em>int] = None</em>, <em>storage_config: Dict = None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/datasketch/experimental/aio/lsh.html#AsyncMinHashLSH"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#datasketch.experimental.aio.lsh.AsyncMinHashLSH" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="descclassname">datasketch.experimental.aio.lsh.</code><code class="descname">AsyncMinHashLSH</code><span class="sig-paren">(</span><em>threshold: float = 0.9</em>, <em>num_perm: int = 128</em>, <em>weights: Tuple[float</em>, <em>float] = (0.5</em>, <em>0.5)</em>, <em>params: Tuple[int</em>, <em>int] = None</em>, <em>storage_config: Dict[KT</em>, <em>VT] = None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/datasketch/experimental/aio/lsh.html#AsyncMinHashLSH"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#datasketch.experimental.aio.lsh.AsyncMinHashLSH" title="Permalink to this definition">¶</a></dt>
 <dd><p>Asynchronous MinHashLSH index.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
@@ -943,7 +943,7 @@ If storage_config is None aiomongo storage will be used.</li>
 </div>
 <dl class="method">
 <dt id="datasketch.experimental.aio.lsh.AsyncMinHashLSH.__init__">
-<code class="descname">__init__</code><span class="sig-paren">(</span><em>threshold: float = 0.9</em>, <em>num_perm: int = 128</em>, <em>weights: Tuple[float</em>, <em>float] = (0.5</em>, <em>0.5)</em>, <em>params: Tuple[int</em>, <em>int] = None</em>, <em>storage_config: Dict = None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/datasketch/experimental/aio/lsh.html#AsyncMinHashLSH.__init__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#datasketch.experimental.aio.lsh.AsyncMinHashLSH.__init__" title="Permalink to this definition">¶</a></dt>
+<code class="descname">__init__</code><span class="sig-paren">(</span><em>threshold: float = 0.9</em>, <em>num_perm: int = 128</em>, <em>weights: Tuple[float</em>, <em>float] = (0.5</em>, <em>0.5)</em>, <em>params: Tuple[int</em>, <em>int] = None</em>, <em>storage_config: Dict[KT</em>, <em>VT] = None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/datasketch/experimental/aio/lsh.html#AsyncMinHashLSH.__init__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#datasketch.experimental.aio.lsh.AsyncMinHashLSH.__init__" title="Permalink to this definition">¶</a></dt>
 <dd><p>Initialize self.  See help(type(self)) for accurate signature.</p>
 </dd></dl>
 
@@ -990,7 +990,8 @@ If storage_config is None aiomongo storage will be used.</li>
 <dl class="method">
 <dt id="datasketch.experimental.aio.lsh.AsyncMinHashLSH.delete_session">
 <code class="descname">delete_session</code><span class="sig-paren">(</span><em>batch_size=10000</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/datasketch/experimental/aio/lsh.html#AsyncMinHashLSH.delete_session"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#datasketch.experimental.aio.lsh.AsyncMinHashLSH.delete_session" title="Permalink to this definition">¶</a></dt>
-<dd><p>Create a asynchronous context manager for fast removing in index.</p>
+<dd><p>Create a asynchronous context manager for fast removal of keys
+from index.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
