@@ -9,4 +9,4 @@ python:
 install:
     - "pip install -e .[test]"
 # command to run tests
-script: nosetests --exclude-dir=/test/aio
+script: nosetests --exclude-dir=/datasketch/test/aio
