@@ -13,8 +13,8 @@ from similarity_benchmark import _get_exact, _gen_data,\
 def _run_minhash(A, B, data, seed, bs, num_perm):
     (a_start, a_end), (b_start, b_end) = A, B
     hasher = pyhash.murmur3_32()
-    m1 = MinHash(num_perm=num_perm, hashobj=Hash)
-    m2 = MinHash(num_perm=num_perm, hashobj=Hash)
+    m1 = MinHash(num_perm=num_perm)
+    m2 = MinHash(num_perm=num_perm)
     for i in xrange(a_start, a_end):
         m1.update(hasher(data[i], seed=seed))
     for i in xrange(b_start, b_end):

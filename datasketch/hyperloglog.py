@@ -1,6 +1,7 @@
 import struct, copy
 from hashlib import sha1
 import numpy as np
+import mmh3
 try:
     from .hyperloglog_const import _thresholds, _raw_estimate, _bias
 except ImportError:
@@ -31,18 +32,14 @@ class HyperLogLog(object):
         reg (numpy.array, optional): The internal state.
             This argument is for initializing the HyperLogLog from
             an existing one.
-        hashobj (optional): The hash function used. 
-            It must implements
-            the `digest()` method similar to hashlib_ hash functions, such
-            as `hashlib.sha1`.
     '''
 
-    __slots__ = ('p', 'm', 'reg', 'alpha', 'max_rank', 'hashobj')
+    __slots__ = ('p', 'm', 'reg', 'alpha', 'max_rank')
 
     # The range of the hash values used for HyperLogLog
     _hash_range_bit = 32
-    _hash_range_byte = 4
-    _struct_fmt_str = '<I'
+    # The hash function used by HyperLogLog
+    _hash_func = lambda b : mmh3.hash(b, signed=False)
 
     def _get_alpha(self, p):
         if not (4 <= p <= 16):
@@ -55,7 +52,7 @@ class HyperLogLog(object):
             return 0.709
         return 0.7213 / (1.0 + 1.079 / (1 << p))
 
-    def __init__(self, p=8, reg=None, hashobj=sha1):
+    def __init__(self, p=8, reg=None):
         if reg is None:
             self.p = p
             self.m = 1 << p
@@ -74,7 +71,6 @@ class HyperLogLog(object):
             # reasonable counter values, so we don't check for every values.
             self.reg = reg
         # Common settings
-        self.hashobj = hashobj
         self.alpha = self._get_alpha(self.p)
         self.max_rank = self._hash_range_bit - self.p
 
@@ -93,8 +89,7 @@ class HyperLogLog(object):
                 hyperloglog.update("new value".encode('utf-8'))
         '''
         # Digest the hash object to get the hash value
-        hv = struct.unpack(self._struct_fmt_str,
-                self.hashobj(b).digest()[:self._hash_range_byte])[0]
+        hv = _hash_func(b)
         # Get the index of the register using the first p bits of the hash
         reg_index = hv & (self.m - 1)
         # Get the rest of the hash
@@ -134,7 +129,7 @@ class HyperLogLog(object):
                     precisions.")
         self.reg = np.maximum(self.reg, other.reg)
 
-    def digest(self, hashobj):
+    def digest(self):
         '''
         Returns:
             numpy.array: The current internal state.
@@ -169,7 +164,7 @@ class HyperLogLog(object):
     def __len__(self):
         '''
         Returns:
-            int: Get the size of the HyperLogLog as the size of 
+            int: Get the size of the HyperLogLog as the size of
                 `reg`.
         '''
         return len(self.reg)
@@ -179,7 +174,7 @@ class HyperLogLog(object):
         Check equivalence between two HyperLogLogs
 
         Args:
-            other (datasketch.HyperLogLog): 
+            other (datasketch.HyperLogLog):
 
         Returns:
             bool: True if both have the same internal state.
@@ -282,13 +277,13 @@ class HyperLogLogPlusPlus(HyperLogLog):
     2. A new small-cardinality estimation scheme
     3. Sparse representation (not implemented here)
 
-    This class has the same set of methods as 
+    This class has the same set of methods as
     :class:`datasketch.HyperLogLog`.
     '''
 
     _hash_range_bit = 64
-    _hash_range_byte = 8
-    _struct_fmt_str = '<Q'
+    # The hash function used by HyperLogLog++
+    _hash_func = lambda b : mmh3.hash64(b, signed=False)[0]
 
     def _get_threshold(self, p):
         return _thresholds[p - 4]

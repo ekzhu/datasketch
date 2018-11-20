@@ -1,6 +1,7 @@
 import random, copy, struct
 from hashlib import sha1
 import numpy as np
+import mmh3
 
 # The size of a hash value in number of bytes
 hashvalue_byte_size = len(bytes(np.int64(42).data))
@@ -11,49 +12,45 @@ _max_hash = (1 << 32) - 1
 _hash_range = (1 << 32)
 
 class MinHash(object):
-    '''MinHash is a probabilistic data structure for computing 
+    '''MinHash is a probabilistic data structure for computing
     `Jaccard similarity`_ between sets.
- 
+
     Args:
         num_perm (int, optional): Number of random permutation functions.
             It will be ignored if `hashvalues` is not None.
-        seed (int, optional): The random seed controls the set of random 
+        seed (int, optional): The random seed controls the set of random
             permutation functions generated for this MinHash.
-        hashobj (optional): The hash function used by this MinHash. 
-            It must implements
-            the `digest()` method similar to hashlib_ hash functions, such
-            as `hashlib.sha1`.
-        hashvalues (`numpy.array` or `list`, optional): The hash values is 
-            the internal state of the MinHash. It can be specified for faster 
-            initialization using the existing state from another MinHash. 
+        hashvalues (`numpy.array` or `list`, optional): The hash values is
+            the internal state of the MinHash. It can be specified for faster
+            initialization using the existing state from another MinHash.
         permutations (optional): The permutation function parameters. This argument
             can be specified for faster initialization using the existing
             state from another MinHash.
-    
-    Note:
-        To save memory usage, consider using :class:`datasketch.LeanMinHash`.
-        
-    Note:
-        Since version 1.1.1, MinHash will only support serialization using 
-        `pickle`_. ``serialize`` and ``deserialize`` methods are removed, 
-        and are supported in :class:`datasketch.LeanMinHash` instead. 
-        MinHash serialized before version 1.1.1 cannot be deserialized properly 
-        in newer versions (`need to migrate? <https://github.com/ekzhu/datasketch/issues/18>`_). 
 
     Note:
-        Since version 1.1.3, MinHash uses Numpy's random number generator 
-        instead of Python's built-in random package. This change makes the 
+        To save memory usage, consider using :class:`datasketch.LeanMinHash`.
+
+    Note:
+        Since version 1.1.1, MinHash will only support serialization using
+        `pickle`_. ``serialize`` and ``deserialize`` methods are removed,
+        and are supported in :class:`datasketch.LeanMinHash` instead.
+        MinHash serialized before version 1.1.1 cannot be deserialized properly
+        in newer versions (`need to migrate? <https://github.com/ekzhu/datasketch/issues/18>`_).
+
+    Note:
+        Since version 1.1.3, MinHash uses Numpy's random number generator
+        instead of Python's built-in random package. This change makes the
         hash values consistent across different Python versions.
         The side-effect is that now MinHash created before version 1.1.3 won't
         work (i.e., ``jaccard``, ``merge`` and ``union``)
-        with those created after. 
+        with those created after.
 
     .. _`Jaccard similarity`: https://en.wikipedia.org/wiki/Jaccard_index
     .. _hashlib: https://docs.python.org/3.5/library/hashlib.html
     .. _`pickle`: https://docs.python.org/3/library/pickle.html
     '''
 
-    def __init__(self, num_perm=128, seed=1, hashobj=sha1,
+    def __init__(self, num_perm=128, seed=1,
             hashvalues=None, permutations=None):
         if hashvalues is not None:
             num_perm = len(hashvalues)
@@ -63,7 +60,6 @@ class MinHash(object):
             raise ValueError("Cannot have more than %d number of\
                     permutation functions" % _hash_range)
         self.seed = seed
-        self.hashobj = hashobj
         # Initialize hash values
         if hashvalues is not None:
             self.hashvalues = self._parse_hashvalues(hashvalues)
@@ -91,18 +87,18 @@ class MinHash(object):
 
     def update(self, b):
         '''Update this MinHash with a new value.
-        
+
         Args:
             b (bytes): The value of type `bytes`.
-            
+
         Example:
             To update with a new string value:
-            
+
             .. code-block:: python
 
                 minhash.update("new value".encode('utf-8'))
         '''
-        hv = struct.unpack('<I', self.hashobj(b).digest()[:4])[0]
+        hv = mmh3.hash(b, signed=False)
         a, b = self.permutations
         phv = np.bitwise_and((a * hv + b) % _mersenne_prime, np.uint64(_max_hash))
         self.hashvalues = np.minimum(phv, self.hashvalues)
@@ -110,10 +106,10 @@ class MinHash(object):
     def jaccard(self, other):
         '''Estimate the `Jaccard similarity`_ (resemblance) between the sets
         represented by this MinHash and the other.
-        
+
         Args:
             other (datasketch.MinHash): The other MinHash.
-            
+
         Returns:
             float: The Jaccard similarity, which is between 0.0 and 1.0.
         '''
@@ -129,7 +125,7 @@ class MinHash(object):
     def count(self):
         '''Estimate the cardinality count based on the technique described in
         `this paper <http://ieeexplore.ieee.org/stamp/stamp.jsp?arnumber=365694>`_.
-        
+
         Returns:
             int: The estimated cardinality of the set represented by this MinHash.
         '''
@@ -139,7 +135,7 @@ class MinHash(object):
     def merge(self, other):
         '''Merge the other MinHash with this one, making this one the union
         of both.
-        
+
         Args:
             other (datasketch.MinHash): The other MinHash.
         '''
@@ -154,7 +150,7 @@ class MinHash(object):
     def digest(self):
         '''Export the hash values, which is the internal state of the
         MinHash.
-        
+
         Returns:
             numpy.array: The hash values which is a Numpy array.
         '''
@@ -162,7 +158,7 @@ class MinHash(object):
 
     def is_empty(self):
         '''
-        Returns: 
+        Returns:
             bool: If the current MinHash is empty - at the state of just
                 initialized.
         '''
@@ -204,7 +200,7 @@ class MinHash(object):
         Args:
             *mhs: The MinHash objects to be united. The argument list length is variable,
                 but must be at least 2.
-        
+
         Returns:
             datasketch.MinHash: A new union MinHash.
         '''

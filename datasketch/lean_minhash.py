@@ -9,7 +9,7 @@ class LeanMinHash(MinHash):
     -- no `update()`.
 
     Lean MinHash inherits all methods from :class:`datasketch.MinHash`.
-    It does not store the `permutations` and the `hashobj` needed for updating.
+    It does not store the `permutations` needed for updating.
     If a MinHash does not need further updates, convert it into a lean MinHash
     to save memory.
 
@@ -213,7 +213,7 @@ class LeanMinHash(MinHash):
         seed = lmhs[0].seed
         if any((seed != m.seed or num_perm != len(m)) for m in lmhs):
             raise ValueError("The unioning MinHash must have the\
-                    same seed, number of permutation functions and hashobj")
+                    same seed and number of permutation functions")
         hashvalues = np.minimum.reduce([m.hashvalues for m in lmhs])
 
         lmh = object.__new__(LeanMinHash)
