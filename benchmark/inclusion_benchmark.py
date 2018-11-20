@@ -6,6 +6,7 @@ MinHash inclusion score is computed using Jaccard estiamte,
 inclusion-exclusion principle, and the exact cardinality.
 '''
 import time, logging, random, struct
+import mmh3
 from datasketch.hyperloglog import HyperLogLog
 from datasketch.minhash import MinHash
 
@@ -47,9 +48,12 @@ def _hyperloglog_inclusion(h1, h2):
     return ic / c1
 
 def _run_hyperloglog(A, B, data, seed, p):
+    class H(HyperLogLog):
+        def hash_func(self, b):
+            return mmh3.hash(b, seed=seed, signed=False)
     (a_start, a_end), (b_start, b_end) = A, B
-    h1 = HyperLogLog(p=p)
-    h2 = HyperLogLog(p=p)
+    h1 = H(p=p)
+    h2 = H(p=p)
     for i in range(a_start, a_end):
         h1.update(data[i])
     for i in range(b_start, b_end):
@@ -57,9 +61,12 @@ def _run_hyperloglog(A, B, data, seed, p):
     return _hyperloglog_inclusion(h1, h2)
 
 def _run_minhash(A, B, data, seed, p):
+    class M(MinHash):
+        def hash_func(self, b):
+            return mmh3.hash(b, seed=seed, signed=False)
     (a_start, a_end), (b_start, b_end) = A, B
-    m1 = MinHash(num_perm=2**p)
-    m2 = MinHash(num_perm=2**p)
+    m1 = M(num_perm=2**p)
+    m2 = M(num_perm=2**p)
     for i in range(a_start, a_end):
         m1.update(data[i])
     for i in range(b_start, b_end):

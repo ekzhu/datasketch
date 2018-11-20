@@ -6,7 +6,7 @@ import numpy as np
 from datasketch.hyperloglog import HyperLogLog, HyperLogLogPlusPlus
 
 class HyperLogLogFakeHash(HyperLogLog):
-    def _hash_func(self, b):
+    def hash_func(self, b):
         return b & 0xffffffff
 
 class TestHyperLogLog(unittest.TestCase):
@@ -134,7 +134,7 @@ class TestHyperLogLogSpecific(unittest.TestCase):
 
 
 class HyperLogLogPlusPlusFakeHash(HyperLogLogPlusPlus):
-    def _hash_func(self, b):
+    def hash_func(self, b):
         return b & 0xffffffffffffffff
 
 

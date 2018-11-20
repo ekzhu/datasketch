@@ -1,4 +1,5 @@
 import time, logging, random, struct
+import mmh3
 from datasketch.hyperloglog import HyperLogLog
 from datasketch.minhash import MinHash
 
@@ -11,13 +12,19 @@ def _gen_data(size):
     return [int_bytes(i) for i in range(size)]
 
 def _run_hyperloglog(data, seed, p):
-    h = HyperLogLog(p=p)
+    class H(HyperLogLog):
+        def hash_func(self, b):
+            return mmh3.hash(b, seed=seed, signed=False)
+    h = H(p=p)
     for d in data:
         h.update(d)
     return h.count()
 
 def _run_minhash(data, seed, p):
-    m = MinHash(num_perm=2**p, seed=seed)
+    class M(MinHash):
+        def hash_func(self, b):
+            return mmh3.hash(b, seed=seed, signed=False)
+    m = M(num_perm=2**p)
     for d in data:
         m.update(d)
     return m.count()

@@ -84,11 +84,25 @@ class MinHash(object):
     def _parse_hashvalues(self, hashvalues):
         return np.array(hashvalues, dtype=np.uint64)
 
+    def hash_func(self, b):
+        '''The Murmur3 32-bit hash function used compute the hash value of
+        the input to `update` before applying permutations.
+
+        You can override this function to use a different hash function.
+
+        Args:
+            b (byte-like): The value of type `bytes` or byte-like such as `str`.
+
+        Returns:
+            unsigned int: The hash value.
+        '''
+        return mmh3.hash(b) & 0xffffffff
+
     def update(self, b):
         '''Update this MinHash with a new value.
 
         Args:
-            b (bytes): The value of type `bytes`.
+            b (byte-like): The value of type `bytes` or byte-like such as `str`.
 
         Example:
             To update with a new string value:
@@ -97,7 +111,7 @@ class MinHash(object):
 
                 minhash.update("new value".encode('utf-8'))
         '''
-        hv = mmh3.hash(b) & 0xffffffff
+        hv = self.hash_func(b)
         a, b = self.permutations
         phv = np.bitwise_and((a * hv + b) % _mersenne_prime, np.uint64(_max_hash))
         self.hashvalues = np.minimum(phv, self.hashvalues)

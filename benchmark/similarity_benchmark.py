@@ -3,6 +3,7 @@ Test the accuracy of similarity estimation using data sketches.
 '''
 import time, logging, random, struct
 import numpy as np
+import mmh3
 from datasketch.hyperloglog import HyperLogLog
 from datasketch.minhash import MinHash
 from datasketch.b_bit_minhash import bBitMinHash
@@ -37,9 +38,12 @@ def _b_bit_minhash_jaccard(m1, m2, b):
     return bBitMinHash(m1, b).jaccard(bBitMinHash(m2, b))
 
 def _run_minhash(A, B, data, seed, num_perm, b):
+    class M(MinHash):
+        def hash_func(self, b):
+            return mmh3.hash(b, seed=seed, signed=False)
     (a_start, a_end), (b_start, b_end) = A, B
-    m1 = MinHash(num_perm=num_perm, seed=seed)
-    m2 = MinHash(num_perm=num_perm, seed=seed)
+    m1 = M(num_perm=num_perm)
+    m2 = M(num_perm=num_perm)
     for i in range(a_start, a_end):
         m1.update(data[i])
     for i in range(b_start, b_end):
@@ -47,9 +51,12 @@ def _run_minhash(A, B, data, seed, num_perm, b):
     return [m1.jaccard(m2), _b_bit_minhash_jaccard(m1, m2, b)]
 
 def _run_hyperloglog(A, B, data, seed, p):
+    class H(HyperLogLog):
+        def hash_func(self, b):
+            return mmh3.hash(b, seed=seed, signed=False)
     (a_start, a_end), (b_start, b_end) = A, B
-    h1 = HyperLogLog(p=p)
-    h2 = HyperLogLog(p=p)
+    h1 = H(p=p)
+    h2 = H(p=p)
     for i in range(a_start, a_end):
         h1.update(data[i])
     for i in range(b_start, b_end):

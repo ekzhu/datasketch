@@ -75,6 +75,17 @@ class HyperLogLog(object):
         self.max_rank = self._hash_range_bit - self.p
 
     def _hash_func(self, b):
+        '''The Murmur3 32-bit hash function used compute the hash value of
+        the input to `update`.
+
+        You can override this function to use a different hash function.
+
+        Args:
+            b (byte-like): The value of type `bytes` or byte-like such as `str`.
+
+        Returns:
+            unsigned int: The hash value.
+        '''
         return mmh3.hash(b) & 0xffffffff
 
     def update(self, b):
@@ -92,7 +103,7 @@ class HyperLogLog(object):
                 hyperloglog.update("new value".encode('utf-8'))
         '''
         # Compute the hash function to get the hash value
-        hv = self._hash_func(b)
+        hv = self.hash_func(b)
         # Get the index of the register using the first p bits of the hash
         reg_index = hv & (self.m - 1)
         # Get the rest of the hash
@@ -286,7 +297,18 @@ class HyperLogLogPlusPlus(HyperLogLog):
 
     _hash_range_bit = 64
 
-    def _hash_func(self, b):
+    def hash_func(self, b):
+        '''The Murmur3 64-bit hash function used compute the hash value of
+        the input to `update`.
+
+        You can override this function to use a different hash function.
+
+        Args:
+            b (byte-like): The value of type `bytes` or byte-like such as `str`.
+
+        Returns:
+            unsigned int: The hash value.
+        '''
         return mmh3.hash64(b)[0] & 0xffffffffffffffff
 
     def _get_threshold(self, p):
