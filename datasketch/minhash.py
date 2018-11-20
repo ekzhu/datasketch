@@ -1,5 +1,4 @@
 import random, copy, struct
-from hashlib import sha1
 import numpy as np
 import mmh3
 
@@ -98,7 +97,7 @@ class MinHash(object):
 
                 minhash.update("new value".encode('utf-8'))
         '''
-        hv = mmh3.hash(b, signed=False)
+        hv = mmh3.hash(b) & 0xffffffff
         a, b = self.permutations
         phv = np.bitwise_and((a * hv + b) % _mersenne_prime, np.uint64(_max_hash))
         self.hashvalues = np.minimum(phv, self.hashvalues)

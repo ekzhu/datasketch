@@ -12,9 +12,10 @@ int_bytes = lambda x : ("a-%d-%d" % (x, x)).encode('utf-8')
 def run_perf(card, p):
     h = HyperLogLog(p=p)
     logging.info("HyperLogLog using p = %d " % p)
+    s = ["a-%d-%d" % (x, x) for x in range(card)]
     start = time.clock()
-    for i in range(card):
-        h.update(int_bytes(i))
+    for b in s:
+        h.update(b)
     duration = time.clock() - start
     logging.info("Digested %d hashes in %.4f sec" % (card, duration))
     return duration

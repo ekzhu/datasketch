@@ -1,5 +1,4 @@
 import time, logging, random, struct
-import pyhash
 from datasketch.hyperloglog import HyperLogLog
 from datasketch.minhash import MinHash
 
@@ -8,34 +7,26 @@ logging.basicConfig(level=logging.INFO)
 # Produce some bytes
 int_bytes = lambda x : ("a-%d-%d" % (x, x)).encode('utf-8')
 
-class Hash(object):
-    def __init__(self, h):
-        self.h = h
-    def digest(self):
-        return struct.pack('<I', self.h)
-
 def _gen_data(size):
     return [int_bytes(i) for i in range(size)]
 
 def _run_hyperloglog(data, seed, p):
-    hasher = pyhash.murmur3_32()
-    h = HyperLogLog(p=p, hashobj=Hash)
+    h = HyperLogLog(p=p)
     for d in data:
-        h.update(hasher(d, seed=seed))
+        h.update(d)
     return h.count()
 
 def _run_minhash(data, seed, p):
-    hasher = pyhash.murmur3_32()
-    m = MinHash(num_perm=2**p, hashobj=Hash)
+    m = MinHash(num_perm=2**p, seed=seed)
     for d in data:
-        m.update(hasher(d, seed=seed))
+        m.update(d)
     return m.count()
 
 def _run_test(data, n, p):
     logging.info("Running HyperLogLog with p = %d" % p)
-    hll_runs = [_run_hyperloglog(data, i, p) for i in xrange(n)]
+    hll_runs = [_run_hyperloglog(data, i, p) for i in range(n)]
     logging.info("Running MinHash with num_perm = %d" % 2**p)
-    minhash_runs = [_run_minhash(data, i, p) for i in xrange(n)]
+    minhash_runs = [_run_minhash(data, i, p) for i in range(n)]
     return (hll_runs, minhash_runs)
 
 

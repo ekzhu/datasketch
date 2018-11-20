@@ -74,6 +74,9 @@ class HyperLogLog(object):
         self.alpha = self._get_alpha(self.p)
         self.max_rank = self._hash_range_bit - self.p
 
+    def _hash_func(self, b):
+        return mmh3.hash(b) & 0xffffffff
+
     def update(self, b):
         '''
         Update the HyperLogLog with a new data value in bytes.
@@ -88,8 +91,8 @@ class HyperLogLog(object):
 
                 hyperloglog.update("new value".encode('utf-8'))
         '''
-        # Digest the hash object to get the hash value
-        hv = _hash_func(b)
+        # Compute the hash function to get the hash value
+        hv = self._hash_func(b)
         # Get the index of the register using the first p bits of the hash
         reg_index = hv & (self.m - 1)
         # Get the rest of the hash
@@ -282,8 +285,9 @@ class HyperLogLogPlusPlus(HyperLogLog):
     '''
 
     _hash_range_bit = 64
-    # The hash function used by HyperLogLog++
-    _hash_func = lambda b : mmh3.hash64(b, signed=False)[0]
+
+    def _hash_func(self, b):
+        return mmh3.hash64(b)[0] & 0xffffffffffffffff
 
     def _get_threshold(self, p):
         return _thresholds[p - 4]
