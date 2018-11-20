@@ -23,7 +23,7 @@ setup(
     # the version across setup.py and the project code, see
     # https://packaging.python.org/en/latest/single_source_version.html
 
-    version='1.2.10',
+    version='1.3.0',
 
     description='Probabilistic data structures for processing and searching very large datasets',
     long_description=long_description,
@@ -76,7 +76,7 @@ setup(
     # your project is installed. For an analysis of "install_requires" vs pip's
     # requirements files see:
     # https://packaging.python.org/en/latest/requirements.html
-    install_requires=['numpy>=1.11', 'redis>=2.10.0'],
+    install_requires=['numpy>=1.11', 'mmh3>=2.5.1', 'redis>=2.10.0'],
 
     # List additional groups of dependencies here (e.g. development
     # dependencies). You can install these using the following syntax,
