@@ -1,13 +1,16 @@
 """
-Assume we want to create partition intervals:
+This module is for creating optimal partition intervals for LSH Ensemble:
 
     [l1, u1], [l2, u2], ...
 
-with all boundaries inclusive.
+with all boundaries inclusive, using set size distribution.
 """
+
+from collections import Counter
 import numpy as np
 
-def compute_nfp_uniform(l, u, cum_counts, sizes):
+
+def _compute_nfp_uniform(l, u, cum_counts, sizes):
     """Computes the expected number of false positives caused by using
     u to approximate set sizes in the interval [l, u], assuming uniform
     distribution of set sizes within the interval.
@@ -28,7 +31,8 @@ def compute_nfp_uniform(l, u, cum_counts, sizes):
         n = cum_counts[u]-cum_counts[l-1]
     return n * float(sizes[u] - sizes[l]) / float(2*sizes[u])
 
-def compute_nfps_uniform(cum_counts, sizes):
+
+def _compute_nfps_uniform(cum_counts, sizes):
     """Computes the matrix of expected false positives for all possible
     sub-intervals of the complete domain of set sizes, assuming uniform
     distribution of set_sizes within each sub-intervals.
@@ -46,10 +50,11 @@ def compute_nfps_uniform(cum_counts, sizes):
     # Compute p = 1, the NFPs
     for l in range(len(sizes)):
         for u in range(l, len(sizes)):
-            nfps[l, u] = compute_nfp_uniform(l, u, cum_counts, sizes)
+            nfps[l, u] = _compute_nfp_uniform(l, u, cum_counts, sizes)
     return nfps
 
-def compute_nfp_real(l, u, counts, sizes):
+
+def _compute_nfp_real(l, u, counts, sizes):
     """Computes the expected number of false positives caused by using
     u to approximate set sizes in the interval [l, u], using the real
     set size distribution.
@@ -66,7 +71,8 @@ def compute_nfp_real(l, u, counts, sizes):
         raise ValueError("l must be less or equal to u")
     return np.sum((float(sizes[u])-sizes[l:u+1])/float(sizes[u])*counts[l:u+1])
 
-def compute_nfps_real(counts, sizes):
+
+def _compute_nfps_real(counts, sizes):
     """Computes the matrix of expected false positives for all possible
     sub-intervals of the complete domain of set sizes.
 
@@ -83,19 +89,20 @@ def compute_nfps_real(counts, sizes):
     # Compute p = 1, the NFPs
     for l in range(len(sizes)):
         for u in range(l, len(sizes)):
-            nfps[l, u] = compute_nfp_real(l, u, counts, sizes)
+            nfps[l, u] = _compute_nfp_real(l, u, counts, sizes)
     return nfps
 
-def compute_best_partitions(num_part, sizes, nfps):
+
+def _compute_best_partitions(num_part, sizes, nfps):
     """Computes the optimal partitions given the size distributions
     and computed number of expected false positives for all sub-intervals.
 
     Args:
-        num_part (int): number of partitions.
-        sizes (numpy.array): set sizes in sorted order.
-        nfps (numpy.array): the computed number of expected false positives
-            for all sub-intervals; axis-0 is for lower bounds and axis-1 is
-            for upper bounds.
+        num_part (int): The number of partitions to create.
+        sizes (numpy.array): The complete domain of set sizes in sorted order.
+        nfps (numpy.array): The computed number of expected false positives
+            for all sub-intervals; axis-0 is for the indexes of lower bounds and
+            axis-1 is for the indexes of upper bounds.
 
     Returns:
         partitions (list): list of lower and upper bounds of set sizes for
@@ -160,4 +167,27 @@ def compute_best_partitions(num_part, sizes, nfps):
                 cost[u, p2i(p)] = min(cost[u1, p2i(p-1)] + nfps[u1+1, u]
                         for u1 in range((p-1)-1, u))
     raise RuntimeError("Function should have returned before here.")
+
+
+def optimal_partitions(sizes, counts, num_part):
+    """Compute the optimal partitions given a distribution of set sizes.
+
+    Args:
+        sizes (numpy.array): The complete domain of set sizes in ascending
+            order.
+        counts (numpy.array): The frequencies of all set sizes in the same
+            order as `sizes`.
+        num_part (int): The number of partitions to create.
+
+    Returns:
+        list: A list of partitions in the form of `(lower, upper)` tuples,
+            where `lower` and `upper` are lower and upper bound (inclusive)
+            set sizes of each partition.
+    """
+    sizes, counts = np.array(sorted(
+        Counter(e[2] for e in entries).most_common())).T
+    nfps = _compute_nfps_real(counts, sizes)
+    partitions, _, _ = _compute_best_partitions(len(self.indexes), sizes,
+            nfps)
+    return partitions
 

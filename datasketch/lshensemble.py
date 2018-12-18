@@ -1,8 +1,7 @@
 from collections import deque, Counter
 import numpy as np
 from datasketch.lsh import integrate, MinHashLSH
-from datasketch.lshensemble_partition import compute_nfps_real,\
-        compute_best_partitions
+from datasketch.lshensemble_partition import optimal_partitions
 
 
 def _false_positive_probability(threshold, b, r, xq):
@@ -162,12 +161,10 @@ class MinHashLSHEnsemble(object):
             entries = list(queue)
         if len(entries) == 0:
             raise ValueError("entries is empty")
-        # Create optimal partition.
+        # Create optimal partitions.
         sizes, counts = np.array(sorted(
             Counter(e[2] for e in entries).most_common())).T
-        nfps = compute_nfps_real(counts, sizes)
-        partitions, _, _ = compute_best_partitions(len(self.indexes), sizes,
-                nfps)
+        partitions = optimal_partitions(sizes, counts, len(self.indexes))
         for i, (lower, upper) in enumerate(partitions):
             self.lowers[i], self.uppers[i] = lower, upper
         # Insert into partitions.

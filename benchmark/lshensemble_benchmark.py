@@ -11,6 +11,7 @@ from datasketch import MinHashLSHEnsemble, MinHash
 def bootstrap_sets(sets_file, sample_ratio, num_perms):
     print("Creating sets...")
     sets = collections.deque([])
+    random.seed(41)
     with gzip.open(sets_file, "rt") as f:
         for i, line in enumerate(f):
             if i == 0:
@@ -22,6 +23,7 @@ def bootstrap_sets(sets_file, sample_ratio, num_perms):
             sets.append(s)
             sys.stdout.write("\rRead {} sets".format(len(sets)))
         sys.stdout.write("\n")
+    sets = list(sets)
     keys = list(range(len(sets)))
     print("Creating MinHash...")
     minhashes = dict()
@@ -68,6 +70,8 @@ def benchmark_lshensemble(threshold, num_perm, num_part, m, index_data,
         results.append(sorted([[key, _compute_containment(qs, index_data.sets[key])]
                                for key in result],
                               key=lambda x : x[1], reverse=True))
+        sys.stdout.write("\rQueried {} sets".format(len(results)))
+    sys.stdout.write("\n")
     return times, results
 
 
@@ -98,7 +102,8 @@ if __name__ == "__main__":
     parser.add_argument("--input", type=str, required=True,
             help="Input set file (gzipped), each line is a set: "
             "<set_size> <1>,<2>,<3>..., where each <?> is an element.")
-    parser.add_argument("--output", type=str, default="lshensemble_benchmark.json")
+    parser.add_argument("--output", type=str,
+            default="lshensemble_benchmark.json")
     args = parser.parse_args(sys.argv[1:])
 
     threshold = 0.5
