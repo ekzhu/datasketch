@@ -1,6 +1,8 @@
-from collections import deque
+from collections import deque, Counter
 import numpy as np
 from datasketch.lsh import integrate, MinHashLSH
+from datasketch.lshensemble_partition import compute_nfps_real,\
+        compute_best_partitions
 
 
 def _false_positive_probability(threshold, b, r, xq):
@@ -10,7 +12,7 @@ def _false_positive_probability(threshold, b, r, xq):
     '''
     _probability = lambda t : 1 - (1 - (t/(1 + xq - t))**float(r))**float(b)
     if xq >= threshold:
-        a, err = integrate(_probability, 0.0, threshold) 
+        a, err = integrate(_probability, 0.0, threshold)
         return a
     a, err = integrate(_probability, 0.0, xq)
     return a
@@ -54,11 +56,11 @@ def _optimal_param(threshold, num_perm, max_r, xq, false_positive_weight,
 
 class MinHashLSHEnsemble(object):
     '''
-    The :ref:`minhash_lsh_ensemble` index. It supports 
+    The :ref:`minhash_lsh_ensemble` index. It supports
     :ref:`containment` queries.
-    The implementation is based on 
-    `E. Zhu et al. <http://www.vldb.org/pvldb/vol9/p1185-zhu.pdf>`_. 
-    
+    The implementation is based on
+    `E. Zhu et al. <http://www.vldb.org/pvldb/vol9/p1185-zhu.pdf>`_.
+
     Args:
         threshold (float): The Containment threshold between 0.0 and
             1.0. The initialized LSH Ensemble will be optimized for the threshold by
@@ -66,12 +68,12 @@ class MinHashLSHEnsemble(object):
         num_perm (int, optional): The number of permutation functions used
             by the MinHash to be indexed. For weighted MinHash, this
             is the sample size (`sample_size`).
-        num_part (int, optional): The number of partitions in LSH Ensemble. 
+        num_part (int, optional): The number of partitions in LSH Ensemble.
         m (int, optional): The memory usage factor: an LSH Ensemble uses approximately
-            `m` times more memory space than a MinHash LSH with the same number of 
-            sets indexed. The higher the `m` the better the accuracy. 
-        weights (tuple, optional): Used to adjust the relative importance of 
-            minizing false positive and false negative when optimizing 
+            `m` times more memory space than a MinHash LSH with the same number of
+            sets indexed. The higher the `m` the better the accuracy.
+        weights (tuple, optional): Used to adjust the relative importance of
+            minizing false positive and false negative when optimizing
             for the Containment threshold. Similar to the `weights` parameter
             in :class:`datasketch.MinHashLSH`.
 
@@ -83,17 +85,17 @@ class MinHashLSHEnsemble(object):
         due to parallelism.
 
     Note:
-        More information about the parameter `m` can be found in the 
+        More information about the parameter `m` can be found in the
         `Go implementation`_
         of LSH Ensemble, in which `m` is named `MaxK`.
-    
+
     .. _`Go implementation`: https://github.com/ekzhu/lshensemble
     .. _`the paper`: http://www.vldb.org/pvldb/vol9/p1185-zhu.pdf
     '''
 
     def __init__(self, threshold=0.9, num_perm=128, num_part=16, m=8, weights=(0.5,0.5)):
         if threshold > 1.0 or threshold < 0.0:
-            raise ValueError("threshold must be in [0.0, 1.0]") 
+            raise ValueError("threshold must be in [0.0, 1.0]")
         if num_perm < 2:
             raise ValueError("Too few permutation functions")
         if num_part < 2:
@@ -109,17 +111,19 @@ class MinHashLSHEnsemble(object):
         self.m = m
         rs = self._init_optimal_params(weights)
         # Initialize multiple LSH indexes for each partition
-        self.indexes = [dict((r, MinHashLSH(num_perm=self.h, params=(int(self.h/r), r))) for r in rs)
-                        for _ in range(0, num_part)] 
+        self.indexes = [dict((r, MinHashLSH(num_perm=self.h,
+            params=(int(self.h/r), r))) for r in rs)
+            for _ in range(0, num_part)]
         self.lowers = [None for _ in self.indexes]
+        self.uppers = [None for _ in self.indexes]
 
     def _init_optimal_params(self, weights):
         false_positive_weight, false_negative_weight = weights
         self.xqs = np.exp(np.linspace(-5, 5, 10))
-        self.params = np.array([_optimal_param(self.threshold, self.h, self.m, 
-                                               xq, 
+        self.params = np.array([_optimal_param(self.threshold, self.h, self.m,
+                                               xq,
                                                false_positive_weight,
-                                               false_negative_weight) 
+                                               false_negative_weight)
                                 for xq in self.xqs], dtype=np.int)
         # Find all unique r
         rs = set()
@@ -132,7 +136,7 @@ class MinHashLSHEnsemble(object):
         if i == len(self.params):
             i = i - 1
         return self.params[i]
-    
+
     def index(self, entries):
         '''
         Index all sets given their keys, MinHashes, and sizes.
@@ -143,7 +147,7 @@ class MinHashLSHEnsemble(object):
                 in the form of `(key, minhash, size)`, where `key` is the unique
                 identifier of a set, `minhash` is the MinHash of the set,
                 and `size` is the size or number of unique items in the set.
-        
+
         Note:
             `size` must be positive.
         '''
@@ -158,26 +162,31 @@ class MinHashLSHEnsemble(object):
             entries = list(queue)
         if len(entries) == 0:
             raise ValueError("entries is empty")
+        # Create optimal partition.
+        sizes, counts = np.array(sorted(
+            Counter(e[2] for e in entries).most_common())).T
+        nfps = compute_nfps_real(counts, sizes)
+        partitions, _, _ = compute_best_partitions(len(self.indexes), sizes,
+                nfps)
+        for i, (lower, upper) in enumerate(partitions):
+            self.lowers[i], self.uppers[i] = lower, upper
+        # Insert into partitions.
         entries.sort(key=lambda e : e[2])
-        if entries[0][2] < 0:
-            raise ValueError("Non-positive set size found in entries")
-        part_size = int(len(entries) / len(self.indexes)) + 1
-        for i, index in enumerate(self.indexes):
-            if part_size*i >= len(entries):
-                continue
-            self.lowers[i] = entries[part_size*i][2]
-            for r in index:
-                for key, minhash, size in entries[part_size*i:part_size*(i+1)]:
-                    index[r].insert(key, minhash)
+        curr_part = 0
+        for key, minhash, size in entries:
+            if size > self.uppers[curr_part]:
+                curr_part += 1
+            for r in self.indexes[curr_part]:
+                self.indexes[curr_part][r].insert(key, minhash)
 
     def query(self, minhash, size):
         '''
-        Giving the MinHash and size of the query set, retrieve 
+        Giving the MinHash and size of the query set, retrieve
         keys that references sets with containment with respect to
         the query set greater than the threshold.
-        
+
         Args:
-            minhash (datasketch.MinHash): The MinHash of the query set. 
+            minhash (datasketch.MinHash): The MinHash of the query set.
             size (int): The size (number of unique items) of the query set.
 
         Returns:
@@ -196,7 +205,7 @@ class MinHashLSHEnsemble(object):
         Args:
             key (hashable): The unique identifier of a set.
 
-        Returns: 
+        Returns:
             bool: True only if the key exists in the index.
         '''
         return any(any(key in index[r] for r in index)
@@ -207,18 +216,18 @@ class MinHashLSHEnsemble(object):
         Returns:
             bool: Check if the index is empty.
         '''
-        return all(all(index[r].is_empty() for r in index) 
-                   for index in self.indexes) 
+        return all(all(index[r].is_empty() for r in index)
+                   for index in self.indexes)
 
 
 if __name__ == "__main__":
     import numpy as np
     xqs = np.exp(np.linspace(-5, 5, 10))
     threshold = 0.5
-    max_r = 8 
+    max_r = 8
     num_perm = 256
     false_negative_weight, false_positive_weight = 0.5, 0.5
     for xq in xqs:
-        b, r = _optimal_param(threshold, num_perm, max_r, xq, 
+        b, r = _optimal_param(threshold, num_perm, max_r, xq,
                 false_positive_weight, false_negative_weight)
         print("threshold: %.2f, xq: %.3f, b: %d, r: %d" % (threshold, xq, b, r))

@@ -24,7 +24,7 @@ def bootstrap_data(num_perms, n, population_size, set_size_dist):
                 m.update(word.encode("utf8"))
             ms.append(m)
         minhashes[num_perm] = ms
-    Data = collections.namedtuple('Data', ['minhashes', 'sets', 'keys']) 
+    Data = collections.namedtuple('Data', ['minhashes', 'sets', 'keys'])
     index_data = Data(minhashes, sets, keys)
     query_indices = random.sample(list(range(len(sets))), int(len(sets)*0.1))
     if len(query_indices) == 0:
@@ -45,7 +45,7 @@ def get_twitter_data(num_perms, subset):
     sets = []
     print("Creating sets...")
     for i, text in enumerate(tweets):
-        s = set(w for w in text 
+        s = set(w for w in text
                 if w not in stopwords)
         if len(s) == 0:
             continue
@@ -61,7 +61,7 @@ def get_twitter_data(num_perms, subset):
                 m.update(word.encode("utf8"))
             ms.append(m)
         minhashes[num_perm] = ms
-    Data = collections.namedtuple('Data', ['minhashes', 'sets', 'keys']) 
+    Data = collections.namedtuple('Data', ['minhashes', 'sets', 'keys'])
     index_data = Data(minhashes, sets, keys)
     query_indices = random.sample(list(range(len(sets))), int(len(sets)*0.1))
     if len(query_indices) == 0:
@@ -88,7 +88,7 @@ def benchmark_lshforest(num_perm, l, k, index_data, query_data):
         duration = time.clock() - start
         times.append(duration)
         results.append(sorted([[key, _compute_jaccard(qs, index_data.sets[key])]
-                               for key in result], 
+                               for key in result],
                               key=lambda x : x[1], reverse=True))
     return times, results
 
@@ -106,7 +106,7 @@ def benchmark_linearscan(num_perm, k, index_data, query_data):
         duration = time.clock() - start
         times.append(duration)
         results.append(sorted([[key, _compute_jaccard(qs, index_data.sets[key])]
-                               for key in result], 
+                               for key in result],
                               key=lambda x : x[1], reverse=True))
     return times, results
 
@@ -118,11 +118,11 @@ def benchmark_ground_truth(k, index_data, query_data):
     truncate_decimal = lambda x : float(int(x*100)) / 100.0
     for q in query_data.sets:
         start = time.clock()
-        result = [(key, _compute_jaccard(q, a)) 
+        result = [(key, _compute_jaccard(q, a))
                   for key, a in zip(index_data.keys, index_data.sets)]
         result.sort(key=lambda x : x[1], reverse=True)
         duration = time.clock() - start
-        topk_result = [] 
+        topk_result = []
         curr_rank = 0
         curr_j2 = -1.0
         for key, j in result:
@@ -163,7 +163,7 @@ if __name__ == "__main__":
               "lsh_times" : [], "lsh_results" : [],
               "linearscan_times" : [], "linearscan_results" : [],
               "ground_truth_times" : None, "ground_truth_results" : None}
-    index_data, query_data = bootstrap_data(num_perms, 10000, 5000, 
+    index_data, query_data = bootstrap_data(num_perms, 10000, 5000,
             scipy.stats.randint(10, 5000))
 
     for num_perm in num_perms:
@@ -177,7 +177,7 @@ if __name__ == "__main__":
         output["lsh_results"].append(lsh_results)
         output["linearscan_times"].append(linearscan_times)
         output["linearscan_results"].append(linearscan_results)
-    
+
     print("Running ground truth benchmark")
     output["ground_truth_times"], output["ground_truth_results"] =\
             benchmark_ground_truth(k, index_data, query_data)
