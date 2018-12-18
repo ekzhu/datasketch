@@ -35,6 +35,7 @@ if __name__ == "__main__":
         # Plot query fscore vs. num perm
         axes[0].plot(num_perms, lsh_fscores[i], marker="+",
                 label="num_part = {}".format(num_part))
+        axes[0].set_ylim(0.0, 1.0)
         axes[0].set_ylabel("Average F-Score")
         axes[0].set_xlabel("# of Permmutation Functions")
         axes[0].grid()

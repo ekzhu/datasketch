@@ -184,10 +184,7 @@ def optimal_partitions(sizes, counts, num_part):
             where `lower` and `upper` are lower and upper bound (inclusive)
             set sizes of each partition.
     """
-    sizes, counts = np.array(sorted(
-        Counter(e[2] for e in entries).most_common())).T
     nfps = _compute_nfps_real(counts, sizes)
-    partitions, _, _ = _compute_best_partitions(len(self.indexes), sizes,
-            nfps)
+    partitions, _, _ = _compute_best_partitions(num_part, sizes, nfps)
     return partitions
 
