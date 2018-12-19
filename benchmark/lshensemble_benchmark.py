@@ -8,6 +8,7 @@ import random
 import os
 import pickle
 import pandas as pd
+from SetSimilaritySearch import SearchIndex
 
 from datasketch import MinHashLSHEnsemble, MinHash
 
@@ -77,10 +78,14 @@ def benchmark_ground_truth(threshold, index_data, query_data):
     (_, query_sets, _) = query_data
     times = []
     results = []
+    print("Building search index...")
+    index = SearchIndex(indexed_sets, similarity_func_name="containment",
+            similarity_threshold=threshold)
     for q in query_sets:
         start = time.perf_counter()
-        result = [key for key, a in zip(keys, indexed_sets)
-                  if _compute_containment(q, a) >= threshold]
+        result = [key for key, _ in index.query(q)]
+        #result = [key for key, a in zip(keys, indexed_sets)
+        #          if _compute_containment(q, a) >= threshold]
         duration = time.perf_counter() - start
         times.append(duration)
         results.append(result)
@@ -134,7 +139,7 @@ if __name__ == "__main__":
             index_data = pickle.load(d)
     else:
         print("Using indexed sets {}".format(args.indexed_sets))
-        index_data = bootstrap_sets(args.indexed_sets, 0.001, num_perms)
+        index_data = bootstrap_sets(args.indexed_sets, 0.01, num_perms)
         with open(index_data_cache, "wb") as d:
             pickle.dump(index_data, d)
     if os.path.exists(query_data_cache):
@@ -146,6 +151,20 @@ if __name__ == "__main__":
         query_data = bootstrap_sets(args.query_sets, 1.0, num_perms, skip=0)
         with open(query_data_cache, "wb") as d:
             pickle.dump(query_data, d)
+
+    rows = []
+    for threshold in thresholds:
+        print("Running ground truth benchmark threshold = {}".format(threshold))
+        ground_truth_times, ground_truth_results = \
+                benchmark_ground_truth(threshold, index_data, query_data)
+        for t, r, query_set, query_key in zip(ground_truth_times,
+                ground_truth_results, query_data[1], query_data[2]):
+            rows.append((query_key, len(query_set), threshold, t,
+                ",".join(str(k) for k in r)))
+    df_groundtruth = pd.DataFrame.from_records(rows,
+        columns=["query_key", "query_size", "threshold",
+            "query_time", "results"])
+    df_groundtruth.to_csv(args.ground_truth_results)
 
     rows = []
     for threshold in thresholds:
@@ -164,18 +183,4 @@ if __name__ == "__main__":
         columns=["query_key", "query_size", "threshold", "num_part",
             "num_perm", "query_time", "results"])
     df.to_csv(args.query_results)
-
-    rows = []
-    for threshold in thresholds:
-        print("Running ground truth benchmark threshold = {}".format(threshold))
-        ground_truth_times, ground_truth_results = \
-                benchmark_ground_truth(threshold, index_data, query_data)
-        for t, r, query_set, query_key in zip(ground_truth_times,
-                ground_truth_results, query_data[1], query_data[2]):
-            rows.append((query_key, len(query_set), threshold, t,
-                ",".join(str(k) for k in r)))
-    df_groundtruth = pd.DataFrame.from_records(rows,
-        columns=["query_key", "query_size", "threshold",
-            "query_time", "results"])
-    df_groundtruth.to_csv(args.ground_truth_results)
 

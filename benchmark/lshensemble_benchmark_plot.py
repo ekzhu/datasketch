@@ -15,6 +15,9 @@ if __name__ == "__main__":
             converters={"results": lambda x: x.split(",")})
     df_groundtruth = pd.read_csv(args.ground_truth_results,
             converters={"results": lambda x: x.split(",")})
+    df_groundtruth["has_result"] = [len(r) > 0
+            for r in df_groundtruth["results"]]
+    df_groundtruth = df_groundtruth[df_groundtruth["has_result"]]
     df = pd.merge(df, df_groundtruth, on=["query_key", "threshold"],
             suffixes=("", "_ground_truth"))
     prs = [get_precision_recall(result, ground_truth)
