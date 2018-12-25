@@ -23,7 +23,7 @@ setup(
     # the version across setup.py and the project code, see
     # https://packaging.python.org/en/latest/single_source_version.html
 
-    version='1.2.10',
+    version='1.3.0',
 
     description='Probabilistic data structures for processing and searching very large datasets',
     long_description=long_description,

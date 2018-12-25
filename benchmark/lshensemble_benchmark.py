@@ -26,7 +26,8 @@ def bootstrap_sets(sets_file, sample_ratio, num_perms, skip=1):
                 continue
             if random.random() > sample_ratio:
                 continue
-            s = np.array(line.strip().split("\t")[1].split(","))
+            s = np.array([int(d) for d in \
+                    line.strip().split("\t")[1].split(",")])
             sets.append(s)
             sys.stdout.write("\rRead {} sets".format(len(sets)))
         sys.stdout.write("\n")
@@ -40,7 +41,7 @@ def bootstrap_sets(sets_file, sample_ratio, num_perms, skip=1):
         for s in sets:
             m = MinHash(num_perm)
             for word in s:
-                m.update(word.encode("utf8"))
+                m.update(str(word).encode("utf8"))
             ms.append(m)
             sys.stdout.write("\rMinhashed {} sets".format(len(ms)))
         sys.stdout.write("\n")
@@ -75,25 +76,16 @@ def benchmark_lshensemble(threshold, num_perm, num_part, m, index_data,
     return times, results
 
 
-def benchmark_ground_truth(threshold, index_data, query_data):
-    (minhashes, indexed_sets, keys) = index_data
+def benchmark_ground_truth(threshold, index, query_data):
     (_, query_sets, _) = query_data
     times = []
     results = []
-    print("Building search index...")
-    index = SearchIndex(indexed_sets, similarity_func_name="containment",
-            similarity_threshold=threshold)
     for q in query_sets:
         start = time.perf_counter()
         result = [key for key, _ in index.query(q)]
-        #result = [key for key, a in zip(keys, indexed_sets)
-        #          if _compute_containment(q, a) >= threshold]
         duration = time.perf_counter() - start
         times.append(duration)
         results.append(result)
-        # results.append(sorted([[key, _compute_containment(q, indexed_sets[key])]
-        #                        for key in result],
-        #                       key=lambda x : x[1], reverse=True))
         sys.stdout.write("\rQueried {} sets".format(len(results)))
     sys.stdout.write("\n")
     return times, results
@@ -128,12 +120,6 @@ if __name__ == "__main__":
     #num_perms = [32, 64, 96, 128, 160, 192, 224, 256]
     num_perms = [256,]
     m = 8
-    output = {"thresholds" : thresholds,
-              "num_parts" : num_parts,
-              "num_perms" : num_perms,
-              "m" : m,
-              "lsh_times" : [], "lsh_results" : [],
-              "ground_truth_times" : None, "ground_truth_results" : None}
 
     index_data, query_data = None, None
     index_data_cache = "{}.pickle".format(args.indexed_sets)
@@ -144,7 +130,7 @@ if __name__ == "__main__":
             index_data = pickle.load(d)
     else:
         print("Using indexed sets {}".format(args.indexed_sets))
-        index_data = bootstrap_sets(args.indexed_sets, 1.0, num_perms)
+        index_data = bootstrap_sets(args.indexed_sets, 0.1, num_perms)
         with open(index_data_cache, "wb") as d:
             pickle.dump(index_data, d)
     if os.path.exists(query_data_cache):
@@ -159,10 +145,15 @@ if __name__ == "__main__":
 
     if not args.skip_ground_truth:
         rows = []
+        # Build search index separately, only works for containment.
+        print("Building search index...")
+        index = SearchIndex(index_data[1], similarity_func_name="containment",
+                similarity_threshold=0.1)
         for threshold in thresholds:
+            index.similarity_threshold = threshold
             print("Running ground truth benchmark threshold = {}".format(threshold))
             ground_truth_times, ground_truth_results = \
-                    benchmark_ground_truth(threshold, index_data, query_data)
+                    benchmark_ground_truth(threshold, index, query_data)
             for t, r, query_set, query_key in zip(ground_truth_times,
                     ground_truth_results, query_data[1], query_data[2]):
                 rows.append((query_key, len(query_set), threshold, t,

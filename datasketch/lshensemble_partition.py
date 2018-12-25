@@ -128,33 +128,11 @@ def _compute_best_partitions(num_part, sizes, nfps):
     cost = np.zeros((len(sizes), num_part-2))
 
     # Note: p is the number of partitions in the subproblem.
-    # p2i translate the number of partition into the index in the matrix.
+    # p2i translates the number of partition into the index in the matrix.
     p2i = lambda p : p - 2
 
-    # Back track to find the best partitions.
-    def _back_track(cost, p):
-        # Find the best right-most upper bound (before the end) given
-        # the number of partitions and upper bound.
-        total_nfps, u = min((cost[u1, p2i(p-1)]+nfps[u1+1, len(sizes)-1], u1)
-                for u1 in range((p-1)-1, len(sizes)-1))
-        partitions = [(sizes[u+1], sizes[-1]),]
-        p -= 1
-        while p > 1:
-            # Find the best right-most upper bound (before the end) given
-            # the number of partitions and upper bound in the sub-problem.
-            _, u1_best = min((cost[u1, p2i(p-1)]+nfps[u1+1, len(sizes)-1], u1)
-                    for u1 in range((p-1)-1, u))
-            partitions.insert(0, (sizes[u1_best+1], sizes[u]))
-            u = u1_best
-            p -= 1
-        partitions.insert(0, (sizes[0], sizes[u]))
-        return [partitions, total_nfps]
-
-    # Compute p >= 2, and returns if p = num_part.
-    for p in range(2, num_part+1):
-        # Early return if p = num_part
-        if p == num_part:
-            return _back_track(cost, p) + [cost, ]
+    # Compute p >= 2 until before p = num_part.
+    for p in range(2, num_part):
         # Compute best partition for subproblems with increasing
         # max index u, starting from the smallest possible u given the p.
         # The smallest possible u can be considered as the max index that
@@ -166,7 +144,25 @@ def _compute_best_partitions(num_part, sizes, nfps):
             else:
                 cost[u, p2i(p)] = min(cost[u1, p2i(p-1)] + nfps[u1+1, u]
                         for u1 in range((p-1)-1, u))
-    raise RuntimeError("Function should have returned before here.")
+    # Back track to find the best partitions.
+    p = num_part
+    # Find the best right-most upper bound (before the end) given
+    # the number of partitions and upper bound.
+    total_nfps, u = min((cost[u1, p2i(p-1)]+nfps[u1+1, len(sizes)-1], u1)
+            for u1 in range((p-1)-1, len(sizes)-1))
+    partitions = [(sizes[u+1], sizes[-1]),]
+    p -= 1
+    while p > 1:
+        # Find the best right-most upper bound (before the end) given
+        # the number of partitions and upper bound in the sub-problem.
+        _, u1_best = min((cost[u1, p2i(p-1)]+nfps[u1+1, u], u1)
+                for u1 in range((p-1)-1, u))
+        partitions.insert(0, (sizes[u1_best+1], sizes[u]))
+        u = u1_best
+        p -= 1
+    partitions.insert(0, (sizes[0], sizes[u]))
+    return [partitions, total_nfps, cost]
+
 
 
 def optimal_partitions(sizes, counts, num_part):
