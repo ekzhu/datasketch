@@ -190,7 +190,7 @@ class MinHashLSHEnsemble(object):
             `iterator` of keys.
         '''
         for i, index in enumerate(self.indexes):
-            u = self.lowers[i]
+            u = self.uppers[i]
             if u is None:
                 continue
             b, r = self._get_optimal_param(u, size)
