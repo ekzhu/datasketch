@@ -115,6 +115,9 @@ def _compute_best_partitions(num_part, sizes, nfps):
 
     if num_part < 2:
         raise ValueError("num_part cannot be less than 2")
+    if num_part > len(sizes):
+        raise ValueError("num_part cannot be greater than the domain size of "
+                "all set sizes")
 
     # If number of partitions is 2, then simply find the upper bound
     # of the first partition.
@@ -144,18 +147,19 @@ def _compute_best_partitions(num_part, sizes, nfps):
             else:
                 cost[u, p2i(p)] = min(cost[u1, p2i(p-1)] + nfps[u1+1, u]
                         for u1 in range((p-1)-1, u))
-    # Back track to find the best partitions.
     p = num_part
-    # Find the best right-most upper bound (before the end) given
-    # the number of partitions and upper bound.
+    # Find the optimal upper bound index of the 2nd right-most partition given
+    # the number of partitions (p).
     total_nfps, u = min((cost[u1, p2i(p-1)]+nfps[u1+1, len(sizes)-1], u1)
             for u1 in range((p-1)-1, len(sizes)-1))
     partitions = [(sizes[u+1], sizes[-1]),]
     p -= 1
+    # Back track to find the best partitions.
     while p > 1:
-        # Find the best right-most upper bound (before the end) given
-        # the number of partitions and upper bound in the sub-problem.
-        _, u1_best = min((cost[u1, p2i(p-1)]+nfps[u1+1, u], u1)
+        # Find the optimal upper bound index of the 2nd right-most partition
+        # givne the number of partitions (p) and upper bound index (u) in this
+        # sub-problem.
+        _, u1_best = min((cost[u1, p2i(p)]+nfps[u1+1, u], u1)
                 for u1 in range((p-1)-1, u))
         partitions.insert(0, (sizes[u1_best+1], sizes[u]))
         u = u1_best
@@ -180,6 +184,11 @@ def optimal_partitions(sizes, counts, num_part):
             where `lower` and `upper` are lower and upper bound (inclusive)
             set sizes of each partition.
     """
+    if num_part < 2:
+        return [(sizes[0], sizes[-1])]
+    if num_part >= len(sizes):
+        partitions = [(x, x) for x in sizes]
+        return partitions
     nfps = _compute_nfps_real(counts, sizes)
     partitions, _, _ = _compute_best_partitions(num_part, sizes, nfps)
     return partitions

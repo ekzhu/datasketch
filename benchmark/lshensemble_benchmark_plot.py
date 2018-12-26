@@ -32,11 +32,10 @@ if __name__ == "__main__":
     num_parts = sorted(list(set(df["num_part"])))
 
     for i, num_perm in enumerate(num_perms):
+        # Plot precisions
         for j, num_part in enumerate(num_parts):
             sub = df[(df["num_part"] == num_part) & (df["num_perm"] == num_perm)].\
                     groupby("threshold")
-            fscores = sub["fscore"].mean()
-            recalls = sub["recall"].mean()
             precisions = sub["precision"].mean()
             plt.plot(thresholds, precisions, label="num_part = {}".format(num_part))
         plt.ylim(0.0, 1.0)
@@ -44,5 +43,31 @@ if __name__ == "__main__":
         plt.ylabel("Average Precisions")
         plt.grid()
         plt.legend()
-        plt.savefig("lshensemble_num_perm_{}.png".format(num_perm))
-
+        plt.savefig("lshensemble_num_perm_{}_precision.png".format(num_perm))
+        plt.close()
+        # Plot recalls
+        for j, num_part in enumerate(num_parts):
+            sub = df[(df["num_part"] == num_part) & (df["num_perm"] == num_perm)].\
+                    groupby("threshold")
+            recalls = sub["recall"].mean()
+            plt.plot(thresholds, recalls, label="num_part = {}".format(num_part))
+        plt.ylim(0.0, 1.0)
+        plt.xlabel("Thresholds")
+        plt.ylabel("Average Recalls")
+        plt.grid()
+        plt.legend()
+        plt.savefig("lshensemble_num_perm_{}_recall.png".format(num_perm))
+        plt.close()
+        # Plot fscores.
+        for j, num_part in enumerate(num_parts):
+            sub = df[(df["num_part"] == num_part) & (df["num_perm"] == num_perm)].\
+                    groupby("threshold")
+            fscores = sub["fscore"].mean()
+            plt.plot(thresholds, fscores, label="num_part = {}".format(num_part))
+        plt.ylim(0.0, 1.0)
+        plt.xlabel("Thresholds")
+        plt.ylabel("Average F-Scores")
+        plt.grid()
+        plt.legend()
+        plt.savefig("lshensemble_num_perm_{}_fscore.png".format(num_perm))
+        plt.close()
