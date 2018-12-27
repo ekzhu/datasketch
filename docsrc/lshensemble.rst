@@ -103,15 +103,26 @@ The precision of LSH Ensemble increases with the number of partitions,
 so does the querying time, as the plot below shows.
 The experiment code can be found in the `benchmark` directory
 of the source code repository.
-
-.. figure:: /_static/lshensemble_benchmark_1k/lshensemble_num_perm_256_precision.png
-   :alt: MinHashLSHEnsemble Benchmark Precision
-
-.. figure:: /_static/lshensemble_benchmark_1k/lshensemble_num_perm_256_recall.png
-   :alt: MinHashLSHEnsemble Benchmark Recall
-
-.. figure:: /_static/lshensemble_benchmark_1k/lshensemble_num_perm_256_query_time.png
-   :alt: MinHashLSHEnsemble Benchmark Query Time
-
 There are other optional parameters that can be used to tune the index to achieve better accuracy or performance.
 See the documentation of :class:`datasketch.MinHashLSHEnsemble` for details.
+
+.. image:: /_static/lshensemble_benchmark_1k/lshensemble_num_perm_256_precision.png
+   :scale: 75 %
+   :align: center
+   :alt: MinHashLSHEnsemble Benchmark Precision
+
+.. image:: /_static/lshensemble_benchmark_1k/lshensemble_num_perm_256_recall.png
+   :scale: 75 %
+   :align: center
+   :alt: MinHashLSHEnsemble Benchmark Recall
+
+.. image:: /_static/lshensemble_benchmark_1k/lshensemble_num_perm_256_fscore.png
+   :scale: 75 %
+   :align: center
+   :alt: MinHashLSHEnsemble Benchmark F-Score
+
+.. image:: /_static/lshensemble_benchmark_1k/lshensemble_num_perm_256_query_time.png
+   :scale: 75 %
+   :align: center
+   :alt: MinHashLSHEnsemble Benchmark Query Time
+

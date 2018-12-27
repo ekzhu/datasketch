@@ -13,7 +13,8 @@
     <script type="text/javascript" src="_static/jquery.js"></script>
     <script type="text/javascript" src="_static/underscore.js"></script>
     <script type="text/javascript" src="_static/doctools.js"></script>
-    <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <script type="text/javascript" src="_static/language_data.js"></script>
+    <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
     <link rel="next" title="HyperLogLog" href="hyperloglog.html" />
@@ -909,7 +910,7 @@ counts</td>
 <h2>Asynchronous MinHash LSH<a class="headerlink" href="#asynchronous-minhash-lsh" title="Permalink to this headline">¶</a></h2>
 <dl class="class">
 <dt id="datasketch.experimental.aio.lsh.AsyncMinHashLSH">
-<em class="property">class </em><code class="descclassname">datasketch.experimental.aio.lsh.</code><code class="descname">AsyncMinHashLSH</code><span class="sig-paren">(</span><em>threshold: float = 0.9</em>, <em>num_perm: int = 128</em>, <em>weights: Tuple[float</em>, <em>float] = (0.5</em>, <em>0.5)</em>, <em>params: Tuple[int</em>, <em>int] = None</em>, <em>storage_config: Dict[KT</em>, <em>VT] = None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/datasketch/experimental/aio/lsh.html#AsyncMinHashLSH"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#datasketch.experimental.aio.lsh.AsyncMinHashLSH" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="descclassname">datasketch.experimental.aio.lsh.</code><code class="descname">AsyncMinHashLSH</code><span class="sig-paren">(</span><em>threshold: float = 0.9</em>, <em>num_perm: int = 128</em>, <em>weights: Tuple[float</em>, <em>float] = (0.5</em>, <em>0.5)</em>, <em>params: Tuple[int</em>, <em>int] = None</em>, <em>storage_config: Dict = None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/datasketch/experimental/aio/lsh.html#AsyncMinHashLSH"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#datasketch.experimental.aio.lsh.AsyncMinHashLSH" title="Permalink to this definition">¶</a></dt>
 <dd><p>Asynchronous MinHashLSH index.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
@@ -943,7 +944,7 @@ If storage_config is None aiomongo storage will be used.</li>
 </div>
 <dl class="method">
 <dt id="datasketch.experimental.aio.lsh.AsyncMinHashLSH.__init__">
-<code class="descname">__init__</code><span class="sig-paren">(</span><em>threshold: float = 0.9</em>, <em>num_perm: int = 128</em>, <em>weights: Tuple[float</em>, <em>float] = (0.5</em>, <em>0.5)</em>, <em>params: Tuple[int</em>, <em>int] = None</em>, <em>storage_config: Dict[KT</em>, <em>VT] = None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/datasketch/experimental/aio/lsh.html#AsyncMinHashLSH.__init__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#datasketch.experimental.aio.lsh.AsyncMinHashLSH.__init__" title="Permalink to this definition">¶</a></dt>
+<code class="descname">__init__</code><span class="sig-paren">(</span><em>threshold: float = 0.9</em>, <em>num_perm: int = 128</em>, <em>weights: Tuple[float</em>, <em>float] = (0.5</em>, <em>0.5)</em>, <em>params: Tuple[int</em>, <em>int] = None</em>, <em>storage_config: Dict = None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/datasketch/experimental/aio/lsh.html#AsyncMinHashLSH.__init__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#datasketch.experimental.aio.lsh.AsyncMinHashLSH.__init__" title="Permalink to this definition">¶</a></dt>
 <dd><p>Initialize self.  See help(type(self)) for accurate signature.</p>
 </dd></dl>
 
@@ -1587,8 +1588,8 @@ Main changes from the original HyperLogLog:</p>
       &copy;2018, Eric Zhu.
       
       |
-      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.8.1</a>
-      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.8.3</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.11</a>
       
       |
       <a href="_sources/documentation.rst.txt"
