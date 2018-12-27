@@ -1,3 +1,14 @@
+"""
+Benchmark dataset from:
+https://github.com/ekzhu/set-similarity-search-benchmark.
+Use "Canada US and UK Open Data":
+
+    Indexed sets: canada_us_uk_opendata.inp.gz
+    Query sets (10 stratified samples from 10 percentile intervals):
+        Size from 10 - 1k: canada_us_uk_opendata_queries_1k.inp.gz
+        Size from 10 - 10k: canada_us_uk_opendata_queries_10k.inp.gz
+        Size from 10 - 100k: canada_us_uk_opendata_queries_100k.inp.gz
+"""
 import time, argparse, sys, json
 import numpy as np
 import scipy.stats
@@ -11,8 +22,6 @@ import pandas as pd
 from SetSimilaritySearch import SearchIndex
 
 from datasketch import MinHashLSHEnsemble, MinHash
-# from datasketch import MinHash
-# from datasketch.lshensemble_master import MinHashLSHEnsemble
 
 
 def bootstrap_sets(sets_file, sample_ratio, num_perms, skip=1):

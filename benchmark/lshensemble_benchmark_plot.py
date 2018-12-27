@@ -71,3 +71,14 @@ if __name__ == "__main__":
         plt.legend()
         plt.savefig("lshensemble_num_perm_{}_fscore.png".format(num_perm))
         plt.close()
+        # Plot query time.
+        times = []
+        for num_part in num_parts:
+            t = np.percentile(df[df["num_part"] == num_part]["query_time"], 90)
+            times.append(t * 1000.0)
+        plt.bar(num_parts, times)
+        plt.xlabel("Number of Partitions")
+        plt.ylabel("90 Percentile Query Time (ms)")
+        plt.grid()
+        plt.savefig("lshensemble_num_perm_{}_query_time.png".format(num_perm))
+        plt.close()

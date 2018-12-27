@@ -82,8 +82,10 @@ Just like MinHash LSH, LSH Ensemble also works directly with :ref:`minhash` data
         for d in set3:
             m3.update(d.encode('utf8'))
 
-        # Create an LSH Ensemble index with a threshold 
-        lshensemble = MinHashLSHEnsemble(threshold=0.8, num_perm=128)
+        # Create an LSH Ensemble index with threshold and number of partition
+        # settings.
+        lshensemble = MinHashLSHEnsemble(threshold=0.8, num_perm=128, 
+            num_part=32)
 
         # Index takes an iterable of (key, minhash, size)
         lshensemble.index([("m2", m2, len(set2)), ("m3", m3, len(set3))])
@@ -97,13 +99,19 @@ Just like MinHash LSH, LSH Ensemble also works directly with :ref:`minhash` data
         for key in lshensemble.query(m1, len(set1)):
             print(key)
 
-The accuracy of LSH Ensemble increases as the number of permutation functions increases, 
-and the query performance decreases with more permutation functions, as the plot below shows.
+The precision of LSH Ensemble increases with the number of partitions, 
+so does the querying time, as the plot below shows.
 The experiment code can be found in the `benchmark` directory
 of the source code repository.
 
-.. figure:: /_static/lshensemble_benchmark.png
-   :alt: MinHashLSHEnsemble Benchmark
+.. figure:: /_static/lshensemble_benchmark_1k/lshensemble_num_perm_256_precision.png
+   :alt: MinHashLSHEnsemble Benchmark Precision
+
+.. figure:: /_static/lshensemble_benchmark_1k/lshensemble_num_perm_256_recall.png
+   :alt: MinHashLSHEnsemble Benchmark Recall
+
+.. figure:: /_static/lshensemble_benchmark_1k/lshensemble_num_perm_256_query_time.png
+   :alt: MinHashLSHEnsemble Benchmark Query Time
 
 There are other optional parameters that can be used to tune the index to achieve better accuracy or performance.
 See the documentation of :class:`datasketch.MinHashLSHEnsemble` for details.
