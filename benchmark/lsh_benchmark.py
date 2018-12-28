@@ -1,5 +1,4 @@
 import time, argparse, sys, json
-from hashlib import sha1
 from sklearn.datasets import fetch_20newsgroups
 import numpy as np
 import scipy.stats
@@ -21,7 +20,7 @@ def benchmark_lsh(num_perm, threshold, index_data, query_data):
         duration = time.clock() - start
         times.append(duration)
         results.append(sorted([[key, _compute_jaccard(qs, index_data.sets[key])]
-                               for key in result], 
+                               for key in result],
                               key=lambda x : x[1], reverse=True))
     return times, results
 
@@ -39,7 +38,7 @@ def benchmark_linearscan(num_perm, threshold, index_data, query_data):
         duration = time.clock() - start
         times.append(duration)
         results.append(sorted([[key, _compute_jaccard(qs, index_data.sets[key])]
-                               for key in result], 
+                               for key in result],
                               key=lambda x : x[1], reverse=True))
     return times, results
 
@@ -71,7 +70,7 @@ if __name__ == "__main__":
               "linearscan_times" : [], "linearscan_results" : [],
               "ground_truth_times" : None, "ground_truth_results" : None}
 
-    index_data, query_data = bootstrap_data(num_perms, 1000, 500, 
+    index_data, query_data = bootstrap_data(num_perms, 1000, 500,
              scipy.stats.randint(10, 500))
 
     threshold = 0.9
