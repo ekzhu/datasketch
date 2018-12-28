@@ -1,5 +1,6 @@
 import json, sys, argparse
 import numpy as np
+import pandas as pd
 import matplotlib
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
@@ -7,34 +8,77 @@ from lsh_benchmark_plot import get_precision_recall, fscore, average_fscore
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument("benchmark_output")
+    parser.add_argument("query_results")
+    parser.add_argument("ground_truth_results")
     args = parser.parse_args(sys.argv[1:])
+    df = pd.read_csv(args.query_results,
+            converters={"results": lambda x: x.split(",")})
+    df_groundtruth = pd.read_csv(args.ground_truth_results,
+            converters={"results": lambda x: x.split(",")})
+    df_groundtruth["has_result"] = [len(r) > 0
+            for r in df_groundtruth["results"]]
+    df_groundtruth = df_groundtruth[df_groundtruth["has_result"]]
+    df = pd.merge(df, df_groundtruth, on=["query_key", "threshold"],
+            suffixes=("", "_ground_truth"))
+    prs = [get_precision_recall(result, ground_truth)
+            for result, ground_truth in \
+                    zip(df["results"], df["results_ground_truth"])]
+    df["precision"] = [p for p, _ in prs]
+    df["recall"] = [r for _, r in prs]
+    df["fscore"] = [fscore(*pr) for pr in prs]
 
-    with open(args.benchmark_output) as f:
-        benchmark = json.load(f) 
+    thresholds = sorted(list(set(df["threshold"])))
+    num_perms = sorted(list(set(df["num_perm"])))
+    num_parts = sorted(list(set(df["num_part"])))
 
-    num_perms = benchmark["num_perms"]
-    lsh_times = benchmark["lsh_times"]
-    ground_truth_results = [[x[0] for x in r] for r in benchmark["ground_truth_results"]]
-    lsh_fscores = []
-    for results in benchmark["lsh_results"]:
-        query_results = [[x[0] for x in r] for r in results]
-        lsh_fscores.append(average_fscore(query_results, ground_truth_results))
-
-    lsh_times = np.array([np.percentile(ts, 90) 
-        for ts in lsh_times])*1000
-
-    fig, axes = plt.subplots(1, 2, figsize=(5*2, 4.5), sharex=True)
-    # Plot query fscore vs. num perm
-    axes[0].plot(num_perms, lsh_fscores, marker="+", label="LSH Ensemble")
-    axes[0].set_ylabel("Average F-Score")
-    axes[0].set_xlabel("# of Permmutation Functions")
-    axes[0].grid()
-    # Plot query time vs. num perm
-    axes[1].plot(num_perms, lsh_times, marker="+", label="LSH Ensemble")
-    axes[1].set_xlabel("# of Permutation Functions")
-    axes[1].set_ylabel("90 Percentile Query Time (ms)")
-    axes[1].grid()
-    axes[1].legend(loc="lower right")
-    plt.tight_layout()
-    fig.savefig("lshensemble_benchmark.png", pad_inches=0.05, bbox_inches="tight")
+    for i, num_perm in enumerate(num_perms):
+        # Plot precisions
+        for j, num_part in enumerate(num_parts):
+            sub = df[(df["num_part"] == num_part) & (df["num_perm"] == num_perm)].\
+                    groupby("threshold")
+            precisions = sub["precision"].mean()
+            plt.plot(thresholds, precisions, label="num_part = {}".format(num_part))
+        plt.ylim(0.0, 1.0)
+        plt.xlabel("Thresholds")
+        plt.ylabel("Average Precisions")
+        plt.grid()
+        plt.legend()
+        plt.savefig("lshensemble_num_perm_{}_precision.png".format(num_perm))
+        plt.close()
+        # Plot recalls
+        for j, num_part in enumerate(num_parts):
+            sub = df[(df["num_part"] == num_part) & (df["num_perm"] == num_perm)].\
+                    groupby("threshold")
+            recalls = sub["recall"].mean()
+            plt.plot(thresholds, recalls, label="num_part = {}".format(num_part))
+        plt.ylim(0.0, 1.0)
+        plt.xlabel("Thresholds")
+        plt.ylabel("Average Recalls")
+        plt.grid()
+        plt.legend()
+        plt.savefig("lshensemble_num_perm_{}_recall.png".format(num_perm))
+        plt.close()
+        # Plot fscores.
+        for j, num_part in enumerate(num_parts):
+            sub = df[(df["num_part"] == num_part) & (df["num_perm"] == num_perm)].\
+                    groupby("threshold")
+            fscores = sub["fscore"].mean()
+            plt.plot(thresholds, fscores, label="num_part = {}".format(num_part))
+        plt.ylim(0.0, 1.0)
+        plt.xlabel("Thresholds")
+        plt.ylabel("Average F-Scores")
+        plt.grid()
+        plt.legend()
+        plt.savefig("lshensemble_num_perm_{}_fscore.png".format(num_perm))
+        plt.close()
+        # Plot query time.
+        times = []
+        for num_part in num_parts:
+            t = np.percentile(df[df["num_part"] == num_part]["query_time"], 90)
+            times.append(t * 1000.0)
+        plt.bar(num_parts, times)
+        plt.xlabel("Number of Partitions")
+        plt.ylabel("90 Percentile Query Time (ms)")
+        plt.grid()
+        plt.savefig("lshensemble_num_perm_{}_query_time.png".format(num_perm))
+        plt.close()

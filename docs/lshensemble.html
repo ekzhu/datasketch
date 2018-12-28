@@ -13,7 +13,8 @@
     <script type="text/javascript" src="_static/jquery.js"></script>
     <script type="text/javascript" src="_static/underscore.js"></script>
     <script type="text/javascript" src="_static/doctools.js"></script>
-    <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <script type="text/javascript" src="_static/language_data.js"></script>
+    <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
     <link rel="next" title="MinHash LSH Forest" href="lshforest.html" />
@@ -159,8 +160,10 @@ The full implementation is in <a class="reference external" href="https://golang
 <span class="k">for</span> <span class="n">d</span> <span class="ow">in</span> <span class="n">set3</span><span class="p">:</span>
     <span class="n">m3</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">d</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="s1">&#39;utf8&#39;</span><span class="p">))</span>
 
-<span class="c1"># Create an LSH Ensemble index with a threshold</span>
-<span class="n">lshensemble</span> <span class="o">=</span> <span class="n">MinHashLSHEnsemble</span><span class="p">(</span><span class="n">threshold</span><span class="o">=</span><span class="mf">0.8</span><span class="p">,</span> <span class="n">num_perm</span><span class="o">=</span><span class="mi">128</span><span class="p">)</span>
+<span class="c1"># Create an LSH Ensemble index with threshold and number of partition</span>
+<span class="c1"># settings.</span>
+<span class="n">lshensemble</span> <span class="o">=</span> <span class="n">MinHashLSHEnsemble</span><span class="p">(</span><span class="n">threshold</span><span class="o">=</span><span class="mf">0.8</span><span class="p">,</span> <span class="n">num_perm</span><span class="o">=</span><span class="mi">128</span><span class="p">,</span>
+    <span class="n">num_part</span><span class="o">=</span><span class="mi">32</span><span class="p">)</span>
 
 <span class="c1"># Index takes an iterable of (key, minhash, size)</span>
 <span class="n">lshensemble</span><span class="o">.</span><span class="n">index</span><span class="p">([(</span><span class="s2">&quot;m2&quot;</span><span class="p">,</span> <span class="n">m2</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">set2</span><span class="p">)),</span> <span class="p">(</span><span class="s2">&quot;m3&quot;</span><span class="p">,</span> <span class="n">m3</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">set3</span><span class="p">))])</span>
@@ -175,15 +178,16 @@ The full implementation is in <a class="reference external" href="https://golang
     <span class="nb">print</span><span class="p">(</span><span class="n">key</span><span class="p">)</span>
 </pre></div>
 </div>
-<p>The accuracy of LSH Ensemble increases as the number of permutation functions increases,
-and the query performance decreases with more permutation functions, as the plot below shows.
+<p>The precision of LSH Ensemble increases with the number of partitions,
+so does the querying time, as the plot below shows.
 The experiment code can be found in the <cite>benchmark</cite> directory
-of the source code repository.</p>
-<div class="figure">
-<img alt="MinHashLSHEnsemble Benchmark" src="_images/lshensemble_benchmark.png" />
-</div>
-<p>There are other optional parameters that can be used to tune the index to achieve better accuracy or performance.
+of the source code repository.
+There are other optional parameters that can be used to tune the index to achieve better accuracy or performance.
 See the documentation of <a class="reference internal" href="documentation.html#datasketch.MinHashLSHEnsemble" title="datasketch.MinHashLSHEnsemble"><code class="xref py py-class docutils literal notranslate"><span class="pre">datasketch.MinHashLSHEnsemble</span></code></a> for details.</p>
+<a class="reference internal image-reference" href="_images/lshensemble_num_perm_256_precision.png"><img alt="MinHashLSHEnsemble Benchmark Precision" class="align-center" src="_images/lshensemble_num_perm_256_precision.png" style="width: 480.0px; height: 360.0px;" /></a>
+<a class="reference internal image-reference" href="_images/lshensemble_num_perm_256_recall.png"><img alt="MinHashLSHEnsemble Benchmark Recall" class="align-center" src="_images/lshensemble_num_perm_256_recall.png" style="width: 480.0px; height: 360.0px;" /></a>
+<a class="reference internal image-reference" href="_images/lshensemble_num_perm_256_fscore.png"><img alt="MinHashLSHEnsemble Benchmark F-Score" class="align-center" src="_images/lshensemble_num_perm_256_fscore.png" style="width: 480.0px; height: 360.0px;" /></a>
+<a class="reference internal image-reference" href="_images/lshensemble_num_perm_256_query_time.png"><img alt="MinHashLSHEnsemble Benchmark Query Time" class="align-center" src="_images/lshensemble_num_perm_256_query_time.png" style="width: 480.0px; height: 360.0px;" /></a>
 </div>
 </div>
 
@@ -198,8 +202,8 @@ See the documentation of <a class="reference internal" href="documentation.html#
       &copy;2018, Eric Zhu.
       
       |
-      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.8.1</a>
-      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.8.3</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.11</a>
       
       |
       <a href="_sources/lshensemble.rst.txt"
