@@ -89,14 +89,26 @@ class HyperLogLog(object):
         the `hashfunc` argument in the constructor.
 
         Args:
-            b (bytes): A value of type `bytes`.
+            b: The value to be hashed using the hash function specified.
 
         Example:
-            To update with a new string value:
+            To update with a new string value (using the default SHA1 hash
+            function, which requires bytes as input):
 
             .. code-block:: python
 
-                hyperloglog.update("new value".encode('utf-8'))
+                hll = HyperLogLog()
+                hll.update("new value".encode('utf-8'))
+
+            We can also use a different hash function, for example, `pyfarmhash`:
+
+            .. code-block:: python
+
+                import farmhash
+                def _hash_32(b):
+                    return farmhash.hash32(b)
+                hll = HyperLogLog(hashfunc=_hash_32)
+                hll.update("new value")
         '''
         # Digest the hash object to get the hash value
         hv = self.hashfunc(b)

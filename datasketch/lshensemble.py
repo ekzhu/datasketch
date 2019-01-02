@@ -97,8 +97,8 @@ class MinHashLSHEnsemble(object):
             raise ValueError("threshold must be in [0.0, 1.0]")
         if num_perm < 2:
             raise ValueError("Too few permutation functions")
-        if num_part < 2:
-            raise ValueError("num_part must be at least 2")
+        if num_part < 1:
+            raise ValueError("num_part must be at least 1")
         if m < 2 or m > num_perm:
             raise ValueError("m must be in the range of [2, num_perm]")
         if any(w < 0.0 or w > 1.0 for w in weights):
