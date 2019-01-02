@@ -103,14 +103,26 @@ class MinHash(object):
         the `hashfunc` argument in the constructor.
 
         Args:
-            b (bytes): The value of type `bytes`.
+            b: The value to be hashed using the hash function specified.
 
         Example:
-            To update with a new string value:
+            To update with a new string value (using the default SHA1 hash
+            function, which requires bytes as input):
 
             .. code-block:: python
 
+                minhash = Minhash()
                 minhash.update("new value".encode('utf-8'))
+
+            We can also use a different hash function, for example, `pyfarmhash`:
+
+            .. code-block:: python
+
+                import farmhash
+                def _hash_32(b):
+                    return farmhash.hash32(b)
+                minhash = MinHash(hashfunc=_hash_32)
+                minhash.update("new value")
         '''
         hv = self.hashfunc(b)
         a, b = self.permutations
@@ -191,7 +203,8 @@ class MinHash(object):
         '''
         :returns: datasketch.MinHash -- A copy of this MinHash by exporting its state.
         '''
-        return MinHash(seed=self.seed, hashvalues=self.digest(),
+        return MinHash(seed=self.seed, hashfunc=self.hashfunc,
+                hashvalues=self.digest(),
                 permutations=self.permutations)
 
     def __len__(self):

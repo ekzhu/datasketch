@@ -20,11 +20,17 @@ import os
 import pickle
 import pandas as pd
 from SetSimilaritySearch import SearchIndex
+import farmhash
 
 from datasketch import MinHashLSHEnsemble, MinHash
 
 
-def bootstrap_sets(sets_file, sample_ratio, num_perms, skip=1):
+def _hash_32(d):
+    return farmhash.hash32(d)
+
+
+def bootstrap_sets(sets_file, sample_ratio, num_perms, skip=1,
+        pad_for_asym=False):
     print("Creating sets...")
     sets = collections.deque([])
     random.seed(41)
@@ -42,19 +48,41 @@ def bootstrap_sets(sets_file, sample_ratio, num_perms, skip=1):
         sys.stdout.write("\n")
     sets = list(sets)
     keys = list(range(len(sets)))
+    # Generate paddings for asym.
+    max_size = max(len(s) for s in sets)
+    paddings = dict()
+    if pad_for_asym:
+        padding_sizes = sorted(list(set([max_size-len(s) for s in sets])))
+        for num_perm in num_perms:
+            paddings[num_perm] = dict()
+            for i, padding_size in enumerate(padding_sizes):
+                if i == 0:
+                    prev_size = 0
+                    pad = MinHash(num_perm, hashfunc=_hash_32)
+                else:
+                    prev_size = padding_sizes[i-1]
+                    pad = paddings[num_perm][prev_size].copy()
+                for w in range(prev_size, padding_size):
+                    pad.update(str(w)+"_tmZZRe8DE23s")
+                paddings[num_perm][padding_size] = pad
+    # Generate minhash
     print("Creating MinHash...")
     minhashes = dict()
     for num_perm in num_perms:
         print("Using num_parm = {}".format(num_perm))
         ms = []
         for s in sets:
-            m = MinHash(num_perm)
+            m = MinHash(num_perm, hashfunc=_hash_32)
             for word in s:
-                m.update(str(word).encode("utf8"))
+                m.update(str(word))
+            if pad_for_asym:
+                # Add padding to the minhash
+                m.merge(paddings[num_perm][max_size-len(s)])
             ms.append(m)
             sys.stdout.write("\rMinhashed {} sets".format(len(ms)))
         sys.stdout.write("\n")
         minhashes[num_perm] = ms
+
     return (minhashes, sets, keys)
 
 
@@ -64,25 +92,27 @@ def benchmark_lshensemble(threshold, num_perm, num_part, m, index_data,
     (minhashes, indexed_sets, keys) = index_data
     lsh = MinHashLSHEnsemble(threshold=threshold, num_perm=num_perm,
             num_part=num_part, m=m)
-    lsh.index((key, minhash, len(set))
-            for key, minhash, set in \
+    lsh.index((key, minhash, len(s))
+            for key, minhash, s in \
                     zip(keys, minhashes[num_perm], indexed_sets))
     print("Querying")
     (minhashes, sets, keys) = query_data
-    times = []
+    probe_times = []
+    process_times = []
     results = []
     for qs, minhash in zip(sets, minhashes[num_perm]):
+        # Record probing time
         start = time.perf_counter()
         result = list(lsh.query(minhash, len(qs)))
-        duration = time.perf_counter() - start
-        times.append(duration)
+        probe_times.append(time.perf_counter() - start)
+        # Record post processing time.
+        start = time.perf_counter()
+        [_compute_containment(qs, indexed_sets[key]) for key in result]
+        process_times.append(time.perf_counter() - start)
         results.append(result)
-        # results.append(sorted([[key, _compute_containment(qs, indexed_sets[key])]
-        #                        for key in result],
-        #                       key=lambda x : x[1], reverse=True))
         sys.stdout.write("\rQueried {} sets".format(len(results)))
     sys.stdout.write("\n")
-    return times, results
+    return results, probe_times, process_times
 
 
 def benchmark_ground_truth(threshold, index, query_data):
@@ -97,7 +127,7 @@ def benchmark_ground_truth(threshold, index, query_data):
         results.append(result)
         sys.stdout.write("\rQueried {} sets".format(len(results)))
     sys.stdout.write("\n")
-    return times, results
+    return results, times
 
 
 def _compute_containment(x, y):
@@ -122,10 +152,12 @@ if __name__ == "__main__":
     parser.add_argument("--ground-truth-results", type=str,
             default="lshensemble_benchmark_ground_truth_results.csv")
     parser.add_argument("--skip-ground-truth", action="store_true")
+    parser.add_argument("--use-asym-minhash", action="store_true")
     args = parser.parse_args(sys.argv[1:])
 
     thresholds = [0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0]
-    num_parts = [8, 16, 32]
+    #num_parts = [1, 8, 16, 32]
+    num_parts = [1,]
     #num_perms = [32, 64, 96, 128, 160, 192, 224, 256]
     num_perms = [256,]
     m = 8
@@ -139,7 +171,8 @@ if __name__ == "__main__":
             index_data = pickle.load(d)
     else:
         print("Using indexed sets {}".format(args.indexed_sets))
-        index_data = bootstrap_sets(args.indexed_sets, 0.1, num_perms)
+        index_data = bootstrap_sets(args.indexed_sets, 0.1, num_perms,
+                pad_for_asym=args.use_asym_minhash)
         with open(index_data_cache, "wb") as d:
             pickle.dump(index_data, d)
     if os.path.exists(query_data_cache):
@@ -161,7 +194,7 @@ if __name__ == "__main__":
         for threshold in thresholds:
             index.similarity_threshold = threshold
             print("Running ground truth benchmark threshold = {}".format(threshold))
-            ground_truth_times, ground_truth_results = \
+            ground_truth_results, ground_truth_times = \
                     benchmark_ground_truth(threshold, index, query_data)
             for t, r, query_set, query_key in zip(ground_truth_times,
                     ground_truth_results, query_data[1], query_data[2]):
@@ -179,14 +212,16 @@ if __name__ == "__main__":
                 print("Running LSH Ensemble benchmark "
                         "threshold = {}, num_part = {}, num_perm = {}".format(
                             threshold, num_part, num_perm))
-                lsh_times, lsh_results = benchmark_lshensemble(
+                results, probe_times, process_times = benchmark_lshensemble(
                         threshold, num_perm, num_part, m, index_data, query_data)
-                for t, r, query_set, query_key in zip(lsh_times, lsh_results,
+                for probe_time, process_time, result, query_set, query_key in zip(\
+                        probe_times, process_times, results, \
                         query_data[1], query_data[2]):
                     rows.append((query_key, len(query_set), threshold,
-                        num_part, num_perm, t, ",".join(str(k) for k in r)))
+                        num_part, num_perm, probe_time, process_time,
+                        ",".join(str(k) for k in result)))
     df = pd.DataFrame.from_records(rows,
         columns=["query_key", "query_size", "threshold", "num_part",
-            "num_perm", "query_time", "results"])
+            "num_perm", "probe_time", "process_time", "results"])
     df.to_csv(args.query_results)
 
