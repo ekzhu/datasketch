@@ -136,7 +136,7 @@ usage. Because using more permutation functions means</p>
 <p>The speed and memory usage of MinHash are both linearly
 proportional to the number of permutation functions used.</p>
 <div class="figure">
-<img alt="MinHash Benchmark" src="_images/minhash_benchmark.png" />
+<img alt="MinHash Benchmark" src="_images/minhash_benchmark_sha1.png" />
 </div>
 <p>You can union two MinHash object using the <code class="docutils literal notranslate"><span class="pre">merge</span></code> function. This
 makes MinHash useful in parallel MapReduce style data analysis.</p>
@@ -154,6 +154,38 @@ cardinality. The analysis is presented in <a class="reference external" href="ht
 </div>
 <p>If you are handling billions of MinHash objects, consider using
 <a class="reference internal" href="documentation.html#datasketch.LeanMinHash" title="datasketch.LeanMinHash"><code class="xref py py-class docutils literal notranslate"><span class="pre">datasketch.LeanMinHash</span></code></a> to reduce your memory footprint.</p>
+<p>MinHash by default uses the SHA1 hash funciton from Python’s built-in
+<a class="reference external" href="https://docs.python.org/3.7/library/hashlib.html">hashlib</a> library.
+You can also change the hash function using the <cite>hashfunc</cite> parameter
+in the constructor.</p>
+<div class="code python highlight-default notranslate"><div class="highlight"><pre><span></span><span class="c1"># Let&#39;s use MurmurHash3.</span>
+<span class="kn">import</span> <span class="nn">mmh3</span>
+
+<span class="c1"># We need to define a new hash function that outputs an integer that</span>
+<span class="c1"># can be encoded in 32 bits.</span>
+<span class="k">def</span> <span class="nf">_hash_func</span><span class="p">(</span><span class="n">d</span><span class="p">):</span>
+    <span class="k">return</span> <span class="n">mmh3</span><span class="o">.</span><span class="n">hash32</span><span class="p">(</span><span class="n">d</span><span class="p">)</span>
+
+<span class="c1"># Use this function in MinHash constructor.</span>
+<span class="n">m</span> <span class="o">=</span> <span class="n">MinHash</span><span class="p">(</span><span class="n">hashfunc</span><span class="o">=</span><span class="n">_hash_func</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Different hash functions have different performance-accuracy trade-off,
+you can use the benchmark code in <cite>benchmark/minhash_benchmark.py</cite> to
+run some tests. Here are the results for some popular hash functions
+available in Python.</p>
+<p>MurmurHash3: <a class="reference external" href="https://pypi.org/project/mmh3/">mmh3</a></p>
+<div class="figure">
+<img alt="MinHash Benchmark" src="_images/minhash_benchmark_mmh3.png" />
+</div>
+<p><a class="reference external" href="https://pypi.org/project/xxhash/">xxhash</a></p>
+<div class="figure">
+<img alt="MinHash Benchmark" src="_images/minhash_benchmark_xxh.png" />
+</div>
+<p><a class="reference external" href="https://pypi.org/project/pyfarmhash">Farmhash</a></p>
+<div class="figure">
+<img alt="MinHash Benchmark" src="_images/minhash_benchmark_farmhash.png" />
+</div>
 </div>
 
 
@@ -164,11 +196,11 @@ cardinality. The analysis is presented in <a class="reference external" href="ht
     <div class="clearer"></div>
   </div>
     <div class="footer">
-      &copy;2018, Eric Zhu.
+      &copy;2019, Eric Zhu.
       
       |
       Powered by <a href="http://sphinx-doc.org/">Sphinx 1.8.3</a>
-      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.11</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
       
       |
       <a href="_sources/minhash.rst.txt"

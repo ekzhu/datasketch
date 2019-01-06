@@ -50,7 +50,7 @@ usage. Because using more permutation functions means
 The speed and memory usage of MinHash are both linearly
 proportional to the number of permutation functions used.
 
-.. figure:: /_static/minhash_benchmark.png
+.. figure:: /_static/hashfunc/minhash_benchmark_sha1.png
    :alt: MinHash Benchmark
 
 You can union two MinHash object using the ``merge`` function. This
@@ -73,4 +73,42 @@ cardinality. The analysis is presented in `Cohen
 
 If you are handling billions of MinHash objects, consider using 
 :class:`datasketch.LeanMinHash` to reduce your memory footprint.
+
+MinHash by default uses the SHA1 hash funciton from Python's built-in 
+`hashlib <https://docs.python.org/3.7/library/hashlib.html>`__ library.
+You can also change the hash function using the `hashfunc` parameter
+in the constructor.
+
+.. code:: python
+
+    # Let's use MurmurHash3.
+    import mmh3
+    
+    # We need to define a new hash function that outputs an integer that
+    # can be encoded in 32 bits.
+    def _hash_func(d):
+        return mmh3.hash32(d)
+
+    # Use this function in MinHash constructor.
+    m = MinHash(hashfunc=_hash_func)
+
+Different hash functions have different performance-accuracy trade-off,
+you can use the benchmark code in `benchmark/minhash_benchmark.py` to 
+run some tests. Here are the results for some popular hash functions
+available in Python.
+
+MurmurHash3: `mmh3 <https://pypi.org/project/mmh3/>`__
+
+.. figure:: /_static/hashfunc/minhash_benchmark_mmh3.png
+   :alt: MinHash Benchmark
+
+`xxhash <https://pypi.org/project/xxhash/>`__
+
+.. figure:: /_static/hashfunc/minhash_benchmark_xxh.png
+   :alt: MinHash Benchmark
+
+`Farmhash <https://pypi.org/project/pyfarmhash>`__
+
+.. figure:: /_static/hashfunc/minhash_benchmark_farmhash.png
+   :alt: MinHash Benchmark
 

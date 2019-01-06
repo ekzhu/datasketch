@@ -89,7 +89,6 @@
             
   <h1>Source code for datasketch.hyperloglog</h1><div class="highlight"><pre>
 <span></span><span class="kn">import</span> <span class="nn">struct</span><span class="o">,</span> <span class="nn">copy</span>
-<span class="kn">from</span> <span class="nn">hashlib</span> <span class="k">import</span> <span class="n">sha1</span>
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
 <span class="k">try</span><span class="p">:</span>
     <span class="kn">from</span> <span class="nn">.hyperloglog_const</span> <span class="k">import</span> <span class="n">_thresholds</span><span class="p">,</span> <span class="n">_raw_estimate</span><span class="p">,</span> <span class="n">_bias</span>
@@ -97,6 +96,7 @@
     <span class="c1"># For Python 2</span>
     <span class="kn">from</span> <span class="nn">hyperloglog_const</span> <span class="k">import</span> <span class="n">_thresholds</span><span class="p">,</span> <span class="n">_raw_estimate</span><span class="p">,</span> <span class="n">_bias</span>
 
+<span class="kn">from</span> <span class="nn">datasketch.hashfunc</span> <span class="k">import</span> <span class="n">sha1_hash32</span><span class="p">,</span> <span class="n">sha1_hash64</span>
 
 <span class="c1"># Get the number of bits starting from the first non-zero bit to the right</span>
 <span class="n">_bit_length</span> <span class="o">=</span> <span class="k">lambda</span> <span class="n">bits</span> <span class="p">:</span> <span class="n">bits</span><span class="o">.</span><span class="n">bit_length</span><span class="p">()</span>
@@ -121,18 +121,19 @@
 <span class="sd">        reg (numpy.array, optional): The internal state.</span>
 <span class="sd">            This argument is for initializing the HyperLogLog from</span>
 <span class="sd">            an existing one.</span>
-<span class="sd">        hashobj (optional): The hash function used. </span>
-<span class="sd">            It must implements</span>
-<span class="sd">            the `digest()` method similar to hashlib_ hash functions, such</span>
-<span class="sd">            as `hashlib.sha1`.</span>
+<span class="sd">        hashfunc (optional): The hash function used by this MinHash.</span>
+<span class="sd">            It takes the input passed to the `update` method and</span>
+<span class="sd">            returns an integer that can be encoded with 32 bits.</span>
+<span class="sd">            The default hash function is based on SHA1 from hashlib_.</span>
+<span class="sd">        hashobj (**deprecated**): This argument is deprecated since version</span>
+<span class="sd">            1.4.0. It is a no-op and has been replaced by `hashfunc`.</span>
 <span class="sd">    &#39;&#39;&#39;</span>
 
-    <span class="vm">__slots__</span> <span class="o">=</span> <span class="p">(</span><span class="s1">&#39;p&#39;</span><span class="p">,</span> <span class="s1">&#39;m&#39;</span><span class="p">,</span> <span class="s1">&#39;reg&#39;</span><span class="p">,</span> <span class="s1">&#39;alpha&#39;</span><span class="p">,</span> <span class="s1">&#39;max_rank&#39;</span><span class="p">,</span> <span class="s1">&#39;hashobj&#39;</span><span class="p">)</span>
+    <span class="vm">__slots__</span> <span class="o">=</span> <span class="p">(</span><span class="s1">&#39;p&#39;</span><span class="p">,</span> <span class="s1">&#39;m&#39;</span><span class="p">,</span> <span class="s1">&#39;reg&#39;</span><span class="p">,</span> <span class="s1">&#39;alpha&#39;</span><span class="p">,</span> <span class="s1">&#39;max_rank&#39;</span><span class="p">,</span> <span class="s1">&#39;hashfunc&#39;</span><span class="p">)</span>
 
     <span class="c1"># The range of the hash values used for HyperLogLog</span>
     <span class="n">_hash_range_bit</span> <span class="o">=</span> <span class="mi">32</span>
     <span class="n">_hash_range_byte</span> <span class="o">=</span> <span class="mi">4</span>
-    <span class="n">_struct_fmt_str</span> <span class="o">=</span> <span class="s1">&#39;&lt;I&#39;</span>
 
     <span class="k">def</span> <span class="nf">_get_alpha</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">p</span><span class="p">):</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="p">(</span><span class="mi">4</span> <span class="o">&lt;=</span> <span class="n">p</span> <span class="o">&lt;=</span> <span class="mi">16</span><span class="p">):</span>
@@ -145,7 +146,7 @@
             <span class="k">return</span> <span class="mf">0.709</span>
         <span class="k">return</span> <span class="mf">0.7213</span> <span class="o">/</span> <span class="p">(</span><span class="mf">1.0</span> <span class="o">+</span> <span class="mf">1.079</span> <span class="o">/</span> <span class="p">(</span><span class="mi">1</span> <span class="o">&lt;&lt;</span> <span class="n">p</span><span class="p">))</span>
 
-<div class="viewcode-block" id="HyperLogLog.__init__"><a class="viewcode-back" href="../../documentation.html#datasketch.HyperLogLog.__init__">[docs]</a>    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">p</span><span class="o">=</span><span class="mi">8</span><span class="p">,</span> <span class="n">reg</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">hashobj</span><span class="o">=</span><span class="n">sha1</span><span class="p">):</span>
+<div class="viewcode-block" id="HyperLogLog.__init__"><a class="viewcode-back" href="../../documentation.html#datasketch.HyperLogLog.__init__">[docs]</a>    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">p</span><span class="o">=</span><span class="mi">8</span><span class="p">,</span> <span class="n">reg</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">hashfunc</span><span class="o">=</span><span class="n">sha1_hash32</span><span class="p">,</span> <span class="n">hashobj</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
         <span class="k">if</span> <span class="n">reg</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">p</span> <span class="o">=</span> <span class="n">p</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">m</span> <span class="o">=</span> <span class="mi">1</span> <span class="o">&lt;&lt;</span> <span class="n">p</span>
@@ -163,28 +164,48 @@
             <span class="c1"># Generally we trust the user to import register that contains</span>
             <span class="c1"># reasonable counter values, so we don&#39;t check for every values.</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">reg</span> <span class="o">=</span> <span class="n">reg</span>
+        <span class="c1"># Check the hash function.</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">callable</span><span class="p">(</span><span class="n">hashfunc</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;The hashfunc must be a callable.&quot;</span><span class="p">)</span>
+        <span class="c1"># Check for use of hashobj and issue warning.</span>
+        <span class="k">if</span> <span class="n">hashobj</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span><span class="s2">&quot;hashobj is deprecated, use hashfunc instead.&quot;</span><span class="p">,</span>
+                    <span class="ne">DeprecationWarning</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">hashfunc</span> <span class="o">=</span> <span class="n">hashfunc</span>
         <span class="c1"># Common settings</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">hashobj</span> <span class="o">=</span> <span class="n">hashobj</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">alpha</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_alpha</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">p</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">max_rank</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_hash_range_bit</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">p</span></div>
 
 <div class="viewcode-block" id="HyperLogLog.update"><a class="viewcode-back" href="../../documentation.html#datasketch.HyperLogLog.update">[docs]</a>    <span class="k">def</span> <span class="nf">update</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">b</span><span class="p">):</span>
         <span class="sd">&#39;&#39;&#39;</span>
 <span class="sd">        Update the HyperLogLog with a new data value in bytes.</span>
+<span class="sd">        The value will be hashed using the hash function specified by</span>
+<span class="sd">        the `hashfunc` argument in the constructor.</span>
 
 <span class="sd">        Args:</span>
-<span class="sd">            b (bytes): A value of type `bytes`.</span>
+<span class="sd">            b: The value to be hashed using the hash function specified.</span>
 
 <span class="sd">        Example:</span>
-<span class="sd">            To update with a new string value:</span>
+<span class="sd">            To update with a new string value (using the default SHA1 hash</span>
+<span class="sd">            function, which requires bytes as input):</span>
 
 <span class="sd">            .. code-block:: python</span>
 
-<span class="sd">                hyperloglog.update(&quot;new value&quot;.encode(&#39;utf-8&#39;))</span>
+<span class="sd">                hll = HyperLogLog()</span>
+<span class="sd">                hll.update(&quot;new value&quot;.encode(&#39;utf-8&#39;))</span>
+
+<span class="sd">            We can also use a different hash function, for example, `pyfarmhash`:</span>
+
+<span class="sd">            .. code-block:: python</span>
+
+<span class="sd">                import farmhash</span>
+<span class="sd">                def _hash_32(b):</span>
+<span class="sd">                    return farmhash.hash32(b)</span>
+<span class="sd">                hll = HyperLogLog(hashfunc=_hash_32)</span>
+<span class="sd">                hll.update(&quot;new value&quot;)</span>
 <span class="sd">        &#39;&#39;&#39;</span>
         <span class="c1"># Digest the hash object to get the hash value</span>
-        <span class="n">hv</span> <span class="o">=</span> <span class="n">struct</span><span class="o">.</span><span class="n">unpack</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_struct_fmt_str</span><span class="p">,</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">hashobj</span><span class="p">(</span><span class="n">b</span><span class="p">)</span><span class="o">.</span><span class="n">digest</span><span class="p">()[:</span><span class="bp">self</span><span class="o">.</span><span class="n">_hash_range_byte</span><span class="p">])[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">hv</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">hashfunc</span><span class="p">(</span><span class="n">b</span><span class="p">)</span>
         <span class="c1"># Get the index of the register using the first p bits of the hash</span>
         <span class="n">reg_index</span> <span class="o">=</span> <span class="n">hv</span> <span class="o">&amp;</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">m</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span>
         <span class="c1"># Get the rest of the hash</span>
@@ -259,7 +280,7 @@
 <div class="viewcode-block" id="HyperLogLog.__len__"><a class="viewcode-back" href="../../documentation.html#datasketch.HyperLogLog.__len__">[docs]</a>    <span class="k">def</span> <span class="nf">__len__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="sd">&#39;&#39;&#39;</span>
 <span class="sd">        Returns:</span>
-<span class="sd">            int: Get the size of the HyperLogLog as the size of </span>
+<span class="sd">            int: Get the size of the HyperLogLog as the size of</span>
 <span class="sd">                `reg`.</span>
 <span class="sd">        &#39;&#39;&#39;</span>
         <span class="k">return</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">reg</span><span class="p">)</span></div>
@@ -269,7 +290,7 @@
 <span class="sd">        Check equivalence between two HyperLogLogs</span>
 
 <span class="sd">        Args:</span>
-<span class="sd">            other (datasketch.HyperLogLog): </span>
+<span class="sd">            other (datasketch.HyperLogLog):</span>
 
 <span class="sd">        Returns:</span>
 <span class="sd">            bool: True if both have the same internal state.</span>
@@ -372,13 +393,27 @@
 <span class="sd">    2. A new small-cardinality estimation scheme</span>
 <span class="sd">    3. Sparse representation (not implemented here)</span>
 
-<span class="sd">    This class has the same set of methods as </span>
-<span class="sd">    :class:`datasketch.HyperLogLog`.</span>
+<span class="sd">    Args:</span>
+<span class="sd">        p (int, optional): The precision parameter. It is ignored if</span>
+<span class="sd">            the `reg` is given.</span>
+<span class="sd">        reg (numpy.array, optional): The internal state.</span>
+<span class="sd">            This argument is for initializing the HyperLogLog from</span>
+<span class="sd">            an existing one.</span>
+<span class="sd">        hashfunc (optional): The hash function used by this MinHash.</span>
+<span class="sd">            It takes the input passed to the `update` method and</span>
+<span class="sd">            returns an integer that can be encoded with 64 bits.</span>
+<span class="sd">            The default hash function is based on SHA1 from hashlib_.</span>
+<span class="sd">        hashobj (**deprecated**): This argument is deprecated since version</span>
+<span class="sd">            1.4.0. It is a no-op and has been replaced by `hashfunc`.</span>
 <span class="sd">    &#39;&#39;&#39;</span>
 
     <span class="n">_hash_range_bit</span> <span class="o">=</span> <span class="mi">64</span>
     <span class="n">_hash_range_byte</span> <span class="o">=</span> <span class="mi">8</span>
-    <span class="n">_struct_fmt_str</span> <span class="o">=</span> <span class="s1">&#39;&lt;Q&#39;</span>
+
+<div class="viewcode-block" id="HyperLogLogPlusPlus.__init__"><a class="viewcode-back" href="../../documentation.html#datasketch.HyperLogLogPlusPlus.__init__">[docs]</a>    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">p</span><span class="o">=</span><span class="mi">8</span><span class="p">,</span> <span class="n">reg</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">hashfunc</span><span class="o">=</span><span class="n">sha1_hash64</span><span class="p">,</span>
+            <span class="n">hashobj</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">HyperLogLogPlusPlus</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">p</span><span class="o">=</span><span class="n">p</span><span class="p">,</span> <span class="n">reg</span><span class="o">=</span><span class="n">reg</span><span class="p">,</span>
+                <span class="n">hashfunc</span><span class="o">=</span><span class="n">hashfunc</span><span class="p">,</span> <span class="n">hashobj</span><span class="o">=</span><span class="n">hashobj</span><span class="p">)</span></div>
 
     <span class="k">def</span> <span class="nf">_get_threshold</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">p</span><span class="p">):</span>
         <span class="k">return</span> <span class="n">_thresholds</span><span class="p">[</span><span class="n">p</span> <span class="o">-</span> <span class="mi">4</span><span class="p">]</span>
@@ -411,11 +446,11 @@
     <div class="clearer"></div>
   </div>
     <div class="footer">
-      &copy;2018, Eric Zhu.
+      &copy;2019, Eric Zhu.
       
       |
       Powered by <a href="http://sphinx-doc.org/">Sphinx 1.8.3</a>
-      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.11</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
       
     </div>
 

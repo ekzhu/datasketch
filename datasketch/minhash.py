@@ -1,4 +1,5 @@
 import random, copy, struct
+import warnings
 import numpy as np
 
 from datasketch.hashfunc import sha1_hash32
@@ -72,6 +73,10 @@ class MinHash(object):
         if not callable(hashfunc):
             raise ValueError("The hashfunc must be a callable.")
         self.hashfunc = hashfunc
+        # Check for use of hashobj and issue warning.
+        if hashobj is not None:
+            warnings.warn("hashobj is deprecated, use hashfunc instead.",
+                    DeprecationWarning)
         # Initialize hash values
         if hashvalues is not None:
             self.hashvalues = self._parse_hashvalues(hashvalues)

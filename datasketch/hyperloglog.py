@@ -77,6 +77,10 @@ class HyperLogLog(object):
         # Check the hash function.
         if not callable(hashfunc):
             raise ValueError("The hashfunc must be a callable.")
+        # Check for use of hashobj and issue warning.
+        if hashobj is not None:
+            warnings.warn("hashobj is deprecated, use hashfunc instead.",
+                    DeprecationWarning)
         self.hashfunc = hashfunc
         # Common settings
         self.alpha = self._get_alpha(self.p)
