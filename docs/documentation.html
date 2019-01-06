@@ -106,7 +106,7 @@
 <h2>MinHash<a class="headerlink" href="#minhash" title="Permalink to this headline">¶</a></h2>
 <dl class="class">
 <dt id="datasketch.MinHash">
-<em class="property">class </em><code class="descclassname">datasketch.</code><code class="descname">MinHash</code><span class="sig-paren">(</span><em>num_perm=128</em>, <em>seed=1</em>, <em>hashobj=&lt;built-in function openssl_sha1&gt;</em>, <em>hashvalues=None</em>, <em>permutations=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/datasketch/minhash.html#MinHash"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#datasketch.MinHash" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="descclassname">datasketch.</code><code class="descname">MinHash</code><span class="sig-paren">(</span><em>num_perm=128</em>, <em>seed=1</em>, <em>hashfunc=&lt;function sha1_hash32&gt;</em>, <em>hashobj=None</em>, <em>hashvalues=None</em>, <em>permutations=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/datasketch/minhash.html#MinHash"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#datasketch.MinHash" title="Permalink to this definition">¶</a></dt>
 <dd><p>MinHash is a probabilistic data structure for computing
 <a class="reference external" href="https://en.wikipedia.org/wiki/Jaccard_index">Jaccard similarity</a> between sets.</p>
 <table class="docutils field-list" frame="void" rules="none">
@@ -118,10 +118,12 @@
 It will be ignored if <cite>hashvalues</cite> is not None.</li>
 <li><strong>seed</strong> (<em>int</em><em>, </em><em>optional</em>) – The random seed controls the set of random
 permutation functions generated for this MinHash.</li>
-<li><strong>hashobj</strong> (<em>optional</em>) – The hash function used by this MinHash.
-It must implements
-the <cite>digest()</cite> method similar to <a class="reference external" href="https://docs.python.org/3.5/library/hashlib.html">hashlib</a> hash functions, such
-as <cite>hashlib.sha1</cite>.</li>
+<li><strong>hashfunc</strong> (<em>optional</em>) – The hash function used by this MinHash.
+It takes the input passed to the <cite>update</cite> method and
+returns an integer that can be encoded with 32 bits.
+The default hash function is based on SHA1 from <a class="reference external" href="https://docs.python.org/3.5/library/hashlib.html">hashlib</a>.</li>
+<li><strong>hashobj</strong> (<strong>deprecated</strong>) – This argument is deprecated since version
+1.4.0. It is a no-op and has been replaced by <cite>hashfunc</cite>.</li>
 <li><strong>hashvalues</strong> (<cite>numpy.array</cite> or <cite>list</cite>, optional) – The hash values is
 the internal state of the MinHash. It can be specified for faster
 initialization using the existing state from another MinHash.</li>
@@ -156,25 +158,37 @@ with those created after.</p>
 </div>
 <dl class="method">
 <dt id="datasketch.MinHash.__init__">
-<code class="descname">__init__</code><span class="sig-paren">(</span><em>num_perm=128</em>, <em>seed=1</em>, <em>hashobj=&lt;built-in function openssl_sha1&gt;</em>, <em>hashvalues=None</em>, <em>permutations=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/datasketch/minhash.html#MinHash.__init__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#datasketch.MinHash.__init__" title="Permalink to this definition">¶</a></dt>
+<code class="descname">__init__</code><span class="sig-paren">(</span><em>num_perm=128</em>, <em>seed=1</em>, <em>hashfunc=&lt;function sha1_hash32&gt;</em>, <em>hashobj=None</em>, <em>hashvalues=None</em>, <em>permutations=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/datasketch/minhash.html#MinHash.__init__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#datasketch.MinHash.__init__" title="Permalink to this definition">¶</a></dt>
 <dd><p>Initialize self.  See help(type(self)) for accurate signature.</p>
 </dd></dl>
 
 <dl class="method">
 <dt id="datasketch.MinHash.update">
 <code class="descname">update</code><span class="sig-paren">(</span><em>b</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/datasketch/minhash.html#MinHash.update"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#datasketch.MinHash.update" title="Permalink to this definition">¶</a></dt>
-<dd><p>Update this MinHash with a new value.</p>
+<dd><p>Update this MinHash with a new value.
+The value will be hashed using the hash function specified by
+the <cite>hashfunc</cite> argument in the constructor.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>b</strong> (<em>bytes</em>) – The value of type <cite>bytes</cite>.</td>
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>b</strong> – The value to be hashed using the hash function specified.</td>
 </tr>
 </tbody>
 </table>
 <p class="rubric">Example</p>
-<p>To update with a new string value:</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">minhash</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="s2">&quot;new value&quot;</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="s1">&#39;utf-8&#39;</span><span class="p">))</span>
+<p>To update with a new string value (using the default SHA1 hash
+function, which requires bytes as input):</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">minhash</span> <span class="o">=</span> <span class="n">Minhash</span><span class="p">()</span>
+<span class="n">minhash</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="s2">&quot;new value&quot;</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="s1">&#39;utf-8&#39;</span><span class="p">))</span>
+</pre></div>
+</div>
+<p>We can also use a different hash function, for example, <cite>pyfarmhash</cite>:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">farmhash</span>
+<span class="k">def</span> <span class="nf">_hash_32</span><span class="p">(</span><span class="n">b</span><span class="p">):</span>
+    <span class="k">return</span> <span class="n">farmhash</span><span class="o">.</span><span class="n">hash32</span><span class="p">(</span><span class="n">b</span><span class="p">)</span>
+<span class="n">minhash</span> <span class="o">=</span> <span class="n">MinHash</span><span class="p">(</span><span class="n">hashfunc</span><span class="o">=</span><span class="n">_hash_32</span><span class="p">)</span>
+<span class="n">minhash</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="s2">&quot;new value&quot;</span><span class="p">)</span>
 </pre></div>
 </div>
 </dd></dl>
@@ -349,7 +363,7 @@ but must be at least 2.</td>
 and faster deserialization, but with its internal state frozen
 – no <cite>update()</cite>.</p>
 <p>Lean MinHash inherits all methods from <a class="reference internal" href="#datasketch.MinHash" title="datasketch.MinHash"><code class="xref py py-class docutils literal notranslate"><span class="pre">datasketch.MinHash</span></code></a>.
-It does not store the <cite>permutations</cite> and the <cite>hashobj</cite> needed for updating.
+It does not store the <cite>permutations</cite> and the <cite>hashfunc</cite> needed for updating.
 If a MinHash does not need further updates, convert it into a lean MinHash
 to save memory.</p>
 <p class="rubric">Example</p>
@@ -1362,7 +1376,7 @@ the query set greater than the threshold.</p>
 <h2>HyperLogLog<a class="headerlink" href="#hyperloglog" title="Permalink to this headline">¶</a></h2>
 <dl class="class">
 <dt id="datasketch.HyperLogLog">
-<em class="property">class </em><code class="descclassname">datasketch.</code><code class="descname">HyperLogLog</code><span class="sig-paren">(</span><em>p=8</em>, <em>reg=None</em>, <em>hashobj=&lt;built-in function openssl_sha1&gt;</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/datasketch/hyperloglog.html#HyperLogLog"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#datasketch.HyperLogLog" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="descclassname">datasketch.</code><code class="descname">HyperLogLog</code><span class="sig-paren">(</span><em>p=8</em>, <em>reg=None</em>, <em>hashfunc=&lt;function sha1_hash32&gt;</em>, <em>hashobj=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/datasketch/hyperloglog.html#HyperLogLog"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#datasketch.HyperLogLog" title="Permalink to this definition">¶</a></dt>
 <dd><p>The HyperLogLog data sketch for estimating
 cardinality of very large dataset in a single pass.
 The original HyperLogLog is described <a class="reference external" href="http://algo.inria.fr/flajolet/Publications/FlFuGaMe07.pdf">here</a>.</p>
@@ -1378,10 +1392,12 @@ the <cite>reg</cite> is given.</li>
 <li><strong>reg</strong> (<em>numpy.array</em><em>, </em><em>optional</em>) – The internal state.
 This argument is for initializing the HyperLogLog from
 an existing one.</li>
-<li><strong>hashobj</strong> (<em>optional</em>) – The hash function used.
-It must implements
-the <cite>digest()</cite> method similar to <a class="reference external" href="https://docs.python.org/3.5/library/hashlib.html">hashlib</a> hash functions, such
-as <cite>hashlib.sha1</cite>.</li>
+<li><strong>hashfunc</strong> (<em>optional</em>) – The hash function used by this MinHash.
+It takes the input passed to the <cite>update</cite> method and
+returns an integer that can be encoded with 32 bits.
+The default hash function is based on SHA1 from <a class="reference external" href="https://docs.python.org/3.5/library/hashlib.html">hashlib</a>.</li>
+<li><strong>hashobj</strong> (<strong>deprecated</strong>) – This argument is deprecated since version
+1.4.0. It is a no-op and has been replaced by <cite>hashfunc</cite>.</li>
 </ul>
 </td>
 </tr>
@@ -1389,25 +1405,37 @@ as <cite>hashlib.sha1</cite>.</li>
 </table>
 <dl class="method">
 <dt id="datasketch.HyperLogLog.__init__">
-<code class="descname">__init__</code><span class="sig-paren">(</span><em>p=8</em>, <em>reg=None</em>, <em>hashobj=&lt;built-in function openssl_sha1&gt;</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/datasketch/hyperloglog.html#HyperLogLog.__init__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#datasketch.HyperLogLog.__init__" title="Permalink to this definition">¶</a></dt>
+<code class="descname">__init__</code><span class="sig-paren">(</span><em>p=8</em>, <em>reg=None</em>, <em>hashfunc=&lt;function sha1_hash32&gt;</em>, <em>hashobj=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/datasketch/hyperloglog.html#HyperLogLog.__init__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#datasketch.HyperLogLog.__init__" title="Permalink to this definition">¶</a></dt>
 <dd><p>Initialize self.  See help(type(self)) for accurate signature.</p>
 </dd></dl>
 
 <dl class="method">
 <dt id="datasketch.HyperLogLog.update">
 <code class="descname">update</code><span class="sig-paren">(</span><em>b</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/datasketch/hyperloglog.html#HyperLogLog.update"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#datasketch.HyperLogLog.update" title="Permalink to this definition">¶</a></dt>
-<dd><p>Update the HyperLogLog with a new data value in bytes.</p>
+<dd><p>Update the HyperLogLog with a new data value in bytes.
+The value will be hashed using the hash function specified by
+the <cite>hashfunc</cite> argument in the constructor.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>b</strong> (<em>bytes</em>) – A value of type <cite>bytes</cite>.</td>
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>b</strong> – The value to be hashed using the hash function specified.</td>
 </tr>
 </tbody>
 </table>
 <p class="rubric">Example</p>
-<p>To update with a new string value:</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">hyperloglog</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="s2">&quot;new value&quot;</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="s1">&#39;utf-8&#39;</span><span class="p">))</span>
+<p>To update with a new string value (using the default SHA1 hash
+function, which requires bytes as input):</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">hll</span> <span class="o">=</span> <span class="n">HyperLogLog</span><span class="p">()</span>
+<span class="n">hll</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="s2">&quot;new value&quot;</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="s1">&#39;utf-8&#39;</span><span class="p">))</span>
+</pre></div>
+</div>
+<p>We can also use a different hash function, for example, <cite>pyfarmhash</cite>:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">farmhash</span>
+<span class="k">def</span> <span class="nf">_hash_32</span><span class="p">(</span><span class="n">b</span><span class="p">):</span>
+    <span class="k">return</span> <span class="n">farmhash</span><span class="o">.</span><span class="n">hash32</span><span class="p">(</span><span class="n">b</span><span class="p">)</span>
+<span class="n">hll</span> <span class="o">=</span> <span class="n">HyperLogLog</span><span class="p">(</span><span class="n">hashfunc</span><span class="o">=</span><span class="n">_hash_32</span><span class="p">)</span>
+<span class="n">hll</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="s2">&quot;new value&quot;</span><span class="p">)</span>
 </pre></div>
 </div>
 </dd></dl>
@@ -1540,7 +1568,7 @@ initialized.</td>
 <h2>HyperLogLog++<a class="headerlink" href="#id3" title="Permalink to this headline">¶</a></h2>
 <dl class="class">
 <dt id="datasketch.HyperLogLogPlusPlus">
-<em class="property">class </em><code class="descclassname">datasketch.</code><code class="descname">HyperLogLogPlusPlus</code><span class="sig-paren">(</span><em>p=8</em>, <em>reg=None</em>, <em>hashobj=&lt;built-in function openssl_sha1&gt;</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/datasketch/hyperloglog.html#HyperLogLogPlusPlus"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#datasketch.HyperLogLogPlusPlus" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="descclassname">datasketch.</code><code class="descname">HyperLogLogPlusPlus</code><span class="sig-paren">(</span><em>p=8</em>, <em>reg=None</em>, <em>hashfunc=&lt;function sha1_hash64&gt;</em>, <em>hashobj=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/datasketch/hyperloglog.html#HyperLogLogPlusPlus"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#datasketch.HyperLogLogPlusPlus" title="Permalink to this definition">¶</a></dt>
 <dd><p>HyperLogLog++ is an enhanced HyperLogLog <a class="reference external" href="http://research.google.com/pubs/pub40671.html">from Google</a>.
 Main changes from the original HyperLogLog:</p>
 <ol class="arabic simple">
@@ -1548,8 +1576,33 @@ Main changes from the original HyperLogLog:</p>
 <li>A new small-cardinality estimation scheme</li>
 <li>Sparse representation (not implemented here)</li>
 </ol>
-<p>This class has the same set of methods as
-<a class="reference internal" href="#datasketch.HyperLogLog" title="datasketch.HyperLogLog"><code class="xref py py-class docutils literal notranslate"><span class="pre">datasketch.HyperLogLog</span></code></a>.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>p</strong> (<em>int</em><em>, </em><em>optional</em>) – The precision parameter. It is ignored if
+the <cite>reg</cite> is given.</li>
+<li><strong>reg</strong> (<em>numpy.array</em><em>, </em><em>optional</em>) – The internal state.
+This argument is for initializing the HyperLogLog from
+an existing one.</li>
+<li><strong>hashfunc</strong> (<em>optional</em>) – The hash function used by this MinHash.
+It takes the input passed to the <cite>update</cite> method and
+returns an integer that can be encoded with 64 bits.
+The default hash function is based on SHA1 from <a class="reference external" href="https://docs.python.org/3.5/library/hashlib.html">hashlib</a>.</li>
+<li><strong>hashobj</strong> (<strong>deprecated</strong>) – This argument is deprecated since version
+1.4.0. It is a no-op and has been replaced by <cite>hashfunc</cite>.</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+<dl class="method">
+<dt id="datasketch.HyperLogLogPlusPlus.__init__">
+<code class="descname">__init__</code><span class="sig-paren">(</span><em>p=8</em>, <em>reg=None</em>, <em>hashfunc=&lt;function sha1_hash64&gt;</em>, <em>hashobj=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/datasketch/hyperloglog.html#HyperLogLogPlusPlus.__init__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#datasketch.HyperLogLogPlusPlus.__init__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Initialize self.  See help(type(self)) for accurate signature.</p>
+</dd></dl>
+
 <dl class="attribute">
 <dt id="datasketch.HyperLogLogPlusPlus.__weakref__">
 <code class="descname">__weakref__</code><a class="headerlink" href="#datasketch.HyperLogLogPlusPlus.__weakref__" title="Permalink to this definition">¶</a></dt>
@@ -1585,11 +1638,11 @@ Main changes from the original HyperLogLog:</p>
     <div class="clearer"></div>
   </div>
     <div class="footer">
-      &copy;2018, Eric Zhu.
+      &copy;2019, Eric Zhu.
       
       |
       Powered by <a href="http://sphinx-doc.org/">Sphinx 1.8.3</a>
-      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.11</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
       
       |
       <a href="_sources/documentation.rst.txt"

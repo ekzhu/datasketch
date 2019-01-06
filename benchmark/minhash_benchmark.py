@@ -3,7 +3,6 @@ Benchmarking the performance and accuracy of MinHash.
 '''
 import time, logging
 from numpy import random
-from hashlib import sha1
 import matplotlib
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt

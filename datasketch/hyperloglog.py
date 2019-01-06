@@ -1,5 +1,4 @@
 import struct, copy
-from hashlib import sha1
 import numpy as np
 try:
     from .hyperloglog_const import _thresholds, _raw_estimate, _bias
@@ -7,6 +6,7 @@ except ImportError:
     # For Python 2
     from hyperloglog_const import _thresholds, _raw_estimate, _bias
 
+from datasketch.hashfunc import sha1_hash32, sha1_hash64
 
 # Get the number of bits starting from the first non-zero bit to the right
 _bit_length = lambda bits : bits.bit_length()
@@ -31,18 +31,19 @@ class HyperLogLog(object):
         reg (numpy.array, optional): The internal state.
             This argument is for initializing the HyperLogLog from
             an existing one.
-        hashobj (optional): The hash function used. 
-            It must implements
-            the `digest()` method similar to hashlib_ hash functions, such
-            as `hashlib.sha1`.
+        hashfunc (optional): The hash function used by this MinHash.
+            It takes the input passed to the `update` method and
+            returns an integer that can be encoded with 32 bits.
+            The default hash function is based on SHA1 from hashlib_.
+        hashobj (**deprecated**): This argument is deprecated since version
+            1.4.0. It is a no-op and has been replaced by `hashfunc`.
     '''
 
-    __slots__ = ('p', 'm', 'reg', 'alpha', 'max_rank', 'hashobj')
+    __slots__ = ('p', 'm', 'reg', 'alpha', 'max_rank', 'hashfunc')
 
     # The range of the hash values used for HyperLogLog
     _hash_range_bit = 32
     _hash_range_byte = 4
-    _struct_fmt_str = '<I'
 
     def _get_alpha(self, p):
         if not (4 <= p <= 16):
@@ -55,7 +56,7 @@ class HyperLogLog(object):
             return 0.709
         return 0.7213 / (1.0 + 1.079 / (1 << p))
 
-    def __init__(self, p=8, reg=None, hashobj=sha1):
+    def __init__(self, p=8, reg=None, hashfunc=sha1_hash32, hashobj=None):
         if reg is None:
             self.p = p
             self.m = 1 << p
@@ -73,28 +74,48 @@ class HyperLogLog(object):
             # Generally we trust the user to import register that contains
             # reasonable counter values, so we don't check for every values.
             self.reg = reg
+        # Check the hash function.
+        if not callable(hashfunc):
+            raise ValueError("The hashfunc must be a callable.")
+        # Check for use of hashobj and issue warning.
+        if hashobj is not None:
+            warnings.warn("hashobj is deprecated, use hashfunc instead.",
+                    DeprecationWarning)
+        self.hashfunc = hashfunc
         # Common settings
-        self.hashobj = hashobj
         self.alpha = self._get_alpha(self.p)
         self.max_rank = self._hash_range_bit - self.p
 
     def update(self, b):
         '''
         Update the HyperLogLog with a new data value in bytes.
+        The value will be hashed using the hash function specified by
+        the `hashfunc` argument in the constructor.
 
         Args:
-            b (bytes): A value of type `bytes`.
+            b: The value to be hashed using the hash function specified.
 
         Example:
-            To update with a new string value:
+            To update with a new string value (using the default SHA1 hash
+            function, which requires bytes as input):
 
             .. code-block:: python
 
-                hyperloglog.update("new value".encode('utf-8'))
+                hll = HyperLogLog()
+                hll.update("new value".encode('utf-8'))
+
+            We can also use a different hash function, for example, `pyfarmhash`:
+
+            .. code-block:: python
+
+                import farmhash
+                def _hash_32(b):
+                    return farmhash.hash32(b)
+                hll = HyperLogLog(hashfunc=_hash_32)
+                hll.update("new value")
         '''
         # Digest the hash object to get the hash value
-        hv = struct.unpack(self._struct_fmt_str,
-                self.hashobj(b).digest()[:self._hash_range_byte])[0]
+        hv = self.hashfunc(b)
         # Get the index of the register using the first p bits of the hash
         reg_index = hv & (self.m - 1)
         # Get the rest of the hash
@@ -169,7 +190,7 @@ class HyperLogLog(object):
     def __len__(self):
         '''
         Returns:
-            int: Get the size of the HyperLogLog as the size of 
+            int: Get the size of the HyperLogLog as the size of
                 `reg`.
         '''
         return len(self.reg)
@@ -179,7 +200,7 @@ class HyperLogLog(object):
         Check equivalence between two HyperLogLogs
 
         Args:
-            other (datasketch.HyperLogLog): 
+            other (datasketch.HyperLogLog):
 
         Returns:
             bool: True if both have the same internal state.
@@ -282,13 +303,27 @@ class HyperLogLogPlusPlus(HyperLogLog):
     2. A new small-cardinality estimation scheme
     3. Sparse representation (not implemented here)
 
-    This class has the same set of methods as 
-    :class:`datasketch.HyperLogLog`.
+    Args:
+        p (int, optional): The precision parameter. It is ignored if
+            the `reg` is given.
+        reg (numpy.array, optional): The internal state.
+            This argument is for initializing the HyperLogLog from
+            an existing one.
+        hashfunc (optional): The hash function used by this MinHash.
+            It takes the input passed to the `update` method and
+            returns an integer that can be encoded with 64 bits.
+            The default hash function is based on SHA1 from hashlib_.
+        hashobj (**deprecated**): This argument is deprecated since version
+            1.4.0. It is a no-op and has been replaced by `hashfunc`.
     '''
 
     _hash_range_bit = 64
     _hash_range_byte = 8
-    _struct_fmt_str = '<Q'
+
+    def __init__(self, p=8, reg=None, hashfunc=sha1_hash64,
+            hashobj=None):
+        super(HyperLogLogPlusPlus, self).__init__(p=p, reg=reg,
+                hashfunc=hashfunc, hashobj=hashobj)
 
     def _get_threshold(self, p):
         return _thresholds[p - 4]

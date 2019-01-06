@@ -1,34 +1,17 @@
 import unittest
 import struct
 import pickle
-from hashlib import sha1
 import numpy as np
 from datasketch import minhash
 from datasketch.b_bit_minhash import bBitMinHash
-
-class FakeHash(object):
-    '''
-    Implmenets the hexdigest required by HyperLogLog.
-    '''
-
-    def __init__(self, h):
-        '''
-        Initialize with an integer
-        '''
-        self.h = h
-
-    def digest(self):
-        '''
-        Return the bytes representation of the integer
-        '''
-        return struct.pack('<Q', self.h)
+from test.utils import fake_hash_func
 
 
 class TestMinHash(unittest.TestCase):
 
     def test_init(self):
-        m1 = minhash.MinHash(4, 1, hashobj=FakeHash)
-        m2 = minhash.MinHash(4, 1, hashobj=FakeHash)
+        m1 = minhash.MinHash(4, 1, hashfunc=fake_hash_func)
+        m2 = minhash.MinHash(4, 1, hashfunc=fake_hash_func)
         self.assertTrue(np.array_equal(m1.hashvalues, m2.hashvalues))
         self.assertTrue(np.array_equal(m1.permutations, m2.permutations))
 
@@ -37,15 +20,15 @@ class TestMinHash(unittest.TestCase):
         self.assertTrue(m.is_empty())
 
     def test_update(self):
-        m1 = minhash.MinHash(4, 1, hashobj=FakeHash)
-        m2 = minhash.MinHash(4, 1, hashobj=FakeHash)
+        m1 = minhash.MinHash(4, 1, hashfunc=fake_hash_func)
+        m2 = minhash.MinHash(4, 1, hashfunc=fake_hash_func)
         m1.update(12)
         for i in range(4):
             self.assertTrue(m1.hashvalues[i] < m2.hashvalues[i])
 
     def test_jaccard(self):
-        m1 = minhash.MinHash(4, 1, hashobj=FakeHash)
-        m2 = minhash.MinHash(4, 1, hashobj=FakeHash)
+        m1 = minhash.MinHash(4, 1, hashfunc=fake_hash_func)
+        m2 = minhash.MinHash(4, 1, hashfunc=fake_hash_func)
         self.assertTrue(m1.jaccard(m2) == 1.0)
         m2.update(12)
         self.assertTrue(m1.jaccard(m2) == 0.0)
@@ -53,21 +36,21 @@ class TestMinHash(unittest.TestCase):
         self.assertTrue(m1.jaccard(m2) < 1.0)
 
     def test_merge(self):
-        m1 = minhash.MinHash(4, 1, hashobj=FakeHash)
-        m2 = minhash.MinHash(4, 1, hashobj=FakeHash)
+        m1 = minhash.MinHash(4, 1, hashfunc=fake_hash_func)
+        m2 = minhash.MinHash(4, 1, hashfunc=fake_hash_func)
         m2.update(12)
         m1.merge(m2)
         self.assertTrue(m1.jaccard(m2) == 1.0)
 
     def test_union(self):
-        m1 = minhash.MinHash(4, 1, hashobj=FakeHash)
-        m2 = minhash.MinHash(4, 1, hashobj=FakeHash)
+        m1 = minhash.MinHash(4, 1, hashfunc=fake_hash_func)
+        m2 = minhash.MinHash(4, 1, hashfunc=fake_hash_func)
         m2.update(12)
         u = minhash.MinHash.union(m1, m2)
         self.assertTrue(u.jaccard(m2) == 1.0)
 
     def test_pickle(self):
-        m = minhash.MinHash(4, 1, hashobj=FakeHash)
+        m = minhash.MinHash(4, 1, hashfunc=fake_hash_func)
         m.update(123)
         m.update(45)
         p = pickle.loads(pickle.dumps(m))
@@ -76,11 +59,11 @@ class TestMinHash(unittest.TestCase):
         self.assertTrue(np.array_equal(p.permutations, m.permutations))
 
     def test_eq(self):
-        m1 = minhash.MinHash(4, 1, hashobj=FakeHash)
-        m2 = minhash.MinHash(4, 1, hashobj=FakeHash)
-        m3 = minhash.MinHash(4, 2, hashobj=FakeHash)
-        m4 = minhash.MinHash(8, 1, hashobj=FakeHash)
-        m5 = minhash.MinHash(4, 1, hashobj=FakeHash)
+        m1 = minhash.MinHash(4, 1, hashfunc=fake_hash_func)
+        m2 = minhash.MinHash(4, 1, hashfunc=fake_hash_func)
+        m3 = minhash.MinHash(4, 2, hashfunc=fake_hash_func)
+        m4 = minhash.MinHash(8, 1, hashfunc=fake_hash_func)
+        m5 = minhash.MinHash(4, 1, hashfunc=fake_hash_func)
         m1.update(11)
         m2.update(12)
         m3.update(11)
@@ -96,7 +79,7 @@ class TestMinHash(unittest.TestCase):
         self.assertEqual(m1, m2)
 
     def test_count(self):
-        m = minhash.MinHash(hashobj=FakeHash)
+        m = minhash.MinHash(hashfunc=fake_hash_func)
         m.update(11)
         m.update(123)
         m.update(92)
@@ -117,7 +100,7 @@ class TestMinHash(unittest.TestCase):
 class TestbBitMinHash(unittest.TestCase):
 
     def setUp(self):
-        self.m = minhash.MinHash(hashobj=FakeHash)
+        self.m = minhash.MinHash(hashfunc=fake_hash_func)
         self.m.update(11)
         self.m.update(123)
         self.m.update(92)
@@ -138,11 +121,11 @@ class TestbBitMinHash(unittest.TestCase):
         bm = bBitMinHash(self.m, 32)
 
     def test_eq(self):
-        m1 = minhash.MinHash(4, 1, hashobj=FakeHash)
-        m2 = minhash.MinHash(4, 1, hashobj=FakeHash)
-        m3 = minhash.MinHash(4, 2, hashobj=FakeHash)
-        m4 = minhash.MinHash(8, 1, hashobj=FakeHash)
-        m5 = minhash.MinHash(4, 1, hashobj=FakeHash)
+        m1 = minhash.MinHash(4, 1, hashfunc=fake_hash_func)
+        m2 = minhash.MinHash(4, 1, hashfunc=fake_hash_func)
+        m3 = minhash.MinHash(4, 2, hashfunc=fake_hash_func)
+        m4 = minhash.MinHash(8, 1, hashfunc=fake_hash_func)
+        m5 = minhash.MinHash(4, 1, hashfunc=fake_hash_func)
         m1.update(11)
         m2.update(12)
         m3.update(11)
@@ -159,8 +142,8 @@ class TestbBitMinHash(unittest.TestCase):
         self.assertEqual(m1, m5)
 
     def test_jaccard(self):
-        m1 = minhash.MinHash(4, 1, hashobj=FakeHash)
-        m2 = minhash.MinHash(4, 1, hashobj=FakeHash)
+        m1 = minhash.MinHash(4, 1, hashfunc=fake_hash_func)
+        m2 = minhash.MinHash(4, 1, hashfunc=fake_hash_func)
         bm1 = bBitMinHash(m1)
         bm2 = bBitMinHash(m2)
         self.assertTrue(bm1.jaccard(bm2) == 1.0)
@@ -179,7 +162,7 @@ class TestbBitMinHash(unittest.TestCase):
 
     def test_pickle(self):
         for num_perm in [1 << i for i in range(4, 10)]:
-            m = minhash.MinHash(num_perm=num_perm, hashobj=FakeHash)
+            m = minhash.MinHash(num_perm=num_perm, hashfunc=fake_hash_func)
             m.update(11)
             m.update(123)
             m.update(92)

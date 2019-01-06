@@ -1,5 +1,4 @@
 import time, argparse, sys, json
-from hashlib import sha1
 import numpy as np
 import nltk
 import scipy.stats

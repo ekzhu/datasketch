@@ -2,7 +2,6 @@
 Benchmarking the performance and accuracy of WeightedMinHash.
 '''
 import time, logging, random
-from hashlib import sha1
 import matplotlib
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
@@ -14,7 +13,7 @@ logging.basicConfig(level=logging.INFO)
 def run_perf(dim, num_rep, sample_size):
     wmg = WeightedMinHashGenerator(dim, sample_size=sample_size)
     logging.info("WeightedMinHash using %d samples" % sample_size)
-    data = np.random.uniform(0, dim, (num_rep, dim)) 
+    data = np.random.uniform(0, dim, (num_rep, dim))
     durs = []
     for i in range(num_rep):
         start = time.clock()
@@ -33,8 +32,8 @@ def jaccard(v1, v2):
 def run_acc(dim, num_rep, sample_size):
     logging.info("WeightedMinHash using %d samples" % sample_size)
     wmg = WeightedMinHashGenerator(dim, sample_size=sample_size)
-    data1 = np.random.uniform(0, dim, (num_rep, dim)) 
-    data2 = np.random.uniform(0, dim, (num_rep, dim)) 
+    data1 = np.random.uniform(0, dim, (num_rep, dim))
+    data2 = np.random.uniform(0, dim, (num_rep, dim))
     errs = []
     for i in range(num_rep):
         wm1 = wmg.minhash(data1[i])
