@@ -232,6 +232,26 @@ To configure Asynchronous MongoDB storage that will connect to a `replica set <h
 .. code:: python
 
     _storage = {'type': 'aiomongo', 'mongo': {'replica_set': 'rs0', 'replica_set_nodes': 'node1:port1,node2:port2,node3:port3'}}
+
+If you want to pass additional params to the `Mongo client <http://api.mongodb.com/python/current/api/pymongo/mongo_client.html>` constructor, just put them in the ``mongo.args`` object in the storage config (example usage to configure X509 authentication):
+
+.. code:: python
+
+    _storage = {
+        'type': 'aiomongo',
+        'mongo':
+            {
+                ...,
+                'args': {
+                    'ssl': True,
+                    'ssl_ca_certs': 'root-ca.pem',
+                    'ssl_pem_passphrase': 'password',
+                    'ssl_certfile': 'certfile.pem',
+                    'authMechanism': "MONGODB-X509",
+                    'username': "username"
+                }
+            }
+    }
         
 To create index for a large number of MinHashes using asynchronous MinHash LSH.
 
