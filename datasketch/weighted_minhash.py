@@ -75,7 +75,7 @@ class WeightedMinHash(object):
             are equivalent.
         '''
         return self.seed == getattr(other, 'seed', object()) and \
-                np.array_equal(self.hashvalues, other.hashvalues)
+                np.array_equal(self.hashvalues, getattr(other, 'hashvalues', object()))
     
 
 class WeightedMinHashGenerator(object):
