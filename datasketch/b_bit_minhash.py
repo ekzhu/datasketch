@@ -47,9 +47,10 @@ class bBitMinHash(object):
         '''
         Check for full equality of two b-bit MinHash objects.
         '''
-        return self.seed == other.seed and self.b == other.b and \
-                self.r == other.r and \
-                np.array_equal(self.hashvalues, other.hashvalues)
+        return self.seed == getattr(other, 'seed', object()) and \
+               self.b == getattr(other, 'b', object()) and \
+               self.r == getattr(other, 'r', object()) and \
+               np.array_equal(self.hashvalues, getattr(other, 'hashvalues', object()))
 
     def jaccard(self, other):
         '''

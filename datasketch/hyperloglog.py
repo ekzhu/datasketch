@@ -205,11 +205,11 @@ class HyperLogLog(object):
         Returns:
             bool: True if both have the same internal state.
         '''
-        if self.p != other.p:
+        if self.p != getattr(other, 'p', object()):
             return False
-        if self.m != other.m:
+        if self.m != getattr(other, 'm', object()):
             return False
-        if not np.array_equal(self.reg, other.reg):
+        if not np.array_equal(self.reg, getattr(other, 'reg', object())):
             return False
         return True
 

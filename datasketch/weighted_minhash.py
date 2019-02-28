@@ -74,7 +74,7 @@ class WeightedMinHash(object):
             bool: If their seeds and hash values are both equal then two
             are equivalent.
         '''
-        return self.seed == other.seed and \
+        return self.seed == getattr(other, 'seed', object()) and \
                 np.array_equal(self.hashvalues, other.hashvalues)
     
 
