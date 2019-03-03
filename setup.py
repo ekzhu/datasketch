@@ -14,6 +14,13 @@ here = path.abspath(path.dirname(__file__))
 with open(path.join(here, 'DESCRIPTION.rst'), encoding='utf-8') as f:
     long_description = f.read()
 
+# Get the code version
+version = {}
+with open(path.join(here, "datasketch/version.py")) as fp:
+    exec(fp.read(), version)
+__version__ = version['__version__']
+# now we have a `__version__` variable
+
 test_requires = ['coverage', 'mock>=2.0.0']
 
 setup(
@@ -23,7 +30,7 @@ setup(
     # the version across setup.py and the project code, see
     # https://packaging.python.org/en/latest/single_source_version.html
 
-    version='1.4.1',
+    version=__version__,
 
     description='Probabilistic data structures for processing and searching very large datasets',
     long_description=long_description,

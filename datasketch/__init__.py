@@ -11,3 +11,6 @@ from datasketch.hashfunc import sha1_hash32
 # Alias
 WeightedMinHashLSH = MinHashLSH
 WeightedMinHashLSHForest = MinHashLSHForest
+
+# Version
+from datasketch.version import __version__
