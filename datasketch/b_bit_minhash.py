@@ -46,7 +46,7 @@ class bBitMinHash(object):
     def __eq__(self, other):
         '''
         Check for full equality of two b-bit MinHash objects.
-        '''g
+        '''
         return type(self) is type(other) and \
             self.seed == other.seed and \
             self.b == other.b and \
