@@ -222,8 +222,9 @@ class MinHash(object):
         '''
         :returns: bool -- If their seeds and hash values are both equal then two are equivalent.
         '''
-        return self.seed == other.seed and \
-                np.array_equal(self.hashvalues, other.hashvalues)
+        return type(self) is type(other) and \
+            self.seed == other.seed and \
+            np.array_equal(self.hashvalues, other.hashvalues)
 
     @classmethod
     def union(cls, *mhs):

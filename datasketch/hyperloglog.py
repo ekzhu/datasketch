@@ -205,13 +205,10 @@ class HyperLogLog(object):
         Returns:
             bool: True if both have the same internal state.
         '''
-        if self.p != other.p:
-            return False
-        if self.m != other.m:
-            return False
-        if not np.array_equal(self.reg, other.reg):
-            return False
-        return True
+        return type(self) is type(other) and \
+            self.p == other.p and \
+            self.m == other.m and \
+            np.array_equal(self.reg, other.reg)
 
     def _get_rank(self, bits):
         rank = self.max_rank - _bit_length(bits) + 1
