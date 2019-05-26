@@ -9,8 +9,10 @@ Forest <http://ilpubs.stanford.edu:8090/678/1/2005-14.pdf>`__ by Bawa et
 al. is a general LSH data structure that makes top-k query possible for
 many different types of LSH indexes, which include MinHash LSH. I
 implemented the MinHash LSH Forest, which takes a :ref:`minhash` data sketch of
-the query set, and returns the top-k matching sets that have the highest
-Jaccard similarities with the query set.
+the query set, and returns the top-k matching sets that have the 
+**approximately** highest Jaccard similarities with the query set
+(`Incorrect results of LSH
+Forest <https://github.com/ekzhu/datasketch/issues/89>`__).
 
 The interface of :class:`datasketch.MinHashLSHForest` is similar to 
 :class:`datasketch.MinHashLSH`,

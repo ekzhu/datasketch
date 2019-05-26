@@ -1,11 +1,9 @@
 
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
-  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<!DOCTYPE html>
 
 <html xmlns="http://www.w3.org/1999/xhtml">
   <head>
-    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
-    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <meta charset="utf-8" />
     <title>MinHash LSH Ensemble &#8212; datasketch 1.0.0 documentation</title>
     <link rel="stylesheet" href="_static/alabaster.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
@@ -79,8 +77,6 @@
     <form class="search" action="search.html" method="get">
       <input type="text" name="q" />
       <input type="submit" value="Go" />
-      <input type="hidden" name="check_keywords" value="yes" />
-      <input type="hidden" name="area" value="default" />
     </form>
     </div>
 </div>
@@ -141,7 +137,7 @@ This package implements a slightly simplified version of the index,
 The full implementation is in <a class="reference external" href="https://golang.org/">Go</a>. It can be found at
 <a class="reference external" href="https://github.com/ekzhu/lshensemble">github.com/ekzhu/lshensemble</a>.</p>
 <p>Just like MinHash LSH, LSH Ensemble also works directly with <a class="reference internal" href="minhash.html#minhash"><span class="std std-ref">MinHash</span></a> data sketches.</p>
-<div class="code python highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">datasketch</span> <span class="k">import</span> <span class="n">MinHashLSHEnsemble</span><span class="p">,</span> <span class="n">MinHash</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">datasketch</span> <span class="kn">import</span> <span class="n">MinHashLSHEnsemble</span><span class="p">,</span> <span class="n">MinHash</span>
 
 <span class="n">set1</span> <span class="o">=</span> <span class="nb">set</span><span class="p">([</span><span class="s2">&quot;cat&quot;</span><span class="p">,</span> <span class="s2">&quot;dog&quot;</span><span class="p">,</span> <span class="s2">&quot;fish&quot;</span><span class="p">,</span> <span class="s2">&quot;cow&quot;</span><span class="p">])</span>
 <span class="n">set2</span> <span class="o">=</span> <span class="nb">set</span><span class="p">([</span><span class="s2">&quot;cat&quot;</span><span class="p">,</span> <span class="s2">&quot;dog&quot;</span><span class="p">,</span> <span class="s2">&quot;fish&quot;</span><span class="p">,</span> <span class="s2">&quot;cow&quot;</span><span class="p">,</span> <span class="s2">&quot;pig&quot;</span><span class="p">,</span> <span class="s2">&quot;elephant&quot;</span><span class="p">,</span> <span class="s2">&quot;lion&quot;</span><span class="p">,</span> <span class="s2">&quot;tiger&quot;</span><span class="p">,</span>
@@ -169,13 +165,13 @@ The full implementation is in <a class="reference external" href="https://golang
 <span class="n">lshensemble</span><span class="o">.</span><span class="n">index</span><span class="p">([(</span><span class="s2">&quot;m2&quot;</span><span class="p">,</span> <span class="n">m2</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">set2</span><span class="p">)),</span> <span class="p">(</span><span class="s2">&quot;m3&quot;</span><span class="p">,</span> <span class="n">m3</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">set3</span><span class="p">))])</span>
 
 <span class="c1"># Check for membership using the key</span>
-<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;m2&quot;</span> <span class="ow">in</span> <span class="n">lshensemble</span><span class="p">)</span>
-<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;m3&quot;</span> <span class="ow">in</span> <span class="n">lshensemble</span><span class="p">)</span>
+<span class="k">print</span><span class="p">(</span><span class="s2">&quot;m2&quot;</span> <span class="ow">in</span> <span class="n">lshensemble</span><span class="p">)</span>
+<span class="k">print</span><span class="p">(</span><span class="s2">&quot;m3&quot;</span> <span class="ow">in</span> <span class="n">lshensemble</span><span class="p">)</span>
 
 <span class="c1"># Using m1 as the query, get an result iterator</span>
-<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Sets with containment &gt; 0.8:&quot;</span><span class="p">)</span>
+<span class="k">print</span><span class="p">(</span><span class="s2">&quot;Sets with containment &gt; 0.8:&quot;</span><span class="p">)</span>
 <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">lshensemble</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">m1</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">set1</span><span class="p">)):</span>
-    <span class="nb">print</span><span class="p">(</span><span class="n">key</span><span class="p">)</span>
+    <span class="k">print</span><span class="p">(</span><span class="n">key</span><span class="p">)</span>
 </pre></div>
 </div>
 <p>The precision of LSH Ensemble increases with the number of partitions,
@@ -202,7 +198,7 @@ See the documentation of <a class="reference internal" href="documentation.html#
       &copy;2019, Eric Zhu.
       
       |
-      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.8.3</a>
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 2.0.1</a>
       &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
       
       |

@@ -86,8 +86,8 @@ class MinHashLSHForest(object):
 
     def query(self, minhash, k):
         '''
-        Return the approximate top-k keys that have the highest
-        Jaccard similarities to the query set.
+        Return the approximate top-k keys that have the
+        (approximately) highest Jaccard similarities to the query set.
 
         Args:
             minhash (datasketch.MinHash): The MinHash of the query set.

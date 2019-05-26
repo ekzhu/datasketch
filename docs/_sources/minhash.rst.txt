@@ -74,6 +74,9 @@ cardinality. The analysis is presented in `Cohen
 If you are handling billions of MinHash objects, consider using 
 :class:`datasketch.LeanMinHash` to reduce your memory footprint.
 
+Use Different Hash Functions
+----------------------------
+
 MinHash by default uses the SHA1 hash funciton from Python's built-in 
 `hashlib <https://docs.python.org/3.7/library/hashlib.html>`__ library.
 You can also change the hash function using the `hashfunc` parameter
@@ -112,3 +115,11 @@ MurmurHash3: `mmh3 <https://pypi.org/project/mmh3/>`__
 .. figure:: /_static/hashfunc/minhash_benchmark_farmhash.png
    :alt: MinHash Benchmark
 
+Common Issues with MinHash
+--------------------------
+
+1. `High estimation error when set sizes differ by a lot 
+   <https://github.com/ekzhu/datasketch/issues/85>`__
+2. `Use Inclusion-Exclusion Principle (i.e., merge() and count() functions) 
+   instead of jaccard() to estimate similarity
+   <https://github.com/ekzhu/datasketch/issues/85>`__ 

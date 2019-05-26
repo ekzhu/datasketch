@@ -1,11 +1,9 @@
 
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
-  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<!DOCTYPE html>
 
 <html xmlns="http://www.w3.org/1999/xhtml">
   <head>
-    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
-    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <meta charset="utf-8" />
     <title>MinHash LSH Forest &#8212; datasketch 1.0.0 documentation</title>
     <link rel="stylesheet" href="_static/alabaster.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
@@ -75,8 +73,6 @@
     <form class="search" action="search.html" method="get">
       <input type="text" name="q" />
       <input type="submit" value="Go" />
-      <input type="hidden" name="check_keywords" value="yes" />
-      <input type="hidden" name="area" value="default" />
     </form>
     </div>
 </div>
@@ -97,14 +93,16 @@ Forest</a> by Bawa et
 al. is a general LSH data structure that makes top-k query possible for
 many different types of LSH indexes, which include MinHash LSH. I
 implemented the MinHash LSH Forest, which takes a <a class="reference internal" href="minhash.html#minhash"><span class="std std-ref">MinHash</span></a> data sketch of
-the query set, and returns the top-k matching sets that have the highest
-Jaccard similarities with the query set.</p>
+the query set, and returns the top-k matching sets that have the
+<strong>approximately</strong> highest Jaccard similarities with the query set
+(<a class="reference external" href="https://github.com/ekzhu/datasketch/issues/89">Incorrect results of LSH
+Forest</a>).</p>
 <p>The interface of <a class="reference internal" href="documentation.html#datasketch.MinHashLSHForest" title="datasketch.MinHashLSHForest"><code class="xref py py-class docutils literal notranslate"><span class="pre">datasketch.MinHashLSHForest</span></code></a> is similar to
 <a class="reference internal" href="documentation.html#datasketch.MinHashLSH" title="datasketch.MinHashLSH"><code class="xref py py-class docutils literal notranslate"><span class="pre">datasketch.MinHashLSH</span></code></a>,
 however, it is very important to call <code class="docutils literal notranslate"><span class="pre">index</span></code> method after adding the
 keys. Without calling the <code class="docutils literal notranslate"><span class="pre">index</span></code> method, the keys won’t be
 searchable.</p>
-<div class="code python highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">datasketch</span> <span class="k">import</span> <span class="n">MinHashLSHForest</span><span class="p">,</span> <span class="n">MinHash</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">datasketch</span> <span class="kn">import</span> <span class="n">MinHashLSHForest</span><span class="p">,</span> <span class="n">MinHash</span>
 
 <span class="n">data1</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;minhash&#39;</span><span class="p">,</span> <span class="s1">&#39;is&#39;</span><span class="p">,</span> <span class="s1">&#39;a&#39;</span><span class="p">,</span> <span class="s1">&#39;probabilistic&#39;</span><span class="p">,</span> <span class="s1">&#39;data&#39;</span><span class="p">,</span> <span class="s1">&#39;structure&#39;</span><span class="p">,</span> <span class="s1">&#39;for&#39;</span><span class="p">,</span>
         <span class="s1">&#39;estimating&#39;</span><span class="p">,</span> <span class="s1">&#39;the&#39;</span><span class="p">,</span> <span class="s1">&#39;similarity&#39;</span><span class="p">,</span> <span class="s1">&#39;between&#39;</span><span class="p">,</span> <span class="s1">&#39;datasets&#39;</span><span class="p">]</span>
@@ -135,12 +133,12 @@ searchable.</p>
 <span class="n">forest</span><span class="o">.</span><span class="n">index</span><span class="p">()</span>
 
 <span class="c1"># Check for membership using the key</span>
-<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;m2&quot;</span> <span class="ow">in</span> <span class="n">forest</span><span class="p">)</span>
-<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;m3&quot;</span> <span class="ow">in</span> <span class="n">forest</span><span class="p">)</span>
+<span class="k">print</span><span class="p">(</span><span class="s2">&quot;m2&quot;</span> <span class="ow">in</span> <span class="n">forest</span><span class="p">)</span>
+<span class="k">print</span><span class="p">(</span><span class="s2">&quot;m3&quot;</span> <span class="ow">in</span> <span class="n">forest</span><span class="p">)</span>
 
 <span class="c1"># Using m1 as the query, retrieve top 2 keys that have the higest Jaccard</span>
 <span class="n">result</span> <span class="o">=</span> <span class="n">forest</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">m1</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span>
-<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Top 2 candidates&quot;</span><span class="p">,</span> <span class="n">result</span><span class="p">)</span>
+<span class="k">print</span><span class="p">(</span><span class="s2">&quot;Top 2 candidates&quot;</span><span class="p">,</span> <span class="n">result</span><span class="p">)</span>
 </pre></div>
 </div>
 <p>The plot below shows the <a class="reference external" href="https://www.kaggle.com/wiki/MeanAveragePrecision">mean average precision
@@ -148,7 +146,7 @@ searchable.</p>
 scan with MinHash and MinHash LSH Forest. Synthetic data was used. See
 <a class="reference external" href="https://github.com/ekzhu/datasketch/blob/master/benchmark/lshforest_benchmark.py">benchmark</a>
 for details.</p>
-<div class="figure">
+<div class="figure align-center">
 <img alt="MinHashLSHForest Benchmark" src="_images/lshforest_benchmark.png" />
 </div>
 <p>(Optional) If you have read the LSH Forest
@@ -159,13 +157,13 @@ parameter for <a class="reference internal" href="documentation.html#datasketch.
 the paper, this implementation fixes the number of LSH functions, in
 this case <code class="docutils literal notranslate"><span class="pre">num_perm</span></code>, and makes the maximum depth of every prefix tree
 dependent on <code class="docutils literal notranslate"><span class="pre">num_perm</span></code> and <code class="docutils literal notranslate"><span class="pre">l</span></code>:</p>
-<div class="code python highlight-default notranslate"><div class="highlight"><pre><span></span><span class="c1"># The maximum depth of a prefix tree depends on num_perm and l</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># The maximum depth of a prefix tree depends on num_perm and l</span>
 <span class="n">k</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">num_perm</span> <span class="o">/</span> <span class="n">l</span><span class="p">)</span>
 </pre></div>
 </div>
 <p>This way the interface of the <a class="reference internal" href="documentation.html#datasketch.MinHashLSHForest" title="datasketch.MinHashLSHForest"><code class="xref py py-class docutils literal notranslate"><span class="pre">datasketch.MinHashLSHForest</span></code></a> is in coherence with
 the interface of <code class="docutils literal notranslate"><span class="pre">MinHash</span></code>.</p>
-<div class="code python highlight-default notranslate"><div class="highlight"><pre><span></span><span class="c1"># There is another optional parameter l (default l=8).</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># There is another optional parameter l (default l=8).</span>
 <span class="n">forest</span> <span class="o">=</span> <span class="n">MinHashLSHForest</span><span class="p">(</span><span class="n">num_perm</span><span class="o">=</span><span class="mi">250</span><span class="p">,</span> <span class="n">l</span><span class="o">=</span><span class="mi">10</span><span class="p">)</span>
 </pre></div>
 </div>
@@ -182,7 +180,7 @@ the interface of <code class="docutils literal notranslate"><span class="pre">Mi
       &copy;2019, Eric Zhu.
       
       |
-      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.8.3</a>
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 2.0.1</a>
       &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
       
       |
