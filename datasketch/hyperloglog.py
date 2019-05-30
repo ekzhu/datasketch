@@ -1,7 +1,6 @@
-from __future__ import print_function
 import struct, copy
 import numpy as np
-import sys
+import warnings
 try:
     from .hyperloglog_const import _thresholds, _raw_estimate, _bias
 except ImportError:
@@ -137,9 +136,8 @@ class HyperLogLog(object):
         # Small range correction
         small_range_threshold = (5.0 / 2.0) * self.m
         if abs(e-small_range_threshold)/small_range_threshold < 0.15:
-          print("Warning: estimate is close to error correction threshold\n\
-            Output may not satisfy HyperLogLog accuracy guarantee.",
-            file=sys.stderr)
+          warnings.warn(("Warning: estimate is close to error correction threshold. "
+                        +"Output may not satisfy HyperLogLog accuracy guarantee."))
         if e <= small_range_threshold:
             num_zero = self.m - np.count_nonzero(self.reg)
             return self._linearcounting(num_zero)
