@@ -1,5 +1,6 @@
 import struct, copy
 import numpy as np
+import warnings
 try:
     from .hyperloglog_const import _thresholds, _raw_estimate, _bias
 except ImportError:
@@ -133,7 +134,11 @@ class HyperLogLog(object):
         # Use HyperLogLog estimation function
         e = self.alpha * float(self.m ** 2) / np.sum(2.0**(-self.reg))
         # Small range correction
-        if e <= (5.0 / 2.0) * self.m:
+        small_range_threshold = (5.0 / 2.0) * self.m
+        if abs(e-small_range_threshold)/small_range_threshold < 0.15:
+          warnings.warn(("Warning: estimate is close to error correction threshold. "
+                        +"Output may not satisfy HyperLogLog accuracy guarantee."))
+        if e <= small_range_threshold:
             num_zero = self.m - np.count_nonzero(self.reg)
             return self._linearcounting(num_zero)
         # Normal range, no correction
