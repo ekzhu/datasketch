@@ -18,7 +18,14 @@ except ImportError:
     # For when no scipy installed
     integrate = _integration
 
-
+def _ensure_bytestring(bytes_or_str):
+    if isinstance(bytes_or_str, str):
+        return bytes_or_str.encode('utf-8')
+    elif isinstance(bytes_or_str,  bytes):
+        return bytes_or_str
+    else:
+        raise ValueError("basename must be either bytes or string type")
+    
 def _false_positive_probability(threshold, b, r):
     _probability = lambda s : 1 - (1 - s**float(r))**float(b)
     a, err = integrate(_probability, 0.0, threshold)
@@ -115,7 +122,7 @@ class MinHashLSH(object):
 
         self.prepickle = storage_config['type'] == 'redis' if prepickle is None else prepickle
 
-        basename = storage_config.get('basename', _random_name(11))
+        basename = _ensure_bytestring(storage_config.get('basename', _random_name(11)))
         self.hashtables = [
             unordered_storage(storage_config, name=b''.join([basename, b'_bucket_', bytes([i])]))
             for i in range(self.b)]
