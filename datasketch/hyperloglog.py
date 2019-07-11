@@ -174,7 +174,7 @@ class HyperLogLog(object):
         Returns:
             datasketch.HyperLogLog:
         '''
-        return self.__class__(reg=self.digest())
+        return self.__class__(reg=self.digest(), hashfunc=self.hashfunc)
 
     def is_empty(self):
         '''

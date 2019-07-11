@@ -116,6 +116,7 @@ class TestHyperLogLog(unittest.TestCase):
         h1.update(0b00011111)
         h2 = h1.copy()
         self.assertEqual(h1, h2)
+        self.assertEqual(h1.hashfunc, h2.hashfunc)
 
 
 class TestHyperLogLogSpecific(unittest.TestCase):
