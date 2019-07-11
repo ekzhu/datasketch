@@ -111,6 +111,12 @@ class TestHyperLogLog(unittest.TestCase):
         self.assertEqual(h1, h3)
         self.assertNotEqual(h1, h4)
 
+    def test_copy(self):
+        h1 = self._class(4, hashfunc=fake_hash_func)
+        h1.update(0b00011111)
+        h2 = h1.copy()
+        self.assertEqual(h1, h2)
+
 
 class TestHyperLogLogSpecific(unittest.TestCase):
 

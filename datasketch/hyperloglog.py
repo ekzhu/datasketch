@@ -160,7 +160,7 @@ class HyperLogLog(object):
                     precisions.")
         self.reg = np.maximum(self.reg, other.reg)
 
-    def digest(self, hashobj):
+    def digest(self):
         '''
         Returns:
             numpy.array: The current internal state.
@@ -174,7 +174,7 @@ class HyperLogLog(object):
         Returns:
             datasketch.HyperLogLog:
         '''
-        return HyperLogLog(reg=self.digest())
+        return self.__class__(reg=self.digest())
 
     def is_empty(self):
         '''
