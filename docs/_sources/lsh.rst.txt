@@ -172,11 +172,12 @@ Asynchronous MinHash LSH at scale
 ---------------------------------
 
 .. note::
-    The module supports Python version >=3.6, and is currently experimental. 
+    The module supports Python version >=3.6, and is currently experimental.
     So the interface may change slightly in the future.
 
-This module may be useful if you want to process millions of text documents 
-in streaming/batch mode using asynchronous RESTful API (for example, aiohttp) for clustering tasks,
+This module may be useful if you want to process millions of text documents
+in streaming/batch mode using asynchronous RESTful API (for example, aiohttp)
+for clustering tasks,
 and maximize the throughput of your service.
 
 We currently provide asynchronous MongoDB storage (*python motor package*)
@@ -252,7 +253,7 @@ If you want to pass additional params to the `Mongo client <http://api.mongodb.c
                 }
             }
     }
-        
+
 To create index for a large number of MinHashes using asynchronous MinHash LSH.
 
 .. code:: python
@@ -319,3 +320,4 @@ Common Issues with MinHash LSH
 4. `Combining/Storing LSH with different thresholds <https://github.com/ekzhu/datasketch/issues/93>`__
 
 `See more issues <https://github.com/ekzhu/datasketch/issues?utf8=%E2%9C%93&q=lsh>`__
+

@@ -130,7 +130,6 @@ See the documentation of :class:`datasketch.MinHashLSHEnsemble` for details.
 Common Issues with LSH Ensemble
 -------------------------------
 
-1. `Can I get containment values from LSH Ensemble? 
-   <https://github.com/ekzhu/datasketch/issues/97>`__
-2. `How to use LSH Ensemble to find containment-based duplicates?
-   <https://github.com/ekzhu/datasketch/issues/76#issuecomment-521275633>`__
+1. `Can I get containment values from LSH Ensemble? <https://github.com/ekzhu/datasketch/issues/97>`__
+2. `How to use LSH Ensemble to find containment-based duplicates? <https://github.com/ekzhu/datasketch/issues/76#issuecomment-521275633>`__
+
