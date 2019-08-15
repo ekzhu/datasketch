@@ -66,10 +66,10 @@
 </ul>
 </div>
 <div id="searchbox" style="display: none" role="search">
-  <h3>Quick search</h3>
+  <h3 id="searchlabel">Quick search</h3>
     <div class="searchformwrapper">
     <form class="search" action="../../search.html" method="get">
-      <input type="text" name="q" />
+      <input type="text" name="q" aria-labelledby="searchlabel" />
       <input type="submit" value="Go" />
     </form>
     </div>
@@ -86,6 +86,7 @@
   <h1>Source code for datasketch.hyperloglog</h1><div class="highlight"><pre>
 <span></span><span class="kn">import</span> <span class="nn">struct</span><span class="o">,</span> <span class="nn">copy</span>
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">warnings</span>
 <span class="k">try</span><span class="p">:</span>
     <span class="kn">from</span> <span class="nn">.hyperloglog_const</span> <span class="k">import</span> <span class="n">_thresholds</span><span class="p">,</span> <span class="n">_raw_estimate</span><span class="p">,</span> <span class="n">_bias</span>
 <span class="k">except</span> <span class="ne">ImportError</span><span class="p">:</span>
@@ -219,7 +220,11 @@
         <span class="c1"># Use HyperLogLog estimation function</span>
         <span class="n">e</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">alpha</span> <span class="o">*</span> <span class="nb">float</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">m</span> <span class="o">**</span> <span class="mi">2</span><span class="p">)</span> <span class="o">/</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="mf">2.0</span><span class="o">**</span><span class="p">(</span><span class="o">-</span><span class="bp">self</span><span class="o">.</span><span class="n">reg</span><span class="p">))</span>
         <span class="c1"># Small range correction</span>
-        <span class="k">if</span> <span class="n">e</span> <span class="o">&lt;=</span> <span class="p">(</span><span class="mf">5.0</span> <span class="o">/</span> <span class="mf">2.0</span><span class="p">)</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">m</span><span class="p">:</span>
+        <span class="n">small_range_threshold</span> <span class="o">=</span> <span class="p">(</span><span class="mf">5.0</span> <span class="o">/</span> <span class="mf">2.0</span><span class="p">)</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">m</span>
+        <span class="k">if</span> <span class="nb">abs</span><span class="p">(</span><span class="n">e</span><span class="o">-</span><span class="n">small_range_threshold</span><span class="p">)</span><span class="o">/</span><span class="n">small_range_threshold</span> <span class="o">&lt;</span> <span class="mf">0.15</span><span class="p">:</span>
+          <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">((</span><span class="s2">&quot;Warning: estimate is close to error correction threshold. &quot;</span>
+                        <span class="o">+</span><span class="s2">&quot;Output may not satisfy HyperLogLog accuracy guarantee.&quot;</span><span class="p">))</span>
+        <span class="k">if</span> <span class="n">e</span> <span class="o">&lt;=</span> <span class="n">small_range_threshold</span><span class="p">:</span>
             <span class="n">num_zero</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">m</span> <span class="o">-</span> <span class="n">np</span><span class="o">.</span><span class="n">count_nonzero</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">reg</span><span class="p">)</span>
             <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_linearcounting</span><span class="p">(</span><span class="n">num_zero</span><span class="p">)</span>
         <span class="c1"># Normal range, no correction</span>
@@ -241,7 +246,7 @@
 <span class="s2">                    precisions.&quot;</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">reg</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">maximum</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">reg</span><span class="p">,</span> <span class="n">other</span><span class="o">.</span><span class="n">reg</span><span class="p">)</span></div>
 
-<div class="viewcode-block" id="HyperLogLog.digest"><a class="viewcode-back" href="../../documentation.html#datasketch.HyperLogLog.digest">[docs]</a>    <span class="k">def</span> <span class="nf">digest</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">hashobj</span><span class="p">):</span>
+<div class="viewcode-block" id="HyperLogLog.digest"><a class="viewcode-back" href="../../documentation.html#datasketch.HyperLogLog.digest">[docs]</a>    <span class="k">def</span> <span class="nf">digest</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="sd">&#39;&#39;&#39;</span>
 <span class="sd">        Returns:</span>
 <span class="sd">            numpy.array: The current internal state.</span>
@@ -255,7 +260,7 @@
 <span class="sd">        Returns:</span>
 <span class="sd">            datasketch.HyperLogLog:</span>
 <span class="sd">        &#39;&#39;&#39;</span>
-        <span class="k">return</span> <span class="n">HyperLogLog</span><span class="p">(</span><span class="n">reg</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">digest</span><span class="p">())</span></div>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="p">(</span><span class="n">reg</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">digest</span><span class="p">(),</span> <span class="n">hashfunc</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">hashfunc</span><span class="p">)</span></div>
 
 <div class="viewcode-block" id="HyperLogLog.is_empty"><a class="viewcode-back" href="../../documentation.html#datasketch.HyperLogLog.is_empty">[docs]</a>    <span class="k">def</span> <span class="nf">is_empty</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="sd">&#39;&#39;&#39;</span>
@@ -442,7 +447,7 @@
       &copy;2019, Eric Zhu.
       
       |
-      Powered by <a href="http://sphinx-doc.org/">Sphinx 2.0.1</a>
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 2.1.2</a>
       &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
       
     </div>

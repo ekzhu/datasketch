@@ -66,10 +66,10 @@
 </ul>
 </div>
 <div id="searchbox" style="display: none" role="search">
-  <h3>Quick search</h3>
+  <h3 id="searchlabel">Quick search</h3>
     <div class="searchformwrapper">
     <form class="search" action="search.html" method="get">
-      <input type="text" name="q" />
+      <input type="text" name="q" aria-labelledby="searchlabel" />
       <input type="submit" value="Go" />
     </form>
     </div>
@@ -134,7 +134,7 @@ this library.</p>
 <p>Weighted MinHash as similar accuracy and performance profiles as
 MinHash. As you increase the number of samples, you get better accuracy,
 at the expense of slower speed.</p>
-<div class="figure align-center">
+<div class="figure align-default">
 <img alt="Weighted MinHash Benchmark" src="_images/weighted_minhash_benchmark.png" />
 </div>
 <p><a class="reference internal" href="documentation.html#datasketch.MinHashLSH" title="datasketch.MinHashLSH"><code class="xref py py-class docutils literal notranslate"><span class="pre">datasketch.MinHashLSH</span></code></a> and
@@ -173,7 +173,7 @@ can also be used to index <a class="reference internal" href="documentation.html
       &copy;2019, Eric Zhu.
       
       |
-      Powered by <a href="http://sphinx-doc.org/">Sphinx 2.0.1</a>
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 2.1.2</a>
       &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
       
       |

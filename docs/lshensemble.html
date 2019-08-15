@@ -55,6 +55,7 @@
 <li class="toctree-l1 current"><a class="current reference internal" href="#">MinHash LSH Ensemble</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="#containment">Containment</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#lsh-for-containment">LSH for Containment</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#common-issues-with-lsh-ensemble">Common Issues with LSH Ensemble</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="lshforest.html">MinHash LSH Forest</a></li>
@@ -72,10 +73,10 @@
 </ul>
 </div>
 <div id="searchbox" style="display: none" role="search">
-  <h3>Quick search</h3>
+  <h3 id="searchlabel">Quick search</h3>
     <div class="searchformwrapper">
     <form class="search" action="search.html" method="get">
-      <input type="text" name="q" />
+      <input type="text" name="q" aria-labelledby="searchlabel" />
       <input type="submit" value="Go" />
     </form>
     </div>
@@ -185,6 +186,13 @@ See the documentation of <a class="reference internal" href="documentation.html#
 <a class="reference internal image-reference" href="_images/lshensemble_num_perm_256_fscore.png"><img alt="MinHashLSHEnsemble Benchmark F-Score" class="align-center" src="_images/lshensemble_num_perm_256_fscore.png" style="width: 480.0px; height: 360.0px;" /></a>
 <a class="reference internal image-reference" href="_images/lshensemble_num_perm_256_query_time.png"><img alt="MinHashLSHEnsemble Benchmark Query Time" class="align-center" src="_images/lshensemble_num_perm_256_query_time.png" style="width: 480.0px; height: 360.0px;" /></a>
 </div>
+<div class="section" id="common-issues-with-lsh-ensemble">
+<h2>Common Issues with LSH Ensemble<a class="headerlink" href="#common-issues-with-lsh-ensemble" title="Permalink to this headline">¶</a></h2>
+<ol class="arabic simple">
+<li><p><a class="reference external" href="https://github.com/ekzhu/datasketch/issues/97">Can I get containment values from LSH Ensemble?</a></p></li>
+<li><p><a class="reference external" href="https://github.com/ekzhu/datasketch/issues/76#issuecomment-521275633">How to use LSH Ensemble to find containment-based duplicates?</a></p></li>
+</ol>
+</div>
 </div>
 
 
@@ -198,7 +206,7 @@ See the documentation of <a class="reference internal" href="documentation.html#
       &copy;2019, Eric Zhu.
       
       |
-      Powered by <a href="http://sphinx-doc.org/">Sphinx 2.0.1</a>
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 2.1.2</a>
       &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
       
       |

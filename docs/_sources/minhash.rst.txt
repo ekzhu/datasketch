@@ -123,3 +123,5 @@ Common Issues with MinHash
 2. `Use Inclusion-Exclusion Principle (i.e., merge() and count() functions) 
    instead of jaccard() to estimate similarity
    <https://github.com/ekzhu/datasketch/issues/85>`__ 
+
+`See more issues <https://github.com/ekzhu/datasketch/issues?utf8=%E2%9C%93&q=minhash>`__

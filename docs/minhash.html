@@ -72,10 +72,10 @@
 </ul>
 </div>
 <div id="searchbox" style="display: none" role="search">
-  <h3>Quick search</h3>
+  <h3 id="searchlabel">Quick search</h3>
     <div class="searchformwrapper">
     <form class="search" action="search.html" method="get">
-      <input type="text" name="q" />
+      <input type="text" name="q" aria-labelledby="searchlabel" />
       <input type="submit" value="Go" />
     </form>
     </div>
@@ -135,7 +135,7 @@ usage. Because using more permutation functions means</p>
 </div></blockquote>
 <p>The speed and memory usage of MinHash are both linearly
 proportional to the number of permutation functions used.</p>
-<div class="figure align-center">
+<div class="figure align-default">
 <img alt="MinHash Benchmark" src="_images/minhash_benchmark_sha1.png" />
 </div>
 <p>You can union two MinHash object using the <code class="docutils literal notranslate"><span class="pre">merge</span></code> function. This
@@ -177,15 +177,15 @@ you can use the benchmark code in <cite>benchmark/minhash_benchmark.py</cite> to
 run some tests. Here are the results for some popular hash functions
 available in Python.</p>
 <p>MurmurHash3: <a class="reference external" href="https://pypi.org/project/mmh3/">mmh3</a></p>
-<div class="figure align-center">
+<div class="figure align-default">
 <img alt="MinHash Benchmark" src="_images/minhash_benchmark_mmh3.png" />
 </div>
 <p><a class="reference external" href="https://pypi.org/project/xxhash/">xxhash</a></p>
-<div class="figure align-center">
+<div class="figure align-default">
 <img alt="MinHash Benchmark" src="_images/minhash_benchmark_xxh.png" />
 </div>
 <p><a class="reference external" href="https://pypi.org/project/pyfarmhash">Farmhash</a></p>
-<div class="figure align-center">
+<div class="figure align-default">
 <img alt="MinHash Benchmark" src="_images/minhash_benchmark_farmhash.png" />
 </div>
 </div>
@@ -196,6 +196,7 @@ available in Python.</p>
 <li><p><a class="reference external" href="https://github.com/ekzhu/datasketch/issues/85">Use Inclusion-Exclusion Principle (i.e., merge() and count() functions)
 instead of jaccard() to estimate similarity</a></p></li>
 </ol>
+<p><a class="reference external" href="https://github.com/ekzhu/datasketch/issues?utf8=%E2%9C%93&amp;q=minhash">See more issues</a></p>
 </div>
 </div>
 
@@ -210,7 +211,7 @@ instead of jaccard() to estimate similarity</a></p></li>
       &copy;2019, Eric Zhu.
       
       |
-      Powered by <a href="http://sphinx-doc.org/">Sphinx 2.0.1</a>
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 2.1.2</a>
       &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
       
       |

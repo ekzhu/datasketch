@@ -90,3 +90,16 @@ the interface of ``MinHash``.
 
     # There is another optional parameter l (default l=8).
     forest = MinHashLSHForest(num_perm=250, l=10)
+
+
+Common Issues with MinHash LSH Forest
+-------------------------------------
+
+1. `Unexpected/Incorrect results by MinHash LSH Forest 
+   <https://github.com/ekzhu/datasketch/issues/89>`__
+2. `MinHash LSH Forest Accuracy
+   <https://github.com/ekzhu/datasketch/issues/52>`__
+3. `Minhash LSH Forest Top-K results differs from MinHash LSH
+    <https://github.com/ekzhu/datasketch/issues/42>`__
+4. `No result for top-k
+    <https://github.com/ekzhu/datasketch/issues/35>`__
