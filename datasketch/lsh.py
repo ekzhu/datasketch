@@ -1,4 +1,6 @@
 import pickle
+import struct
+
 from datasketch.storage import (
     ordered_storage, unordered_storage, _random_name)
 
@@ -117,7 +119,7 @@ class MinHashLSH(object):
 
         basename = storage_config.get('basename', _random_name(11))
         self.hashtables = [
-            unordered_storage(storage_config, name=b''.join([basename, b'_bucket_', bytes([i])]))
+            unordered_storage(storage_config, name=b''.join([basename, b'_bucket_', struct.pack('>H', i)]))
             for i in range(self.b)]
         self.hashranges = [(i*self.r, (i+1)*self.r) for i in range(self.b)]
         self.keys = ordered_storage(storage_config, name=b''.join([basename, b'_keys']))
