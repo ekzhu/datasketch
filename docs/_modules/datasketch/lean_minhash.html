@@ -111,6 +111,14 @@
 
 <span class="sd">            # Or between a lean MinHash and a MinHash</span>
 <span class="sd">            lean_minhash.jaccard(minhash2)</span>
+<span class="sd">        </span>
+<span class="sd">        To create a lean MinHash from the hash values and seed of an existing</span>
+<span class="sd">        MinHash:</span>
+
+<span class="sd">        .. code-block:: python</span>
+
+<span class="sd">            lean_minhash = LeanMinHash(seed=minhash.seed,</span>
+<span class="sd">                                       hashvalues=minhash.hashvalues)</span>
 
 <span class="sd">        To create a MinHash from a lean MinHash:</span>
 
@@ -129,7 +137,15 @@
 <span class="sd">        :class:`datasketch.MinHashLSHForest`, and :class:`datasketch.MinHashLSHEnsemble`.</span>
 
 <span class="sd">    Args:</span>
-<span class="sd">        minhash: The :class:`datasketch.MinHash` object used to initialize the LeanMinHash.</span>
+<span class="sd">        minhash (optional): The :class:`datasketch.MinHash` object used to </span>
+<span class="sd">            initialize the LeanMinHash. If this is not set, then `seed`</span>
+<span class="sd">            and `hashvalues` must be set. </span>
+<span class="sd">        seed (optional): The random seed that controls the set of random </span>
+<span class="sd">            permutation functions generated for this LeanMinHash. This parameter</span>
+<span class="sd">            must be used together with `hashvalues`.</span>
+<span class="sd">        hashvalues (optional): The hash values used to inititialize the state</span>
+<span class="sd">            of the LeanMinHash. This parameter must be used together with</span>
+<span class="sd">            `seed`.</span>
 <span class="sd">    &#39;&#39;&#39;</span>
 
     <span class="vm">__slots__</span> <span class="o">=</span> <span class="p">(</span><span class="s1">&#39;seed&#39;</span><span class="p">,</span> <span class="s1">&#39;hashvalues&#39;</span><span class="p">)</span>
@@ -145,8 +161,14 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">seed</span> <span class="o">=</span> <span class="n">seed</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">hashvalues</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_parse_hashvalues</span><span class="p">(</span><span class="n">hashvalues</span><span class="p">)</span>
 
-<div class="viewcode-block" id="LeanMinHash.__init__"><a class="viewcode-back" href="../../documentation.html#datasketch.LeanMinHash.__init__">[docs]</a>    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">minhash</span><span class="p">):</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_initialize_slots</span><span class="p">(</span><span class="n">minhash</span><span class="o">.</span><span class="n">seed</span><span class="p">,</span> <span class="n">minhash</span><span class="o">.</span><span class="n">hashvalues</span><span class="p">)</span></div>
+<div class="viewcode-block" id="LeanMinHash.__init__"><a class="viewcode-back" href="../../documentation.html#datasketch.LeanMinHash.__init__">[docs]</a>    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">minhash</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">seed</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">hashvalues</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">minhash</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_initialize_slots</span><span class="p">(</span><span class="n">minhash</span><span class="o">.</span><span class="n">seed</span><span class="p">,</span> <span class="n">minhash</span><span class="o">.</span><span class="n">hashvalues</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">hashvalues</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">seed</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_initialize_slots</span><span class="p">(</span><span class="n">seed</span><span class="p">,</span> <span class="n">hashvalues</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Init parameters cannot be None: make sure &quot;</span>
+                    <span class="s2">&quot;to set either minhash or both of hash values and seed&quot;</span><span class="p">)</span></div>
 
 <div class="viewcode-block" id="LeanMinHash.update"><a class="viewcode-back" href="../../documentation.html#datasketch.LeanMinHash.update">[docs]</a>    <span class="k">def</span> <span class="nf">update</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">b</span><span class="p">):</span>
         <span class="sd">&#39;&#39;&#39;This method is not available on a LeanMinHash.</span>

@@ -327,7 +327,7 @@ but must be at least 2.</p>
 <h2>Lean MinHash<a class="headerlink" href="#lean-minhash" title="Permalink to this headline">¶</a></h2>
 <dl class="class">
 <dt id="datasketch.LeanMinHash">
-<em class="property">class </em><code class="sig-prename descclassname">datasketch.</code><code class="sig-name descname">LeanMinHash</code><span class="sig-paren">(</span><em class="sig-param">minhash</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/datasketch/lean_minhash.html#LeanMinHash"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#datasketch.LeanMinHash" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">datasketch.</code><code class="sig-name descname">LeanMinHash</code><span class="sig-paren">(</span><em class="sig-param">minhash=None</em>, <em class="sig-param">seed=None</em>, <em class="sig-param">hashvalues=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/datasketch/lean_minhash.html#LeanMinHash"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#datasketch.LeanMinHash" title="Permalink to this definition">¶</a></dt>
 <dd><p>Lean MinHash is MinHash with a smaller memory footprint
 and faster deserialization, but with its internal state frozen
 – no <cite>update()</cite>.</p>
@@ -344,6 +344,12 @@ to save memory.</p>
 
 <span class="c1"># Or between a lean MinHash and a MinHash</span>
 <span class="n">lean_minhash</span><span class="o">.</span><span class="n">jaccard</span><span class="p">(</span><span class="n">minhash2</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>To create a lean MinHash from the hash values and seed of an existing
+MinHash:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">lean_minhash</span> <span class="o">=</span> <span class="n">LeanMinHash</span><span class="p">(</span><span class="n">seed</span><span class="o">=</span><span class="n">minhash</span><span class="o">.</span><span class="n">seed</span><span class="p">,</span>
+                           <span class="n">hashvalues</span><span class="o">=</span><span class="n">minhash</span><span class="o">.</span><span class="n">hashvalues</span><span class="p">)</span>
 </pre></div>
 </div>
 <p>To create a MinHash from a lean MinHash:</p>
@@ -363,12 +369,22 @@ to save memory.</p>
 </div>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>minhash</strong> – The <a class="reference internal" href="#datasketch.MinHash" title="datasketch.MinHash"><code class="xref py py-class docutils literal notranslate"><span class="pre">datasketch.MinHash</span></code></a> object used to initialize the LeanMinHash.</p>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>minhash</strong> (<em>optional</em>) – The <a class="reference internal" href="#datasketch.MinHash" title="datasketch.MinHash"><code class="xref py py-class docutils literal notranslate"><span class="pre">datasketch.MinHash</span></code></a> object used to
+initialize the LeanMinHash. If this is not set, then <cite>seed</cite>
+and <cite>hashvalues</cite> must be set.</p></li>
+<li><p><strong>seed</strong> (<em>optional</em>) – The random seed that controls the set of random
+permutation functions generated for this LeanMinHash. This parameter
+must be used together with <cite>hashvalues</cite>.</p></li>
+<li><p><strong>hashvalues</strong> (<em>optional</em>) – The hash values used to inititialize the state
+of the LeanMinHash. This parameter must be used together with
+<cite>seed</cite>.</p></li>
+</ul>
 </dd>
 </dl>
 <dl class="method">
 <dt id="datasketch.LeanMinHash.__init__">
-<code class="sig-name descname">__init__</code><span class="sig-paren">(</span><em class="sig-param">minhash</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/datasketch/lean_minhash.html#LeanMinHash.__init__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#datasketch.LeanMinHash.__init__" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">__init__</code><span class="sig-paren">(</span><em class="sig-param">minhash=None</em>, <em class="sig-param">seed=None</em>, <em class="sig-param">hashvalues=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/datasketch/lean_minhash.html#LeanMinHash.__init__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#datasketch.LeanMinHash.__init__" title="Permalink to this definition">¶</a></dt>
 <dd><p>Initialize self.  See help(type(self)) for accurate signature.</p>
 </dd></dl>
 

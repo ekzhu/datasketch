@@ -25,6 +25,14 @@ class LeanMinHash(MinHash):
 
             # Or between a lean MinHash and a MinHash
             lean_minhash.jaccard(minhash2)
+        
+        To create a lean MinHash from the hash values and seed of an existing
+        MinHash:
+
+        .. code-block:: python
+
+            lean_minhash = LeanMinHash(seed=minhash.seed,
+                                       hashvalues=minhash.hashvalues)
 
         To create a MinHash from a lean MinHash:
 
@@ -43,7 +51,15 @@ class LeanMinHash(MinHash):
         :class:`datasketch.MinHashLSHForest`, and :class:`datasketch.MinHashLSHEnsemble`.
 
     Args:
-        minhash: The :class:`datasketch.MinHash` object used to initialize the LeanMinHash.
+        minhash (optional): The :class:`datasketch.MinHash` object used to 
+            initialize the LeanMinHash. If this is not set, then `seed`
+            and `hashvalues` must be set. 
+        seed (optional): The random seed that controls the set of random 
+            permutation functions generated for this LeanMinHash. This parameter
+            must be used together with `hashvalues`.
+        hashvalues (optional): The hash values used to inititialize the state
+            of the LeanMinHash. This parameter must be used together with
+            `seed`.
     '''
 
     __slots__ = ('seed', 'hashvalues')
@@ -59,8 +75,14 @@ class LeanMinHash(MinHash):
         self.seed = seed
         self.hashvalues = self._parse_hashvalues(hashvalues)
 
-    def __init__(self, minhash):
-        self._initialize_slots(minhash.seed, minhash.hashvalues)
+    def __init__(self, minhash=None, seed=None, hashvalues=None):
+        if minhash is not None:
+            self._initialize_slots(minhash.seed, minhash.hashvalues)
+        elif hashvalues is not None and seed is not None:
+            self._initialize_slots(seed, hashvalues)
+        else:
+            raise ValueError("Init parameters cannot be None: make sure "
+                    "to set either minhash or both of hash values and seed")
 
     def update(self, b):
         '''This method is not available on a LeanMinHash.

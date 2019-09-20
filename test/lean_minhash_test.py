@@ -16,6 +16,11 @@ class TestLeanMinHash(unittest.TestCase):
         self.assertTrue(np.array_equal(lm1.hashvalues, lm2.hashvalues))
         self.assertTrue(np.array_equal(lm1.seed, lm2.seed))
 
+        lm1 = LeanMinHash(seed=m1.seed, hashvalues=m1.hashvalues)
+        lm2 = LeanMinHash(seed=m2.seed, hashvalues=m2.hashvalues)
+        self.assertTrue(np.array_equal(lm1.hashvalues, lm2.hashvalues))
+        self.assertTrue(np.array_equal(lm1.seed, lm2.seed))
+
     def test_is_empty(self):
         m = MinHash()
         lm = LeanMinHash(m)
