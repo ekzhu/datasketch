@@ -41,7 +41,7 @@ datasketch must be used with Python 2.7 or above and NumPy 1.11 or
 above. Scipy is optional, but with it the LSH initialization can be much
 faster.
 
-Note that `MinHash LSH`_ and `MinHash LSH Ensmeble`_ also support Redis storage 
+Note that `MinHash LSH`_ and `MinHash LSH Ensemble`_ also support Redis storage 
 layer.
 
 Install

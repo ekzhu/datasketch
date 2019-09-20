@@ -1140,7 +1140,7 @@ Note that keys won’t be searchable until <cite>index</cite> is called.</p>
 <h2>MinHash LSH Ensemble<a class="headerlink" href="#minhash-lsh-ensemble" title="Permalink to this headline">¶</a></h2>
 <dl class="class">
 <dt id="datasketch.MinHashLSHEnsemble">
-<em class="property">class </em><code class="sig-prename descclassname">datasketch.</code><code class="sig-name descname">MinHashLSHEnsemble</code><span class="sig-paren">(</span><em class="sig-param">threshold=0.9</em>, <em class="sig-param">num_perm=128</em>, <em class="sig-param">num_part=16</em>, <em class="sig-param">m=8</em>, <em class="sig-param">weights=(0.5</em>, <em class="sig-param">0.5)</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/datasketch/lshensemble.html#MinHashLSHEnsemble"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#datasketch.MinHashLSHEnsemble" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">datasketch.</code><code class="sig-name descname">MinHashLSHEnsemble</code><span class="sig-paren">(</span><em class="sig-param">threshold=0.9</em>, <em class="sig-param">num_perm=128</em>, <em class="sig-param">num_part=16</em>, <em class="sig-param">m=8</em>, <em class="sig-param">weights=(0.5</em>, <em class="sig-param">0.5)</em>, <em class="sig-param">storage_config=None</em>, <em class="sig-param">prepickle=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/datasketch/lshensemble.html#MinHashLSHEnsemble"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#datasketch.MinHashLSHEnsemble" title="Permalink to this definition">¶</a></dt>
 <dd><p>The <a class="reference internal" href="lshensemble.html#minhash-lsh-ensemble"><span class="std std-ref">MinHash LSH Ensemble</span></a> index. It supports
 <a class="reference internal" href="lshensemble.html#containment"><span class="std std-ref">Containment</span></a> queries.
 The implementation is based on
@@ -1162,6 +1162,14 @@ sets indexed. The higher the <cite>m</cite> the better the accuracy.</p></li>
 minizing false positive and false negative when optimizing
 for the Containment threshold. Similar to the <cite>weights</cite> parameter
 in <a class="reference internal" href="#datasketch.MinHashLSH" title="datasketch.MinHashLSH"><code class="xref py py-class docutils literal notranslate"><span class="pre">datasketch.MinHashLSH</span></code></a>.</p></li>
+<li><p><strong>storage_config</strong> (<em>dict</em><em>, </em><em>optional</em>) – Type of storage service to use for storing
+hashtables and keys.
+<cite>basename</cite> is an optional property whose value will be used as the prefix to
+stored keys. If this is not set, a random string will be generated instead. If you
+set this, you will be responsible for ensuring there are no key collisions.</p></li>
+<li><p><strong>prepickle</strong> (<em>bool</em><em>, </em><em>optional</em>) – If True, all keys are pickled to bytes before
+insertion. If None, a default value is chosen based on the
+<cite>storage_config</cite>.</p></li>
 </ul>
 </dd>
 </dl>
@@ -1181,7 +1189,7 @@ of LSH Ensemble, in which <cite>m</cite> is named <cite>MaxK</cite>.</p>
 </div>
 <dl class="method">
 <dt id="datasketch.MinHashLSHEnsemble.__init__">
-<code class="sig-name descname">__init__</code><span class="sig-paren">(</span><em class="sig-param">threshold=0.9</em>, <em class="sig-param">num_perm=128</em>, <em class="sig-param">num_part=16</em>, <em class="sig-param">m=8</em>, <em class="sig-param">weights=(0.5</em>, <em class="sig-param">0.5)</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/datasketch/lshensemble.html#MinHashLSHEnsemble.__init__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#datasketch.MinHashLSHEnsemble.__init__" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">__init__</code><span class="sig-paren">(</span><em class="sig-param">threshold=0.9</em>, <em class="sig-param">num_perm=128</em>, <em class="sig-param">num_part=16</em>, <em class="sig-param">m=8</em>, <em class="sig-param">weights=(0.5</em>, <em class="sig-param">0.5)</em>, <em class="sig-param">storage_config=None</em>, <em class="sig-param">prepickle=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/datasketch/lshensemble.html#MinHashLSHEnsemble.__init__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#datasketch.MinHashLSHEnsemble.__init__" title="Permalink to this definition">¶</a></dt>
 <dd><p>Initialize self.  See help(type(self)) for accurate signature.</p>
 </dd></dl>
 

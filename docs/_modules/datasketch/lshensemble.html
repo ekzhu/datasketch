@@ -85,7 +85,10 @@
             
   <h1>Source code for datasketch.lshensemble</h1><div class="highlight"><pre>
 <span></span><span class="kn">from</span> <span class="nn">collections</span> <span class="k">import</span> <span class="n">deque</span><span class="p">,</span> <span class="n">Counter</span>
+<span class="kn">import</span> <span class="nn">struct</span>
+
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">from</span> <span class="nn">datasketch.storage</span> <span class="k">import</span> <span class="n">_random_name</span>
 <span class="kn">from</span> <span class="nn">datasketch.lsh</span> <span class="k">import</span> <span class="n">integrate</span><span class="p">,</span> <span class="n">MinHashLSH</span>
 <span class="kn">from</span> <span class="nn">datasketch.lshensemble_partition</span> <span class="k">import</span> <span class="n">optimal_partitions</span>
 
@@ -161,6 +164,14 @@
 <span class="sd">            minizing false positive and false negative when optimizing</span>
 <span class="sd">            for the Containment threshold. Similar to the `weights` parameter</span>
 <span class="sd">            in :class:`datasketch.MinHashLSH`.</span>
+<span class="sd">        storage_config (dict, optional): Type of storage service to use for storing</span>
+<span class="sd">            hashtables and keys.</span>
+<span class="sd">            `basename` is an optional property whose value will be used as the prefix to</span>
+<span class="sd">            stored keys. If this is not set, a random string will be generated instead. If you</span>
+<span class="sd">            set this, you will be responsible for ensuring there are no key collisions.</span>
+<span class="sd">        prepickle (bool, optional): If True, all keys are pickled to bytes before</span>
+<span class="sd">            insertion. If None, a default value is chosen based on the</span>
+<span class="sd">            `storage_config`.</span>
 
 <span class="sd">    Note:</span>
 <span class="sd">        Using more partitions (`num_part`) leads to better accuracy, at the</span>
@@ -178,7 +189,8 @@
 <span class="sd">    .. _`the paper`: http://www.vldb.org/pvldb/vol9/p1185-zhu.pdf</span>
 <span class="sd">    &#39;&#39;&#39;</span>
 
-<div class="viewcode-block" id="MinHashLSHEnsemble.__init__"><a class="viewcode-back" href="../../documentation.html#datasketch.MinHashLSHEnsemble.__init__">[docs]</a>    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">threshold</span><span class="o">=</span><span class="mf">0.9</span><span class="p">,</span> <span class="n">num_perm</span><span class="o">=</span><span class="mi">128</span><span class="p">,</span> <span class="n">num_part</span><span class="o">=</span><span class="mi">16</span><span class="p">,</span> <span class="n">m</span><span class="o">=</span><span class="mi">8</span><span class="p">,</span> <span class="n">weights</span><span class="o">=</span><span class="p">(</span><span class="mf">0.5</span><span class="p">,</span><span class="mf">0.5</span><span class="p">)):</span>
+<div class="viewcode-block" id="MinHashLSHEnsemble.__init__"><a class="viewcode-back" href="../../documentation.html#datasketch.MinHashLSHEnsemble.__init__">[docs]</a>    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">threshold</span><span class="o">=</span><span class="mf">0.9</span><span class="p">,</span> <span class="n">num_perm</span><span class="o">=</span><span class="mi">128</span><span class="p">,</span> <span class="n">num_part</span><span class="o">=</span><span class="mi">16</span><span class="p">,</span> <span class="n">m</span><span class="o">=</span><span class="mi">8</span><span class="p">,</span> 
+            <span class="n">weights</span><span class="o">=</span><span class="p">(</span><span class="mf">0.5</span><span class="p">,</span><span class="mf">0.5</span><span class="p">),</span> <span class="n">storage_config</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">prepickle</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
         <span class="k">if</span> <span class="n">threshold</span> <span class="o">&gt;</span> <span class="mf">1.0</span> <span class="ow">or</span> <span class="n">threshold</span> <span class="o">&lt;</span> <span class="mf">0.0</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;threshold must be in [0.0, 1.0]&quot;</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">num_perm</span> <span class="o">&lt;</span> <span class="mi">2</span><span class="p">:</span>
@@ -196,9 +208,16 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">m</span> <span class="o">=</span> <span class="n">m</span>
         <span class="n">rs</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_init_optimal_params</span><span class="p">(</span><span class="n">weights</span><span class="p">)</span>
         <span class="c1"># Initialize multiple LSH indexes for each partition</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">indexes</span> <span class="o">=</span> <span class="p">[</span><span class="nb">dict</span><span class="p">((</span><span class="n">r</span><span class="p">,</span> <span class="n">MinHashLSH</span><span class="p">(</span><span class="n">num_perm</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">h</span><span class="p">,</span>
-            <span class="n">params</span><span class="o">=</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">h</span><span class="o">/</span><span class="n">r</span><span class="p">),</span> <span class="n">r</span><span class="p">)))</span> <span class="k">for</span> <span class="n">r</span> <span class="ow">in</span> <span class="n">rs</span><span class="p">)</span>
-            <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">num_part</span><span class="p">)]</span>
+        <span class="n">storage_config</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;type&#39;</span><span class="p">:</span> <span class="s1">&#39;dict&#39;</span><span class="p">}</span> <span class="k">if</span> <span class="ow">not</span> <span class="n">storage_config</span> <span class="k">else</span> <span class="n">storage_config</span>
+        <span class="n">basename</span> <span class="o">=</span> <span class="n">storage_config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;basename&#39;</span><span class="p">,</span> <span class="n">_random_name</span><span class="p">(</span><span class="mi">11</span><span class="p">))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">indexes</span> <span class="o">=</span> <span class="p">[</span>
+            <span class="nb">dict</span><span class="p">((</span><span class="n">r</span><span class="p">,</span> <span class="n">MinHashLSH</span><span class="p">(</span>
+                <span class="n">num_perm</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">h</span><span class="p">,</span>
+                <span class="n">params</span><span class="o">=</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">h</span><span class="o">/</span><span class="n">r</span><span class="p">),</span> <span class="n">r</span><span class="p">),</span>
+                <span class="n">storage_config</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_get_storage_config</span><span class="p">(</span>
+                    <span class="n">basename</span><span class="p">,</span> <span class="n">storage_config</span><span class="p">,</span> <span class="n">partition</span><span class="p">,</span> <span class="n">r</span><span class="p">),</span>
+                <span class="n">prepickle</span><span class="o">=</span><span class="n">prepickle</span><span class="p">))</span> <span class="k">for</span> <span class="n">r</span> <span class="ow">in</span> <span class="n">rs</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">partition</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">num_part</span><span class="p">)]</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">lowers</span> <span class="o">=</span> <span class="p">[</span><span class="kc">None</span> <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">indexes</span><span class="p">]</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">uppers</span> <span class="o">=</span> <span class="p">[</span><span class="kc">None</span> <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">indexes</span><span class="p">]</span></div>
 
@@ -221,6 +240,12 @@
         <span class="k">if</span> <span class="n">i</span> <span class="o">==</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">params</span><span class="p">):</span>
             <span class="n">i</span> <span class="o">=</span> <span class="n">i</span> <span class="o">-</span> <span class="mi">1</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">params</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+    
+    <span class="k">def</span> <span class="nf">_get_storage_config</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">basename</span><span class="p">,</span> <span class="n">base_config</span><span class="p">,</span> <span class="n">partition</span><span class="p">,</span> <span class="n">r</span><span class="p">):</span>
+        <span class="n">config</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="n">base_config</span><span class="p">)</span>
+        <span class="n">config</span><span class="p">[</span><span class="s2">&quot;basename&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="sa">b</span><span class="s2">&quot;-&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span>
+            <span class="p">[</span><span class="n">basename</span><span class="p">,</span> <span class="n">struct</span><span class="o">.</span><span class="n">pack</span><span class="p">(</span><span class="s1">&#39;&gt;H&#39;</span><span class="p">,</span> <span class="n">partition</span><span class="p">),</span> <span class="n">struct</span><span class="o">.</span><span class="n">pack</span><span class="p">(</span><span class="s1">&#39;&gt;H&#39;</span><span class="p">,</span> <span class="n">r</span><span class="p">)])</span>
+        <span class="k">return</span> <span class="n">config</span>
 
 <div class="viewcode-block" id="MinHashLSHEnsemble.index"><a class="viewcode-back" href="../../documentation.html#datasketch.MinHashLSHEnsemble.index">[docs]</a>    <span class="k">def</span> <span class="nf">index</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">entries</span><span class="p">):</span>
         <span class="sd">&#39;&#39;&#39;</span>
@@ -261,7 +286,7 @@
                 <span class="n">curr_part</span> <span class="o">+=</span> <span class="mi">1</span>
             <span class="k">for</span> <span class="n">r</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">indexes</span><span class="p">[</span><span class="n">curr_part</span><span class="p">]:</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">indexes</span><span class="p">[</span><span class="n">curr_part</span><span class="p">][</span><span class="n">r</span><span class="p">]</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="n">minhash</span><span class="p">)</span></div>
-
+    
 <div class="viewcode-block" id="MinHashLSHEnsemble.query"><a class="viewcode-back" href="../../documentation.html#datasketch.MinHashLSHEnsemble.query">[docs]</a>    <span class="k">def</span> <span class="nf">query</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">minhash</span><span class="p">,</span> <span class="n">size</span><span class="p">):</span>
         <span class="sd">&#39;&#39;&#39;</span>
 <span class="sd">        Giving the MinHash and size of the query set, retrieve</span>
