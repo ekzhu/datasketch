@@ -1,9 +1,8 @@
 test:
-	nosetests
+	nosetests --exclude-dir=test/aio
 
 doc:
 	sphinx-build -a -b html docsrc docs
-
 
 upload:
 	rm -rf ./dist/*

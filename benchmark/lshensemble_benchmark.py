@@ -86,12 +86,12 @@ def bootstrap_sets(sets_file, sample_ratio, num_perms, skip=1,
     return (minhashes, sets, keys)
 
 
-def benchmark_lshensemble(threshold, num_perm, num_part, m, index_data,
-        query_data):
+def benchmark_lshensemble(threshold, num_perm, num_part, m, storage_config,
+        index_data, query_data):
     print("Building LSH Ensemble index")
     (minhashes, indexed_sets, keys) = index_data
     lsh = MinHashLSHEnsemble(threshold=threshold, num_perm=num_perm,
-            num_part=num_part, m=m)
+            num_part=num_part, m=m, storage_config=storage_config)
     lsh.index((key, minhash, len(s))
             for key, minhash, s in \
                     zip(keys, minhashes[num_perm], indexed_sets))
@@ -140,7 +140,7 @@ def _compute_containment(x, y):
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(
             description="Run LSH Ensemble benchmark using data sets obtained "
-            "from https://github.com/ekzhu/set-similarity-search-benchmark.")
+            "from https://github.com/ekzhu/set-similarity-search-benchmarks.")
     parser.add_argument("--indexed-sets", type=str, required=True,
             help="Input indexed set file (gzipped), each line is a set: "
             "<set_size> <1>,<2>,<3>..., where each <?> is an element.")
@@ -153,13 +153,17 @@ if __name__ == "__main__":
             default="lshensemble_benchmark_ground_truth_results.csv")
     parser.add_argument("--skip-ground-truth", action="store_true")
     parser.add_argument("--use-asym-minhash", action="store_true")
+    parser.add_argument("--use-redis", action="store_true")
+    parser.add_argument("--redis-host", type=str, default="localhost")
+    parser.add_argument("--redis-port", type=int, default=6379)
     args = parser.parse_args(sys.argv[1:])
 
-    thresholds = [0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0]
+    #thresholds = [0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0]
+    thresholds = [0.5, 0.75, 1.0]
     #num_parts = [1, 8, 16, 32]
-    num_parts = [1,]
+    num_parts = [8,]
     #num_perms = [32, 64, 96, 128, 160, 192, 224, 256]
-    num_perms = [256,]
+    num_perms = [32,]
     m = 8
 
     index_data, query_data = None, None
@@ -204,6 +208,16 @@ if __name__ == "__main__":
             columns=["query_key", "query_size", "threshold",
                 "query_time", "results"])
         df_groundtruth.to_csv(args.ground_truth_results)
+    
+    storage_config = {"type": "dict"}
+    if args.use_redis:
+        storage_config = {
+            "type": "redis",
+            "redis": {
+                "host": args.redis_host,
+                "port": args.redis_port,
+            },
+        }
 
     rows = []
     for threshold in thresholds:
@@ -213,7 +227,8 @@ if __name__ == "__main__":
                         "threshold = {}, num_part = {}, num_perm = {}".format(
                             threshold, num_part, num_perm))
                 results, probe_times, process_times = benchmark_lshensemble(
-                        threshold, num_perm, num_part, m, index_data, query_data)
+                        threshold, num_perm, num_part, m, storage_config, 
+                        index_data, query_data)
                 for probe_time, process_time, result, query_set, query_key in zip(\
                         probe_times, process_times, results, \
                         query_data[1], query_data[2]):

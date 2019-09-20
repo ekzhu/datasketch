@@ -1,5 +1,8 @@
 from collections import deque, Counter
+import struct
+
 import numpy as np
+from datasketch.storage import _random_name
 from datasketch.lsh import integrate, MinHashLSH
 from datasketch.lshensemble_partition import optimal_partitions
 
@@ -75,6 +78,14 @@ class MinHashLSHEnsemble(object):
             minizing false positive and false negative when optimizing
             for the Containment threshold. Similar to the `weights` parameter
             in :class:`datasketch.MinHashLSH`.
+        storage_config (dict, optional): Type of storage service to use for storing
+            hashtables and keys.
+            `basename` is an optional property whose value will be used as the prefix to
+            stored keys. If this is not set, a random string will be generated instead. If you
+            set this, you will be responsible for ensuring there are no key collisions.
+        prepickle (bool, optional): If True, all keys are pickled to bytes before
+            insertion. If None, a default value is chosen based on the
+            `storage_config`.
 
     Note:
         Using more partitions (`num_part`) leads to better accuracy, at the
@@ -92,7 +103,8 @@ class MinHashLSHEnsemble(object):
     .. _`the paper`: http://www.vldb.org/pvldb/vol9/p1185-zhu.pdf
     '''
 
-    def __init__(self, threshold=0.9, num_perm=128, num_part=16, m=8, weights=(0.5,0.5)):
+    def __init__(self, threshold=0.9, num_perm=128, num_part=16, m=8, 
+            weights=(0.5,0.5), storage_config=None, prepickle=None):
         if threshold > 1.0 or threshold < 0.0:
             raise ValueError("threshold must be in [0.0, 1.0]")
         if num_perm < 2:
@@ -110,9 +122,16 @@ class MinHashLSHEnsemble(object):
         self.m = m
         rs = self._init_optimal_params(weights)
         # Initialize multiple LSH indexes for each partition
-        self.indexes = [dict((r, MinHashLSH(num_perm=self.h,
-            params=(int(self.h/r), r))) for r in rs)
-            for _ in range(0, num_part)]
+        storage_config = {'type': 'dict'} if not storage_config else storage_config
+        basename = storage_config.get('basename', _random_name(11))
+        self.indexes = [
+            dict((r, MinHashLSH(
+                num_perm=self.h,
+                params=(int(self.h/r), r),
+                storage_config=self._get_storage_config(
+                    basename, storage_config, partition, r),
+                prepickle=prepickle)) for r in rs)
+            for partition in range(0, num_part)]
         self.lowers = [None for _ in self.indexes]
         self.uppers = [None for _ in self.indexes]
 
@@ -135,6 +154,12 @@ class MinHashLSHEnsemble(object):
         if i == len(self.params):
             i = i - 1
         return self.params[i]
+    
+    def _get_storage_config(self, basename, base_config, partition, r):
+        config = dict(base_config)
+        config["basename"] = b"-".join(
+            [basename, struct.pack('>H', partition), struct.pack('>H', r)])
+        return config
 
     def index(self, entries):
         '''
@@ -175,7 +200,7 @@ class MinHashLSHEnsemble(object):
                 curr_part += 1
             for r in self.indexes[curr_part]:
                 self.indexes[curr_part][r].insert(key, minhash)
-
+    
     def query(self, minhash, size):
         '''
         Giving the MinHash and size of the query set, retrieve
