@@ -137,6 +137,34 @@ def _compute_containment(x, y):
     return float(intersection) / float(len(x))
 
 
+levels = {
+    "test": {
+        "thresholds": [1.0,],
+        "num_parts": [4,],
+        "num_perms": [32,],
+        "m": 2,
+    },
+    "lite": {
+        "thresholds": [0.5, 0.75, 1.0],
+        "num_parts": [8, 16],
+        "num_perms": [32, 64],
+        "m": 8,
+    },
+    "medium": {
+        "thresholds": [0.5, 0.6, 0.7, 0.8, 0.9, 1.0],
+        "num_parts": [8, 16, 32],
+        "num_perms": [32, 128, 224],
+        "m": 8,
+    },
+    "complete": {
+        "thresholds": [0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0],
+        "num_parts": [8, 16, 32],
+        "num_perms": [32, 64, 96, 128, 160, 192, 224, 256],
+        "m": 8,
+    },
+}
+
+
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(
             description="Run LSH Ensemble benchmark using data sets obtained "
@@ -151,6 +179,9 @@ if __name__ == "__main__":
             default="lshensemble_benchmark_query_results.csv")
     parser.add_argument("--ground-truth-results", type=str,
             default="lshensemble_benchmark_ground_truth_results.csv")
+    parser.add_argument("--indexed-sets-sample-ratio", type=float, default=0.1)
+    parser.add_argument("--level", type=str, choices=levels.keys(), 
+            default="complete")
     parser.add_argument("--skip-ground-truth", action="store_true")
     parser.add_argument("--use-asym-minhash", action="store_true")
     parser.add_argument("--use-redis", action="store_true")
@@ -158,14 +189,8 @@ if __name__ == "__main__":
     parser.add_argument("--redis-port", type=int, default=6379)
     args = parser.parse_args(sys.argv[1:])
 
-    #thresholds = [0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0]
-    thresholds = [0.5, 0.75, 1.0]
-    #num_parts = [1, 8, 16, 32]
-    num_parts = [8,]
-    #num_perms = [32, 64, 96, 128, 160, 192, 224, 256]
-    num_perms = [32,]
-    m = 8
-
+    level = levels[args.level]
+    
     index_data, query_data = None, None
     index_data_cache = "{}.pickle".format(args.indexed_sets)
     query_data_cache = "{}.pickle".format(args.query_sets)
@@ -175,7 +200,8 @@ if __name__ == "__main__":
             index_data = pickle.load(d)
     else:
         print("Using indexed sets {}".format(args.indexed_sets))
-        index_data = bootstrap_sets(args.indexed_sets, 0.1, num_perms,
+        index_data = bootstrap_sets(args.indexed_sets, 
+                args.indexed_sets_sample_ratio, num_perms=level["num_perms"],
                 pad_for_asym=args.use_asym_minhash)
         with open(index_data_cache, "wb") as d:
             pickle.dump(index_data, d)
@@ -185,7 +211,8 @@ if __name__ == "__main__":
             query_data = pickle.load(d)
     else:
         print("Using query sets {}".format(args.query_sets))
-        query_data = bootstrap_sets(args.query_sets, 1.0, num_perms, skip=0)
+        query_data = bootstrap_sets(args.query_sets, 1.0, 
+                num_perms=level["num_perms"], skip=0)
         with open(query_data_cache, "wb") as d:
             pickle.dump(query_data, d)
 
@@ -195,7 +222,7 @@ if __name__ == "__main__":
         print("Building search index...")
         index = SearchIndex(index_data[1], similarity_func_name="containment",
                 similarity_threshold=0.1)
-        for threshold in thresholds:
+        for threshold in level["thresholds"]:
             index.similarity_threshold = threshold
             print("Running ground truth benchmark threshold = {}".format(threshold))
             ground_truth_results, ground_truth_times = \
@@ -220,14 +247,14 @@ if __name__ == "__main__":
         }
 
     rows = []
-    for threshold in thresholds:
-        for num_part in num_parts:
-            for num_perm in num_perms:
+    for threshold in level["thresholds"]:
+        for num_part in level["num_parts"]:
+            for num_perm in level["num_perms"]:
                 print("Running LSH Ensemble benchmark "
                         "threshold = {}, num_part = {}, num_perm = {}".format(
                             threshold, num_part, num_perm))
                 results, probe_times, process_times = benchmark_lshensemble(
-                        threshold, num_perm, num_part, m, storage_config, 
+                        threshold, num_perm, num_part, level["m"], storage_config, 
                         index_data, query_data)
                 for probe_time, process_time, result, query_set, query_key in zip(\
                         probe_times, process_times, results, \
