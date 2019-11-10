@@ -3,7 +3,7 @@ Setup script for datasketch package
 """
 
 # Always prefer setuptools over distutils
-from setuptools import setup, find_packages
+from setuptools import setup
 # To use a consistent encoding
 from codecs import open
 from os import path
@@ -52,6 +52,9 @@ setup(
         'numpy>=1.11'
     ],
     extras_require={
+        'cassandra': [
+            'cassandra-driver>=3.20',
+        ],
         'scipy': [
             'scipy',
         ],
@@ -69,6 +72,7 @@ setup(
             'nltk>=3.4.5',
         ],
         'test': [
+            'cassandra-driver>=3.20',
             'redis>=2.10.0',
             'mock>=2.0.0', 
             'mockredispy', 
