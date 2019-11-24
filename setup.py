@@ -70,12 +70,11 @@ setup(
         ],
         'test': [
             'redis>=2.10.0',
-            'nose>=1.3.7',
             'nose2>=0.9.1',
             'mock>=2.0.0', 
             'mockredispy', 
-            'nose-exclude',
             'coverage', 
+            'pymongo>=3.9.0',
         ],
         'experimental_aio': [
             "aiounittest ; python_version>='3.6'", 
