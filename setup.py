@@ -52,8 +52,12 @@ setup(
         'numpy>=1.11'
     ],
     extras_require={
-        'scipy': ['scipy'],
-        'redis': ['redis>=2.10.0'],
+        'scipy': [
+            'scipy',
+        ],
+        'redis': [
+            'redis>=2.10.0',
+        ],
         'benchmark': [
             'pyhash>=0.9.3',
             'matplotlib>=3.1.2',
@@ -65,6 +69,7 @@ setup(
             'nltk>=3.4.5',
         ],
         'test': [
+            'redis>=2.10.0',
             'nose>=1.3.7',
             'nose2>=0.9.1',
             'mock>=2.0.0', 
