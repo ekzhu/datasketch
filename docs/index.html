@@ -153,10 +153,18 @@ layer.</p>
 <div class="section" id="install">
 <h2>Install<a class="headerlink" href="#install" title="Permalink to this headline">¶</a></h2>
 <p>To install datasketch using <code class="docutils literal notranslate"><span class="pre">pip</span></code>:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">pip</span> <span class="n">install</span> <span class="n">datasketch</span> <span class="o">-</span><span class="n">U</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">pip</span> <span class="n">install</span> <span class="n">datasketch</span>
 </pre></div>
 </div>
 <p>This will also install NumPy as dependency.</p>
+<p>To install with Redis dependency:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">pip</span> <span class="n">install</span> <span class="n">datasketch</span><span class="p">[</span><span class="n">redis</span><span class="p">]</span>
+</pre></div>
+</div>
+<p>To install with Scipy for faster MinHashLSH initialization:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">pip</span> <span class="n">install</span> <span class="n">datasketch</span><span class="p">[</span><span class="n">scipy</span><span class="p">]</span>
+</pre></div>
+</div>
 <div class="toctree-wrapper compound">
 </div>
 </div>
