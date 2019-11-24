@@ -11,7 +11,8 @@ services:
   - mongodb
 install:
   - pip install -e .[test]
-  - if (( $TRAVIS_PYTHON_VERSION >= 3.6 )) || [[ $TRAVIS_PYTHON_VERSION == 'nightly' ]]; then pip install -e .[experimental_aio]; fi
+  - if [[ $TRAVIS_PYTHON_VERSION == '3.6' || $TRAVIS_PYTHON_VERSION == 'nightly' ]]; then pip install -e .[experimental_aio]; fi
 script:
   - nose2 test
-  - if (( $TRAVIS_PYTHON_VERSION >= 3.6 )) || [[ $TRAVIS_PYTHON_VERSION == 'nightly' ]]; then export DO_TEST_MONGO=true; nose2 test.test_lsh_mongo; fi
+  - export DO_TEST_MONGO=true
+  - if [[ $TRAVIS_PYTHON_VERSION == '3.6' || $TRAVIS_PYTHON_VERSION == 'nightly' ]]; then nose2 test.test_lsh_mongo; fi
