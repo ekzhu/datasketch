@@ -11,10 +11,10 @@ services:
   - mongodb
 install:
   - pip install -e .[test]
-  - if [[ $TRAVIS_PYTHON_VERSION == '3.6' || $TRAVIS_PYTHON_VERSION == 'nightly' ]]; then pip install -e .[experimental_aio]; fi
+  - if [[ $TRAVIS_PYTHON_VERSION == '3.6' || $TRAVIS_PYTHON_VERSION == '3.7' || $TRAVIS_PYTHON_VERSION == '3.8' || $TRAVIS_PYTHON_VERSION == 'nightly' ]]; then pip install -e .[experimental_aio]; fi
 script:
-  # Run normal tests first.
-  - nosetests --exclude-test-file=test/test_lsh_mongo.py
-  # Run Mongo integration tests.
+  # Run non aio tests first because Python versions before 3.6 does not support aio.
+  - nosetests --exclude-dir=test/aio
+  # Run aio tests.
   - export DO_TEST_MONGO=true
-  - if [[ $TRAVIS_PYTHON_VERSION == '3.6' || $TRAVIS_PYTHON_VERSION == 'nightly' ]]; then nosetests test.test_lsh_mongo; fi
+  - if [[ $TRAVIS_PYTHON_VERSION == '3.6' || $TRAVIS_PYTHON_VERSION == '3.7' || $TRAVIS_PYTHON_VERSION == '3.8' || $TRAVIS_PYTHON_VERSION == 'nightly' ]]; then nosetests test.aio; fi
