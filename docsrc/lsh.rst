@@ -120,6 +120,44 @@ bulk insertion.
 Note that querying the LSH object during an open insertion session may result in
 inconsistency.
 
+MinHash LSH also supports a Cassandra cluster as a storage layer. Using a long-term
+storage for your LSH addresses all use cases where the application needs to continuously update
+the LSH object (for example when you use MinHash LSH to incrementally cluster documents).
+
+The Cassandra storage option can be configured as follows:
+
+.. code:: python
+
+    from datasketch import MinHashLSH
+
+    lsh = MinHashLSH(
+        threashold=0.5, num_perm=128, storage_config={
+            'type': 'cassandra',
+            'basename': b'unique_name',
+            'cassandra': {
+                'seeds': ['127.0.0.1'],
+                'keyspace': 'lsh_test',
+                'replication': {
+                    'class': 'SimpleStrategy',
+                    'replication_factor': '1',
+                },
+                'drop_keyspace': False,
+                'drop_tables': False,
+            }
+        }
+    )
+
+The parameter `seeds` specifies the list of seed nodes that can be contacted to connect to the
+Cassandra cluster. Options `keyspace` and `replication` specify the parameters to be used
+when creating a keyspace (if not already existing). If you want to force creation of either tables
+or keyspace (and thus DROP existing ones), set `drop_tables` and `drop_keyspace` options to
+`True`.
+
+If you fancy setting a prefix for the tables used by the storage you can do so via
+the `basename` parameter. Furthermore, like the Redis counterpart, you can use insert sessions
+to reduce the number of network calls during bulk insertion.
+
+
 Connecting to Existing MinHash LSH
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 

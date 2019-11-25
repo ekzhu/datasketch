@@ -148,8 +148,8 @@ sub-linear query time:</p>
 <p>datasketch must be used with Python 2.7 or above and NumPy 1.11 or
 above. Scipy is optional, but with it the LSH initialization can be much
 faster.</p>
-<p>Note that <a class="reference external" href="https://ekzhu.github.io/datasketch/lsh.html">MinHash LSH</a> and <a class="reference external" href="https://ekzhu.github.io/datasketch/lshensemble.html">MinHash LSH Ensemble</a> also support Redis storage
-layer.</p>
+<p>Note that <a class="reference external" href="https://ekzhu.github.io/datasketch/lsh.html">MinHash LSH</a> and <a class="reference external" href="https://ekzhu.github.io/datasketch/lshensemble.html">MinHash LSH Ensemble</a> also support Redis and Cassandra
+storage layer.</p>
 <div class="section" id="install">
 <h2>Install<a class="headerlink" href="#install" title="Permalink to this headline">¶</a></h2>
 <p>To install datasketch using <code class="docutils literal notranslate"><span class="pre">pip</span></code>:</p>
@@ -159,6 +159,10 @@ layer.</p>
 <p>This will also install NumPy as dependency.</p>
 <p>To install with Redis dependency:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">pip</span> <span class="n">install</span> <span class="n">datasketch</span><span class="p">[</span><span class="n">redis</span><span class="p">]</span>
+</pre></div>
+</div>
+<p>To install with Cassandra dependency:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">pip</span> <span class="n">install</span> <span class="n">datasketch</span><span class="p">[</span><span class="n">cassandra</span><span class="p">]</span>
 </pre></div>
 </div>
 <p>To install with Scipy for faster MinHashLSH initialization:</p>
