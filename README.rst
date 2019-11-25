@@ -61,6 +61,12 @@ To install with Redis dependency:
 
     pip install datasketch[redis]
 
+To install with Cassandra dependency:
+
+::
+
+    pip install datasketch[cassandra]
+
 To install with Scipy for faster MinHashLSH initialization:
 
 ::
