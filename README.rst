@@ -42,7 +42,7 @@ above. Scipy is optional, but with it the LSH initialization can be much
 faster.
 
 Note that `MinHash LSH`_ and `MinHash LSH Ensemble`_ also support Redis and Cassandra 
-storage layer.
+storage layer (see `MinHash LSH at Scale`_).
 
 Install
 -------
@@ -80,3 +80,4 @@ To install with Scipy for faster MinHashLSH initialization:
 .. _`MinHash LSH`: https://ekzhu.github.io/datasketch/lsh.html
 .. _`MinHash LSH Forest`: https://ekzhu.github.io/datasketch/lshforest.html
 .. _`MinHash LSH Ensemble`: https://ekzhu.github.io/datasketch/lshensemble.html
+.. _`Minhash LSH at Scale`: http://ekzhu.github.io/datasketch/lsh.html#minhash-lsh-at-scale
