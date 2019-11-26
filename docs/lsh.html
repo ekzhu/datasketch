@@ -180,10 +180,11 @@ The Redis storage option can be configured using:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">datasketch</span> <span class="kn">import</span> <span class="n">MinHashLSH</span>
 
 <span class="n">lsh</span> <span class="o">=</span> <span class="n">MinHashLSH</span><span class="p">(</span>
-   <span class="n">threshold</span><span class="o">=</span><span class="mf">0.5</span><span class="p">,</span> <span class="n">num_perm</span><span class="o">=</span><span class="mi">128</span><span class="p">,</span> <span class="n">storage_config</span><span class="o">=</span><span class="p">{</span>
-      <span class="s1">&#39;type&#39;</span><span class="p">:</span> <span class="s1">&#39;redis&#39;</span><span class="p">,</span>
-      <span class="s1">&#39;redis&#39;</span><span class="p">:</span> <span class="p">{</span><span class="s1">&#39;host&#39;</span><span class="p">:</span> <span class="s1">&#39;localhost&#39;</span><span class="p">,</span> <span class="s1">&#39;port&#39;</span><span class="p">:</span> <span class="mi">6379</span><span class="p">}</span>
-   <span class="p">})</span>
+    <span class="n">threshold</span><span class="o">=</span><span class="mf">0.5</span><span class="p">,</span> <span class="n">num_perm</span><span class="o">=</span><span class="mi">128</span><span class="p">,</span> <span class="n">storage_config</span><span class="o">=</span><span class="p">{</span>
+        <span class="s1">&#39;type&#39;</span><span class="p">:</span> <span class="s1">&#39;redis&#39;</span><span class="p">,</span>
+        <span class="s1">&#39;redis&#39;</span><span class="p">:</span> <span class="p">{</span><span class="s1">&#39;host&#39;</span><span class="p">:</span> <span class="s1">&#39;localhost&#39;</span><span class="p">,</span> <span class="s1">&#39;port&#39;</span><span class="p">:</span> <span class="mi">6379</span><span class="p">},</span>
+    <span class="p">}</span>
+<span class="p">)</span>
 </pre></div>
 </div>
 <p>To insert a large number of MinHashes in sequence, it is advisable to use
@@ -207,7 +208,6 @@ the LSH object (for example when you use MinHash LSH to incrementally cluster do
 <span class="n">lsh</span> <span class="o">=</span> <span class="n">MinHashLSH</span><span class="p">(</span>
     <span class="n">threashold</span><span class="o">=</span><span class="mf">0.5</span><span class="p">,</span> <span class="n">num_perm</span><span class="o">=</span><span class="mi">128</span><span class="p">,</span> <span class="n">storage_config</span><span class="o">=</span><span class="p">{</span>
         <span class="s1">&#39;type&#39;</span><span class="p">:</span> <span class="s1">&#39;cassandra&#39;</span><span class="p">,</span>
-        <span class="s1">&#39;basename&#39;</span><span class="p">:</span> <span class="sa">b</span><span class="s1">&#39;unique_name&#39;</span><span class="p">,</span>
         <span class="s1">&#39;cassandra&#39;</span><span class="p">:</span> <span class="p">{</span>
             <span class="s1">&#39;seeds&#39;</span><span class="p">:</span> <span class="p">[</span><span class="s1">&#39;127.0.0.1&#39;</span><span class="p">],</span>
             <span class="s1">&#39;keyspace&#39;</span><span class="p">:</span> <span class="s1">&#39;lsh_test&#39;</span><span class="p">,</span>
@@ -227,8 +227,7 @@ Cassandra cluster. Options <cite>keyspace</cite> and <cite>replication</cite> sp
 when creating a keyspace (if not already existing). If you want to force creation of either tables
 or keyspace (and thus DROP existing ones), set <cite>drop_tables</cite> and <cite>drop_keyspace</cite> options to
 <cite>True</cite>.</p>
-<p>If you fancy setting a prefix for all tables used by the storage you can do so via
-the <cite>basename</cite> parameter. Furthermore, like the Redis counterpart, you can use insert sessions
+<p>Like the Redis counterpart, you can use insert sessions
 to reduce the number of network calls during bulk insertion.</p>
 <div class="section" id="connecting-to-existing-minhash-lsh">
 <h3>Connecting to Existing MinHash LSH<a class="headerlink" href="#connecting-to-existing-minhash-lsh" title="Permalink to this headline">¶</a></h3>
@@ -253,12 +252,32 @@ so you can call <cite>pickle</cite>:</p>
 such as various parameter settings in a single location.</p>
 <p>Alternatively you can specify <cite>basename</cite> in the storage config when
 you first creating the LSH. For example:</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">lsh</span> <span class="o">=</span> <span class="n">MinHashLSH</span><span class="p">(</span>
- <span class="n">threshold</span><span class="o">=</span><span class="mf">0.5</span><span class="p">,</span> <span class="n">num_perm</span><span class="o">=</span><span class="mi">128</span><span class="p">,</span> <span class="n">storage_config</span><span class="o">=</span><span class="p">{</span>
-    <span class="s1">&#39;type&#39;</span><span class="p">:</span> <span class="s1">&#39;redis&#39;</span><span class="p">,</span>
-    <span class="s1">&#39;basename&#39;</span><span class="p">:</span> <span class="sa">b</span><span class="s1">&#39;unique_name_6ac4fg&#39;</span><span class="p">,</span>
-    <span class="s1">&#39;redis&#39;</span><span class="p">:</span> <span class="p">{</span><span class="s1">&#39;host&#39;</span><span class="p">:</span> <span class="s1">&#39;localhost&#39;</span><span class="p">,</span> <span class="s1">&#39;port&#39;</span><span class="p">:</span> <span class="mi">6379</span><span class="p">}</span>
- <span class="p">})</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># For Redis.</span>
+<span class="n">lsh</span> <span class="o">=</span> <span class="n">MinHashLSH</span><span class="p">(</span>
+    <span class="n">threshold</span><span class="o">=</span><span class="mf">0.5</span><span class="p">,</span> <span class="n">num_perm</span><span class="o">=</span><span class="mi">128</span><span class="p">,</span> <span class="n">storage_config</span><span class="o">=</span><span class="p">{</span>
+        <span class="s1">&#39;type&#39;</span><span class="p">:</span> <span class="s1">&#39;redis&#39;</span><span class="p">,</span>
+        <span class="s1">&#39;basename&#39;</span><span class="p">:</span> <span class="sa">b</span><span class="s1">&#39;unique_name_6ac4fg&#39;</span><span class="p">,</span>
+        <span class="s1">&#39;redis&#39;</span><span class="p">:</span> <span class="p">{</span><span class="s1">&#39;host&#39;</span><span class="p">:</span> <span class="s1">&#39;localhost&#39;</span><span class="p">,</span> <span class="s1">&#39;port&#39;</span><span class="p">:</span> <span class="mi">6379</span><span class="p">},</span>
+    <span class="p">}</span>
+<span class="p">)</span>
+
+ <span class="c1"># For Cassandra.</span>
+ <span class="n">lsh</span> <span class="o">=</span> <span class="n">MinHashLSH</span><span class="p">(</span>
+    <span class="n">threashold</span><span class="o">=</span><span class="mf">0.5</span><span class="p">,</span> <span class="n">num_perm</span><span class="o">=</span><span class="mi">128</span><span class="p">,</span> <span class="n">storage_config</span><span class="o">=</span><span class="p">{</span>
+        <span class="s1">&#39;type&#39;</span><span class="p">:</span> <span class="s1">&#39;cassandra&#39;</span><span class="p">,</span>
+        <span class="s1">&#39;basename&#39;</span><span class="p">:</span> <span class="sa">b</span><span class="s1">&#39;unique_name&#39;</span><span class="p">,</span>
+        <span class="s1">&#39;cassandra&#39;</span><span class="p">:</span> <span class="p">{</span>
+            <span class="s1">&#39;seeds&#39;</span><span class="p">:</span> <span class="p">[</span><span class="s1">&#39;127.0.0.1&#39;</span><span class="p">],</span>
+            <span class="s1">&#39;keyspace&#39;</span><span class="p">:</span> <span class="s1">&#39;lsh_test&#39;</span><span class="p">,</span>
+            <span class="s1">&#39;replication&#39;</span><span class="p">:</span> <span class="p">{</span>
+                <span class="s1">&#39;class&#39;</span><span class="p">:</span> <span class="s1">&#39;SimpleStrategy&#39;</span><span class="p">,</span>
+                <span class="s1">&#39;replication_factor&#39;</span><span class="p">:</span> <span class="s1">&#39;1&#39;</span><span class="p">,</span>
+            <span class="p">},</span>
+            <span class="s1">&#39;drop_keyspace&#39;</span><span class="p">:</span> <span class="bp">False</span><span class="p">,</span>
+            <span class="s1">&#39;drop_tables&#39;</span><span class="p">:</span> <span class="bp">False</span><span class="p">,</span>
+        <span class="p">}</span>
+    <span class="p">}</span>
+<span class="p">)</span>
 </pre></div>
 </div>
 <p>The <cite>basename</cite> will be used to generate key prefixes in the storage layer to
@@ -423,7 +442,7 @@ processes see <a class="reference internal" href="#minhash-lsh-at-scale"><span c
       &copy;2019, Eric Zhu.
       
       |
-      Powered by <a href="http://sphinx-doc.org/">Sphinx 2.1.2</a>
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 2.2.1</a>
       &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
       
       |
