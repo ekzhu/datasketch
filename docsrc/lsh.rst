@@ -97,13 +97,14 @@ The Redis storage option can be configured using:
 
 .. code:: python
 
-      from datasketch import MinHashLSH
+    from datasketch import MinHashLSH
 
-      lsh = MinHashLSH(
-         threshold=0.5, num_perm=128, storage_config={
+    lsh = MinHashLSH(
+        threshold=0.5, num_perm=128, storage_config={
             'type': 'redis',
-            'redis': {'host': 'localhost', 'port': 6379}
-         })
+            'redis': {'host': 'localhost', 'port': 6379},
+        }
+    )
 
 To insert a large number of MinHashes in sequence, it is advisable to use
 an insertion session. This reduces the number of network calls during
@@ -133,7 +134,6 @@ The Cassandra storage option can be configured as follows:
     lsh = MinHashLSH(
         threashold=0.5, num_perm=128, storage_config={
             'type': 'cassandra',
-            'basename': b'unique_name',
             'cassandra': {
                 'seeds': ['127.0.0.1'],
                 'keyspace': 'lsh_test',
@@ -153,8 +153,7 @@ when creating a keyspace (if not already existing). If you want to force creatio
 or keyspace (and thus DROP existing ones), set `drop_tables` and `drop_keyspace` options to
 `True`.
 
-If you fancy setting a prefix for the tables used by the storage you can do so via
-the `basename` parameter. Furthermore, like the Redis counterpart, you can use insert sessions
+Like the Redis counterpart, you can use insert sessions
 to reduce the number of network calls during bulk insertion.
 
 
@@ -189,12 +188,32 @@ you first creating the LSH. For example:
 
 .. code:: python
     
+    # For Redis.
     lsh = MinHashLSH(
-     threshold=0.5, num_perm=128, storage_config={
-        'type': 'redis',
-        'basename': b'unique_name_6ac4fg',
-        'redis': {'host': 'localhost', 'port': 6379}
-     })
+        threshold=0.5, num_perm=128, storage_config={
+            'type': 'redis',
+            'basename': b'unique_name_6ac4fg',
+            'redis': {'host': 'localhost', 'port': 6379},
+        }
+    )
+     
+     # For Cassandra.
+     lsh = MinHashLSH(
+        threashold=0.5, num_perm=128, storage_config={
+            'type': 'cassandra',
+            'basename': b'unique_name',
+            'cassandra': {
+                'seeds': ['127.0.0.1'],
+                'keyspace': 'lsh_test',
+                'replication': {
+                    'class': 'SimpleStrategy',
+                    'replication_factor': '1',
+                },
+                'drop_keyspace': False,
+                'drop_tables': False,
+            }
+        }
+    )
 
 The `basename` will be used to generate key prefixes in the storage layer to
 uniquely identify data associated with this LSH. Thus, if you create a new
