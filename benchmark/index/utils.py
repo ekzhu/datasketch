@@ -156,7 +156,6 @@ def load_results(run_key, conn):
 
 def compute_recall(result, ground):
     result_keys = [x[0] for x in result]
-    print(result_keys)
     ground_keys = [x[0] for x in ground]
     intersection = len(np.intersect1d(result_keys, ground_keys))
     return float(intersection) / float(len(ground_keys)) 

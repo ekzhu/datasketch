@@ -98,8 +98,8 @@ if __name__ == "__main__":
     ls = [4, 8, 16, 32]
 
     # HNSW Index parameters.
-    Ms = [30,]
-    efCs = [100,]
+    Ms = [20, 40, 60, 80, 100]
+    efCs = [100, 500, 100, 1500, 2000]
     num_threads = 1
 
     # Read benchmark dataset.

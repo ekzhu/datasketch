@@ -68,7 +68,11 @@ doctrees
 .idea
 
 # Benchmark files
-*.inp.gz
+benchmark/**/*.inp.gz
 
 # Benchmark output
-*.sqlite
+benchmark/**/*.sqlite
+
+# Benchmark plots
+benchmark/**/*.png
+benchmark/**/*.pdf

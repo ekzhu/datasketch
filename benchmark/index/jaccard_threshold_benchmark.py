@@ -45,6 +45,8 @@ def search_lsh_jaccard_threshold(index_data, query_data, num_perm, threshold):
 
 def search_minhash_jaccard_threshold(index_data, query_data, num_perm, 
         threshold):
+    """Run the linear scan algorithm using MinHash sketches for Jaccard
+    threshold-based search."""
     (index_sets, index_keys, index_minhashes) = index_data
     (query_sets, query_keys, query_minhashes) = query_data
     times = []
@@ -88,9 +90,10 @@ if __name__ == "__main__":
             help="The output SQLite3 database to write results.")
     args = parser.parse_args(sys.argv[1:])
 
-    # Index parameters.
+    # MinHash LSH parameters.
     num_perms = [32, 64, 96, 128, 160, 192, 224, 256]
-    thresholds = [0.5, 0.9]
+    #thresholds = [0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9]
+    thresholds = [0.5,]
     
     # Read benchmark dataset.
     print("Reading benchmark dataset.")
@@ -126,18 +129,6 @@ if __name__ == "__main__":
                     (query_sets, query_keys, query_minhashes),
                     num_perm, threshold)
             save_results("lsh", args.index_set_file, args.query_set_file,
-                    args.index_sample_ratio, args.query_sample_ratio,
-                    None, threshold,
-                    {"num_perm": num_perm}, results, times, args.output)
-        # Run MinHash.
-        print("Running MinHash Linear Scan.")
-        for num_perm in num_perms:
-            print(f"Using num_perm = {num_perm}.")
-            results, times = search_minhash_jaccard_threshold(
-                    (index_sets, index_keys, index_minhashes),
-                    (query_sets, query_keys, query_minhashes),
-                    num_perm, threshold)
-            save_results("minhash", args.index_set_file, args.query_set_file,
                     args.index_sample_ratio, args.query_sample_ratio,
                     None, threshold,
                     {"num_perm": num_perm}, results, times, args.output)
