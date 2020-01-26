@@ -122,6 +122,8 @@ def save_results(run_name, index_set_file, query_set_file, index_sample_ratio,
         time real not null,
         FOREIGN KEY(run_key) REFERENCES runs(key)
     )""")
+    cursor.execute("""CREATE INDEX IF NOT EXISTS run_key_idx 
+            on results(run_key)""")
     conn.commit()
     cursor.execute("""INSERT INTO runs (name, time, 
             index_set_file, query_set_file, 
@@ -154,7 +156,7 @@ def load_results(run_key, conn):
     return (results, times)
 
 
-def compute_recall(result, ground):
+def _compute_recall(result, ground):
     result_keys = [x[0] for x in result]
     ground_keys = [x[0] for x in ground]
     intersection = len(np.intersect1d(result_keys, ground_keys))
@@ -167,6 +169,24 @@ def compute_recalls(results, grounds):
     recalls = []
     for (query_key_1, result), (query_key_2, ground) in zip(results, grounds):
         assert(query_key_1 == query_key_2)
-        recall = compute_recall(result, ground)
+        recall = _compute_recall(result, ground)
         recalls.append((query_key_1, recall))
     return recalls
+
+
+def _compute_relevance(result, ground):
+    result_relevance = np.mean([x[1] for x in result])
+    ground_relevance = np.mean([x[1] for x in ground])
+    return result_relevance / ground_relevance
+
+
+def compute_relevances(results, grounds):
+    results.sort(key=lambda x: x[0])
+    grounds.sort(key=lambda x: x[0])
+    relevances = []
+    for (query_key_1, result), (query_key_2, ground) in zip(results, grounds):
+        assert(query_key_1 == query_key_2)
+        relevance = _compute_relevance(result, ground)
+        relevances.append((query_key_1, relevance))
+    return relevances
+

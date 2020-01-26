@@ -20,7 +20,7 @@ def search_hnsw_jaccard_topk(index_data, query_data, index_params, k):
             data_type=nmslib.DataType.OBJECT_AS_STRING)
     index.addDataPointBatch(
             [" ".join(str(v) for v in s) for s in index_sets],
-            index_keys)
+            range(len(index_keys)))
     index.createIndex(index_params)
     end = time.perf_counter()
     print("Indexing time: {:.3f}.".format(end-start))
@@ -29,9 +29,9 @@ def search_hnsw_jaccard_topk(index_data, query_data, index_params, k):
     results = []
     for query_set, query_key in zip(query_sets, query_keys):
         start = time.perf_counter()
-        keys, distances = index.knnQuery(" ".join(str(v) for v in query_sets), k)
-        result = [[int(key), float(1.0-distance)] 
-                for key, distance in zip(keys, distances)]
+        result, _ = index.knnQuery(" ".join(str(v) for v in query_sets), k)
+        result = [[index_keys[i], compute_jaccard(query_set, index_sets[i])] 
+                for i in result]
         result.sort(key=lambda x : x[1], reverse=True)
         duration = time.perf_counter() - start
         times.append(duration)
@@ -94,12 +94,12 @@ if __name__ == "__main__":
     k = 100
 
     # LSH Forest parameters.
-    num_perms = [32, 64, 96, 128, 160, 192, 224, 256]
+    num_perms = [32, 64, 128, 256, 512]
     ls = [4, 8, 16, 32]
 
     # HNSW Index parameters.
-    Ms = [20, 40, 60, 80, 100]
-    efCs = [100, 500, 100, 1500, 2000]
+    Ms = [4, 8, 12, 16, 24, 36, 48, 64, 96]
+    efCs = [500,]
     num_threads = 1
 
     # Read benchmark dataset.
