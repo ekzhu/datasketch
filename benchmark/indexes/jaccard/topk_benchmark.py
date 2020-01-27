@@ -94,12 +94,12 @@ if __name__ == "__main__":
     k = 100
 
     # LSH Forest parameters.
-    num_perms = [32, 64, 128, 256, 512]
-    ls = [4, 8, 16, 32]
+    num_perms = [8, 16, 32, 64, 128, 256, 512]
+    ls = [4, 8, 16, 32, 64]
 
     # HNSW Index parameters.
     Ms = [4, 8, 12, 16, 24, 36, 48, 64, 96]
-    efCs = [500,]
+    efCs = [100, 500, 1000, 1500, 2000]
     num_threads = 1
 
     # Read benchmark dataset.
@@ -150,6 +150,8 @@ if __name__ == "__main__":
     print("Running LSH Forest.")
     for num_perm in num_perms:
         for l in ls:
+            if l > num_perm:
+                continue
             print(f"Using num_perm = {num_perm}, l = {l}.")
             results, times = search_lshforest_jaccard_topk(
                     (index_sets, index_keys, index_minhashes),

@@ -91,8 +91,7 @@ if __name__ == "__main__":
     args = parser.parse_args(sys.argv[1:])
 
     # MinHash LSH parameters.
-    num_perms = [32, 64, 96, 128, 160, 192, 224, 256]
-    #thresholds = [0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9]
+    num_perms = [8, 16, 32, 64, 128, 256]
     thresholds = [0.5,]
     
     # Read benchmark dataset.
