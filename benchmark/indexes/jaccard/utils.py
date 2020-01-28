@@ -182,3 +182,59 @@ def compute_relevances(results, grounds):
         relevances.append((query_key_1, relevance))
     return relevances
 
+
+def is_run_exist(result_sqlite, name, k, threshold, params):
+    conn = sqlite3.connect(result_sqlite)
+    cursor = conn.cursor()
+    cursor.execute("""SELECT params FROM runs 
+            WHERE name = ? AND k = ? AND threshold = ?""", (name, k, threshold))
+    return any(json.loads(row[0]) == params for row in cursor)
+
+
+def evaluate_runs(result_sqlite, names=None):
+    conn = sqlite3.connect(result_sqlite)
+    cursor = conn.cursor()
+    if not names:
+        cursor.execute("""SELECT key, name, k, threshold, params FROM runs""")
+    else:
+        cursor.execute("""SELECT key, name, k, threshold, params 
+                FROM runs 
+                WHERE name IN ? OR name == 'ground_truth""", (names,))
+    runs = [{
+                "key": key,
+                "name": name, 
+                "k": k, 
+                "threshold": threshold,
+                **json.loads(params),
+            }
+            for (key, name, k, threshold, params) in cursor]
+    cursor.close()
+
+    # Get ground truth results first.
+    for i, run in enumerate([run for run in runs 
+            if run["name"] == "ground_truth"]):
+        results, times = load_results(run["key"], conn)
+        run.update({"results": results, "times": times})
+    
+    # Compute mean recall and query time of every run.
+    for i, run in enumerate([run for run in runs 
+            if run["name"] != "ground_truth"]):
+        # Load results of this run.
+        results, times = load_results(run["key"], conn)
+        # Find the corresponding ground truth run with the same 
+        # benchmark settings.
+        ground_truth = [x for x in runs if x["name"] == "ground_truth" and
+                x["benchmark"] == run["benchmark"]][0]
+        # Compute metrics.
+        recalls = compute_recalls(results, ground_truth["results"])
+        relevances = compute_relevances(results, ground_truth["results"])
+        mean_recall = np.mean([x[1] for x in recalls])
+        mean_relevance = np.mean([x[1] for x in relevances])
+        mean_time = np.mean(times * 1000)
+        # Update run with computed metrics.
+        run.update({
+            "mean_recall": mean_recall, 
+            "mean_relevance": mean_relevance, 
+            "mean_time": mean_time,
+        })
+    return runs
