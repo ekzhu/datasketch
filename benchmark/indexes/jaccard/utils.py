@@ -98,19 +98,14 @@ def compute_jaccard(x, y):
     return float(intersection) / float(len(x) + len(y) - intersection)
 
 
-def save_results(run_name, index_set_file, query_set_file, index_sample_ratio, 
-        query_sample_ratio, k, threshold, 
-        params, results, times, output_sqlite):
+def save_results(run_name, k, threshold, params, results, times, 
+        output_sqlite):
     conn = sqlite3.connect(output_sqlite)
     cursor = conn.cursor()
     cursor.execute("""CREATE TABLE IF NOT EXISTS runs (
         key integer primary key,
         name text not null,
         time datetime not null,
-        index_set_file text not null,
-        query_set_file text not null,
-        index_sample_ratio real not null,
-        query_sample_ratio real not null,
         k integer,
         threshold real,
         params text not null
@@ -125,13 +120,10 @@ def save_results(run_name, index_set_file, query_set_file, index_sample_ratio,
     cursor.execute("""CREATE INDEX IF NOT EXISTS run_key_idx 
             on results(run_key)""")
     conn.commit()
-    cursor.execute("""INSERT INTO runs (name, time, 
-            index_set_file, query_set_file, 
-            index_sample_ratio, query_sample_ratio, k, threshold, params)
-            VALUES (?, datetime('now'), ?, ?, ?, ?, ?, ?, ?)""", 
-            (run_name, index_set_file, query_set_file, 
-                index_sample_ratio, query_sample_ratio, k, threshold,
-                json.dumps(params)))
+    cursor.execute("""INSERT INTO runs 
+            (name, time, k, threshold, params)
+            VALUES (?, datetime('now'), ?, ?, ?)""", 
+            (run_name, k, threshold, json.dumps(params)))
     cursor.execute("SELECT last_insert_rowid()")
     run_key = cursor.fetchone()[0]
     rows = ([run_key, result[0], json.dumps(result[1]), time] 

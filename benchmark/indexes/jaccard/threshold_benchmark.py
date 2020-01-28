@@ -94,6 +94,14 @@ if __name__ == "__main__":
     num_perms = [8, 16, 32, 64, 128, 256]
     thresholds = [0.5,]
     
+    # Benchmark settings.
+    benchmark_settings = {
+        "index_set_file": args.index_set_file,
+        "query_set_file": args.query_set_file,
+        "index_sample_ratio": args.index_sample_ratio,
+        "query_sample_ratio": args.query_sample_ratio,
+    } 
+    
     # Read benchmark dataset.
     print("Reading benchmark dataset.")
     index_sets, index_keys = read_sets_from_file(args.index_set_file, 
@@ -115,10 +123,8 @@ if __name__ == "__main__":
         print("Running Ground Truth.")
         ground_truth_results, ground_truth_times = search_jaccard_threshold(
                 (index_sets, index_keys), (query_sets, query_keys), threshold)
-        save_results("ground_truth", args.index_set_file, args.query_set_file,
-                args.index_sample_ratio, args.query_sample_ratio, 
-                None, threshold,
-                {}, ground_truth_results, ground_truth_times, args.output)
+        save_results("ground_truth", None, threshold, benchmark_settings, 
+                ground_truth_results, ground_truth_times, args.output)
         # Run LSH.
         print("Running LSH.")
         for num_perm in num_perms:
@@ -127,7 +133,7 @@ if __name__ == "__main__":
                     (index_sets, index_keys, index_minhashes),
                     (query_sets, query_keys, query_minhashes),
                     num_perm, threshold)
-            save_results("lsh", args.index_set_file, args.query_set_file,
-                    args.index_sample_ratio, args.query_sample_ratio,
-                    None, threshold,
-                    {"num_perm": num_perm}, results, times, args.output)
+            params = {"num_perm": num_perm}
+            params.update(benchmark_settings)
+            save_results("lsh", None, threshold, params,
+                    results, times, args.output)

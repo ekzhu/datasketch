@@ -1,75 +1,12 @@
 import sys
 import argparse
-import time
 
 import farmhash
-import nmslib
-from datasketch import MinHashLSHForest
 
 from exact_set_similarity_search import search_jaccard_topk
-from utils import read_sets_from_file, compute_jaccard, save_results,\
-        create_minhashes_from_sets
-
-
-def search_hnsw_jaccard_topk(index_data, query_data, index_params, k):
-    (index_sets, index_keys) = index_data
-    (query_sets, query_keys) = query_data
-    print("Building HNSW Index.")
-    start = time.perf_counter()
-    index = nmslib.init(method="hnsw", space="jaccard_sparse", 
-            data_type=nmslib.DataType.OBJECT_AS_STRING)
-    index.addDataPointBatch(
-            [" ".join(str(v) for v in s) for s in index_sets],
-            range(len(index_keys)))
-    index.createIndex(index_params)
-    end = time.perf_counter()
-    print("Indexing time: {:.3f}.".format(end-start))
-    print("Querying.")
-    times = []
-    results = []
-    for query_set, query_key in zip(query_sets, query_keys):
-        start = time.perf_counter()
-        result, _ = index.knnQuery(" ".join(str(v) for v in query_sets), k)
-        result = [[index_keys[i], compute_jaccard(query_set, index_sets[i])] 
-                for i in result]
-        result.sort(key=lambda x : x[1], reverse=True)
-        duration = time.perf_counter() - start
-        times.append(duration)
-        results.append((query_key, result))
-        sys.stdout.write("\rQueried {} sets".format(len(results)))
-    sys.stdout.write("\n")
-    return (results, times)
-
-
-def search_lshforest_jaccard_topk(index_data, query_data, num_perm, l, k):
-    (index_sets, index_keys, index_minhashes) = index_data
-    (query_sets, query_keys, query_minhashes) = query_data
-    print("Building LSH Forest Index.")
-    start = time.perf_counter()
-    index = MinHashLSHForest(num_perm=num_perm, l=l)
-    # Use the indices of the indexed sets as keys in LSH.
-    for i in range(len(index_keys)):
-        index.add(i, index_minhashes[num_perm][i])
-    index.index()
-    end = time.perf_counter()
-    print("Indexing time: {:.3f}.".format(end-start))
-    print("Querying.")
-    times = []
-    results = []
-    for query_minhash, query_key, query_set in \
-            zip(query_minhashes[num_perm], query_keys, query_sets):
-        start = time.perf_counter()
-        result = index.query(query_minhash, k)
-        # Recover the retrieved indexed sets and 
-        # compute the exact Jaccard similarities.
-        result = [[index_keys[i], compute_jaccard(query_set, index_sets[i])]
-                               for i in result]
-        # Sort by similarity.
-        result.sort(key=lambda x : x[1], reverse=True)
-        duration = time.perf_counter() - start
-        times.append(duration)
-        results.append((query_key, result))
-    return (results, times)
+from hnsw import search_hnsw_jaccard_topk
+from lshforest import search_lshforest_jaccard_topk
+from utils import read_sets_from_file, save_results, create_minhashes_from_sets
 
 
 if __name__ == "__main__":
@@ -102,6 +39,14 @@ if __name__ == "__main__":
     efCs = [100, 500, 1000, 1500, 2000]
     num_threads = 1
 
+    # Benchmark settings.
+    benchmark_settings = {
+        "index_set_file": args.index_set_file,
+        "query_set_file": args.query_set_file,
+        "index_sample_ratio": args.index_sample_ratio,
+        "query_sample_ratio": args.query_sample_ratio,
+    } 
+
     # Read benchmark dataset.
     print("Reading benchmark dataset.")
     (index_sets, index_keys) = read_sets_from_file(args.index_set_file, 
@@ -115,9 +60,8 @@ if __name__ == "__main__":
     print("Running Ground Truth.")
     ground_truth_results, ground_truth_times = search_jaccard_topk(
             (index_sets, index_keys), (query_sets, query_keys), k)
-    save_results("ground_truth", args.index_set_file, args.query_set_file,
-            args.index_sample_ratio, args.query_sample_ratio, k, None,
-            {}, ground_truth_results, ground_truth_times, args.output)
+    save_results("ground_truth", k, None, benchmark_settings,
+            ground_truth_results, ground_truth_times, args.output)
 
     # Run HNSW
     print("Running HNSW.")
@@ -134,9 +78,8 @@ if __name__ == "__main__":
                     (index_sets, index_keys), 
                     (query_sets, query_keys), index_params, k)
             # Save results
-            save_results("hnsw", args.index_set_file, args.query_set_file,
-                    args.index_sample_ratio, args.query_sample_ratio, 
-                    k, None, index_params, 
+            index_params.update(benchmark_settings)
+            save_results("hnsw", k, None, index_params, 
                     hnsw_results, hnsw_times, args.output)
 
     # Create Minhashes.
@@ -153,12 +96,11 @@ if __name__ == "__main__":
             if l > num_perm:
                 continue
             print(f"Using num_perm = {num_perm}, l = {l}.")
+            params = {"num_perm": num_perm, "l": l}
+            params.update(benchmark_settings)
             results, times = search_lshforest_jaccard_topk(
                     (index_sets, index_keys, index_minhashes),
                     (query_sets, query_keys, query_minhashes),
                     num_perm, l, k)
-            save_results("lshforest", args.index_set_file, args.query_set_file,
-                    args.index_sample_ratio, args.query_sample_ratio,
-                    k, None,
-                    {"num_perm": num_perm, "l": l}, 
+            save_results("lshforest", k, None, params,
                     results, times, args.output)
