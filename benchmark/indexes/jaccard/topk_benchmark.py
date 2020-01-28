@@ -35,7 +35,7 @@ if __name__ == "__main__":
 
     # LSH parameters, num_perm = b * r
     bs = [4, 8, 16, 32, 64, 128, 256]
-    rs = [1, 2, 4, 8]
+    rs = [2, 4, 8]
 
     # HNSW Index parameters.
     Ms = [4, 8, 12, 16, 24, 36, 48, 64, 96]
