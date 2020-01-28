@@ -32,25 +32,39 @@ if __name__ == "__main__":
                     if run["k"] == k and run["name"] == name]
             recalls = [run["mean_recall"] for run in selected]
             times = [run["mean_time"] for run in selected]
-            plt.plot(recalls, times, "*", label=name)
+            plt.scatter(recalls, times, label=name)
+            if name == 'lsh':
+                for run in selected:
+                    x = run["mean_recall"]
+                    y = run["mean_time"]
+                    b = run["index"]["b"]
+                    r = run["index"]["r"]
+                    plt.annotate(f"({b}, {r})", (x, y))
         plt.xlabel(f"Recall @ {k}")
         plt.ylabel("Time (ms)")
         plt.grid()
         plt.legend()
         plt.savefig(f"{args.plot_filename_prefix}_recall_{k}.png")
         plt.close()
-        # Plot relevance vs. time. 
+        # Plot similarity vs. time. 
         plt.figure()
         for name in names:
-            # Get recalls and times of this algorithm.
+            # Get similarities and times of this algorithm.
             selected = [run for run in runs
                     if run["k"] == k and run["name"] == name]
-            relevances = [run["mean_relevance"] for run in selected]
+            similarities = [run["mean_similarity"] for run in selected]
             times = [run["mean_time"] for run in selected]
-            plt.plot(relevances, times, "*", label=name)
-        plt.xlabel(f"Relevance @ {k}")
+            plt.plot(similarities, times, "*", label=name)
+            if name == 'lsh':
+                for run in selected:
+                    x = run["mean_similarity"]
+                    y = run["mean_time"]
+                    b = run["index"]["b"]
+                    r = run["index"]["r"]
+                    plt.annotate(f"({b}, {r})", (x, y))
+        plt.xlabel(f"Similarity @ {k}")
         plt.ylabel("Time (ms)")
         plt.grid()
         plt.legend()
-        plt.savefig(f"{args.plot_filename_prefix}_relevance_{k}.png")
+        plt.savefig(f"{args.plot_filename_prefix}_similarity_{k}.png")
         plt.close()

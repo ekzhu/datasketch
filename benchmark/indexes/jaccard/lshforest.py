@@ -37,5 +37,7 @@ def search_lshforest_jaccard_topk(index_data, query_data, b, r, k):
         duration = time.perf_counter() - start
         times.append(duration)
         results.append((query_key, result))
+        sys.stdout.write("\rQueried {} sets".format(len(results)))
+    sys.stdout.write("\n")
     return (results, times)
 

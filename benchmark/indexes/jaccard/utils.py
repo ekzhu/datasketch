@@ -172,21 +172,12 @@ def compute_recalls(results, grounds):
     return recalls
 
 
-def _compute_relevance(result, ground):
-    result_relevance = np.mean([x[1] for x in result])
-    ground_relevance = np.mean([x[1] for x in ground])
-    return result_relevance / ground_relevance
-
-
-def compute_relevances(results, grounds):
-    results.sort(key=lambda x: x[0])
-    grounds.sort(key=lambda x: x[0])
-    relevances = []
-    for (query_key_1, result), (query_key_2, ground) in zip(results, grounds):
-        assert(query_key_1 == query_key_2)
-        relevance = _compute_relevance(result, ground)
-        relevances.append((query_key_1, relevance))
-    return relevances
+def compute_similarities(results):
+    similarities = []
+    for (query_key_1, result) in results:
+        similarity = np.mean([x[1] for x in result])
+        similarities.append((query_key_1, similarity))
+    return similarities
 
 
 def get_run(name, k, threshold, params, result_sqlite):
@@ -221,7 +212,11 @@ def evaluate_runs(result_sqlite, names=None):
             }
             for (key, name, k, threshold, params) in cursor]
     cursor.close()
-    conn.close()
+
+    # TODO: add filter to avoid hard-code.
+    runs = [run for run in runs
+            if run["name"] != 'lsh' or 
+            (run["name"] == 'lsh' and run["index"]["r"] > 1)]
 
     # Get ground truth results first.
     for i, run in enumerate([run for run in runs 
@@ -240,14 +235,15 @@ def evaluate_runs(result_sqlite, names=None):
                 x["benchmark"] == run["benchmark"]][0]
         # Compute metrics.
         recalls = compute_recalls(results, ground_truth["results"])
-        relevances = compute_relevances(results, ground_truth["results"])
+        similarities = compute_similarities(results)
         mean_recall = np.mean([x[1] for x in recalls])
-        mean_relevance = np.mean([x[1] for x in relevances])
+        mean_similarity = np.mean([x[1] for x in similarities])
         mean_time = np.mean(times * 1000)
         # Update run with computed metrics.
         run.update({
             "mean_recall": mean_recall, 
-            "mean_relevance": mean_relevance, 
+            "mean_similarity": mean_similarity,
             "mean_time": mean_time,
         })
+    conn.close()
     return runs
