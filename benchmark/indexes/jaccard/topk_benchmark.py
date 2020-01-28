@@ -4,12 +4,12 @@ import argparse
 import farmhash
 import numpy as np
 
-from exact_set_similarity_search import search_jaccard_topk
+from exact import search_jaccard_topk
 from hnsw import search_hnsw_jaccard_topk
 from lsh import search_lsh_jaccard_topk
 from lshforest import search_lshforest_jaccard_topk
 from utils import read_sets_from_file, save_results, create_minhashes_from_sets, \
-        is_run_exist
+        get_run, init_results_db
 
 
 if __name__ == "__main__":
@@ -59,40 +59,42 @@ if __name__ == "__main__":
     (query_sets, query_keys) = read_sets_from_file(args.index_set_file, 
             sample_ratio=args.query_sample_ratio, 
             skip=1)
+    
+    # Initialize output SQLite database.
+    init_results_db(args.output)
 
     # Run ground truth.
-    print("Running Ground Truth.")
-    ground_truth_results, ground_truth_times = search_jaccard_topk(
-            (index_sets, index_keys), (query_sets, query_keys), k)
-    save_results("ground_truth", k, None, {"benchmark": benchmark_settings},
-            ground_truth_results, ground_truth_times, args.output)
+    params = {"benchmark": benchmark_settings}
+    if get_run("ground_truth", k, None, params, args.output) is None:
+        print("Running Ground Truth.")
+        ground_truth_results, ground_truth_times = search_jaccard_topk(
+                (index_sets, index_keys), (query_sets, query_keys), k)
+        save_results("ground_truth", k, None, params,
+                ground_truth_results, ground_truth_times, args.output)
 
     # Run HNSW
-    print("Running HNSW.")
     for M in Ms:
         for efC in efCs:
-            print(f"Using M = {M}, efC = {efC}")
             index_params = {
                 'M': M, 
                 'indexThreadQty': num_threads, 
                 'efConstruction': efC, 
                 'post' : 0,
             }
+            params = {"index": index_params, "benchmark": benchmark_settings}
+            if get_run("hnsw", k, None, params, args.output) is not None:
+                continue
+            print(f"Running HNSW using M = {M}, efC = {efC}")
             hnsw_results, hnsw_times = search_hnsw_jaccard_topk(
                     (index_sets, index_keys), 
                     (query_sets, query_keys), index_params, k)
             # Save results
-            params = {"index": index_params, "benchmark": benchmark_settings}
             save_results("hnsw", k, None, params, 
                     hnsw_results, hnsw_times, args.output)
 
-    # Create Minhashes.
-    print("Creating minhashes.")
-    num_perms = list(np.unique([b*r for r in rs for b in bs]))
-    index_minhashes = create_minhashes_from_sets(index_sets, num_perms, 
-            hashfunc=farmhash.hash32)
-    query_minhashes = create_minhashes_from_sets(query_sets, num_perms, 
-            hashfunc=farmhash.hash32)
+    # Initialize storage for Minhashes.
+    index_minhashes = {}
+    query_minhashes = {}
 
     # Run LSH.
     for b in bs:
@@ -101,16 +103,46 @@ if __name__ == "__main__":
                 "index": {"b": b, "r": r}, 
                 "benchmark": benchmark_settings,
             }
+            if get_run("lsh", k, None, params, args.output) is not None:
+                continue
             print(f"Running LSH using b = {b}, r = {r}.")
+            # Lazily create MinHashes.
+            if b*r not in index_minhashes:
+                index_minhashes.update(create_minhashes_from_sets(
+                        index_sets, [b*r,], hashfunc=farmhash.hash32))
+            if b*r not in query_minhashes:
+                query_minhashes.update(create_minhashes_from_sets(
+                        query_sets, [b*r,], hashfunc=farmhash.hash32))
+            # Run benchmark.
             results, times = search_lsh_jaccard_topk(
                     (index_sets, index_keys, index_minhashes),
                     (query_sets, query_keys, query_minhashes),
                     b, r, k)
+            # Save result to SQLite database.
             save_results("lsh", k, None, params, results, times, args.output)
+    
+    # Run LSH Forest.
+    for b in bs:
+        for r in rs:
+            params = {
+                "index": {"b": b, "r": r}, 
+                "benchmark": benchmark_settings,
+            }
+            if get_run("lshforest", k, None, params, args.output) is not None:
+                continue
             print(f"Running LSH Forest using b = {b}, r = {r}.")
+            # Lazily create MinHashes.
+            if b*r not in index_minhashes:
+                index_minhashes.update(create_minhashes_from_sets(
+                        index_sets, [b*r,], hashfunc=farmhash.hash32))
+            if b*r not in query_minhashes:
+                query_minhashes.update(create_minhashes_from_sets(
+                        query_sets, [b*r,], hashfunc=farmhash.hash32))
+            # Run benchmark.
             results, times = search_lshforest_jaccard_topk(
                     (index_sets, index_keys, index_minhashes),
                     (query_sets, query_keys, query_minhashes),
                     b, r, k)
+            # Save result to SQLite database.
             save_results("lshforest", k, None, params, results, times, 
                     args.output)

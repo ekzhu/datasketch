@@ -98,8 +98,7 @@ def compute_jaccard(x, y):
     return float(intersection) / float(len(x) + len(y) - intersection)
 
 
-def save_results(run_name, k, threshold, params, results, times, 
-        output_sqlite):
+def init_results_db(output_sqlite):
     conn = sqlite3.connect(output_sqlite)
     cursor = conn.cursor()
     cursor.execute("""CREATE TABLE IF NOT EXISTS runs (
@@ -120,6 +119,13 @@ def save_results(run_name, k, threshold, params, results, times,
     cursor.execute("""CREATE INDEX IF NOT EXISTS run_key_idx 
             on results(run_key)""")
     conn.commit()
+    conn.close()
+
+
+def save_results(run_name, k, threshold, params, results, times, 
+        output_sqlite):
+    conn = sqlite3.connect(output_sqlite)
+    cursor = conn.cursor()
     cursor.execute("""INSERT INTO runs 
             (name, time, k, threshold, params)
             VALUES (?, datetime('now'), ?, ?, ?)""", 
@@ -183,12 +189,18 @@ def compute_relevances(results, grounds):
     return relevances
 
 
-def is_run_exist(result_sqlite, name, k, threshold, params):
+def get_run(name, k, threshold, params, result_sqlite):
     conn = sqlite3.connect(result_sqlite)
     cursor = conn.cursor()
-    cursor.execute("""SELECT params FROM runs 
-            WHERE name = ? AND k = ? AND threshold = ?""", (name, k, threshold))
-    return any(json.loads(row[0]) == params for row in cursor)
+    cursor.execute("""SELECT key, k, threshold, params 
+            FROM runs WHERE name = ?""", (name,))
+    runs = [row[0] for row in cursor 
+            if row[1] == k and row[2] == threshold 
+            and json.loads(row[3]) == params]
+    conn.close()
+    if len(runs) > 0:
+        return runs[0]
+    return None
 
 
 def evaluate_runs(result_sqlite, names=None):
@@ -209,6 +221,7 @@ def evaluate_runs(result_sqlite, names=None):
             }
             for (key, name, k, threshold, params) in cursor]
     cursor.close()
+    conn.close()
 
     # Get ground truth results first.
     for i, run in enumerate([run for run in runs 

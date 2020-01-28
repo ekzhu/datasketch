@@ -105,16 +105,18 @@ class MinHashLSH(object):
             raise ValueError("Weight must be in [0.0, 1.0]")
         if sum(weights) != 1.0:
             raise ValueError("Weights must sum to 1.0")
+        self.h = num_perm
         if params is not None:
             self.b, self.r = params
             if self.b * self.r > num_perm:
-                raise ValueError("The product of b and r must be less than num_perm")
-            self.h = self.b * self.r
+                raise ValueError("The product of b and r in params is "
+                        f"{self.b} * {self.r} = {self.b*self.r} -- "
+                        f"it must be less than num_perm {num_perm}. "
+                        "Did you forget to specify num_perm?")
         else:
             false_positive_weight, false_negative_weight = weights
             self.b, self.r = _optimal_param(threshold, num_perm,
                     false_positive_weight, false_negative_weight)
-            self.h = num_perm
 
         self.prepickle = storage_config['type'] == 'redis' if prepickle is None else prepickle
 
