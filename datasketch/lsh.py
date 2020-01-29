@@ -110,9 +110,9 @@ class MinHashLSH(object):
             self.b, self.r = params
             if self.b * self.r > num_perm:
                 raise ValueError("The product of b and r in params is "
-                        "{} * {} = {} -- ".format(self.b, self.r, self.b*self.r)
-                        "it must be less than num_perm {}. ".format(num_perm)
-                        "Did you forget to specify num_perm?")
+                        "{} * {} = {} -- it must be less than num_perm {}. "
+                        "Did you forget to specify num_perm?".format(
+                            self.b, self.r, self.b*self.r, num_perm))
         else:
             false_positive_weight, false_negative_weight = weights
             self.b, self.r = _optimal_param(threshold, num_perm,
