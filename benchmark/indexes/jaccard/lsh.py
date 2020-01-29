@@ -1,4 +1,5 @@
 import time
+import sys
 
 from datasketch import MinHashLSH
 
@@ -35,6 +36,6 @@ def search_lsh_jaccard_topk(index_data, query_data, b, r, k):
         duration = time.perf_counter() - start
         times.append(duration)
         results.append((query_key, result))
-        sys.stdout.write("\rQueried {} sets".format(len(results)))
+        sys.stdout.write(f"\rQueried {len(results)} sets")
     sys.stdout.write("\n")
     return (results, times)
