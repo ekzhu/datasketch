@@ -6,7 +6,7 @@ python:
   - "3.6"
   - "3.7"
   - "3.8"
-  - "nightly"
+  # - "nightly"
 addons:
   apt:
     sources:
