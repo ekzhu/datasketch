@@ -16,6 +16,7 @@ addons:
       - sourceline: 'deb-src http://www.apache.org/dist/cassandra/debian 311x main'
         key_url: *apache-key
     packages:
+      - cython3
       - openjdk-8-jdk
       - cassandra
 services:
