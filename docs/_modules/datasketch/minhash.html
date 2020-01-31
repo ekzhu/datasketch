@@ -88,7 +88,7 @@
 <span class="kn">import</span> <span class="nn">warnings</span>
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
 
-<span class="kn">from</span> <span class="nn">datasketch.hashfunc</span> <span class="k">import</span> <span class="n">sha1_hash32</span>
+<span class="kn">from</span> <span class="nn">datasketch.hashfunc</span> <span class="kn">import</span> <span class="n">sha1_hash32</span>
 
 <span class="c1"># The size of a hash value in number of bytes</span>
 <span class="n">hashvalue_byte_size</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="nb">bytes</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">int64</span><span class="p">(</span><span class="mi">42</span><span class="p">)</span><span class="o">.</span><span class="n">data</span><span class="p">))</span>
@@ -143,7 +143,7 @@
 <span class="sd">    .. _`pickle`: https://docs.python.org/3/library/pickle.html</span>
 <span class="sd">    &#39;&#39;&#39;</span>
 
-<div class="viewcode-block" id="MinHash.__init__"><a class="viewcode-back" href="../../documentation.html#datasketch.MinHash.__init__">[docs]</a>    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">num_perm</span><span class="o">=</span><span class="mi">128</span><span class="p">,</span> <span class="n">seed</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+<div class="viewcode-block" id="MinHash.__init__"><a class="viewcode-back" href="../../documentation.html#datasketch.MinHash.__init__">[docs]</a>    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">num_perm</span><span class="o">=</span><span class="mi">128</span><span class="p">,</span> <span class="n">seed</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
             <span class="n">hashfunc</span><span class="o">=</span><span class="n">sha1_hash32</span><span class="p">,</span>
             <span class="n">hashobj</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="c1"># Deprecated.</span>
             <span class="n">hashvalues</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">permutations</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
@@ -298,13 +298,13 @@
                 <span class="n">hashvalues</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">digest</span><span class="p">(),</span>
                 <span class="n">permutations</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">permutations</span><span class="p">)</span></div>
 
-<div class="viewcode-block" id="MinHash.__len__"><a class="viewcode-back" href="../../documentation.html#datasketch.MinHash.__len__">[docs]</a>    <span class="k">def</span> <span class="nf">__len__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<div class="viewcode-block" id="MinHash.__len__"><a class="viewcode-back" href="../../documentation.html#datasketch.MinHash.__len__">[docs]</a>    <span class="k">def</span> <span class="fm">__len__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="sd">&#39;&#39;&#39;</span>
 <span class="sd">        :returns: int -- The number of hash values.</span>
 <span class="sd">        &#39;&#39;&#39;</span>
         <span class="k">return</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">hashvalues</span><span class="p">)</span></div>
 
-<div class="viewcode-block" id="MinHash.__eq__"><a class="viewcode-back" href="../../documentation.html#datasketch.MinHash.__eq__">[docs]</a>    <span class="k">def</span> <span class="nf">__eq__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+<div class="viewcode-block" id="MinHash.__eq__"><a class="viewcode-back" href="../../documentation.html#datasketch.MinHash.__eq__">[docs]</a>    <span class="k">def</span> <span class="fm">__eq__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
         <span class="sd">&#39;&#39;&#39;</span>
 <span class="sd">        :returns: bool -- If their seeds and hash values are both equal then two are equivalent.</span>
 <span class="sd">        &#39;&#39;&#39;</span>
@@ -343,10 +343,10 @@
     <div class="clearer"></div>
   </div>
     <div class="footer">
-      &copy;2019, Eric Zhu.
+      &copy;2020, Eric Zhu.
       
       |
-      Powered by <a href="http://sphinx-doc.org/">Sphinx 2.2.1</a>
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 2.3.1</a>
       &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
       
     </div>

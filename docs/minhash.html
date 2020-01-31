@@ -111,12 +111,12 @@ MinHash is introduced by Andrei Z. Broder in this
     <span class="n">m1</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">d</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="s1">&#39;utf8&#39;</span><span class="p">))</span>
 <span class="k">for</span> <span class="n">d</span> <span class="ow">in</span> <span class="n">data2</span><span class="p">:</span>
     <span class="n">m2</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">d</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="s1">&#39;utf8&#39;</span><span class="p">))</span>
-<span class="k">print</span><span class="p">(</span><span class="s2">&quot;Estimated Jaccard for data1 and data2 is&quot;</span><span class="p">,</span> <span class="n">m1</span><span class="o">.</span><span class="n">jaccard</span><span class="p">(</span><span class="n">m2</span><span class="p">))</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Estimated Jaccard for data1 and data2 is&quot;</span><span class="p">,</span> <span class="n">m1</span><span class="o">.</span><span class="n">jaccard</span><span class="p">(</span><span class="n">m2</span><span class="p">))</span>
 
 <span class="n">s1</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">data1</span><span class="p">)</span>
 <span class="n">s2</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">data2</span><span class="p">)</span>
 <span class="n">actual_jaccard</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">s1</span><span class="o">.</span><span class="n">intersection</span><span class="p">(</span><span class="n">s2</span><span class="p">)))</span><span class="o">/</span><span class="nb">float</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">s1</span><span class="o">.</span><span class="n">union</span><span class="p">(</span><span class="n">s2</span><span class="p">)))</span>
-<span class="k">print</span><span class="p">(</span><span class="s2">&quot;Actual Jaccard for data1 and data2 is&quot;</span><span class="p">,</span> <span class="n">actual_jaccard</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Actual Jaccard for data1 and data2 is&quot;</span><span class="p">,</span> <span class="n">actual_jaccard</span><span class="p">)</span>
 </pre></div>
 </div>
 <p>You can adjust the accuracy by customizing the number of permutation
@@ -207,10 +207,10 @@ available in Python.</p>
     <div class="clearer"></div>
   </div>
     <div class="footer">
-      &copy;2019, Eric Zhu.
+      &copy;2020, Eric Zhu.
       
       |
-      Powered by <a href="http://sphinx-doc.org/">Sphinx 2.2.1</a>
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 2.3.1</a>
       &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
       
       |

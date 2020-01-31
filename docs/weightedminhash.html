@@ -123,7 +123,7 @@ functions in MinHash) and the random seed.</p>
 <span class="n">wmg</span> <span class="o">=</span> <span class="n">WeightedMinHashGenerator</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">v1</span><span class="p">))</span>
 <span class="n">wm1</span> <span class="o">=</span> <span class="n">wmg</span><span class="o">.</span><span class="n">minhash</span><span class="p">(</span><span class="n">v1</span><span class="p">)</span> <span class="c1"># wm1 is of the type WeightedMinHash</span>
 <span class="n">wm2</span> <span class="o">=</span> <span class="n">wmg</span><span class="o">.</span><span class="n">minhash</span><span class="p">(</span><span class="n">v2</span><span class="p">)</span>
-<span class="k">print</span><span class="p">(</span><span class="s2">&quot;Estimated Jaccard is&quot;</span><span class="p">,</span> <span class="n">wm1</span><span class="o">.</span><span class="n">jaccard</span><span class="p">(</span><span class="n">wm2</span><span class="p">))</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Estimated Jaccard is&quot;</span><span class="p">,</span> <span class="n">wm1</span><span class="o">.</span><span class="n">jaccard</span><span class="p">(</span><span class="n">wm2</span><span class="p">))</span>
 </pre></div>
 </div>
 <p>It is possible to make <a class="reference internal" href="documentation.html#datasketch.WeightedMinHash" title="datasketch.WeightedMinHash"><code class="xref py py-class docutils literal notranslate"><span class="pre">datasketch.WeightedMinHash</span></code></a> have a <code class="docutils literal notranslate"><span class="pre">update</span></code> interface
@@ -140,7 +140,7 @@ at the expense of slower speed.</p>
 <p><a class="reference internal" href="documentation.html#datasketch.MinHashLSH" title="datasketch.MinHashLSH"><code class="xref py py-class docutils literal notranslate"><span class="pre">datasketch.MinHashLSH</span></code></a> and
 <a class="reference internal" href="documentation.html#datasketch.MinHashLSHForest" title="datasketch.MinHashLSHForest"><code class="xref py py-class docutils literal notranslate"><span class="pre">datasketch.MinHashLSHForest</span></code></a>
 can also be used to index <a class="reference internal" href="documentation.html#datasketch.WeightedMinHash" title="datasketch.WeightedMinHash"><code class="xref py py-class docutils literal notranslate"><span class="pre">datasketch.WeightedMinHash</span></code></a>.</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">numpy</span> <span class="kn">as</span> <span class="nn">np</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
 <span class="kn">from</span> <span class="nn">datasketch</span> <span class="kn">import</span> <span class="n">WeightedMinHashGenerator</span>
 <span class="kn">from</span> <span class="nn">datasketch</span> <span class="kn">import</span> <span class="n">MinHashLSH</span>
 
@@ -157,7 +157,7 @@ can also be used to index <a class="reference internal" href="documentation.html
 <span class="n">lsh</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="s2">&quot;m2&quot;</span><span class="p">,</span> <span class="n">m2</span><span class="p">)</span>
 <span class="n">lsh</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="s2">&quot;m3&quot;</span><span class="p">,</span> <span class="n">m3</span><span class="p">)</span>
 <span class="n">result</span> <span class="o">=</span> <span class="n">lsh</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">m1</span><span class="p">)</span>
-<span class="k">print</span><span class="p">(</span><span class="s2">&quot;Approximate neighbours with weighted Jaccard similarity &gt; 0.1&quot;</span><span class="p">,</span> <span class="n">result</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Approximate neighbours with weighted Jaccard similarity &gt; 0.1&quot;</span><span class="p">,</span> <span class="n">result</span><span class="p">)</span>
 </pre></div>
 </div>
 </div>
@@ -170,10 +170,10 @@ can also be used to index <a class="reference internal" href="documentation.html
     <div class="clearer"></div>
   </div>
     <div class="footer">
-      &copy;2019, Eric Zhu.
+      &copy;2020, Eric Zhu.
       
       |
-      Powered by <a href="http://sphinx-doc.org/">Sphinx 2.2.1</a>
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 2.3.1</a>
       &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
       
       |

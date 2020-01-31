@@ -54,6 +54,7 @@
 <li class="toctree-l1"><a class="reference internal" href="lsh.html">MinHash LSH</a></li>
 <li class="toctree-l1"><a class="reference internal" href="lshensemble.html">MinHash LSH Ensemble</a></li>
 <li class="toctree-l1 current"><a class="current reference internal" href="#">MinHash LSH Forest</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#tips-for-improving-accuracy">Tips for Improving Accuracy</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#common-issues-with-minhash-lsh-forest">Common Issues with MinHash LSH Forest</a></li>
 </ul>
 </li>
@@ -136,12 +137,12 @@ searchable.</p>
 <span class="n">forest</span><span class="o">.</span><span class="n">index</span><span class="p">()</span>
 
 <span class="c1"># Check for membership using the key</span>
-<span class="k">print</span><span class="p">(</span><span class="s2">&quot;m2&quot;</span> <span class="ow">in</span> <span class="n">forest</span><span class="p">)</span>
-<span class="k">print</span><span class="p">(</span><span class="s2">&quot;m3&quot;</span> <span class="ow">in</span> <span class="n">forest</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;m2&quot;</span> <span class="ow">in</span> <span class="n">forest</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;m3&quot;</span> <span class="ow">in</span> <span class="n">forest</span><span class="p">)</span>
 
 <span class="c1"># Using m1 as the query, retrieve top 2 keys that have the higest Jaccard</span>
 <span class="n">result</span> <span class="o">=</span> <span class="n">forest</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">m1</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span>
-<span class="k">print</span><span class="p">(</span><span class="s2">&quot;Top 2 candidates&quot;</span><span class="p">,</span> <span class="n">result</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Top 2 candidates&quot;</span><span class="p">,</span> <span class="n">result</span><span class="p">)</span>
 </pre></div>
 </div>
 <p>The plot below shows the <a class="reference external" href="https://www.kaggle.com/wiki/MeanAveragePrecision">mean average precision
@@ -170,6 +171,41 @@ the interface of <code class="docutils literal notranslate"><span class="pre">Mi
 <span class="n">forest</span> <span class="o">=</span> <span class="n">MinHashLSHForest</span><span class="p">(</span><span class="n">num_perm</span><span class="o">=</span><span class="mi">250</span><span class="p">,</span> <span class="n">l</span><span class="o">=</span><span class="mi">10</span><span class="p">)</span>
 </pre></div>
 </div>
+<div class="section" id="tips-for-improving-accuracy">
+<h2>Tips for Improving Accuracy<a class="headerlink" href="#tips-for-improving-accuracy" title="Permalink to this headline">¶</a></h2>
+<p>The default parameters may not be good enough for all data. Here are
+some tips for improving the accuracy of LSH Forest.</p>
+<p><strong>Use 2*k</strong>: You can use a multiple of <cite>k</cite> (e.g., <cite>2*k</cite>) in the argument, then
+compute the exact (or approximate using MinHash) Jaccard
+similarities of the sets referenced by the returned keys,
+from which you then take the top-k. For example:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Set our k to 10.</span>
+<span class="n">k</span> <span class="o">=</span> <span class="mi">10</span>
+
+<span class="c1"># Do work to create index...</span>
+
+<span class="c1"># When you query, instead of use k, use 2*k.</span>
+<span class="n">result</span> <span class="o">=</span> <span class="n">forest</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">minhash</span><span class="p">,</span> <span class="mi">2</span><span class="o">*</span><span class="n">k</span><span class="p">)</span>
+
+<span class="c1"># Let&#39;s say you store the sets in a dictionary (not a good idea for</span>
+<span class="c1"># millions of sets) referenced by keys, you can use them to compute</span>
+<span class="c1"># the exact Jaccard similarities of the returned sets to your query set.</span>
+<span class="c1"># You can also use MinHashes instead.</span>
+<span class="n">result</span> <span class="o">=</span> <span class="p">[(</span><span class="n">key</span><span class="p">,</span> <span class="n">compute_jaccard</span><span class="p">(</span><span class="n">index_sets</span><span class="p">[</span><span class="n">key</span><span class="p">],</span> <span class="n">query_set</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">result</span><span class="p">]</span>
+
+<span class="c1"># Then you can take the final top-k.</span>
+<span class="n">result</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">result</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">x</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">reverse</span><span class="o">=</span><span class="kc">True</span><span class="p">)[:</span><span class="n">k</span><span class="p">]</span>
+</pre></div>
+</div>
+<p>This is often called
+“post-processing”. Because the total number of similarity
+computations is still bounded by a constant multiple of <cite>k</cite>, the
+performance won’t degrade too much – however you do have to keep
+the original sets (or MinHashes) around somewhere
+(in-memory, databases, etc.) so that you
+can make references to them.</p>
+</div>
 <div class="section" id="common-issues-with-minhash-lsh-forest">
 <h2>Common Issues with MinHash LSH Forest<a class="headerlink" href="#common-issues-with-minhash-lsh-forest" title="Permalink to this headline">¶</a></h2>
 <ol class="arabic simple">
@@ -189,10 +225,10 @@ the interface of <code class="docutils literal notranslate"><span class="pre">Mi
     <div class="clearer"></div>
   </div>
     <div class="footer">
-      &copy;2019, Eric Zhu.
+      &copy;2020, Eric Zhu.
       
       |
-      Powered by <a href="http://sphinx-doc.org/">Sphinx 2.2.1</a>
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 2.3.1</a>
       &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
       
       |

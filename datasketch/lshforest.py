@@ -95,6 +95,18 @@ class MinHashLSHForest(object):
 
         Returns:
             `list` of at most k keys.
+        
+        Note:
+            Tip for improving accuracy: 
+            you can use a multiple of `k` (e.g., `2*k`) in the argument,
+            compute the exact (or approximate using MinHash) Jaccard 
+            similarities of the sets referenced by the returned keys,
+            from which you then take the final top-k. This is often called 
+            "post-processing". Because the total number of similarity 
+            computations is still bounded by a constant multiple of `k`, the
+            performance won't degrade too much -- however you do have to keep
+            the original sets (or MinHashes) around some where so that you 
+            can make references to them.
         '''
         if k <= 0:
             raise ValueError("k must be positive")

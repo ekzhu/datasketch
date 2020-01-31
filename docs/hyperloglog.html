@@ -100,10 +100,10 @@ Philippe Flajolet, Éric Fusy, Olivier Gandouet and Frédéric Meunier.</p>
 <span class="n">h</span> <span class="o">=</span> <span class="n">HyperLogLog</span><span class="p">()</span>
 <span class="k">for</span> <span class="n">d</span> <span class="ow">in</span> <span class="n">data1</span><span class="p">:</span>
   <span class="n">h</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">d</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="s1">&#39;utf8&#39;</span><span class="p">))</span>
-<span class="k">print</span><span class="p">(</span><span class="s2">&quot;Estimated cardinality is&quot;</span><span class="p">,</span> <span class="n">h</span><span class="o">.</span><span class="n">count</span><span class="p">())</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Estimated cardinality is&quot;</span><span class="p">,</span> <span class="n">h</span><span class="o">.</span><span class="n">count</span><span class="p">())</span>
 
 <span class="n">s1</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">data1</span><span class="p">)</span>
-<span class="k">print</span><span class="p">(</span><span class="s2">&quot;Actual cardinality is&quot;</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">s1</span><span class="p">))</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Actual cardinality is&quot;</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">s1</span><span class="p">))</span>
 </pre></div>
 </div>
 <p>As in MinHash, you can also control the accuracy of HyperLogLog by
@@ -155,10 +155,10 @@ can use all the HyperLogLog functions in HyperLogLog++.</p>
     <div class="clearer"></div>
   </div>
     <div class="footer">
-      &copy;2019, Eric Zhu.
+      &copy;2020, Eric Zhu.
       
       |
-      Powered by <a href="http://sphinx-doc.org/">Sphinx 2.2.1</a>
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 2.3.1</a>
       &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
       
       |

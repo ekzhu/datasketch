@@ -84,7 +84,7 @@
           <div class="body" role="main">
             
   <h1>Source code for datasketch.lshforest</h1><div class="highlight"><pre>
-<span></span><span class="kn">from</span> <span class="nn">collections</span> <span class="k">import</span> <span class="n">defaultdict</span>
+<span></span><span class="kn">from</span> <span class="nn">collections</span> <span class="kn">import</span> <span class="n">defaultdict</span>
 
 
 <div class="viewcode-block" id="MinHashLSHForest"><a class="viewcode-back" href="../../documentation.html#datasketch.MinHashLSHForest">[docs]</a><span class="k">class</span> <span class="nc">MinHashLSHForest</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
@@ -108,7 +108,7 @@
 <span class="sd">        and weighted MinHash without modification.</span>
 <span class="sd">    &#39;&#39;&#39;</span>
 
-<div class="viewcode-block" id="MinHashLSHForest.__init__"><a class="viewcode-back" href="../../documentation.html#datasketch.MinHashLSHForest.__init__">[docs]</a>    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">num_perm</span><span class="o">=</span><span class="mi">128</span><span class="p">,</span> <span class="n">l</span><span class="o">=</span><span class="mi">8</span><span class="p">):</span>
+<div class="viewcode-block" id="MinHashLSHForest.__init__"><a class="viewcode-back" href="../../documentation.html#datasketch.MinHashLSHForest.__init__">[docs]</a>    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">num_perm</span><span class="o">=</span><span class="mi">128</span><span class="p">,</span> <span class="n">l</span><span class="o">=</span><span class="mi">8</span><span class="p">):</span>
         <span class="k">if</span> <span class="n">l</span> <span class="o">&lt;=</span> <span class="mi">0</span> <span class="ow">or</span> <span class="n">num_perm</span> <span class="o">&lt;=</span> <span class="mi">0</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;num_perm and l must be positive&quot;</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">l</span> <span class="o">&gt;</span> <span class="n">num_perm</span><span class="p">:</span>
@@ -181,6 +181,18 @@
 
 <span class="sd">        Returns:</span>
 <span class="sd">            `list` of at most k keys.</span>
+<span class="sd">        </span>
+<span class="sd">        Note:</span>
+<span class="sd">            Tip for improving accuracy: </span>
+<span class="sd">            you can use a multiple of `k` (e.g., `2*k`) in the argument,</span>
+<span class="sd">            compute the exact (or approximate using MinHash) Jaccard </span>
+<span class="sd">            similarities of the sets referenced by the returned keys,</span>
+<span class="sd">            from which you then take the final top-k. This is often called </span>
+<span class="sd">            &quot;post-processing&quot;. Because the total number of similarity </span>
+<span class="sd">            computations is still bounded by a constant multiple of `k`, the</span>
+<span class="sd">            performance won&#39;t degrade too much -- however you do have to keep</span>
+<span class="sd">            the original sets (or MinHashes) around some where so that you </span>
+<span class="sd">            can make references to them.</span>
 <span class="sd">        &#39;&#39;&#39;</span>
         <span class="k">if</span> <span class="n">k</span> <span class="o">&lt;=</span> <span class="mi">0</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;k must be positive&quot;</span><span class="p">)</span>
@@ -222,7 +234,7 @@
     <span class="k">def</span> <span class="nf">_H</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">hs</span><span class="p">):</span>
         <span class="k">return</span> <span class="nb">bytes</span><span class="p">(</span><span class="n">hs</span><span class="o">.</span><span class="n">byteswap</span><span class="p">()</span><span class="o">.</span><span class="n">data</span><span class="p">)</span>
 
-<div class="viewcode-block" id="MinHashLSHForest.__contains__"><a class="viewcode-back" href="../../documentation.html#datasketch.MinHashLSHForest.__contains__">[docs]</a>    <span class="k">def</span> <span class="nf">__contains__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">):</span>
+<div class="viewcode-block" id="MinHashLSHForest.__contains__"><a class="viewcode-back" href="../../documentation.html#datasketch.MinHashLSHForest.__contains__">[docs]</a>    <span class="k">def</span> <span class="fm">__contains__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">):</span>
         <span class="sd">&#39;&#39;&#39;</span>
 <span class="sd">        Returns:</span>
 <span class="sd">            bool: True only if the key has been added to the index.</span>
@@ -237,10 +249,10 @@
     <div class="clearer"></div>
   </div>
     <div class="footer">
-      &copy;2019, Eric Zhu.
+      &copy;2020, Eric Zhu.
       
       |
-      Powered by <a href="http://sphinx-doc.org/">Sphinx 2.2.1</a>
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 2.3.1</a>
       &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
       
     </div>

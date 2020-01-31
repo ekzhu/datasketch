@@ -166,13 +166,13 @@ The full implementation is in <a class="reference external" href="https://golang
 <span class="n">lshensemble</span><span class="o">.</span><span class="n">index</span><span class="p">([(</span><span class="s2">&quot;m2&quot;</span><span class="p">,</span> <span class="n">m2</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">set2</span><span class="p">)),</span> <span class="p">(</span><span class="s2">&quot;m3&quot;</span><span class="p">,</span> <span class="n">m3</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">set3</span><span class="p">))])</span>
 
 <span class="c1"># Check for membership using the key</span>
-<span class="k">print</span><span class="p">(</span><span class="s2">&quot;m2&quot;</span> <span class="ow">in</span> <span class="n">lshensemble</span><span class="p">)</span>
-<span class="k">print</span><span class="p">(</span><span class="s2">&quot;m3&quot;</span> <span class="ow">in</span> <span class="n">lshensemble</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;m2&quot;</span> <span class="ow">in</span> <span class="n">lshensemble</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;m3&quot;</span> <span class="ow">in</span> <span class="n">lshensemble</span><span class="p">)</span>
 
 <span class="c1"># Using m1 as the query, get an result iterator</span>
-<span class="k">print</span><span class="p">(</span><span class="s2">&quot;Sets with containment &gt; 0.8:&quot;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Sets with containment &gt; 0.8:&quot;</span><span class="p">)</span>
 <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">lshensemble</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">m1</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">set1</span><span class="p">)):</span>
-    <span class="k">print</span><span class="p">(</span><span class="n">key</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="n">key</span><span class="p">)</span>
 </pre></div>
 </div>
 <p>The precision of LSH Ensemble increases with the number of partitions,
@@ -203,10 +203,10 @@ See the documentation of <a class="reference internal" href="documentation.html#
     <div class="clearer"></div>
   </div>
     <div class="footer">
-      &copy;2019, Eric Zhu.
+      &copy;2020, Eric Zhu.
       
       |
-      Powered by <a href="http://sphinx-doc.org/">Sphinx 2.2.1</a>
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 2.3.1</a>
       &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
       
       |
