@@ -4,7 +4,7 @@ import pandas as pd
 import matplotlib
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
-from lsh_benchmark_plot import get_precision_recall, fscore, average_fscore
+from utils import get_precision_recall, fscore, average_fscore
 
 def _parse_results(r):
     r = r.strip().split(",")

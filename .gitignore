@@ -66,3 +66,13 @@ doctrees
 
 # Jetbrains
 .idea
+
+# Benchmark files
+benchmark/**/*.inp.gz
+
+# Benchmark output
+benchmark/**/*.sqlite
+
+# Benchmark plots
+benchmark/**/*.png
+benchmark/**/*.pdf

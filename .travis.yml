@@ -6,7 +6,8 @@ python:
   - "3.6"
   - "3.7"
   - "3.8"
-  - "nightly"
+  # - "nightly"
+  # TODO: add nightly back when this issue is fixed: https://github.com/cython/cython/issues/3266
 addons:
   apt:
     sources:
@@ -16,6 +17,7 @@ addons:
       - sourceline: 'deb-src http://www.apache.org/dist/cassandra/debian 311x main'
         key_url: *apache-key
     packages:
+      - cython3
       - openjdk-8-jdk
       - cassandra
 services:
