@@ -372,9 +372,10 @@ Common Issues with MinHash LSH
 ------------------------------
 
 1. `How to use MinHash LSH to compute all-pair duplicates? <https://github.com/ekzhu/datasketch/issues/76>`__
-2. `How to speedup MinHash LSH indexing for hundreds of millions of MinHashes? <https://github.com/ekzhu/datasketch/issues/41>`__
-3. `Can MinHash LSH find similar points under Euclidean (L2) distance? <https://github.com/ekzhu/datasketch/issues/100>`__
-4. `Combining/Storing LSH with different thresholds <https://github.com/ekzhu/datasketch/issues/93>`__
+2. `MinHash LSH for document clustering <https://github.com/ekzhu/datasketch/issues/120>`__
+3. `How to speedup MinHash LSH indexing for hundreds of millions of MinHashes? <https://github.com/ekzhu/datasketch/issues/41>`__
+4. `Can MinHash LSH find similar points under Euclidean (L2) distance? <https://github.com/ekzhu/datasketch/issues/100>`__
+5. `Combining/Storing LSH with different thresholds <https://github.com/ekzhu/datasketch/issues/93>`__
 
 `See more issues <https://github.com/ekzhu/datasketch/issues?utf8=%E2%9C%93&q=lsh>`__
 
