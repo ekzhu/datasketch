@@ -120,5 +120,6 @@ Common Issues with MinHash
 
 1. `High estimation error when set sizes differ by a lot <https://github.com/ekzhu/datasketch/issues/85>`__
 2. `Use Inclusion-Exclusion Principle (i.e., merge() and count() functions) instead of jaccard() to estimate similarity <https://github.com/ekzhu/datasketch/issues/85>`__
+3. `Storing MinHash for later use <https://github.com/ekzhu/datasketch/issues/122>`__
 
 `See more issues <https://github.com/ekzhu/datasketch/issues?utf8=%E2%9C%93&q=minhash>`__
