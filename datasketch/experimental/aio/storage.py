@@ -128,10 +128,17 @@ if motor is not None and ReturnDocument is not None:
             self._mongo_param = self._parse_config(self._config['mongo'])
 
             self._name = name if name else _random_name(11).decode('utf-8')
-            self._collection_name = 'lsh_' + self._name
+            if 'collection_name' in self.mongo_param:
+                self._collection_name = self.mongo_param['collection_name']
+            elif 'collection_prefix' in self.mongo_param:
+                self._collection_name = self.mongo_param['collection_prefix'] + self._name
+            else:
+                self._collection_name = 'lsh_' + self._name
 
             db_lsh = self.mongo_param['db'] if 'db' in self.mongo_param else 'db_0'
-            if 'replica_set' in self.mongo_param:
+            if 'url' in self.mongo_param:
+                dsn = self.mongo_param['url']
+            elif 'replica_set' in self.mongo_param:
                 dsn = 'mongodb://{replica_set_nodes}/?replicaSet={replica_set}'.format(**self.mongo_param)
             elif 'username' in self.mongo_param or 'password' in self.mongo_param:
                 dsn = 'mongodb://{username}:{password}@{host}:{port}'.format(**self.mongo_param)
@@ -142,7 +149,7 @@ if motor is not None and ReturnDocument is not None:
 
             self._batch_size = 1000
             self._mongo_client = motor.motor_asyncio.AsyncIOMotorClient(dsn, **additional_args)
-            self._collection = self._mongo_client[db_lsh][self._collection_name]
+            self._collection = self._mongo_client.get_default_database(db_lsh).get_collection(self._collection_name)
             self._initialized = True
             self._buffer = AsyncMongoBuffer(self._collection, self._batch_size)
 

@@ -291,6 +291,12 @@ To configure Asynchronous MongoDB storage that will connect to a `replica set <h
 
     _storage = {'type': 'aiomongo', 'mongo': {'replica_set': 'rs0', 'replica_set_nodes': 'node1:port1,node2:port2,node3:port3'}}
 
+To connect to a cloud Mongo Atlas cluster (or any other arbitrary ``mongodb`` URI):
+
+.. code:: python
+
+    _storage = {'type': 'aiomongo', 'mongo': {'url': 'mongodb+srv://user:pass@server-ybq4y.mongodb.net/db'}}
+
 If you want to pass additional params to the `Mongo client <http://api.mongodb.com/python/current/api/pymongo/mongo_client.html>` constructor, just put them in the ``mongo.args`` object in the storage config (example usage to configure X509 authentication):
 
 .. code:: python
