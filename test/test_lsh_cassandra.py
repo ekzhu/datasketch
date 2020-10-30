@@ -1,10 +1,12 @@
 import unittest
 import os
 import numpy as np
+import pickle
+from multiprocessing import Pool, TimeoutError
+import time
 from datasketch.lsh import MinHashLSH
 from datasketch.minhash import MinHash
 from datasketch.weighted_minhash import WeightedMinHashGenerator
-
 
 STORAGE_CONFIG_CASSANDRA = {
     'basename': b'test',
@@ -22,6 +24,10 @@ STORAGE_CONFIG_CASSANDRA = {
 }
 DO_TEST_CASSANDRA = os.environ.get("DO_TEST_CASSANDRA") == "true"
 
+def multiprocess_test():    
+    lsh_file_path = "lsh.pkl"
+    lsh = pickle.load(open(lsh_file_path, "rb"))
+    return True
 
 class TestMinHashLSHCassandra(unittest.TestCase):
 
@@ -160,6 +166,28 @@ class TestMinHashLSHCassandra(unittest.TestCase):
         for table in counts:
             self.assertEqual(sum(table.values()), 2)
 
+    @unittest.skipIf(not DO_TEST_CASSANDRA, "Skipping test_cassandra__get_counts")
+    def test_cassandra__multiprocess(self):
+        lsh = MinHashLSH(threshold=0.5, num_perm=16, storage_config=STORAGE_CONFIG_CASSANDRA)
+        lsh_file_path = "lsh.pkl"
+        pickle.dump(lsh, open(lsh_file_path, "wb"))
+
+        pool = Pool(processes=4)
+        async_results = [pool.apply_async(multiprocess_test, ()) for i in range(4)]
+        completion_status = [False for _ in async_results]
+        countdown = 4
+        wait_time = 30
+        start_time = time.time()
+        while countdown > 0:
+            elapsed_time = time.time() - start_time
+            self.assertTrue(elapsed_time < wait_time)
+
+            for i, async_result in enumerate(async_results):
+                if completion_status[i]:
+                    continue
+                if async_result.ready():
+                    completion_status[i] = True
+                    countdown -= 1
 
 class TestWeightedMinHashLSHCassandra(unittest.TestCase):
 
