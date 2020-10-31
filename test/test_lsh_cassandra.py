@@ -24,11 +24,6 @@ STORAGE_CONFIG_CASSANDRA = {
 }
 DO_TEST_CASSANDRA = os.environ.get("DO_TEST_CASSANDRA") == "true"
 
-def multiprocess_test():    
-    lsh_file_path = "lsh.pkl"
-    lsh = pickle.load(open(lsh_file_path, "rb"))
-    return True
-
 class TestMinHashLSHCassandra(unittest.TestCase):
 
     @unittest.skipIf(not DO_TEST_CASSANDRA, "Skipping test_cassandra__init")
@@ -166,14 +161,21 @@ class TestMinHashLSHCassandra(unittest.TestCase):
         for table in counts:
             self.assertEqual(sum(table.values()), 2)
 
+    def multiprocess_test(self):
+        lsh_file_path = "lsh.pkl"
+        with open(lsh_file_path, "rb") as f:
+            lsh = pickle.load(f)
+        return True
+
     @unittest.skipIf(not DO_TEST_CASSANDRA, "Skipping test_cassandra__get_counts")
     def test_cassandra__multiprocess(self):
         lsh = MinHashLSH(threshold=0.5, num_perm=16, storage_config=STORAGE_CONFIG_CASSANDRA)
         lsh_file_path = "lsh.pkl"
-        pickle.dump(lsh, open(lsh_file_path, "wb"))
+        with open(lsh_file_path, "wb") as f:
+            pickle.dump(lsh, f)
 
         pool = Pool(processes=4)
-        async_results = [pool.apply_async(multiprocess_test, ()) for i in range(4)]
+        async_results = [pool.apply_async(self.multiprocess_test, ()) for i in range(4)]
         completion_status = [False for _ in async_results]
         countdown = 4
         wait_time = 30
