@@ -173,7 +173,7 @@ class TestMinHashLSHCassandra(unittest.TestCase):
         lsh_pickled = pickle.dumps(lsh)
 
         pool = Pool(processes=4)
-        async_results = [pool.apply_async(multiprocess_test, (lsh_pickled,))
+        async_results = [pool.apply_async(_multiprocess_test, (lsh_pickled,))
                          for i in range(4)]
         completion_status = [False for _ in async_results]
         countdown = 4
