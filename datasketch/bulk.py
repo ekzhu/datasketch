@@ -1,4 +1,3 @@
-import numpy as np
 from datasketch.minhash import MinHash
 
 def compute_minhash(b, m):
