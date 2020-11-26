@@ -19,7 +19,7 @@ def compute_minhashes(b, m):
     overhead when initializing many minhashes by reusing initial state.
 
     Args:
-        b (List[List[bytes]]): List containing lists of bytes
+        b (iterable): Iterable containing lists of bytes
         m (MinHash): Initialized MinHash object
             The configuration of this MinHash will be used for all minhashes
     '''
