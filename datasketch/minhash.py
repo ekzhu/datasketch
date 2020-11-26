@@ -129,10 +129,16 @@ class MinHash(object):
                 minhash = MinHash(hashfunc=_hash_32)
                 minhash.update("new value")
         '''
-        hv = self.hashfunc(b)
-        a, b = self.permutations
-        phv = np.bitwise_and((a * hv + b) % _mersenne_prime, _max_hash)
-        self.hashvalues = np.minimum(phv, self.hashvalues)
+        if isinstance(b, list):
+            hv = np.array([self.hashfunc(_b) for _b in b], dtype=np.uint64)
+            a, b = self.permutations
+            phv = np.bitwise_and(((hv * np.vstack([a for n in range(len(hv))]).T).T + b) % _mersenne_prime, _max_hash)
+            self.hashvalues = np.minimum(phv.min(axis=0).T, self.hashvalues)
+        else:
+            hv = self.hashfunc(b)
+            a, b = self.permutations
+            phv = np.bitwise_and((a * hv + b) % _mersenne_prime, _max_hash)
+            self.hashvalues = np.minimum(phv, self.hashvalues)
 
     def jaccard(self, other):
         '''Estimate the `Jaccard similarity`_ (resemblance) between the sets
