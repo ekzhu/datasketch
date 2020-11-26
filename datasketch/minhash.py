@@ -69,6 +69,7 @@ class MinHash(object):
             raise ValueError("Cannot have more than %d number of\
                     permutation functions" % _hash_range)
         self.seed = seed
+        self.num_perm = num_perm
         # Check the hash function.
         if not callable(hashfunc):
             raise ValueError("The hashfunc must be a callable.")
@@ -86,13 +87,7 @@ class MinHash(object):
         if permutations is not None:
             self.permutations = permutations
         else:
-            generator = np.random.RandomState(self.seed)
-            # Create parameters for a random bijective permutation function
-            # that maps a 32-bit hash value to another 32-bit hash value.
-            # http://en.wikipedia.org/wiki/Universal_hashing
-            self.permutations = np.array([(generator.randint(1, _mersenne_prime, dtype=np.uint64),
-                                           generator.randint(0, _mersenne_prime, dtype=np.uint64))
-                                          for _ in range(num_perm)], dtype=np.uint64).T
+            self.permutations = self._init_permutations(num_perm)
         if len(self) != len(self.permutations[0]):
             raise ValueError("Numbers of hash values and permutations mismatch")
 
@@ -102,13 +97,36 @@ class MinHash(object):
     def _parse_hashvalues(self, hashvalues):
         return np.array(hashvalues, dtype=np.uint64)
 
-    def update(self, b):
+    def _init_permutations(self, num_perm):
+        # Create parameters for a random bijective permutation function
+        # that maps a 32-bit hash value to another 32-bit hash value.
+        # http://en.wikipedia.org/wiki/Universal_hashing
+        gen = np.random.RandomState(self.seed)
+        return np.array([
+            (gen.randint(1, _mersenne_prime, dtype=np.uint64), gen.randint(0, _mersenne_prime, dtype=np.uint64)) for _ in range(num_perm)
+        ], dtype=np.uint64).T
+
+    def _compute_hashvalues(self, b, permutations, hashvalues):
+        if isinstance(b, list):
+            hv = np.array([self.hashfunc(_b) for _b in b], dtype=np.uint64)
+            a, b = permutations
+            phv = np.bitwise_and(((hv * np.vstack([a for n in range(len(hv))]).T).T + b) % _mersenne_prime, _max_hash)
+            return np.minimum(phv.min(axis=0).T, hashvalues)
+        else:
+            hv = self.hashfunc(b)
+            a, b = permutations
+            phv = np.bitwise_and((a * hv + b) % _mersenne_prime, _max_hash)
+            return np.minimum(phv, hashvalues)
+    
+    def update(self, b, permutations=None, hashvalues=None):
         '''Update this MinHash with a new value.
         The value will be hashed using the hash function specified by
         the `hashfunc` argument in the constructor.
 
         Args:
-            b: The value to be hashed using the hash function specified.
+            b: The value or list of values to be hashed using the hash function specified.
+            permutations (optional): Permutations used in computing hashvalues
+            hashvalues (optional): Initial hashvalues to update
 
         Example:
             To update with a new string value (using the default SHA1 hash
@@ -129,16 +147,9 @@ class MinHash(object):
                 minhash = MinHash(hashfunc=_hash_32)
                 minhash.update("new value")
         '''
-        if isinstance(b, list):
-            hv = np.array([self.hashfunc(_b) for _b in b], dtype=np.uint64)
-            a, b = self.permutations
-            phv = np.bitwise_and(((hv * np.vstack([a for n in range(len(hv))]).T).T + b) % _mersenne_prime, _max_hash)
-            self.hashvalues = np.minimum(phv.min(axis=0).T, self.hashvalues)
-        else:
-            hv = self.hashfunc(b)
-            a, b = self.permutations
-            phv = np.bitwise_and((a * hv + b) % _mersenne_prime, _max_hash)
-            self.hashvalues = np.minimum(phv, self.hashvalues)
+        permutations = self.permutations if permutations is None else permutations
+        hashvalues = self.hashvalues if hashvalues is None else hashvalues
+        self.hashvalues = self._compute_hashvalues(b, permutations, hashvalues)
 
     def jaccard(self, other):
         '''Estimate the `Jaccard similarity`_ (resemblance) between the sets
