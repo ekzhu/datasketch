@@ -94,7 +94,7 @@ class MinHashLSH(object):
     '''
 
     def __init__(self, threshold=0.9, num_perm=128, weights=(0.5, 0.5),
-                 params=None, storage_config=None, prepickle=None):
+                 params=None, storage_config=None, prepickle=None, hashfunc=None):
         storage_config = {'type': 'dict'} if not storage_config else storage_config
         self._buffer_size = 50000
         if threshold > 1.0 or threshold < 0.0:
@@ -119,6 +119,7 @@ class MinHashLSH(object):
                     false_positive_weight, false_negative_weight)
 
         self.prepickle = storage_config['type'] == 'redis' if prepickle is None else prepickle
+        self.hashfunc = hashfunc
 
         basename = storage_config.get('basename', _random_name(11))
         self.hashtables = [
@@ -172,8 +173,12 @@ class MinHashLSH(object):
             key = pickle.dumps(key)
         if check_duplication and key in self.keys:
             raise ValueError("The given key already exists")
-        Hs = [self._H(minhash.hashvalues[start:end])
-              for start, end in self.hashranges]
+        if self.hashfunc:
+            Hs = [self.hashfunc(self._H(minhash.hashvalues[start:end]))
+                for start, end in self.hashranges]
+        else:
+            Hs = [self._H(minhash.hashvalues[start:end])
+                for start, end in self.hashranges]
         self.keys.insert(key, *Hs, buffer=buffer)
         for H, hashtable in zip(Hs, self.hashtables):
             hashtable.insert(H, key, buffer=buffer)
@@ -195,7 +200,10 @@ class MinHashLSH(object):
                     % (self.h, len(minhash)))
         candidates = set()
         for (start, end), hashtable in zip(self.hashranges, self.hashtables):
-            H = self._H(minhash.hashvalues[start:end])
+            if self.hashfunc:
+                H = self.hashfunc(self._H(minhash.hashvalues[start:end]))
+            else:
+                H = self._H(minhash.hashvalues[start:end])
             for key in hashtable.get(H):
                 candidates.add(key)
         if self.prepickle:
