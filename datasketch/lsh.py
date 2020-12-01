@@ -83,6 +83,9 @@ class MinHashLSH(object):
         prepickle (bool, optional): If True, all keys are pickled to bytes before
             insertion. If None, a default value is chosen based on the
             `storage_config`.
+        hashfunc (function, optional): If a hash function is provided it will be used to
+            compress the index keys to reduce the memory footprint. This could cause a higher
+            false positive rate.
 
     Note:
         `weights` must sum to 1.0, and the format is
