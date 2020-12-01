@@ -52,7 +52,6 @@ def _optimal_param(threshold, num_perm, false_positive_weight,
                 opt = (b, r)
     return opt
 
-
 class MinHashLSH(object):
     '''
     The :ref:`minhash_lsh` index.
@@ -119,7 +118,12 @@ class MinHashLSH(object):
                     false_positive_weight, false_negative_weight)
 
         self.prepickle = storage_config['type'] == 'redis' if prepickle is None else prepickle
+        
         self.hashfunc = hashfunc
+        if hashfunc:
+            self._H = self._hashed_byteswap
+        else:
+            self._H = self._byteswap
 
         basename = storage_config.get('basename', _random_name(11))
         self.hashtables = [
@@ -173,11 +177,7 @@ class MinHashLSH(object):
             key = pickle.dumps(key)
         if check_duplication and key in self.keys:
             raise ValueError("The given key already exists")
-        if self.hashfunc:
-            Hs = [self.hashfunc(self._H(minhash.hashvalues[start:end]))
-                for start, end in self.hashranges]
-        else:
-            Hs = [self._H(minhash.hashvalues[start:end])
+        Hs = [self._H(minhash.hashvalues[start:end])
                 for start, end in self.hashranges]
         self.keys.insert(key, *Hs, buffer=buffer)
         for H, hashtable in zip(Hs, self.hashtables):
@@ -200,10 +200,7 @@ class MinHashLSH(object):
                     % (self.h, len(minhash)))
         candidates = set()
         for (start, end), hashtable in zip(self.hashranges, self.hashtables):
-            if self.hashfunc:
-                H = self.hashfunc(self._H(minhash.hashvalues[start:end]))
-            else:
-                H = self._H(minhash.hashvalues[start:end])
+            H = self._H(minhash.hashvalues[start:end])
             for key in hashtable.get(H):
                 candidates.add(key)
         if self.prepickle:
@@ -248,10 +245,12 @@ class MinHashLSH(object):
         '''
         return any(t.size() == 0 for t in self.hashtables)
 
-    @staticmethod
-    def _H(hs):
+    def _byteswap(self, hs):
         return bytes(hs.byteswap().data)
 
+    def _hashed_byteswap(self, hs):
+        return self.hashfunc(bytes(hs.byteswap().data))
+    
     def _query_b(self, minhash, b):
         if len(minhash) != self.h:
             raise ValueError("Expecting minhash with length %d, got %d"
