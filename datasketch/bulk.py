@@ -2,12 +2,7 @@ from datasketch.minhash import MinHash
 from collections.abc import Iterable
 
 def compute_minhash(b, m):
-    mh = MinHash(
-        permutations=m.permutations,
-        num_perm=m.num_perm,
-        seed=m.seed,
-        hashfunc=m.hashfunc
-    )
+    mh = m.copy()
     mh.update_batch(b)
     return mh
 
