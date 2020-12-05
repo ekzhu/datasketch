@@ -2,17 +2,14 @@ from datasketch.minhash import MinHash
 from collections.abc import Iterable
 
 def compute_minhash(b, m):
-    return MinHash(
-            permutations=m.permutations,
-            hashvalues=m._compute_hashvalues(
-                b,
-                permutations=m.permutations,
-                hashvalues=m.hashvalues
-            ),
-            num_perm=m.num_perm,
-            seed=m.seed,
-            hashfunc=m.hashfunc
-        )
+    mh = MinHash(
+        permutations=m.permutations,
+        num_perm=m.num_perm,
+        seed=m.seed,
+        hashfunc=m.hashfunc
+    )
+    mh.update_batch(b)
+    return mh
 
 def compute_minhashes(b, m):
     '''Helper method to compute minhashes in bulk. This helper avoids unnecessary

@@ -26,10 +26,10 @@ class TestMinHash(unittest.TestCase):
         for i in range(4):
             self.assertTrue(m1.hashvalues[i] < m2.hashvalues[i])
 
-    def test_update_list(self):
+    def test_update_batch(self):
         m1 = minhash.MinHash(4, 1, hashfunc=fake_hash_func)
         m2 = minhash.MinHash(4, 1, hashfunc=fake_hash_func)
-        m1.update([12, 24])
+        m1.update_batch([12, 24])
         for i in range(4):
             self.assertTrue(m1.hashvalues[i] < m2.hashvalues[i])
 
@@ -37,7 +37,7 @@ class TestMinHash(unittest.TestCase):
         m1.update(12)
         m1.update(24)
         m2 = minhash.MinHash(4, 1, hashfunc=fake_hash_func)
-        m2.update([12, 24])
+        m2.update_batch([12, 24])
         self.assertTrue(all(m1.hashvalues == m2.hashvalues))
 
     def test_jaccard(self):

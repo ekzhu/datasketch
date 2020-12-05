@@ -94,9 +94,6 @@ class MinHash(object):
     def _init_hashvalues(self, num_perm):
         return np.ones(num_perm, dtype=np.uint64)*_max_hash
 
-    def _parse_hashvalues(self, hashvalues):
-        return np.array(hashvalues, dtype=np.uint64)
-
     def _init_permutations(self, num_perm):
         # Create parameters for a random bijective permutation function
         # that maps a 32-bit hash value to another 32-bit hash value.
@@ -106,27 +103,16 @@ class MinHash(object):
             (gen.randint(1, _mersenne_prime, dtype=np.uint64), gen.randint(0, _mersenne_prime, dtype=np.uint64)) for _ in range(num_perm)
         ], dtype=np.uint64).T
 
-    def _compute_hashvalues(self, b, permutations, hashvalues):
-        if isinstance(b, list):
-            hv = np.array([self.hashfunc(_b) for _b in b], dtype=np.uint64)
-            a, b = permutations
-            phv = np.bitwise_and(((hv * np.vstack([a for n in range(len(hv))]).T).T + b) % _mersenne_prime, _max_hash)
-            return np.minimum(phv.min(axis=0).T, hashvalues)
-        else:
-            hv = self.hashfunc(b)
-            a, b = permutations
-            phv = np.bitwise_and((a * hv + b) % _mersenne_prime, _max_hash)
-            return np.minimum(phv, hashvalues)
-    
-    def update(self, b, permutations=None, hashvalues=None):
+    def _parse_hashvalues(self, hashvalues):
+        return np.array(hashvalues, dtype=np.uint64)
+
+    def update(self, b):
         '''Update this MinHash with a new value.
         The value will be hashed using the hash function specified by
         the `hashfunc` argument in the constructor.
 
         Args:
-            b: The value or list of values to be hashed using the hash function specified.
-            permutations (optional): Permutations used in computing hashvalues
-            hashvalues (optional): Initial hashvalues to update
+            b: The value to be hashed using the hash function specified.
 
         Example:
             To update with a new string value (using the default SHA1 hash
@@ -147,9 +133,32 @@ class MinHash(object):
                 minhash = MinHash(hashfunc=_hash_32)
                 minhash.update("new value")
         '''
-        permutations = self.permutations if permutations is None else permutations
-        hashvalues = self.hashvalues if hashvalues is None else hashvalues
-        self.hashvalues = self._compute_hashvalues(b, permutations, hashvalues)
+        hv = self.hashfunc(b)
+        a, b = self.permutations
+        phv = np.bitwise_and((a * hv + b) % _mersenne_prime, _max_hash)
+        self.hashvalues = np.minimum(phv, self.hashvalues)
+
+    def update_batch(self, b):
+        '''Update this MinHash with new values.
+        The values will be hashed using the hash function specified by
+        the `hashfunc` argument in the constructor.
+
+        Args:
+            b (list): List of values to be hashed using the hash function specified.
+
+        Example:
+            To update with new string values (using the default SHA1 hash
+            function, which requires bytes as input):
+
+            .. code-block:: python
+
+                minhash = Minhash()
+                minhash.update([s.encode('utf-8') for s in ["token1", "token2"]])
+        '''
+        hv = np.array([self.hashfunc(_b) for _b in b], dtype=np.uint64)
+        a, b = self.permutations
+        phv = np.bitwise_and(((hv * np.vstack([a for n in range(len(hv))]).T).T + b) % _mersenne_prime, _max_hash)
+        self.hashvalues = np.minimum(phv.min(axis=0).T, self.hashvalues)
 
     def jaccard(self, other):
         '''Estimate the `Jaccard similarity`_ (resemblance) between the sets
