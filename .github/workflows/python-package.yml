@@ -64,9 +64,10 @@ jobs:
           cd docs
           make html
     - name: Deploy to GitHub pages
-      if: ${{ github.ref == 'refs/heads/main' && matrix.python-version == '3.7' }}
+      if: ${{ github.ref == 'refs/heads/master' && matrix.python-version == '3.7' }}
       uses: JamesIves/github-pages-deploy-action@3.6.2
       with:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         BRANCH: gh-pages
         FOLDER: docs/_build/html
+        CLEAN: true
