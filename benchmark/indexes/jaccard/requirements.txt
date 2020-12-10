@@ -1,4 +1,0 @@
-pyfarmhash
-nmslib
-matplotlib
-SetSimilaritySearch

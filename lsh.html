@@ -1,0 +1,479 @@
+
+<!DOCTYPE html>
+
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>MinHash LSH &#8212; datasketch 1.0.0 documentation</title>
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="_static/alabaster.css" type="text/css" />
+    <script id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+    <script src="_static/jquery.js"></script>
+    <script src="_static/underscore.js"></script>
+    <script src="_static/doctools.js"></script>
+    <script src="_static/language_data.js"></script>
+    <script async="async" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.7/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="MinHash LSH Ensemble" href="lshensemble.html" />
+    <link rel="prev" title="HyperLogLog" href="hyperloglog.html" />
+   
+  <link rel="stylesheet" href="_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  <div class="document">
+    
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="index.html">datasketch</a></h1>
+
+
+
+<p class="blurb">Probabilistic data structures for Big Data</p>
+
+
+
+
+<p>
+<iframe src="https://ghbtns.com/github-btn.html?user=ekzhu&repo=datasketch&type=star&count=true&size=large&v=2"
+  allowtransparency="true" frameborder="0" scrolling="0" width="200px" height="35px"></iframe>
+</p>
+
+
+
+
+
+<h3>Navigation</h3>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="documentation.html">API Documentation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="hyperloglog.html">HyperLogLog</a></li>
+<li class="toctree-l1"><a class="reference internal" href="hyperloglog.html#hyperloglog-plusplus">HyperLogLog++</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">MinHash LSH</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#minhash-lsh-at-scale">MinHash LSH at scale</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#connecting-to-existing-minhash-lsh">Connecting to Existing MinHash LSH</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#asynchronous-minhash-lsh-at-scale">Asynchronous MinHash LSH at scale</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#common-issues-with-minhash-lsh">Common Issues with MinHash LSH</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="lshensemble.html">MinHash LSH Ensemble</a></li>
+<li class="toctree-l1"><a class="reference internal" href="lshforest.html">MinHash LSH Forest</a></li>
+<li class="toctree-l1"><a class="reference internal" href="minhash.html">MinHash</a></li>
+<li class="toctree-l1"><a class="reference internal" href="weightedminhash.html">Weighted MinHash</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="index.html">Documentation overview</a><ul>
+      <li>Previous: <a href="hyperloglog.html" title="previous chapter">HyperLogLog</a></li>
+      <li>Next: <a href="lshensemble.html" title="next chapter">MinHash LSH Ensemble</a></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <div class="section" id="minhash-lsh">
+<span id="id1"></span><h1>MinHash LSH<a class="headerlink" href="#minhash-lsh" title="Permalink to this headline">¶</a></h1>
+<p>Suppose you have a very large collection of
+<a class="reference external" href="https://en.wikipedia.org/wiki/Set_(mathematics)">sets</a>. Giving a
+query, which is also a set, you want to find sets in your collection
+that have Jaccard similarities above certain threshold, and you want to
+do it with many other queries. To do this efficiently, you can create a
+MinHash for every set, and when a query comes, you compute the Jaccard
+similarities between the query MinHash and all the MinHash of your
+collection, and return the sets that satisfy your threshold.</p>
+<p>The said approach is still an O(n) algorithm, meaning the query cost
+increases linearly with respect to the number of sets. A popular
+alternative is to use Locality Sensitive Hashing (LSH) index. LSH can be
+used with MinHash to achieve sub-linear query cost - that is a huge
+improvement. The details of the algorithm can be found in <a class="reference external" href="http://infolab.stanford.edu/~ullman/mmds/ch3.pdf">Chapter 3,
+Mining of Massive
+Datasets</a>.</p>
+<p>This package includes the classic version of MinHash LSH. It is
+important to note that the query does not give you the exact result, due
+to the use of MinHash and LSH. There will be false positives - sets that
+do not satisfy your threshold but returned, and false negatives -
+qualifying sets that are not returned. However, the property of LSH
+assures that sets with higher Jaccard similarities always have higher
+probabilities to get returned than sets with lower similarities.
+Moreover, LSH can be optimized so that there can be a “jump” in
+probability right at the threshold, making the qualifying sets much more
+likely to get returned than the rest.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">datasketch</span> <span class="kn">import</span> <span class="n">MinHash</span><span class="p">,</span> <span class="n">MinHashLSH</span>
+
+<span class="n">set1</span> <span class="o">=</span> <span class="nb">set</span><span class="p">([</span><span class="s1">&#39;minhash&#39;</span><span class="p">,</span> <span class="s1">&#39;is&#39;</span><span class="p">,</span> <span class="s1">&#39;a&#39;</span><span class="p">,</span> <span class="s1">&#39;probabilistic&#39;</span><span class="p">,</span> <span class="s1">&#39;data&#39;</span><span class="p">,</span> <span class="s1">&#39;structure&#39;</span><span class="p">,</span> <span class="s1">&#39;for&#39;</span><span class="p">,</span>
+            <span class="s1">&#39;estimating&#39;</span><span class="p">,</span> <span class="s1">&#39;the&#39;</span><span class="p">,</span> <span class="s1">&#39;similarity&#39;</span><span class="p">,</span> <span class="s1">&#39;between&#39;</span><span class="p">,</span> <span class="s1">&#39;datasets&#39;</span><span class="p">])</span>
+<span class="n">set2</span> <span class="o">=</span> <span class="nb">set</span><span class="p">([</span><span class="s1">&#39;minhash&#39;</span><span class="p">,</span> <span class="s1">&#39;is&#39;</span><span class="p">,</span> <span class="s1">&#39;a&#39;</span><span class="p">,</span> <span class="s1">&#39;probability&#39;</span><span class="p">,</span> <span class="s1">&#39;data&#39;</span><span class="p">,</span> <span class="s1">&#39;structure&#39;</span><span class="p">,</span> <span class="s1">&#39;for&#39;</span><span class="p">,</span>
+            <span class="s1">&#39;estimating&#39;</span><span class="p">,</span> <span class="s1">&#39;the&#39;</span><span class="p">,</span> <span class="s1">&#39;similarity&#39;</span><span class="p">,</span> <span class="s1">&#39;between&#39;</span><span class="p">,</span> <span class="s1">&#39;documents&#39;</span><span class="p">])</span>
+<span class="n">set3</span> <span class="o">=</span> <span class="nb">set</span><span class="p">([</span><span class="s1">&#39;minhash&#39;</span><span class="p">,</span> <span class="s1">&#39;is&#39;</span><span class="p">,</span> <span class="s1">&#39;probability&#39;</span><span class="p">,</span> <span class="s1">&#39;data&#39;</span><span class="p">,</span> <span class="s1">&#39;structure&#39;</span><span class="p">,</span> <span class="s1">&#39;for&#39;</span><span class="p">,</span>
+            <span class="s1">&#39;estimating&#39;</span><span class="p">,</span> <span class="s1">&#39;the&#39;</span><span class="p">,</span> <span class="s1">&#39;similarity&#39;</span><span class="p">,</span> <span class="s1">&#39;between&#39;</span><span class="p">,</span> <span class="s1">&#39;documents&#39;</span><span class="p">])</span>
+
+<span class="n">m1</span> <span class="o">=</span> <span class="n">MinHash</span><span class="p">(</span><span class="n">num_perm</span><span class="o">=</span><span class="mi">128</span><span class="p">)</span>
+<span class="n">m2</span> <span class="o">=</span> <span class="n">MinHash</span><span class="p">(</span><span class="n">num_perm</span><span class="o">=</span><span class="mi">128</span><span class="p">)</span>
+<span class="n">m3</span> <span class="o">=</span> <span class="n">MinHash</span><span class="p">(</span><span class="n">num_perm</span><span class="o">=</span><span class="mi">128</span><span class="p">)</span>
+<span class="k">for</span> <span class="n">d</span> <span class="ow">in</span> <span class="n">set1</span><span class="p">:</span>
+    <span class="n">m1</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">d</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="s1">&#39;utf8&#39;</span><span class="p">))</span>
+<span class="k">for</span> <span class="n">d</span> <span class="ow">in</span> <span class="n">set2</span><span class="p">:</span>
+    <span class="n">m2</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">d</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="s1">&#39;utf8&#39;</span><span class="p">))</span>
+<span class="k">for</span> <span class="n">d</span> <span class="ow">in</span> <span class="n">set3</span><span class="p">:</span>
+    <span class="n">m3</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">d</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="s1">&#39;utf8&#39;</span><span class="p">))</span>
+
+<span class="c1"># Create LSH index</span>
+<span class="n">lsh</span> <span class="o">=</span> <span class="n">MinHashLSH</span><span class="p">(</span><span class="n">threshold</span><span class="o">=</span><span class="mf">0.5</span><span class="p">,</span> <span class="n">num_perm</span><span class="o">=</span><span class="mi">128</span><span class="p">)</span>
+<span class="n">lsh</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="s2">&quot;m2&quot;</span><span class="p">,</span> <span class="n">m2</span><span class="p">)</span>
+<span class="n">lsh</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="s2">&quot;m3&quot;</span><span class="p">,</span> <span class="n">m3</span><span class="p">)</span>
+<span class="n">result</span> <span class="o">=</span> <span class="n">lsh</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">m1</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Approximate neighbours with Jaccard similarity &gt; 0.5&quot;</span><span class="p">,</span> <span class="n">result</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>The Jaccard similarity threshold must be set at initialization, and
+cannot be changed. So does the number of permutation functions (<code class="docutils literal notranslate"><span class="pre">num_perm</span></code>) parameter.
+Similar to MinHash, more permutation functions improves the accuracy,
+but also increases query cost, since more processing is required as the
+MinHash gets bigger.
+I experimented with the <a class="reference external" href="http://scikit-learn.org/stable/datasets/twenty_newsgroups.html">20 News Group
+Dataset</a>,
+which has an average cardinality of 193 (3-shingles). The average
+recall, average precision, and 90 percentile query time vs. number of permutation
+functions
+are plotted below.
+See the <cite>benchmark</cite>
+directory in the source code repository for more experiment and
+plotting code.</p>
+<div class="figure align-default">
+<img alt="MinHashLSH Benchmark" src="_images/lsh_benchmark.png" />
+</div>
+<p>There are other optional parameters that can be used to tune the index.
+See the documentation of <a class="reference internal" href="documentation.html#datasketch.MinHashLSH" title="datasketch.MinHashLSH"><code class="xref py py-class docutils literal notranslate"><span class="pre">datasketch.MinHashLSH</span></code></a> for details.</p>
+<p>MinHash LSH does not support Top-K queries.
+See <a class="reference internal" href="lshforest.html#minhash-lsh-forest"><span class="std std-ref">MinHash LSH Forest</span></a> for an alternative.
+In addition, Jaccard similarity may not be the best measure if your intention is to
+find sets having high intersection with the query.
+For intersection search, see <a class="reference internal" href="lshensemble.html#minhash-lsh-ensemble"><span class="std std-ref">MinHash LSH Ensemble</span></a>.</p>
+<div class="section" id="minhash-lsh-at-scale">
+<span id="id2"></span><h2>MinHash LSH at scale<a class="headerlink" href="#minhash-lsh-at-scale" title="Permalink to this headline">¶</a></h2>
+<p>MinHash LSH supports using Redis as the storage layer for handling large index and
+providing optional persistence as part of
+a production environment.
+The Redis storage option can be configured using:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">datasketch</span> <span class="kn">import</span> <span class="n">MinHashLSH</span>
+
+<span class="n">lsh</span> <span class="o">=</span> <span class="n">MinHashLSH</span><span class="p">(</span>
+    <span class="n">threshold</span><span class="o">=</span><span class="mf">0.5</span><span class="p">,</span> <span class="n">num_perm</span><span class="o">=</span><span class="mi">128</span><span class="p">,</span> <span class="n">storage_config</span><span class="o">=</span><span class="p">{</span>
+        <span class="s1">&#39;type&#39;</span><span class="p">:</span> <span class="s1">&#39;redis&#39;</span><span class="p">,</span>
+        <span class="s1">&#39;redis&#39;</span><span class="p">:</span> <span class="p">{</span><span class="s1">&#39;host&#39;</span><span class="p">:</span> <span class="s1">&#39;localhost&#39;</span><span class="p">,</span> <span class="s1">&#39;port&#39;</span><span class="p">:</span> <span class="mi">6379</span><span class="p">},</span>
+    <span class="p">}</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+<p>To insert a large number of MinHashes in sequence, it is advisable to use
+an insertion session. This reduces the number of network calls during
+bulk insertion.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">data_list</span> <span class="o">=</span> <span class="p">[(</span><span class="s2">&quot;m1&quot;</span><span class="p">,</span> <span class="n">m1</span><span class="p">),</span> <span class="p">(</span><span class="s2">&quot;m2&quot;</span><span class="p">,</span> <span class="n">m2</span><span class="p">),</span> <span class="p">(</span><span class="s2">&quot;m3&quot;</span><span class="p">,</span> <span class="n">m3</span><span class="p">)]</span>
+
+<span class="k">with</span> <span class="n">lsh</span><span class="o">.</span><span class="n">insertion_session</span><span class="p">()</span> <span class="k">as</span> <span class="n">session</span><span class="p">:</span>
+   <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">minhash</span> <span class="ow">in</span> <span class="n">data_list</span><span class="p">:</span>
+      <span class="n">session</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="n">minhash</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Note that querying the LSH object during an open insertion session may result in
+inconsistency.</p>
+<p>MinHash LSH also supports a Cassandra cluster as a storage layer. Using a long-term
+storage for your LSH addresses all use cases where the application needs to continuously update
+the LSH object (for example when you use MinHash LSH to incrementally cluster documents).</p>
+<p>The Cassandra storage option can be configured as follows:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">datasketch</span> <span class="kn">import</span> <span class="n">MinHashLSH</span>
+
+<span class="n">lsh</span> <span class="o">=</span> <span class="n">MinHashLSH</span><span class="p">(</span>
+    <span class="n">threashold</span><span class="o">=</span><span class="mf">0.5</span><span class="p">,</span> <span class="n">num_perm</span><span class="o">=</span><span class="mi">128</span><span class="p">,</span> <span class="n">storage_config</span><span class="o">=</span><span class="p">{</span>
+        <span class="s1">&#39;type&#39;</span><span class="p">:</span> <span class="s1">&#39;cassandra&#39;</span><span class="p">,</span>
+        <span class="s1">&#39;cassandra&#39;</span><span class="p">:</span> <span class="p">{</span>
+            <span class="s1">&#39;seeds&#39;</span><span class="p">:</span> <span class="p">[</span><span class="s1">&#39;127.0.0.1&#39;</span><span class="p">],</span>
+            <span class="s1">&#39;keyspace&#39;</span><span class="p">:</span> <span class="s1">&#39;lsh_test&#39;</span><span class="p">,</span>
+            <span class="s1">&#39;replication&#39;</span><span class="p">:</span> <span class="p">{</span>
+                <span class="s1">&#39;class&#39;</span><span class="p">:</span> <span class="s1">&#39;SimpleStrategy&#39;</span><span class="p">,</span>
+                <span class="s1">&#39;replication_factor&#39;</span><span class="p">:</span> <span class="s1">&#39;1&#39;</span><span class="p">,</span>
+            <span class="p">},</span>
+            <span class="s1">&#39;drop_keyspace&#39;</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span>
+            <span class="s1">&#39;drop_tables&#39;</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span>
+        <span class="p">}</span>
+    <span class="p">}</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+<p>The parameter <cite>seeds</cite> specifies the list of seed nodes that can be contacted to connect to the
+Cassandra cluster. Options <cite>keyspace</cite> and <cite>replication</cite> specify the parameters to be used
+when creating a keyspace (if not already existing). If you want to force creation of either tables
+or keyspace (and thus DROP existing ones), set <cite>drop_tables</cite> and <cite>drop_keyspace</cite> options to
+<cite>True</cite>.</p>
+<p>Like the Redis counterpart, you can use insert sessions
+to reduce the number of network calls during bulk insertion.</p>
+<div class="section" id="connecting-to-existing-minhash-lsh">
+<h3>Connecting to Existing MinHash LSH<a class="headerlink" href="#connecting-to-existing-minhash-lsh" title="Permalink to this headline">¶</a></h3>
+<p>If you are using an external storage layer (e.g., Redis) for your LSH, you can
+share it across multiple processes. Ther are two ways to do it:</p>
+<p>The recommended way is to use “pickling”. The MinHash LSH object is serializable
+so you can call <cite>pickle</cite>:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">pickle</span>
+
+<span class="c1"># Create your LSH object</span>
+<span class="n">lsh</span> <span class="o">=</span> <span class="o">...</span>
+<span class="c1"># Serialize the LSH</span>
+<span class="n">data</span> <span class="o">=</span> <span class="n">pickle</span><span class="o">.</span><span class="n">dumps</span><span class="p">(</span><span class="n">lsh</span><span class="p">)</span>
+<span class="c1"># Now you can pass it as an argument to a forked process or simply save it</span>
+<span class="c1"># in an external storage.</span>
+
+<span class="c1"># In a different process, deserialize the LSH</span>
+<span class="n">lsh</span> <span class="o">=</span> <span class="n">pickle</span><span class="o">.</span><span class="n">loads</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Using pickle allows you to preserve everything you need to know about the LSH
+such as various parameter settings in a single location.</p>
+<p>Alternatively you can specify <cite>basename</cite> in the storage config when
+you first creating the LSH. For example:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># For Redis.</span>
+<span class="n">lsh</span> <span class="o">=</span> <span class="n">MinHashLSH</span><span class="p">(</span>
+    <span class="n">threshold</span><span class="o">=</span><span class="mf">0.5</span><span class="p">,</span> <span class="n">num_perm</span><span class="o">=</span><span class="mi">128</span><span class="p">,</span> <span class="n">storage_config</span><span class="o">=</span><span class="p">{</span>
+        <span class="s1">&#39;type&#39;</span><span class="p">:</span> <span class="s1">&#39;redis&#39;</span><span class="p">,</span>
+        <span class="s1">&#39;basename&#39;</span><span class="p">:</span> <span class="sa">b</span><span class="s1">&#39;unique_name_6ac4fg&#39;</span><span class="p">,</span>
+        <span class="s1">&#39;redis&#39;</span><span class="p">:</span> <span class="p">{</span><span class="s1">&#39;host&#39;</span><span class="p">:</span> <span class="s1">&#39;localhost&#39;</span><span class="p">,</span> <span class="s1">&#39;port&#39;</span><span class="p">:</span> <span class="mi">6379</span><span class="p">},</span>
+    <span class="p">}</span>
+<span class="p">)</span>
+
+ <span class="c1"># For Cassandra.</span>
+ <span class="n">lsh</span> <span class="o">=</span> <span class="n">MinHashLSH</span><span class="p">(</span>
+    <span class="n">threashold</span><span class="o">=</span><span class="mf">0.5</span><span class="p">,</span> <span class="n">num_perm</span><span class="o">=</span><span class="mi">128</span><span class="p">,</span> <span class="n">storage_config</span><span class="o">=</span><span class="p">{</span>
+        <span class="s1">&#39;type&#39;</span><span class="p">:</span> <span class="s1">&#39;cassandra&#39;</span><span class="p">,</span>
+        <span class="s1">&#39;basename&#39;</span><span class="p">:</span> <span class="sa">b</span><span class="s1">&#39;unique_name&#39;</span><span class="p">,</span>
+        <span class="s1">&#39;cassandra&#39;</span><span class="p">:</span> <span class="p">{</span>
+            <span class="s1">&#39;seeds&#39;</span><span class="p">:</span> <span class="p">[</span><span class="s1">&#39;127.0.0.1&#39;</span><span class="p">],</span>
+            <span class="s1">&#39;keyspace&#39;</span><span class="p">:</span> <span class="s1">&#39;lsh_test&#39;</span><span class="p">,</span>
+            <span class="s1">&#39;replication&#39;</span><span class="p">:</span> <span class="p">{</span>
+                <span class="s1">&#39;class&#39;</span><span class="p">:</span> <span class="s1">&#39;SimpleStrategy&#39;</span><span class="p">,</span>
+                <span class="s1">&#39;replication_factor&#39;</span><span class="p">:</span> <span class="s1">&#39;1&#39;</span><span class="p">,</span>
+            <span class="p">},</span>
+            <span class="s1">&#39;drop_keyspace&#39;</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span>
+            <span class="s1">&#39;drop_tables&#39;</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span>
+        <span class="p">}</span>
+    <span class="p">}</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+<p>The <cite>basename</cite> will be used to generate key prefixes in the storage layer to
+uniquely identify data associated with this LSH. Thus, if you create a new
+LSH object with the same <cite>basename</cite>, you will be using the same underlying
+data in the storage layer associated with the old LSH.</p>
+<p>If you don’t specify <cite>basename</cite>, MinHash LSH will generate a random string
+as the base name, and collision is extremely unlikely.</p>
+</div>
+</div>
+<div class="section" id="asynchronous-minhash-lsh-at-scale">
+<span id="minhash-lsh-async"></span><h2>Asynchronous MinHash LSH at scale<a class="headerlink" href="#asynchronous-minhash-lsh-at-scale" title="Permalink to this headline">¶</a></h2>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>The module supports Python version &gt;=3.6, and is currently experimental.
+So the interface may change slightly in the future.</p>
+</div>
+<p>This module may be useful if you want to process millions of text documents
+in streaming/batch mode using asynchronous RESTful API (for example, aiohttp)
+for clustering tasks,
+and maximize the throughput of your service.</p>
+<p>We currently provide asynchronous MongoDB storage (<em>python motor package</em>)</p>
+<p>For sharing across different Python
+processes see <a class="reference internal" href="#minhash-lsh-at-scale"><span class="std std-ref">MinHash LSH at scale</span></a>.</p>
+<p>The Asynchronous MongoDB storage option can be configured using:</p>
+<ul class="simple">
+<li><p>Usual way:</p></li>
+</ul>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">datasketch.experimental.aio.lsh</span> <span class="kn">import</span> <span class="n">AsyncMinHashLSH</span>
+<span class="kn">from</span> <span class="nn">datasketch</span> <span class="kn">import</span> <span class="n">MinHash</span>
+
+<span class="n">_storage</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;type&#39;</span><span class="p">:</span> <span class="s1">&#39;aiomongo&#39;</span><span class="p">,</span> <span class="s1">&#39;mongo&#39;</span><span class="p">:</span> <span class="p">{</span><span class="s1">&#39;host&#39;</span><span class="p">:</span> <span class="s1">&#39;localhost&#39;</span><span class="p">,</span> <span class="s1">&#39;port&#39;</span><span class="p">:</span> <span class="mi">27017</span><span class="p">,</span> <span class="s1">&#39;db&#39;</span><span class="p">:</span> <span class="s1">&#39;lsh_test&#39;</span><span class="p">}}</span>
+
+<span class="k">async</span> <span class="k">def</span> <span class="nf">func</span><span class="p">():</span>
+    <span class="n">lsh</span> <span class="o">=</span> <span class="k">await</span> <span class="n">AsyncMinHashLSH</span><span class="p">(</span><span class="n">storage_config</span><span class="o">=</span><span class="n">_storage</span><span class="p">,</span> <span class="n">threshold</span><span class="o">=</span><span class="mf">0.5</span><span class="p">,</span> <span class="n">num_perm</span><span class="o">=</span><span class="mi">16</span><span class="p">)</span>
+    <span class="n">m1</span> <span class="o">=</span> <span class="n">MinHash</span><span class="p">(</span><span class="mi">16</span><span class="p">)</span>
+    <span class="n">m1</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="s1">&#39;a&#39;</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="s1">&#39;utf8&#39;</span><span class="p">))</span>
+    <span class="n">m2</span> <span class="o">=</span> <span class="n">MinHash</span><span class="p">(</span><span class="mi">16</span><span class="p">)</span>
+    <span class="n">m2</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="s1">&#39;b&#39;</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="s1">&#39;utf8&#39;</span><span class="p">))</span>
+    <span class="k">await</span> <span class="n">lsh</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="s1">&#39;a&#39;</span><span class="p">,</span> <span class="n">m1</span><span class="p">)</span>
+    <span class="k">await</span> <span class="n">lsh</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="s1">&#39;b&#39;</span><span class="p">,</span> <span class="n">m2</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="k">await</span> <span class="n">lsh</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">m1</span><span class="p">))</span>
+    <span class="nb">print</span><span class="p">(</span><span class="k">await</span> <span class="n">lsh</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">m2</span><span class="p">))</span>
+    <span class="n">lsh</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+</pre></div>
+</div>
+<ul class="simple">
+<li><p>Context Manager style:</p></li>
+</ul>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">datasketch.experimental.aio.lsh</span> <span class="kn">import</span> <span class="n">AsyncMinHashLSH</span>
+<span class="kn">from</span> <span class="nn">datasketch</span> <span class="kn">import</span> <span class="n">MinHash</span>
+
+<span class="n">_storage</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;type&#39;</span><span class="p">:</span> <span class="s1">&#39;aiomongo&#39;</span><span class="p">,</span> <span class="s1">&#39;mongo&#39;</span><span class="p">:</span> <span class="p">{</span><span class="s1">&#39;host&#39;</span><span class="p">:</span> <span class="s1">&#39;localhost&#39;</span><span class="p">,</span> <span class="s1">&#39;port&#39;</span><span class="p">:</span> <span class="mi">27017</span><span class="p">,</span> <span class="s1">&#39;db&#39;</span><span class="p">:</span> <span class="s1">&#39;lsh_test&#39;</span><span class="p">}}</span>
+
+<span class="k">async</span> <span class="k">def</span> <span class="nf">func</span><span class="p">():</span>
+    <span class="k">async</span> <span class="k">with</span> <span class="n">AsyncMinHashLSH</span><span class="p">(</span><span class="n">storage_config</span><span class="o">=</span><span class="n">_storage</span><span class="p">,</span> <span class="n">threshold</span><span class="o">=</span><span class="mf">0.5</span><span class="p">,</span> <span class="n">num_perm</span><span class="o">=</span><span class="mi">16</span><span class="p">)</span> <span class="k">as</span> <span class="n">lsh</span><span class="p">:</span>
+        <span class="n">m1</span> <span class="o">=</span> <span class="n">MinHash</span><span class="p">(</span><span class="mi">16</span><span class="p">)</span>
+        <span class="n">m1</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="s1">&#39;a&#39;</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="s1">&#39;utf8&#39;</span><span class="p">))</span>
+        <span class="n">m2</span> <span class="o">=</span> <span class="n">MinHash</span><span class="p">(</span><span class="mi">16</span><span class="p">)</span>
+        <span class="n">m2</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="s1">&#39;b&#39;</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="s1">&#39;utf8&#39;</span><span class="p">))</span>
+        <span class="k">await</span> <span class="n">lsh</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="s1">&#39;a&#39;</span><span class="p">,</span> <span class="n">m1</span><span class="p">)</span>
+        <span class="k">await</span> <span class="n">lsh</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="s1">&#39;b&#39;</span><span class="p">,</span> <span class="n">m2</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="k">await</span> <span class="n">lsh</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">m1</span><span class="p">))</span>
+        <span class="nb">print</span><span class="p">(</span><span class="k">await</span> <span class="n">lsh</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">m2</span><span class="p">))</span>
+</pre></div>
+</div>
+<p>To configure Asynchronous MongoDB storage that will connect to a <a class="reference external" href="http://api.mongodb.com/python/current/examples/high_availability.html#id1">replica set</a> of three nodes, use:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">_storage</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;type&#39;</span><span class="p">:</span> <span class="s1">&#39;aiomongo&#39;</span><span class="p">,</span> <span class="s1">&#39;mongo&#39;</span><span class="p">:</span> <span class="p">{</span><span class="s1">&#39;replica_set&#39;</span><span class="p">:</span> <span class="s1">&#39;rs0&#39;</span><span class="p">,</span> <span class="s1">&#39;replica_set_nodes&#39;</span><span class="p">:</span> <span class="s1">&#39;node1:port1,node2:port2,node3:port3&#39;</span><span class="p">}}</span>
+</pre></div>
+</div>
+<p>To connect to a cloud Mongo Atlas cluster (or any other arbitrary <code class="docutils literal notranslate"><span class="pre">mongodb</span></code> URI):</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">_storage</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;type&#39;</span><span class="p">:</span> <span class="s1">&#39;aiomongo&#39;</span><span class="p">,</span> <span class="s1">&#39;mongo&#39;</span><span class="p">:</span> <span class="p">{</span><span class="s1">&#39;url&#39;</span><span class="p">:</span> <span class="s1">&#39;mongodb+srv://user:pass@server-ybq4y.mongodb.net/db&#39;</span><span class="p">}}</span>
+</pre></div>
+</div>
+<p>If you want to pass additional params to the <cite>Mongo client &lt;http://api.mongodb.com/python/current/api/pymongo/mongo_client.html&gt;</cite> constructor, just put them in the <code class="docutils literal notranslate"><span class="pre">mongo.args</span></code> object in the storage config (example usage to configure X509 authentication):</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">_storage</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="s1">&#39;type&#39;</span><span class="p">:</span> <span class="s1">&#39;aiomongo&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;mongo&#39;</span><span class="p">:</span>
+        <span class="p">{</span>
+            <span class="o">...</span><span class="p">,</span>
+            <span class="s1">&#39;args&#39;</span><span class="p">:</span> <span class="p">{</span>
+                <span class="s1">&#39;ssl&#39;</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span>
+                <span class="s1">&#39;ssl_ca_certs&#39;</span><span class="p">:</span> <span class="s1">&#39;root-ca.pem&#39;</span><span class="p">,</span>
+                <span class="s1">&#39;ssl_pem_passphrase&#39;</span><span class="p">:</span> <span class="s1">&#39;password&#39;</span><span class="p">,</span>
+                <span class="s1">&#39;ssl_certfile&#39;</span><span class="p">:</span> <span class="s1">&#39;certfile.pem&#39;</span><span class="p">,</span>
+                <span class="s1">&#39;authMechanism&#39;</span><span class="p">:</span> <span class="s2">&quot;MONGODB-X509&quot;</span><span class="p">,</span>
+                <span class="s1">&#39;username&#39;</span><span class="p">:</span> <span class="s2">&quot;username&quot;</span>
+            <span class="p">}</span>
+        <span class="p">}</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p>To create index for a large number of MinHashes using asynchronous MinHash LSH.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">datasketch.experimental.aio.lsh</span> <span class="kn">import</span> <span class="n">AsyncMinHashLSH</span>
+<span class="kn">from</span> <span class="nn">datasketch</span> <span class="kn">import</span> <span class="n">MinHash</span>
+
+<span class="k">def</span> <span class="nf">chunk</span><span class="p">(</span><span class="n">it</span><span class="p">,</span> <span class="n">size</span><span class="p">):</span>
+    <span class="n">it</span> <span class="o">=</span> <span class="nb">iter</span><span class="p">(</span><span class="n">it</span><span class="p">)</span>
+    <span class="k">return</span> <span class="nb">iter</span><span class="p">(</span><span class="k">lambda</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">islice</span><span class="p">(</span><span class="n">it</span><span class="p">,</span> <span class="n">size</span><span class="p">)),</span> <span class="p">())</span>
+
+<span class="n">_chunked_str</span> <span class="o">=</span> <span class="n">chunk</span><span class="p">((</span><span class="n">random</span><span class="o">.</span><span class="n">choice</span><span class="p">(</span><span class="n">string</span><span class="o">.</span><span class="n">ascii_lowercase</span><span class="p">)</span> <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">10000</span><span class="p">)),</span> <span class="mi">4</span><span class="p">)</span>
+<span class="n">seq</span> <span class="o">=</span> <span class="nb">frozenset</span><span class="p">(</span><span class="n">chain</span><span class="p">((</span><span class="s1">&#39;&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">s</span><span class="p">)</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">_chunked_str</span><span class="p">),</span> <span class="p">(</span><span class="s1">&#39;aahhb&#39;</span><span class="p">,</span> <span class="s1">&#39;aahh&#39;</span><span class="p">,</span> <span class="s1">&#39;aahhc&#39;</span><span class="p">,</span> <span class="s1">&#39;aac&#39;</span><span class="p">,</span> <span class="s1">&#39;kld&#39;</span><span class="p">,</span> <span class="s1">&#39;bhg&#39;</span><span class="p">,</span> <span class="s1">&#39;kkd&#39;</span><span class="p">,</span> <span class="s1">&#39;yow&#39;</span><span class="p">,</span> <span class="s1">&#39;ppi&#39;</span><span class="p">,</span> <span class="s1">&#39;eer&#39;</span><span class="p">)))</span>
+<span class="n">objs</span> <span class="o">=</span> <span class="p">[</span><span class="n">MinHash</span><span class="p">(</span><span class="mi">16</span><span class="p">)</span> <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">seq</span><span class="p">))]</span>
+<span class="k">for</span> <span class="n">e</span><span class="p">,</span> <span class="n">obj</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">seq</span><span class="p">,</span> <span class="n">objs</span><span class="p">):</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">e</span><span class="p">:</span>
+        <span class="n">obj</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">i</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="s1">&#39;utf-8&#39;</span><span class="p">))</span>
+<span class="n">data</span> <span class="o">=</span> <span class="p">[(</span><span class="n">e</span><span class="p">,</span> <span class="n">m</span><span class="p">)</span> <span class="k">for</span> <span class="n">e</span><span class="p">,</span> <span class="n">m</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">seq</span><span class="p">,</span> <span class="n">objs</span><span class="p">)]</span>
+
+<span class="n">_storage</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;type&#39;</span><span class="p">:</span> <span class="s1">&#39;aiomongo&#39;</span><span class="p">,</span> <span class="s1">&#39;mongo&#39;</span><span class="p">:</span> <span class="p">{</span><span class="s1">&#39;host&#39;</span><span class="p">:</span> <span class="s1">&#39;localhost&#39;</span><span class="p">,</span> <span class="s1">&#39;port&#39;</span><span class="p">:</span> <span class="mi">27017</span><span class="p">,</span> <span class="s1">&#39;db&#39;</span><span class="p">:</span> <span class="s1">&#39;lsh_test&#39;</span><span class="p">}}</span>
+<span class="k">async</span> <span class="k">def</span> <span class="nf">func</span><span class="p">():</span>
+    <span class="k">async</span> <span class="k">with</span> <span class="n">AsyncMinHashLSH</span><span class="p">(</span><span class="n">storage_config</span><span class="o">=</span><span class="n">_storage</span><span class="p">,</span> <span class="n">threshold</span><span class="o">=</span><span class="mf">0.5</span><span class="p">,</span> <span class="n">num_perm</span><span class="o">=</span><span class="mi">16</span><span class="p">)</span> <span class="k">as</span> <span class="n">lsh</span><span class="p">:</span>
+        <span class="k">async</span> <span class="k">with</span> <span class="n">lsh</span><span class="o">.</span><span class="n">insertion_session</span><span class="p">(</span><span class="n">batch_size</span><span class="o">=</span><span class="mi">1000</span><span class="p">)</span> <span class="k">as</span> <span class="n">session</span><span class="p">:</span>
+            <span class="n">fs</span> <span class="o">=</span> <span class="p">(</span><span class="n">session</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="n">minhash</span><span class="p">,</span> <span class="n">check_duplication</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span> <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">minhash</span> <span class="ow">in</span> <span class="n">data</span><span class="p">)</span>
+        <span class="k">await</span> <span class="n">asyncio</span><span class="o">.</span><span class="n">gather</span><span class="p">(</span><span class="o">*</span><span class="n">fs</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>To bulk remove keys from LSH index using asynchronous MinHash LSH.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">datasketch.experimental.aio.lsh</span> <span class="kn">import</span> <span class="n">AsyncMinHashLSH</span>
+<span class="kn">from</span> <span class="nn">datasketch</span> <span class="kn">import</span> <span class="n">MinHash</span>
+
+<span class="k">def</span> <span class="nf">chunk</span><span class="p">(</span><span class="n">it</span><span class="p">,</span> <span class="n">size</span><span class="p">):</span>
+    <span class="n">it</span> <span class="o">=</span> <span class="nb">iter</span><span class="p">(</span><span class="n">it</span><span class="p">)</span>
+    <span class="k">return</span> <span class="nb">iter</span><span class="p">(</span><span class="k">lambda</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">islice</span><span class="p">(</span><span class="n">it</span><span class="p">,</span> <span class="n">size</span><span class="p">)),</span> <span class="p">())</span>
+
+<span class="n">_chunked_str</span> <span class="o">=</span> <span class="n">chunk</span><span class="p">((</span><span class="n">random</span><span class="o">.</span><span class="n">choice</span><span class="p">(</span><span class="n">string</span><span class="o">.</span><span class="n">ascii_lowercase</span><span class="p">)</span> <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">10000</span><span class="p">)),</span> <span class="mi">4</span><span class="p">)</span>
+<span class="n">seq</span> <span class="o">=</span> <span class="nb">frozenset</span><span class="p">(</span><span class="n">chain</span><span class="p">((</span><span class="s1">&#39;&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">s</span><span class="p">)</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">_chunked_str</span><span class="p">),</span> <span class="p">(</span><span class="s1">&#39;aahhb&#39;</span><span class="p">,</span> <span class="s1">&#39;aahh&#39;</span><span class="p">,</span> <span class="s1">&#39;aahhc&#39;</span><span class="p">,</span> <span class="s1">&#39;aac&#39;</span><span class="p">,</span> <span class="s1">&#39;kld&#39;</span><span class="p">,</span> <span class="s1">&#39;bhg&#39;</span><span class="p">,</span> <span class="s1">&#39;kkd&#39;</span><span class="p">,</span> <span class="s1">&#39;yow&#39;</span><span class="p">,</span> <span class="s1">&#39;ppi&#39;</span><span class="p">,</span> <span class="s1">&#39;eer&#39;</span><span class="p">)))</span>
+<span class="n">objs</span> <span class="o">=</span> <span class="p">[</span><span class="n">MinHash</span><span class="p">(</span><span class="mi">16</span><span class="p">)</span> <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">seq</span><span class="p">))]</span>
+<span class="k">for</span> <span class="n">e</span><span class="p">,</span> <span class="n">obj</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">seq</span><span class="p">,</span> <span class="n">objs</span><span class="p">):</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">e</span><span class="p">:</span>
+        <span class="n">obj</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">i</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="s1">&#39;utf-8&#39;</span><span class="p">))</span>
+<span class="n">data</span> <span class="o">=</span> <span class="p">[(</span><span class="n">e</span><span class="p">,</span> <span class="n">m</span><span class="p">)</span> <span class="k">for</span> <span class="n">e</span><span class="p">,</span> <span class="n">m</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">seq</span><span class="p">,</span> <span class="n">objs</span><span class="p">)]</span>
+
+<span class="n">_storage</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;type&#39;</span><span class="p">:</span> <span class="s1">&#39;aiomongo&#39;</span><span class="p">,</span> <span class="s1">&#39;mongo&#39;</span><span class="p">:</span> <span class="p">{</span><span class="s1">&#39;host&#39;</span><span class="p">:</span> <span class="s1">&#39;localhost&#39;</span><span class="p">,</span> <span class="s1">&#39;port&#39;</span><span class="p">:</span> <span class="mi">27017</span><span class="p">,</span> <span class="s1">&#39;db&#39;</span><span class="p">:</span> <span class="s1">&#39;lsh_test&#39;</span><span class="p">}}</span>
+<span class="k">async</span> <span class="k">def</span> <span class="nf">func</span><span class="p">():</span>
+    <span class="k">async</span> <span class="k">with</span> <span class="n">AsyncMinHashLSH</span><span class="p">(</span><span class="n">storage_config</span><span class="o">=</span><span class="n">_storage</span><span class="p">,</span> <span class="n">threshold</span><span class="o">=</span><span class="mf">0.5</span><span class="p">,</span> <span class="n">num_perm</span><span class="o">=</span><span class="mi">16</span><span class="p">)</span> <span class="k">as</span> <span class="n">lsh</span><span class="p">:</span>
+        <span class="k">async</span> <span class="k">with</span> <span class="n">lsh</span><span class="o">.</span><span class="n">insertion_session</span><span class="p">(</span><span class="n">batch_size</span><span class="o">=</span><span class="mi">1000</span><span class="p">)</span> <span class="k">as</span> <span class="n">session</span><span class="p">:</span>
+            <span class="n">fs</span> <span class="o">=</span> <span class="p">(</span><span class="n">session</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="n">minhash</span><span class="p">,</span> <span class="n">check_duplication</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span> <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">minhash</span> <span class="ow">in</span> <span class="n">data</span><span class="p">)</span>
+        <span class="k">await</span> <span class="n">asyncio</span><span class="o">.</span><span class="n">gather</span><span class="p">(</span><span class="o">*</span><span class="n">fs</span><span class="p">)</span>
+
+        <span class="k">async</span> <span class="k">with</span> <span class="n">lsh</span><span class="o">.</span><span class="n">delete_session</span><span class="p">(</span><span class="n">batch_size</span><span class="o">=</span><span class="mi">3</span><span class="p">)</span> <span class="k">as</span> <span class="n">session</span><span class="p">:</span>
+            <span class="n">fs</span> <span class="o">=</span> <span class="p">(</span><span class="n">session</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="n">key</span><span class="p">)</span> <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">keys_to_remove</span><span class="p">)</span>
+            <span class="k">await</span> <span class="n">asyncio</span><span class="o">.</span><span class="n">gather</span><span class="p">(</span><span class="o">*</span><span class="n">fs</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="common-issues-with-minhash-lsh">
+<h2>Common Issues with MinHash LSH<a class="headerlink" href="#common-issues-with-minhash-lsh" title="Permalink to this headline">¶</a></h2>
+<ol class="arabic simple">
+<li><p><a class="reference external" href="https://github.com/ekzhu/datasketch/issues/76">How to use MinHash LSH to compute all-pair duplicates?</a></p></li>
+<li><p><a class="reference external" href="https://github.com/ekzhu/datasketch/issues/120">MinHash LSH for document clustering</a></p></li>
+<li><p><a class="reference external" href="https://github.com/ekzhu/datasketch/issues/41">How to speedup MinHash LSH indexing for hundreds of millions of MinHashes?</a></p></li>
+<li><p><a class="reference external" href="https://github.com/ekzhu/datasketch/issues/100">Can MinHash LSH find similar points under Euclidean (L2) distance?</a></p></li>
+<li><p><a class="reference external" href="https://github.com/ekzhu/datasketch/issues/93">Combining/Storing LSH with different thresholds</a></p></li>
+</ol>
+<p><a class="reference external" href="https://github.com/ekzhu/datasketch/issues?utf8=%E2%9C%93&amp;q=lsh">See more issues</a></p>
+</div>
+</div>
+
+
+          </div>
+          
+        </div>
+      </div>
+    <div class="clearer"></div>
+  </div>
+    <div class="footer">
+      &copy;2020, Eric Zhu.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 3.3.1</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      
+      |
+      <a href="_sources/lsh.rst.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+    <script type="text/javascript">
+
+      var _gaq = _gaq || [];
+      _gaq.push(['_setAccount', 'UA-93507731-1']);
+      _gaq.push(['_setDomainName', 'none']);
+      _gaq.push(['_setAllowLinker', true]);
+      _gaq.push(['_trackPageview']);
+
+      (function() {
+        var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+        ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+        var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+      })();
+
+    </script>
+    
+  </body>
+</html>

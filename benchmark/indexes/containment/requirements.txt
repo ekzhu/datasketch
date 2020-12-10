@@ -1,5 +1,0 @@
-SetSimilaritySearch
-matplotlib
-pandas
-farmhash
-scipy

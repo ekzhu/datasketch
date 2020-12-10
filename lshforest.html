@@ -1,0 +1,260 @@
+
+<!DOCTYPE html>
+
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>MinHash LSH Forest &#8212; datasketch 1.0.0 documentation</title>
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="_static/alabaster.css" type="text/css" />
+    <script id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+    <script src="_static/jquery.js"></script>
+    <script src="_static/underscore.js"></script>
+    <script src="_static/doctools.js"></script>
+    <script src="_static/language_data.js"></script>
+    <script async="async" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.7/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="MinHash" href="minhash.html" />
+    <link rel="prev" title="MinHash LSH Ensemble" href="lshensemble.html" />
+   
+  <link rel="stylesheet" href="_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  <div class="document">
+    
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="index.html">datasketch</a></h1>
+
+
+
+<p class="blurb">Probabilistic data structures for Big Data</p>
+
+
+
+
+<p>
+<iframe src="https://ghbtns.com/github-btn.html?user=ekzhu&repo=datasketch&type=star&count=true&size=large&v=2"
+  allowtransparency="true" frameborder="0" scrolling="0" width="200px" height="35px"></iframe>
+</p>
+
+
+
+
+
+<h3>Navigation</h3>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="documentation.html">API Documentation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="hyperloglog.html">HyperLogLog</a></li>
+<li class="toctree-l1"><a class="reference internal" href="hyperloglog.html#hyperloglog-plusplus">HyperLogLog++</a></li>
+<li class="toctree-l1"><a class="reference internal" href="lsh.html">MinHash LSH</a></li>
+<li class="toctree-l1"><a class="reference internal" href="lshensemble.html">MinHash LSH Ensemble</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">MinHash LSH Forest</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#tips-for-improving-accuracy">Tips for Improving Accuracy</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#common-issues-with-minhash-lsh-forest">Common Issues with MinHash LSH Forest</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="minhash.html">MinHash</a></li>
+<li class="toctree-l1"><a class="reference internal" href="weightedminhash.html">Weighted MinHash</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="index.html">Documentation overview</a><ul>
+      <li>Previous: <a href="lshensemble.html" title="previous chapter">MinHash LSH Ensemble</a></li>
+      <li>Next: <a href="minhash.html" title="next chapter">MinHash</a></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <div class="section" id="minhash-lsh-forest">
+<span id="id1"></span><h1>MinHash LSH Forest<a class="headerlink" href="#minhash-lsh-forest" title="Permalink to this headline">¶</a></h1>
+<p><a class="reference internal" href="lsh.html#minhash-lsh"><span class="std std-ref">MinHash LSH</span></a> is useful for radius (or threshold) queries. However,
+<strong>top-k</strong> queries are often more useful in some cases. <a class="reference external" href="http://ilpubs.stanford.edu:8090/678/1/2005-14.pdf">LSH
+Forest</a> by Bawa et
+al. is a general LSH data structure that makes top-k query possible for
+many different types of LSH indexes, which include MinHash LSH. I
+implemented the MinHash LSH Forest, which takes a <a class="reference internal" href="minhash.html#minhash"><span class="std std-ref">MinHash</span></a> data sketch of
+the query set, and returns the top-k matching sets that have the
+<strong>approximately</strong> highest Jaccard similarities with the query set
+(<a class="reference external" href="https://github.com/ekzhu/datasketch/issues/89">Incorrect results of LSH
+Forest</a>).</p>
+<p>The interface of <a class="reference internal" href="documentation.html#datasketch.MinHashLSHForest" title="datasketch.MinHashLSHForest"><code class="xref py py-class docutils literal notranslate"><span class="pre">datasketch.MinHashLSHForest</span></code></a> is similar to
+<a class="reference internal" href="documentation.html#datasketch.MinHashLSH" title="datasketch.MinHashLSH"><code class="xref py py-class docutils literal notranslate"><span class="pre">datasketch.MinHashLSH</span></code></a>,
+however, it is very important to call <code class="docutils literal notranslate"><span class="pre">index</span></code> method after adding the
+keys. Without calling the <code class="docutils literal notranslate"><span class="pre">index</span></code> method, the keys won’t be
+searchable.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">datasketch</span> <span class="kn">import</span> <span class="n">MinHashLSHForest</span><span class="p">,</span> <span class="n">MinHash</span>
+
+<span class="n">data1</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;minhash&#39;</span><span class="p">,</span> <span class="s1">&#39;is&#39;</span><span class="p">,</span> <span class="s1">&#39;a&#39;</span><span class="p">,</span> <span class="s1">&#39;probabilistic&#39;</span><span class="p">,</span> <span class="s1">&#39;data&#39;</span><span class="p">,</span> <span class="s1">&#39;structure&#39;</span><span class="p">,</span> <span class="s1">&#39;for&#39;</span><span class="p">,</span>
+        <span class="s1">&#39;estimating&#39;</span><span class="p">,</span> <span class="s1">&#39;the&#39;</span><span class="p">,</span> <span class="s1">&#39;similarity&#39;</span><span class="p">,</span> <span class="s1">&#39;between&#39;</span><span class="p">,</span> <span class="s1">&#39;datasets&#39;</span><span class="p">]</span>
+<span class="n">data2</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;minhash&#39;</span><span class="p">,</span> <span class="s1">&#39;is&#39;</span><span class="p">,</span> <span class="s1">&#39;a&#39;</span><span class="p">,</span> <span class="s1">&#39;probability&#39;</span><span class="p">,</span> <span class="s1">&#39;data&#39;</span><span class="p">,</span> <span class="s1">&#39;structure&#39;</span><span class="p">,</span> <span class="s1">&#39;for&#39;</span><span class="p">,</span>
+        <span class="s1">&#39;estimating&#39;</span><span class="p">,</span> <span class="s1">&#39;the&#39;</span><span class="p">,</span> <span class="s1">&#39;similarity&#39;</span><span class="p">,</span> <span class="s1">&#39;between&#39;</span><span class="p">,</span> <span class="s1">&#39;documents&#39;</span><span class="p">]</span>
+<span class="n">data3</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;minhash&#39;</span><span class="p">,</span> <span class="s1">&#39;is&#39;</span><span class="p">,</span> <span class="s1">&#39;probability&#39;</span><span class="p">,</span> <span class="s1">&#39;data&#39;</span><span class="p">,</span> <span class="s1">&#39;structure&#39;</span><span class="p">,</span> <span class="s1">&#39;for&#39;</span><span class="p">,</span>
+        <span class="s1">&#39;estimating&#39;</span><span class="p">,</span> <span class="s1">&#39;the&#39;</span><span class="p">,</span> <span class="s1">&#39;similarity&#39;</span><span class="p">,</span> <span class="s1">&#39;between&#39;</span><span class="p">,</span> <span class="s1">&#39;documents&#39;</span><span class="p">]</span>
+
+<span class="c1"># Create MinHash objects</span>
+<span class="n">m1</span> <span class="o">=</span> <span class="n">MinHash</span><span class="p">(</span><span class="n">num_perm</span><span class="o">=</span><span class="mi">128</span><span class="p">)</span>
+<span class="n">m2</span> <span class="o">=</span> <span class="n">MinHash</span><span class="p">(</span><span class="n">num_perm</span><span class="o">=</span><span class="mi">128</span><span class="p">)</span>
+<span class="n">m3</span> <span class="o">=</span> <span class="n">MinHash</span><span class="p">(</span><span class="n">num_perm</span><span class="o">=</span><span class="mi">128</span><span class="p">)</span>
+<span class="k">for</span> <span class="n">d</span> <span class="ow">in</span> <span class="n">data1</span><span class="p">:</span>
+    <span class="n">m1</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">d</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="s1">&#39;utf8&#39;</span><span class="p">))</span>
+<span class="k">for</span> <span class="n">d</span> <span class="ow">in</span> <span class="n">data2</span><span class="p">:</span>
+    <span class="n">m2</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">d</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="s1">&#39;utf8&#39;</span><span class="p">))</span>
+<span class="k">for</span> <span class="n">d</span> <span class="ow">in</span> <span class="n">data3</span><span class="p">:</span>
+    <span class="n">m3</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">d</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="s1">&#39;utf8&#39;</span><span class="p">))</span>
+
+<span class="c1"># Create a MinHash LSH Forest with the same num_perm parameter</span>
+<span class="n">forest</span> <span class="o">=</span> <span class="n">MinHashLSHForest</span><span class="p">(</span><span class="n">num_perm</span><span class="o">=</span><span class="mi">128</span><span class="p">)</span>
+
+<span class="c1"># Add m2 and m3 into the index</span>
+<span class="n">forest</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="s2">&quot;m2&quot;</span><span class="p">,</span> <span class="n">m2</span><span class="p">)</span>
+<span class="n">forest</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="s2">&quot;m3&quot;</span><span class="p">,</span> <span class="n">m3</span><span class="p">)</span>
+
+<span class="c1"># IMPORTANT: must call index() otherwise the keys won&#39;t be searchable</span>
+<span class="n">forest</span><span class="o">.</span><span class="n">index</span><span class="p">()</span>
+
+<span class="c1"># Check for membership using the key</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;m2&quot;</span> <span class="ow">in</span> <span class="n">forest</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;m3&quot;</span> <span class="ow">in</span> <span class="n">forest</span><span class="p">)</span>
+
+<span class="c1"># Using m1 as the query, retrieve top 2 keys that have the higest Jaccard</span>
+<span class="n">result</span> <span class="o">=</span> <span class="n">forest</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">m1</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Top 2 candidates&quot;</span><span class="p">,</span> <span class="n">result</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>The plot below shows the <a class="reference external" href="https://www.kaggle.com/wiki/MeanAveragePrecision">mean average precision
+(MAP)</a> of linear
+scan with MinHash and MinHash LSH Forest. Synthetic data was used. See
+<a class="reference external" href="https://github.com/ekzhu/datasketch/blob/master/benchmark/lshforest_benchmark.py">benchmark</a>
+for details.</p>
+<div class="figure align-default">
+<img alt="MinHashLSHForest Benchmark" src="_images/lshforest_benchmark.png" />
+</div>
+<p>(Optional) If you have read the LSH Forest
+<a class="reference external" href="http://ilpubs.stanford.edu:8090/678/1/2005-14.pdf">paper</a>, and
+understand the data structure, you may want to customize another
+parameter for <a class="reference internal" href="documentation.html#datasketch.MinHashLSHForest" title="datasketch.MinHashLSHForest"><code class="xref py py-class docutils literal notranslate"><span class="pre">datasketch.MinHashLSHForest</span></code></a> – <code class="docutils literal notranslate"><span class="pre">l</span></code>, the number of prefix trees
+(or “LSH Trees” as in the paper) in the LSH Forest index. Different from
+the paper, this implementation fixes the number of LSH functions, in
+this case <code class="docutils literal notranslate"><span class="pre">num_perm</span></code>, and makes the maximum depth of every prefix tree
+dependent on <code class="docutils literal notranslate"><span class="pre">num_perm</span></code> and <code class="docutils literal notranslate"><span class="pre">l</span></code>:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># The maximum depth of a prefix tree depends on num_perm and l</span>
+<span class="n">k</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">num_perm</span> <span class="o">/</span> <span class="n">l</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>This way the interface of the <a class="reference internal" href="documentation.html#datasketch.MinHashLSHForest" title="datasketch.MinHashLSHForest"><code class="xref py py-class docutils literal notranslate"><span class="pre">datasketch.MinHashLSHForest</span></code></a> is in coherence with
+the interface of <code class="docutils literal notranslate"><span class="pre">MinHash</span></code>.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># There is another optional parameter l (default l=8).</span>
+<span class="n">forest</span> <span class="o">=</span> <span class="n">MinHashLSHForest</span><span class="p">(</span><span class="n">num_perm</span><span class="o">=</span><span class="mi">250</span><span class="p">,</span> <span class="n">l</span><span class="o">=</span><span class="mi">10</span><span class="p">)</span>
+</pre></div>
+</div>
+<div class="section" id="tips-for-improving-accuracy">
+<h2>Tips for Improving Accuracy<a class="headerlink" href="#tips-for-improving-accuracy" title="Permalink to this headline">¶</a></h2>
+<p>The default parameters may not be good enough for all data. Here are
+some tips for improving the accuracy of LSH Forest.</p>
+<p><strong>Use 2*k</strong>: You can use a multiple of <cite>k</cite> (e.g., <cite>2*k</cite>) in the argument, then
+compute the exact (or approximate using MinHash) Jaccard
+similarities of the sets referenced by the returned keys,
+from which you then take the top-k. For example:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Set our k to 10.</span>
+<span class="n">k</span> <span class="o">=</span> <span class="mi">10</span>
+
+<span class="c1"># Do work to create index...</span>
+
+<span class="c1"># When you query, instead of use k, use 2*k.</span>
+<span class="n">result</span> <span class="o">=</span> <span class="n">forest</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">minhash</span><span class="p">,</span> <span class="mi">2</span><span class="o">*</span><span class="n">k</span><span class="p">)</span>
+
+<span class="c1"># Let&#39;s say you store the sets in a dictionary (not a good idea for</span>
+<span class="c1"># millions of sets) referenced by keys, you can use them to compute</span>
+<span class="c1"># the exact Jaccard similarities of the returned sets to your query set.</span>
+<span class="c1"># You can also use MinHashes instead.</span>
+<span class="n">result</span> <span class="o">=</span> <span class="p">[(</span><span class="n">key</span><span class="p">,</span> <span class="n">compute_jaccard</span><span class="p">(</span><span class="n">index_sets</span><span class="p">[</span><span class="n">key</span><span class="p">],</span> <span class="n">query_set</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">result</span><span class="p">]</span>
+
+<span class="c1"># Then you can take the final top-k.</span>
+<span class="n">result</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">result</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">x</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">reverse</span><span class="o">=</span><span class="kc">True</span><span class="p">)[:</span><span class="n">k</span><span class="p">]</span>
+</pre></div>
+</div>
+<p>This is often called
+“post-processing”. Because the total number of similarity
+computations is still bounded by a constant multiple of <cite>k</cite>, the
+performance won’t degrade too much – however you do have to keep
+the original sets (or MinHashes) around somewhere
+(in-memory, databases, etc.) so that you
+can make references to them.</p>
+</div>
+<div class="section" id="common-issues-with-minhash-lsh-forest">
+<h2>Common Issues with MinHash LSH Forest<a class="headerlink" href="#common-issues-with-minhash-lsh-forest" title="Permalink to this headline">¶</a></h2>
+<ol class="arabic simple">
+<li><p><a class="reference external" href="https://github.com/ekzhu/datasketch/issues/89">Unexpected/Incorrect results by MinHash LSH Forest</a></p></li>
+<li><p><a class="reference external" href="https://github.com/ekzhu/datasketch/issues/52">MinHash LSH Forest Accuracy</a></p></li>
+<li><p><a class="reference external" href="https://github.com/ekzhu/datasketch/issues/42">Minhash LSH Forest Top-K results differs from MinHash LSH</a></p></li>
+<li><p><a class="reference external" href="https://github.com/ekzhu/datasketch/issues/35">No result for top-k</a></p></li>
+</ol>
+</div>
+</div>
+
+
+          </div>
+          
+        </div>
+      </div>
+    <div class="clearer"></div>
+  </div>
+    <div class="footer">
+      &copy;2020, Eric Zhu.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 3.3.1</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      
+      |
+      <a href="_sources/lshforest.rst.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+    <script type="text/javascript">
+
+      var _gaq = _gaq || [];
+      _gaq.push(['_setAccount', 'UA-93507731-1']);
+      _gaq.push(['_setDomainName', 'none']);
+      _gaq.push(['_setAllowLinker', true]);
+      _gaq.push(['_trackPageview']);
+
+      (function() {
+        var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+        ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+        var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+      })();
+
+    </script>
+    
+  </body>
+</html>

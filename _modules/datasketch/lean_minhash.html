@@ -1,0 +1,368 @@
+
+<!DOCTYPE html>
+
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>datasketch.lean_minhash &#8212; datasketch 1.0.0 documentation</title>
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/alabaster.css" type="text/css" />
+    <script id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
+    <script src="../../_static/jquery.js"></script>
+    <script src="../../_static/underscore.js"></script>
+    <script src="../../_static/doctools.js"></script>
+    <script src="../../_static/language_data.js"></script>
+    <script async="async" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.7/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+   
+  <link rel="stylesheet" href="../../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  <div class="document">
+    
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../../index.html">datasketch</a></h1>
+
+
+
+<p class="blurb">Probabilistic data structures for Big Data</p>
+
+
+
+
+<p>
+<iframe src="https://ghbtns.com/github-btn.html?user=ekzhu&repo=datasketch&type=star&count=true&size=large&v=2"
+  allowtransparency="true" frameborder="0" scrolling="0" width="200px" height="35px"></iframe>
+</p>
+
+
+
+
+
+<h3>Navigation</h3>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../documentation.html">API Documentation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../hyperloglog.html">HyperLogLog</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../hyperloglog.html#hyperloglog-plusplus">HyperLogLog++</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../lsh.html">MinHash LSH</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../lshensemble.html">MinHash LSH Ensemble</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../lshforest.html">MinHash LSH Forest</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../minhash.html">MinHash</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../weightedminhash.html">Weighted MinHash</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../index.html">Documentation overview</a><ul>
+  <li><a href="../index.html">Module code</a><ul>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <h1>Source code for datasketch.lean_minhash</h1><div class="highlight"><pre>
+<span></span><span class="kn">import</span> <span class="nn">struct</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+
+<span class="kn">from</span> <span class="nn">datasketch</span> <span class="kn">import</span> <span class="n">MinHash</span>
+
+<div class="viewcode-block" id="LeanMinHash"><a class="viewcode-back" href="../../documentation.html#datasketch.LeanMinHash">[docs]</a><span class="k">class</span> <span class="nc">LeanMinHash</span><span class="p">(</span><span class="n">MinHash</span><span class="p">):</span>
+    <span class="sd">&#39;&#39;&#39;Lean MinHash is MinHash with a smaller memory footprint</span>
+<span class="sd">    and faster deserialization, but with its internal state frozen</span>
+<span class="sd">    -- no `update()`.</span>
+
+<span class="sd">    Lean MinHash inherits all methods from :class:`datasketch.MinHash`.</span>
+<span class="sd">    It does not store the `permutations` and the `hashfunc` needed for updating.</span>
+<span class="sd">    If a MinHash does not need further updates, convert it into a lean MinHash</span>
+<span class="sd">    to save memory.</span>
+
+<span class="sd">    Example:</span>
+<span class="sd">        To create a lean MinHash from an existing MinHash:</span>
+
+<span class="sd">        .. code-block:: python</span>
+
+<span class="sd">            lean_minhash = LeanMinHash(minhash)</span>
+
+<span class="sd">            # You can compute the Jaccard similarity between two lean MinHash</span>
+<span class="sd">            lean_minhash.jaccard(lean_minhash2)</span>
+
+<span class="sd">            # Or between a lean MinHash and a MinHash</span>
+<span class="sd">            lean_minhash.jaccard(minhash2)</span>
+<span class="sd">        </span>
+<span class="sd">        To create a lean MinHash from the hash values and seed of an existing</span>
+<span class="sd">        MinHash:</span>
+
+<span class="sd">        .. code-block:: python</span>
+
+<span class="sd">            lean_minhash = LeanMinHash(seed=minhash.seed,</span>
+<span class="sd">                                       hashvalues=minhash.hashvalues)</span>
+
+<span class="sd">        To create a MinHash from a lean MinHash:</span>
+
+<span class="sd">        .. code-block:: python</span>
+
+<span class="sd">            minhash = MinHash(seed=lean_minhash.seed,</span>
+<span class="sd">                              hashvalues=lean_minhash.hashvalues)</span>
+
+<span class="sd">            # Or if you want to prevent further updates on minhash</span>
+<span class="sd">            # from affecting the state of lean_minhash</span>
+<span class="sd">            minhash = MinHash(seed=lean_minhash.seed,</span>
+<span class="sd">                              hashvalues=lean_minhash.digest())</span>
+
+<span class="sd">    Note:</span>
+<span class="sd">        Lean MinHash can also be used in :class:`datasketch.MinHashLSH`,</span>
+<span class="sd">        :class:`datasketch.MinHashLSHForest`, and :class:`datasketch.MinHashLSHEnsemble`.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        minhash (optional): The :class:`datasketch.MinHash` object used to </span>
+<span class="sd">            initialize the LeanMinHash. If this is not set, then `seed`</span>
+<span class="sd">            and `hashvalues` must be set. </span>
+<span class="sd">        seed (optional): The random seed that controls the set of random </span>
+<span class="sd">            permutation functions generated for this LeanMinHash. This parameter</span>
+<span class="sd">            must be used together with `hashvalues`.</span>
+<span class="sd">        hashvalues (optional): The hash values used to inititialize the state</span>
+<span class="sd">            of the LeanMinHash. This parameter must be used together with</span>
+<span class="sd">            `seed`.</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+
+    <span class="vm">__slots__</span> <span class="o">=</span> <span class="p">(</span><span class="s1">&#39;seed&#39;</span><span class="p">,</span> <span class="s1">&#39;hashvalues&#39;</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_initialize_slots</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">seed</span><span class="p">,</span> <span class="n">hashvalues</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;Initialize the slots of the LeanMinHash.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            seed (int): The random seed controls the set of random</span>
+<span class="sd">                permutation functions generated for this LeanMinHash.</span>
+<span class="sd">            hashvalues: The hash values is the internal state of the LeanMinHash.</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">seed</span> <span class="o">=</span> <span class="n">seed</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">hashvalues</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_parse_hashvalues</span><span class="p">(</span><span class="n">hashvalues</span><span class="p">)</span>
+
+<div class="viewcode-block" id="LeanMinHash.__init__"><a class="viewcode-back" href="../../documentation.html#datasketch.LeanMinHash.__init__">[docs]</a>    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">minhash</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">seed</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">hashvalues</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">minhash</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_initialize_slots</span><span class="p">(</span><span class="n">minhash</span><span class="o">.</span><span class="n">seed</span><span class="p">,</span> <span class="n">minhash</span><span class="o">.</span><span class="n">hashvalues</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">hashvalues</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">seed</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_initialize_slots</span><span class="p">(</span><span class="n">seed</span><span class="p">,</span> <span class="n">hashvalues</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Init parameters cannot be None: make sure &quot;</span>
+                    <span class="s2">&quot;to set either minhash or both of hash values and seed&quot;</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="LeanMinHash.update"><a class="viewcode-back" href="../../documentation.html#datasketch.LeanMinHash.update">[docs]</a>    <span class="k">def</span> <span class="nf">update</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">b</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;This method is not available on a LeanMinHash.</span>
+<span class="sd">        Calling it raises a TypeError.</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+        <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;Cannot update a LeanMinHash&quot;</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="LeanMinHash.copy"><a class="viewcode-back" href="../../documentation.html#datasketch.LeanMinHash.copy">[docs]</a>    <span class="k">def</span> <span class="nf">copy</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">lmh</span> <span class="o">=</span> <span class="nb">object</span><span class="o">.</span><span class="fm">__new__</span><span class="p">(</span><span class="n">LeanMinHash</span><span class="p">)</span>
+        <span class="n">lmh</span><span class="o">.</span><span class="n">_initialize_slots</span><span class="p">(</span><span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="vm">__slots__</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">lmh</span></div>
+
+<div class="viewcode-block" id="LeanMinHash.bytesize"><a class="viewcode-back" href="../../documentation.html#datasketch.LeanMinHash.bytesize">[docs]</a>    <span class="k">def</span> <span class="nf">bytesize</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">byteorder</span><span class="o">=</span><span class="s1">&#39;@&#39;</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;Compute the byte size after serialization.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            byteorder (str, optional): This is byte order of the serialized data. Use one</span>
+<span class="sd">                of the `byte order characters</span>
+<span class="sd">                &lt;https://docs.python.org/3/library/struct.html#byte-order-size-and-alignment&gt;`_:</span>
+<span class="sd">                ``@``, ``=``, ``&lt;``, ``&gt;``, and ``!``.</span>
+<span class="sd">                Default is ``@`` -- the native order.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            int: Size in number of bytes after serialization.</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+        <span class="c1"># Use 8 bytes to store the seed integer</span>
+        <span class="n">seed_size</span> <span class="o">=</span> <span class="n">struct</span><span class="o">.</span><span class="n">calcsize</span><span class="p">(</span><span class="n">byteorder</span><span class="o">+</span><span class="s1">&#39;q&#39;</span><span class="p">)</span>
+        <span class="c1"># Use 4 bytes to store the number of hash values</span>
+        <span class="n">length_size</span> <span class="o">=</span> <span class="n">struct</span><span class="o">.</span><span class="n">calcsize</span><span class="p">(</span><span class="n">byteorder</span><span class="o">+</span><span class="s1">&#39;i&#39;</span><span class="p">)</span>
+        <span class="c1"># Use 4 bytes to store each hash value as we are using the lower 32 bit</span>
+        <span class="n">hashvalue_size</span> <span class="o">=</span> <span class="n">struct</span><span class="o">.</span><span class="n">calcsize</span><span class="p">(</span><span class="n">byteorder</span><span class="o">+</span><span class="s1">&#39;I&#39;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">seed_size</span> <span class="o">+</span> <span class="n">length_size</span> <span class="o">+</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">*</span> <span class="n">hashvalue_size</span></div>
+
+<div class="viewcode-block" id="LeanMinHash.serialize"><a class="viewcode-back" href="../../documentation.html#datasketch.LeanMinHash.serialize">[docs]</a>    <span class="k">def</span> <span class="nf">serialize</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">buf</span><span class="p">,</span> <span class="n">byteorder</span><span class="o">=</span><span class="s1">&#39;@&#39;</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">        Serialize this lean MinHash and store the result in an allocated buffer.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            buf (buffer): `buf` must implement the `buffer`_ interface.</span>
+<span class="sd">                One such example is the built-in `bytearray`_ class.</span>
+<span class="sd">            byteorder (str, optional): This is byte order of the serialized data. Use one</span>
+<span class="sd">                of the `byte order characters</span>
+<span class="sd">                &lt;https://docs.python.org/3/library/struct.html#byte-order-size-and-alignment&gt;`_:</span>
+<span class="sd">                ``@``, ``=``, ``&lt;``, ``&gt;``, and ``!``.</span>
+<span class="sd">                Default is ``@`` -- the native order.</span>
+
+<span class="sd">        This is preferred over using `pickle`_ if the serialized lean MinHash needs</span>
+<span class="sd">        to be used by another program in a different programming language.</span>
+
+<span class="sd">        The serialization schema:</span>
+<span class="sd">            1. The first 8 bytes is the seed integer</span>
+<span class="sd">            2. The next 4 bytes is the number of hash values</span>
+<span class="sd">            3. The rest is the serialized hash values, each uses 4 bytes</span>
+
+<span class="sd">        Example:</span>
+<span class="sd">            To serialize a single lean MinHash into a `bytearray`_ buffer.</span>
+
+<span class="sd">            .. code-block:: python</span>
+
+<span class="sd">                buf = bytearray(lean_minhash.bytesize())</span>
+<span class="sd">                lean_minhash.serialize(buf)</span>
+
+<span class="sd">            To serialize multiple lean MinHash into a `bytearray`_ buffer.</span>
+
+<span class="sd">            .. code-block:: python</span>
+
+<span class="sd">                # assuming lean_minhashs is a list of LeanMinHash with the same size</span>
+<span class="sd">                size = lean_minhashs[0].bytesize()</span>
+<span class="sd">                buf = bytearray(size*len(lean_minhashs))</span>
+<span class="sd">                for i, lean_minhash in enumerate(lean_minhashs):</span>
+<span class="sd">                    lean_minhash.serialize(buf[i*size:])</span>
+
+<span class="sd">        .. _`buffer`: https://docs.python.org/3/c-api/buffer.html</span>
+<span class="sd">        .. _`bytearray`: https://docs.python.org/3.6/library/functions.html#bytearray</span>
+<span class="sd">        .. _`byteorder`: https://docs.python.org/3/library/struct.html</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">buf</span><span class="p">)</span> <span class="o">&lt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">bytesize</span><span class="p">():</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;The buffer does not have enough space</span><span class="se">\</span>
+<span class="s2">                    for holding this MinHash.&quot;</span><span class="p">)</span>
+        <span class="n">fmt</span> <span class="o">=</span> <span class="s2">&quot;</span><span class="si">%s</span><span class="s2">qi</span><span class="si">%d</span><span class="s2">I&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">byteorder</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="p">))</span>
+        <span class="n">struct</span><span class="o">.</span><span class="n">pack_into</span><span class="p">(</span><span class="n">fmt</span><span class="p">,</span> <span class="n">buf</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">seed</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="p">),</span> <span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">hashvalues</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="LeanMinHash.deserialize"><a class="viewcode-back" href="../../documentation.html#datasketch.LeanMinHash.deserialize">[docs]</a>    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">deserialize</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">buf</span><span class="p">,</span> <span class="n">byteorder</span><span class="o">=</span><span class="s1">&#39;@&#39;</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">        Deserialize a lean MinHash from a buffer.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            buf (buffer): `buf` must implement the `buffer`_ interface.</span>
+<span class="sd">                One such example is the built-in `bytearray`_ class.</span>
+<span class="sd">            byteorder (str. optional): This is byte order of the serialized data. Use one</span>
+<span class="sd">                of the `byte order characters</span>
+<span class="sd">                &lt;https://docs.python.org/3/library/struct.html#byte-order-size-and-alignment&gt;`_:</span>
+<span class="sd">                ``@``, ``=``, ``&lt;``, ``&gt;``, and ``!``.</span>
+<span class="sd">                Default is ``@`` -- the native order.</span>
+
+<span class="sd">        Return:</span>
+<span class="sd">            datasketch.LeanMinHash: The deserialized lean MinHash</span>
+
+<span class="sd">        Example:</span>
+<span class="sd">            To deserialize a lean MinHash from a buffer.</span>
+
+<span class="sd">            .. code-block:: python</span>
+
+<span class="sd">                lean_minhash = LeanMinHash.deserialize(buf)</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+        <span class="n">fmt_seed_size</span> <span class="o">=</span> <span class="s2">&quot;</span><span class="si">%s</span><span class="s2">qi&quot;</span> <span class="o">%</span> <span class="n">byteorder</span>
+        <span class="n">fmt_hash</span> <span class="o">=</span> <span class="n">byteorder</span> <span class="o">+</span> <span class="s2">&quot;</span><span class="si">%d</span><span class="s2">I&quot;</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">seed</span><span class="p">,</span> <span class="n">num_perm</span> <span class="o">=</span> <span class="n">struct</span><span class="o">.</span><span class="n">unpack_from</span><span class="p">(</span><span class="n">fmt_seed_size</span><span class="p">,</span> <span class="n">buf</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+        <span class="k">except</span> <span class="ne">TypeError</span><span class="p">:</span>
+            <span class="n">seed</span><span class="p">,</span> <span class="n">num_perm</span> <span class="o">=</span> <span class="n">struct</span><span class="o">.</span><span class="n">unpack_from</span><span class="p">(</span><span class="n">fmt_seed_size</span><span class="p">,</span> <span class="n">buffer</span><span class="p">(</span><span class="n">buf</span><span class="p">),</span> <span class="mi">0</span><span class="p">)</span>
+        <span class="n">offset</span> <span class="o">=</span> <span class="n">struct</span><span class="o">.</span><span class="n">calcsize</span><span class="p">(</span><span class="n">fmt_seed_size</span><span class="p">)</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">hashvalues</span> <span class="o">=</span> <span class="n">struct</span><span class="o">.</span><span class="n">unpack_from</span><span class="p">(</span><span class="n">fmt_hash</span> <span class="o">%</span> <span class="n">num_perm</span><span class="p">,</span> <span class="n">buf</span><span class="p">,</span> <span class="n">offset</span><span class="p">)</span>
+        <span class="k">except</span> <span class="ne">TypeError</span><span class="p">:</span>
+            <span class="n">hashvalues</span> <span class="o">=</span> <span class="n">struct</span><span class="o">.</span><span class="n">unpack_from</span><span class="p">(</span><span class="n">fmt_hash</span> <span class="o">%</span> <span class="n">num_perm</span><span class="p">,</span> <span class="n">buffer</span><span class="p">(</span><span class="n">buf</span><span class="p">),</span> <span class="n">offset</span><span class="p">)</span>
+        <span class="n">lmh</span> <span class="o">=</span> <span class="nb">object</span><span class="o">.</span><span class="fm">__new__</span><span class="p">(</span><span class="n">LeanMinHash</span><span class="p">)</span>
+        <span class="n">lmh</span><span class="o">.</span><span class="n">_initialize_slots</span><span class="p">(</span><span class="n">seed</span><span class="p">,</span> <span class="n">hashvalues</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">lmh</span></div>
+
+    <span class="k">def</span> <span class="nf">__getstate__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">buf</span> <span class="o">=</span> <span class="nb">bytearray</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">bytesize</span><span class="p">())</span>
+        <span class="n">fmt</span> <span class="o">=</span> <span class="s2">&quot;qi</span><span class="si">%d</span><span class="s2">I&quot;</span> <span class="o">%</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+        <span class="n">struct</span><span class="o">.</span><span class="n">pack_into</span><span class="p">(</span><span class="n">fmt</span><span class="p">,</span> <span class="n">buf</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">seed</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="p">),</span> <span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">hashvalues</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">buf</span>
+
+    <span class="k">def</span> <span class="nf">__setstate__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">buf</span><span class="p">):</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">seed</span><span class="p">,</span> <span class="n">num_perm</span> <span class="o">=</span> <span class="n">struct</span><span class="o">.</span><span class="n">unpack_from</span><span class="p">(</span><span class="s1">&#39;qi&#39;</span><span class="p">,</span> <span class="n">buf</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+        <span class="k">except</span> <span class="ne">TypeError</span><span class="p">:</span>
+            <span class="n">seed</span><span class="p">,</span> <span class="n">num_perm</span> <span class="o">=</span> <span class="n">struct</span><span class="o">.</span><span class="n">unpack_from</span><span class="p">(</span><span class="s1">&#39;qi&#39;</span><span class="p">,</span> <span class="n">buffer</span><span class="p">(</span><span class="n">buf</span><span class="p">),</span> <span class="mi">0</span><span class="p">)</span>
+        <span class="n">offset</span> <span class="o">=</span> <span class="n">struct</span><span class="o">.</span><span class="n">calcsize</span><span class="p">(</span><span class="s1">&#39;qi&#39;</span><span class="p">)</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">hashvalues</span> <span class="o">=</span> <span class="n">struct</span><span class="o">.</span><span class="n">unpack_from</span><span class="p">(</span><span class="s1">&#39;</span><span class="si">%d</span><span class="s1">I&#39;</span> <span class="o">%</span> <span class="n">num_perm</span><span class="p">,</span> <span class="n">buf</span><span class="p">,</span> <span class="n">offset</span><span class="p">)</span>
+        <span class="k">except</span> <span class="ne">TypeError</span><span class="p">:</span>
+            <span class="n">hashvalues</span> <span class="o">=</span> <span class="n">struct</span><span class="o">.</span><span class="n">unpack_from</span><span class="p">(</span><span class="s1">&#39;</span><span class="si">%d</span><span class="s1">I&#39;</span> <span class="o">%</span> <span class="n">num_perm</span><span class="p">,</span> <span class="n">buffer</span><span class="p">(</span><span class="n">buf</span><span class="p">),</span> <span class="n">offset</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_initialize_slots</span><span class="p">(</span><span class="n">seed</span><span class="p">,</span> <span class="n">hashvalues</span><span class="p">)</span>
+
+<div class="viewcode-block" id="LeanMinHash.__hash__"><a class="viewcode-back" href="../../documentation.html#datasketch.LeanMinHash.__hash__">[docs]</a>    <span class="k">def</span> <span class="fm">__hash__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="nb">hash</span><span class="p">((</span><span class="bp">self</span><span class="o">.</span><span class="n">seed</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">hashvalues</span><span class="p">)))</span></div>
+
+<div class="viewcode-block" id="LeanMinHash.union"><a class="viewcode-back" href="../../documentation.html#datasketch.LeanMinHash.union">[docs]</a>    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">union</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="o">*</span><span class="n">lmhs</span><span class="p">):</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">lmhs</span><span class="p">)</span> <span class="o">&lt;</span> <span class="mi">2</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Cannot union less than 2 MinHash&quot;</span><span class="p">)</span>
+        <span class="n">num_perm</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">lmhs</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+        <span class="n">seed</span> <span class="o">=</span> <span class="n">lmhs</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">seed</span>
+        <span class="k">if</span> <span class="nb">any</span><span class="p">((</span><span class="n">seed</span> <span class="o">!=</span> <span class="n">m</span><span class="o">.</span><span class="n">seed</span> <span class="ow">or</span> <span class="n">num_perm</span> <span class="o">!=</span> <span class="nb">len</span><span class="p">(</span><span class="n">m</span><span class="p">))</span> <span class="k">for</span> <span class="n">m</span> <span class="ow">in</span> <span class="n">lmhs</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;The unioning MinHash must have the</span><span class="se">\</span>
+<span class="s2">                    same seed, number of permutation functions.&quot;</span><span class="p">)</span>
+        <span class="n">hashvalues</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">minimum</span><span class="o">.</span><span class="n">reduce</span><span class="p">([</span><span class="n">m</span><span class="o">.</span><span class="n">hashvalues</span> <span class="k">for</span> <span class="n">m</span> <span class="ow">in</span> <span class="n">lmhs</span><span class="p">])</span>
+
+        <span class="n">lmh</span> <span class="o">=</span> <span class="nb">object</span><span class="o">.</span><span class="fm">__new__</span><span class="p">(</span><span class="n">LeanMinHash</span><span class="p">)</span>
+        <span class="n">lmh</span><span class="o">.</span><span class="n">_initialize_slots</span><span class="p">(</span><span class="n">seed</span><span class="p">,</span> <span class="n">hashvalues</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">lmh</span></div></div>
+</pre></div>
+
+          </div>
+          
+        </div>
+      </div>
+    <div class="clearer"></div>
+  </div>
+    <div class="footer">
+      &copy;2020, Eric Zhu.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 3.3.1</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      
+    </div>
+
+    
+
+    
+    <script type="text/javascript">
+
+      var _gaq = _gaq || [];
+      _gaq.push(['_setAccount', 'UA-93507731-1']);
+      _gaq.push(['_setDomainName', 'none']);
+      _gaq.push(['_setAllowLinker', true]);
+      _gaq.push(['_trackPageview']);
+
+      (function() {
+        var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+        ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+        var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+      })();
+
+    </script>
+    
+  </body>
+</html>
