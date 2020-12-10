@@ -14,9 +14,8 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        # os: [ubuntu-18.04, ubuntu-latest, macos-latest, windows-2019]
-        os: [ubuntu-latest]
-        python-version: ['3.6', '3.7', '3.8']
+        os: ['ubuntu-18.04', ubuntu-latest, macos-latest, windows-2019]
+        python-version: ['3.6', '3.7', '3.8', '3.9']
         mongodb-version: ['latest']
 
     steps:
@@ -46,7 +45,7 @@ jobs:
       with:
         mongodb-version: ${{ matrix.mongodb-version }}
     - name: Install and Start Cassandra
-      if: matrix.os == 'ubuntu-latest'
+      if: matrix.os == 'ubuntu-18.04'
       run: |
         echo "deb http://debian.datastax.com/community stable main" | sudo tee -a /etc/apt/sources.list.d/cassandra.sources.list
         curl -L http://debian.datastax.com/debian/repo_key | sudo apt-key add -
