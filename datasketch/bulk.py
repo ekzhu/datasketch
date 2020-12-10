@@ -7,7 +7,7 @@ def compute_minhashes(b, **minhash_kwargs):
 
     Args:
         b (iterable): Iterable containing lists of bytes
-        m (MinHash): Initialized MinHash object
+        minhash_kwargs: Keyword arguments used to initialize MinHash object
             The configuration of this MinHash will be used for all minhashes
     '''
     return list(compute_minhashes_generator(b, **minhash_kwargs))
@@ -19,7 +19,7 @@ def compute_minhashes_generator(b, **minhash_kwargs):
 
     Args:
         b (iterable): Iterable containing lists of bytes
-        m (MinHash): Initialized MinHash object
+        minhash_kwargs: Keyword arguments used to initialize MinHash object
             The configuration of this MinHash will be used for all minhashes
     '''
     m = MinHash(**minhash_kwargs)
