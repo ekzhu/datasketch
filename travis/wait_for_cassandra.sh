@@ -17,7 +17,7 @@ function wait_for_cassandra() {
     cmd="from cassandra import cluster; c = cluster.Cluster([\"127.0.0.1\"]); c.connect()"
     while ! python -c "${cmd}" > /dev/null 2>&1; do
         echo "waiting for cassandra"
-        if [ $count -gt 30 ]
+        if [ $count -gt 60 ]
         then
             exit
         fi
