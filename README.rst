@@ -1,8 +1,9 @@
 datasketch: Big Data Looks Small
 ================================
 
-.. image:: https://travis-ci.org/ekzhu/datasketch.svg?branch=master
-    :target: https://travis-ci.org/ekzhu/datasketch
+.. image:: https://github.com/ekzhu/datasketch/workflows/Python%20package/badge.svg
+    :target: https://github.com/ekzhu/datasketch/actions
+
 .. image:: https://zenodo.org/badge/DOI/10.5281/zenodo.290602.svg
    :target: https://doi.org/10.5281/zenodo.290602
 
