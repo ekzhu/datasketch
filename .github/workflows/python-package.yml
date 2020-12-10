@@ -32,7 +32,9 @@ jobs:
         if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
     - name: Install package
       run: |
-        pip install -e .[test]
+        # Disable Cassandra optional extensions (faster testing).
+        export CASS_DRIVER_NO_EXTENSIONS=1
+        pip install -e .[test,experimental_aio]
     # - name: Lint with flake8
     #   run: |
     #     # stop the build if there are Python syntax errors or undefined names
@@ -44,6 +46,7 @@ jobs:
       with:
         mongodb-version: ${{ matrix.mongodb-version }}
     - name: Install and Start Cassandra
+      if: matrix.os == 'ubuntu-latest'
       run: |
         echo "deb http://debian.datastax.com/community stable main" | sudo tee -a /etc/apt/sources.list.d/cassandra.sources.list
         curl -L http://debian.datastax.com/debian/repo_key | sudo apt-key add -
@@ -52,8 +55,8 @@ jobs:
         java -version
         sudo apt-get install cassandra cython3
         bash travis/wait_for_cassandra.sh
+        export DO_TEST_CASSANDRA=true
     - name: Test with pytest
       run: |
-        export DO_TEST_CASSANDRA=true
         export DO_TEST_MONGO=true
         pytest
