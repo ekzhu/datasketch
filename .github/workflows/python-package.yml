@@ -45,7 +45,10 @@ jobs:
       if: matrix.os == 'ubuntu-18.04'
       with:
         mongodb-version: ${{ matrix.mongodb-version }}
-      run: export DO_TEST_MONGO=true
+    - name: Enable MongoDB test
+      if: matrix.os == 'ubuntu-18.04'
+      run: |
+        export DO_TEST_MONGO=true
     - name: Install and Start Cassandra
       if: matrix.os == 'ubuntu-18.04'
       run: |
