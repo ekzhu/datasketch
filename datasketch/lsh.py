@@ -52,7 +52,6 @@ def _optimal_param(threshold, num_perm, false_positive_weight,
                 opt = (b, r)
     return opt
 
-
 class MinHashLSH(object):
     '''
     The :ref:`minhash_lsh` index.
@@ -84,6 +83,9 @@ class MinHashLSH(object):
         prepickle (bool, optional): If True, all keys are pickled to bytes before
             insertion. If None, a default value is chosen based on the
             `storage_config`.
+        hashfunc (function, optional): If a hash function is provided it will be used to
+            compress the index keys to reduce the memory footprint. This could cause a higher
+            false positive rate.
 
     Note:
         `weights` must sum to 1.0, and the format is
@@ -94,7 +96,7 @@ class MinHashLSH(object):
     '''
 
     def __init__(self, threshold=0.9, num_perm=128, weights=(0.5, 0.5),
-                 params=None, storage_config=None, prepickle=None):
+                 params=None, storage_config=None, prepickle=None, hashfunc=None):
         storage_config = {'type': 'dict'} if not storage_config else storage_config
         self._buffer_size = 50000
         if threshold > 1.0 or threshold < 0.0:
@@ -119,6 +121,12 @@ class MinHashLSH(object):
                     false_positive_weight, false_negative_weight)
 
         self.prepickle = storage_config['type'] == 'redis' if prepickle is None else prepickle
+        
+        self.hashfunc = hashfunc
+        if hashfunc:
+            self._H = self._hashed_byteswap
+        else:
+            self._H = self._byteswap
 
         basename = storage_config.get('basename', _random_name(11))
         self.hashtables = [
@@ -173,7 +181,7 @@ class MinHashLSH(object):
         if check_duplication and key in self.keys:
             raise ValueError("The given key already exists")
         Hs = [self._H(minhash.hashvalues[start:end])
-              for start, end in self.hashranges]
+                for start, end in self.hashranges]
         self.keys.insert(key, *Hs, buffer=buffer)
         for H, hashtable in zip(Hs, self.hashtables):
             hashtable.insert(H, key, buffer=buffer)
@@ -240,10 +248,12 @@ class MinHashLSH(object):
         '''
         return any(t.size() == 0 for t in self.hashtables)
 
-    @staticmethod
-    def _H(hs):
+    def _byteswap(self, hs):
         return bytes(hs.byteswap().data)
 
+    def _hashed_byteswap(self, hs):
+        return self.hashfunc(bytes(hs.byteswap().data))
+    
     def _query_b(self, minhash, b):
         if len(minhash) != self.h:
             raise ValueError("Expecting minhash with length %d, got %d"
