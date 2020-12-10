@@ -153,7 +153,7 @@ class MinHash(object):
             .. code-block:: python
 
                 minhash = Minhash()
-                minhash.update([s.encode('utf-8') for s in ["token1", "token2"]])
+                minhash.update_batch([s.encode('utf-8') for s in ["token1", "token2"]])
         '''
         hv = np.array([self.hashfunc(_b) for _b in b], dtype=np.uint64)
         a, b = self.permutations
