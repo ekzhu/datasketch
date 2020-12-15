@@ -132,7 +132,7 @@ The Cassandra storage option can be configured as follows:
     from datasketch import MinHashLSH
 
     lsh = MinHashLSH(
-        threashold=0.5, num_perm=128, storage_config={
+        threshold=0.5, num_perm=128, storage_config={
             'type': 'cassandra',
             'cassandra': {
                 'seeds': ['127.0.0.1'],
