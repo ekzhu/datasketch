@@ -95,8 +95,8 @@
 <span class="n">hashvalue_byte_size</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="nb">bytes</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">int64</span><span class="p">(</span><span class="mi">42</span><span class="p">)</span><span class="o">.</span><span class="n">data</span><span class="p">))</span>
 
 <span class="c1"># http://en.wikipedia.org/wiki/Mersenne_prime</span>
-<span class="n">_mersenne_prime</span> <span class="o">=</span> <span class="p">(</span><span class="mi">1</span> <span class="o">&lt;&lt;</span> <span class="mi">61</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span>
-<span class="n">_max_hash</span> <span class="o">=</span> <span class="p">(</span><span class="mi">1</span> <span class="o">&lt;&lt;</span> <span class="mi">32</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span>
+<span class="n">_mersenne_prime</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">uint64</span><span class="p">((</span><span class="mi">1</span> <span class="o">&lt;&lt;</span> <span class="mi">61</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span>
+<span class="n">_max_hash</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">uint64</span><span class="p">((</span><span class="mi">1</span> <span class="o">&lt;&lt;</span> <span class="mi">32</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span>
 <span class="n">_hash_range</span> <span class="o">=</span> <span class="p">(</span><span class="mi">1</span> <span class="o">&lt;&lt;</span> <span class="mi">32</span><span class="p">)</span>
 
 <div class="viewcode-block" id="MinHash"><a class="viewcode-back" href="../../documentation.html#datasketch.MinHash">[docs]</a><span class="k">class</span> <span class="nc">MinHash</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
@@ -156,6 +156,7 @@
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Cannot have more than </span><span class="si">%d</span><span class="s2"> number of</span><span class="se">\</span>
 <span class="s2">                    permutation functions&quot;</span> <span class="o">%</span> <span class="n">_hash_range</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">seed</span> <span class="o">=</span> <span class="n">seed</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">num_perm</span> <span class="o">=</span> <span class="n">num_perm</span>
         <span class="c1"># Check the hash function.</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="n">callable</span><span class="p">(</span><span class="n">hashfunc</span><span class="p">):</span>
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;The hashfunc must be a callable.&quot;</span><span class="p">)</span>
@@ -173,18 +174,21 @@
         <span class="k">if</span> <span class="n">permutations</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">permutations</span> <span class="o">=</span> <span class="n">permutations</span>
         <span class="k">else</span><span class="p">:</span>
-            <span class="n">generator</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">RandomState</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">seed</span><span class="p">)</span>
-            <span class="c1"># Create parameters for a random bijective permutation function</span>
-            <span class="c1"># that maps a 32-bit hash value to another 32-bit hash value.</span>
-            <span class="c1"># http://en.wikipedia.org/wiki/Universal_hashing</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">permutations</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([(</span><span class="n">generator</span><span class="o">.</span><span class="n">randint</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">_mersenne_prime</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">uint64</span><span class="p">),</span>
-                                           <span class="n">generator</span><span class="o">.</span><span class="n">randint</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">_mersenne_prime</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">uint64</span><span class="p">))</span>
-                                          <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">num_perm</span><span class="p">)],</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">uint64</span><span class="p">)</span><span class="o">.</span><span class="n">T</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">permutations</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_init_permutations</span><span class="p">(</span><span class="n">num_perm</span><span class="p">)</span>
         <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">!=</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">permutations</span><span class="p">[</span><span class="mi">0</span><span class="p">]):</span>
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Numbers of hash values and permutations mismatch&quot;</span><span class="p">)</span></div>
 
     <span class="k">def</span> <span class="nf">_init_hashvalues</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">num_perm</span><span class="p">):</span>
         <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">(</span><span class="n">num_perm</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">uint64</span><span class="p">)</span><span class="o">*</span><span class="n">_max_hash</span>
+
+    <span class="k">def</span> <span class="nf">_init_permutations</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">num_perm</span><span class="p">):</span>
+        <span class="c1"># Create parameters for a random bijective permutation function</span>
+        <span class="c1"># that maps a 32-bit hash value to another 32-bit hash value.</span>
+        <span class="c1"># http://en.wikipedia.org/wiki/Universal_hashing</span>
+        <span class="n">gen</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">RandomState</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">seed</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span>
+            <span class="p">(</span><span class="n">gen</span><span class="o">.</span><span class="n">randint</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">_mersenne_prime</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">uint64</span><span class="p">),</span> <span class="n">gen</span><span class="o">.</span><span class="n">randint</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">_mersenne_prime</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">uint64</span><span class="p">))</span> <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">num_perm</span><span class="p">)</span>
+        <span class="p">],</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">uint64</span><span class="p">)</span><span class="o">.</span><span class="n">T</span>
 
     <span class="k">def</span> <span class="nf">_parse_hashvalues</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">hashvalues</span><span class="p">):</span>
         <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">hashvalues</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">uint64</span><span class="p">)</span>
@@ -218,8 +222,30 @@
 <span class="sd">        &#39;&#39;&#39;</span>
         <span class="n">hv</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">hashfunc</span><span class="p">(</span><span class="n">b</span><span class="p">)</span>
         <span class="n">a</span><span class="p">,</span> <span class="n">b</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">permutations</span>
-        <span class="n">phv</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">bitwise_and</span><span class="p">((</span><span class="n">a</span> <span class="o">*</span> <span class="n">hv</span> <span class="o">+</span> <span class="n">b</span><span class="p">)</span> <span class="o">%</span> <span class="n">_mersenne_prime</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">uint64</span><span class="p">(</span><span class="n">_max_hash</span><span class="p">))</span>
+        <span class="n">phv</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">bitwise_and</span><span class="p">((</span><span class="n">a</span> <span class="o">*</span> <span class="n">hv</span> <span class="o">+</span> <span class="n">b</span><span class="p">)</span> <span class="o">%</span> <span class="n">_mersenne_prime</span><span class="p">,</span> <span class="n">_max_hash</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">hashvalues</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">minimum</span><span class="p">(</span><span class="n">phv</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">hashvalues</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="MinHash.update_batch"><a class="viewcode-back" href="../../documentation.html#datasketch.MinHash.update_batch">[docs]</a>    <span class="k">def</span> <span class="nf">update_batch</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">b</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;Update this MinHash with new values.</span>
+<span class="sd">        The values will be hashed using the hash function specified by</span>
+<span class="sd">        the `hashfunc` argument in the constructor.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            b (list): List of values to be hashed using the hash function specified.</span>
+
+<span class="sd">        Example:</span>
+<span class="sd">            To update with new string values (using the default SHA1 hash</span>
+<span class="sd">            function, which requires bytes as input):</span>
+
+<span class="sd">            .. code-block:: python</span>
+
+<span class="sd">                minhash = Minhash()</span>
+<span class="sd">                minhash.update_batch([s.encode(&#39;utf-8&#39;) for s in [&quot;token1&quot;, &quot;token2&quot;]])</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+        <span class="n">hv</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="bp">self</span><span class="o">.</span><span class="n">hashfunc</span><span class="p">(</span><span class="n">_b</span><span class="p">)</span> <span class="k">for</span> <span class="n">_b</span> <span class="ow">in</span> <span class="n">b</span><span class="p">],</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">uint64</span><span class="p">)</span>
+        <span class="n">a</span><span class="p">,</span> <span class="n">b</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">permutations</span>
+        <span class="n">phv</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">bitwise_and</span><span class="p">(((</span><span class="n">hv</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">tile</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">hv</span><span class="p">),</span> <span class="mi">1</span><span class="p">))</span><span class="o">.</span><span class="n">T</span><span class="p">)</span><span class="o">.</span><span class="n">T</span> <span class="o">+</span> <span class="n">b</span><span class="p">)</span> <span class="o">%</span> <span class="n">_mersenne_prime</span><span class="p">,</span> <span class="n">_max_hash</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">hashvalues</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">vstack</span><span class="p">([</span><span class="n">phv</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">hashvalues</span><span class="p">])</span><span class="o">.</span><span class="n">min</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span></div>
 
 <div class="viewcode-block" id="MinHash.jaccard"><a class="viewcode-back" href="../../documentation.html#datasketch.MinHash.jaccard">[docs]</a>    <span class="k">def</span> <span class="nf">jaccard</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
         <span class="sd">&#39;&#39;&#39;Estimate the `Jaccard similarity`_ (resemblance) between the sets</span>
@@ -334,7 +360,68 @@
         <span class="n">hashvalues</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">minimum</span><span class="o">.</span><span class="n">reduce</span><span class="p">([</span><span class="n">m</span><span class="o">.</span><span class="n">hashvalues</span> <span class="k">for</span> <span class="n">m</span> <span class="ow">in</span> <span class="n">mhs</span><span class="p">])</span>
         <span class="n">permutations</span> <span class="o">=</span> <span class="n">mhs</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">permutations</span>
         <span class="k">return</span> <span class="bp">cls</span><span class="p">(</span><span class="n">num_perm</span><span class="o">=</span><span class="n">num_perm</span><span class="p">,</span> <span class="n">seed</span><span class="o">=</span><span class="n">seed</span><span class="p">,</span> <span class="n">hashvalues</span><span class="o">=</span><span class="n">hashvalues</span><span class="p">,</span>
-                <span class="n">permutations</span><span class="o">=</span><span class="n">permutations</span><span class="p">)</span></div></div>
+                <span class="n">permutations</span><span class="o">=</span><span class="n">permutations</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="MinHash.bulk"><a class="viewcode-back" href="../../documentation.html#datasketch.MinHash.bulk">[docs]</a>    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">bulk</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">b</span><span class="p">,</span> <span class="o">**</span><span class="n">minhash_kwargs</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;Compute MinHashes in bulk. This method avoids unnecessary</span>
+<span class="sd">        overhead when initializing many minhashes by reusing the initialized</span>
+<span class="sd">        state.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            b (Iterable): An Iterable of lists of bytes, each list is</span>
+<span class="sd">                hashed in to one MinHash in the output.</span>
+<span class="sd">            minhash_kwargs: Keyword arguments used to initialize MinHash,</span>
+<span class="sd">                will be used for all minhashes.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            List[datasketch.MinHash]: A list of computed MinHashes.</span>
+
+<span class="sd">        Example:</span>
+
+<span class="sd">            .. code-block:: python</span>
+
+<span class="sd">                from datasketch import MinHash</span>
+<span class="sd">                data = [[b&#39;token1&#39;, b&#39;token2&#39;, b&#39;token3&#39;],</span>
+<span class="sd">                        [b&#39;token4&#39;, b&#39;token5&#39;, b&#39;token6&#39;]]</span>
+<span class="sd">                minhashes = MinHash.bulk(data, num_perm=64)</span>
+
+<span class="sd">        &#39;&#39;&#39;</span>
+        <span class="k">return</span> <span class="nb">list</span><span class="p">(</span><span class="bp">cls</span><span class="o">.</span><span class="n">generator</span><span class="p">(</span><span class="n">b</span><span class="p">,</span> <span class="o">**</span><span class="n">minhash_kwargs</span><span class="p">))</span></div>
+
+<div class="viewcode-block" id="MinHash.generator"><a class="viewcode-back" href="../../documentation.html#datasketch.MinHash.generator">[docs]</a>    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">generator</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">b</span><span class="p">,</span> <span class="o">**</span><span class="n">minhash_kwargs</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;Compute MinHashes in a generator. This method avoids unnecessary</span>
+<span class="sd">        overhead when initializing many minhashes by reusing the initialized</span>
+<span class="sd">        state.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            b (Iterable): An Iterable of lists of bytes, each list is</span>
+<span class="sd">                hashed in to one MinHash in the output.</span>
+<span class="sd">            minhash_kwargs: Keyword arguments used to initialize MinHash,</span>
+<span class="sd">                will be used for all minhashes.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            A generator of computed MinHashes.</span>
+
+<span class="sd">        Example:</span>
+
+<span class="sd">            .. code-block:: python</span>
+
+<span class="sd">                from datasketch import MinHash</span>
+<span class="sd">                data = [[b&#39;token1&#39;, b&#39;token2&#39;, b&#39;token3&#39;],</span>
+<span class="sd">                        [b&#39;token4&#39;, b&#39;token5&#39;, b&#39;token6&#39;]]</span>
+<span class="sd">                for minhash in MinHash.generator(data, num_perm=64):</span>
+<span class="sd">                    # do something useful</span>
+<span class="sd">                    minhash</span>
+
+<span class="sd">        &#39;&#39;&#39;</span>
+        <span class="n">m</span> <span class="o">=</span> <span class="bp">cls</span><span class="p">(</span><span class="o">**</span><span class="n">minhash_kwargs</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">_b</span> <span class="ow">in</span> <span class="n">b</span><span class="p">:</span>
+            <span class="n">_m</span> <span class="o">=</span> <span class="n">m</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+            <span class="n">_m</span><span class="o">.</span><span class="n">update_batch</span><span class="p">(</span><span class="n">_b</span><span class="p">)</span>
+            <span class="k">yield</span> <span class="n">_m</span></div></div>
+
 </pre></div>
 
           </div>

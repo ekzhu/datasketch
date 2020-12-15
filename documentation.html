@@ -184,6 +184,26 @@ function, which requires bytes as input):</p>
 </dd></dl>
 
 <dl class="py method">
+<dt id="datasketch.MinHash.update_batch">
+<code class="sig-name descname">update_batch</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">b</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/datasketch/minhash.html#MinHash.update_batch"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#datasketch.MinHash.update_batch" title="Permalink to this definition">¶</a></dt>
+<dd><p>Update this MinHash with new values.
+The values will be hashed using the hash function specified by
+the <cite>hashfunc</cite> argument in the constructor.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>b</strong> (<em>list</em>) – List of values to be hashed using the hash function specified.</p>
+</dd>
+</dl>
+<p class="rubric">Example</p>
+<p>To update with new string values (using the default SHA1 hash
+function, which requires bytes as input):</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">minhash</span> <span class="o">=</span> <span class="n">Minhash</span><span class="p">()</span>
+<span class="n">minhash</span><span class="o">.</span><span class="n">update_batch</span><span class="p">([</span><span class="n">s</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="s1">&#39;utf-8&#39;</span><span class="p">)</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="p">[</span><span class="s2">&quot;token1&quot;</span><span class="p">,</span> <span class="s2">&quot;token2&quot;</span><span class="p">]])</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="py method">
 <dt id="datasketch.MinHash.jaccard">
 <code class="sig-name descname">jaccard</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">other</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/datasketch/minhash.html#MinHash.jaccard"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#datasketch.MinHash.jaccard" title="Permalink to this definition">¶</a></dt>
 <dd><p>Estimate the <a class="reference external" href="https://en.wikipedia.org/wiki/Jaccard_index">Jaccard similarity</a> (resemblance) between the sets
@@ -297,12 +317,6 @@ All hash values are reset.</p>
 </dl>
 </dd></dl>
 
-<dl class="py attribute">
-<dt id="datasketch.MinHash.__weakref__">
-<code class="sig-name descname">__weakref__</code><a class="headerlink" href="#datasketch.MinHash.__weakref__" title="Permalink to this definition">¶</a></dt>
-<dd><p>list of weak references to the object (if defined)</p>
-</dd></dl>
-
 <dl class="py method">
 <dt id="datasketch.MinHash.union">
 <em class="property">classmethod </em><code class="sig-name descname">union</code><span class="sig-paren">(</span><em class="sig-param"><span class="o">*</span><span class="n">mhs</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/datasketch/minhash.html#MinHash.union"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#datasketch.MinHash.union" title="Permalink to this definition">¶</a></dt>
@@ -319,6 +333,73 @@ but must be at least 2.</p>
 <dd class="field-odd"><p><a class="reference internal" href="#datasketch.MinHash" title="datasketch.MinHash">datasketch.MinHash</a></p>
 </dd>
 </dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt id="datasketch.MinHash.__weakref__">
+<code class="sig-name descname">__weakref__</code><a class="headerlink" href="#datasketch.MinHash.__weakref__" title="Permalink to this definition">¶</a></dt>
+<dd><p>list of weak references to the object (if defined)</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="datasketch.MinHash.bulk">
+<em class="property">classmethod </em><code class="sig-name descname">bulk</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">b</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">minhash_kwargs</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/datasketch/minhash.html#MinHash.bulk"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#datasketch.MinHash.bulk" title="Permalink to this definition">¶</a></dt>
+<dd><p>Compute MinHashes in bulk. This method avoids unnecessary
+overhead when initializing many minhashes by reusing the initialized
+state.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>b</strong> (<em>Iterable</em>) – An Iterable of lists of bytes, each list is
+hashed in to one MinHash in the output.</p></li>
+<li><p><strong>minhash_kwargs</strong> – Keyword arguments used to initialize MinHash,
+will be used for all minhashes.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>A list of computed MinHashes.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>List[<a class="reference internal" href="#datasketch.MinHash" title="datasketch.MinHash">datasketch.MinHash</a>]</p>
+</dd>
+</dl>
+<p class="rubric">Example</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">datasketch</span> <span class="kn">import</span> <span class="n">MinHash</span>
+<span class="n">data</span> <span class="o">=</span> <span class="p">[[</span><span class="sa">b</span><span class="s1">&#39;token1&#39;</span><span class="p">,</span> <span class="sa">b</span><span class="s1">&#39;token2&#39;</span><span class="p">,</span> <span class="sa">b</span><span class="s1">&#39;token3&#39;</span><span class="p">],</span>
+        <span class="p">[</span><span class="sa">b</span><span class="s1">&#39;token4&#39;</span><span class="p">,</span> <span class="sa">b</span><span class="s1">&#39;token5&#39;</span><span class="p">,</span> <span class="sa">b</span><span class="s1">&#39;token6&#39;</span><span class="p">]]</span>
+<span class="n">minhashes</span> <span class="o">=</span> <span class="n">MinHash</span><span class="o">.</span><span class="n">bulk</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">num_perm</span><span class="o">=</span><span class="mi">64</span><span class="p">)</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="py method">
+<dt id="datasketch.MinHash.generator">
+<em class="property">classmethod </em><code class="sig-name descname">generator</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">b</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">minhash_kwargs</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/datasketch/minhash.html#MinHash.generator"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#datasketch.MinHash.generator" title="Permalink to this definition">¶</a></dt>
+<dd><p>Compute MinHashes in a generator. This method avoids unnecessary
+overhead when initializing many minhashes by reusing the initialized
+state.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>b</strong> (<em>Iterable</em>) – An Iterable of lists of bytes, each list is
+hashed in to one MinHash in the output.</p></li>
+<li><p><strong>minhash_kwargs</strong> – Keyword arguments used to initialize MinHash,
+will be used for all minhashes.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>A generator of computed MinHashes.</p>
+</dd>
+</dl>
+<p class="rubric">Example</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">datasketch</span> <span class="kn">import</span> <span class="n">MinHash</span>
+<span class="n">data</span> <span class="o">=</span> <span class="p">[[</span><span class="sa">b</span><span class="s1">&#39;token1&#39;</span><span class="p">,</span> <span class="sa">b</span><span class="s1">&#39;token2&#39;</span><span class="p">,</span> <span class="sa">b</span><span class="s1">&#39;token3&#39;</span><span class="p">],</span>
+        <span class="p">[</span><span class="sa">b</span><span class="s1">&#39;token4&#39;</span><span class="p">,</span> <span class="sa">b</span><span class="s1">&#39;token5&#39;</span><span class="p">,</span> <span class="sa">b</span><span class="s1">&#39;token6&#39;</span><span class="p">]]</span>
+<span class="k">for</span> <span class="n">minhash</span> <span class="ow">in</span> <span class="n">MinHash</span><span class="o">.</span><span class="n">generator</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">num_perm</span><span class="o">=</span><span class="mi">64</span><span class="p">):</span>
+    <span class="c1"># do something useful</span>
+    <span class="n">minhash</span>
+</pre></div>
+</div>
 </dd></dl>
 
 </dd></dl>
