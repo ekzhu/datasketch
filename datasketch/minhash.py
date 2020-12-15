@@ -8,8 +8,8 @@ from datasketch.hashfunc import sha1_hash32
 hashvalue_byte_size = len(bytes(np.int64(42).data))
 
 # http://en.wikipedia.org/wiki/Mersenne_prime
-_mersenne_prime = (1 << 61) - 1
-_max_hash = (1 << 32) - 1
+_mersenne_prime = np.uint64((1 << 61) - 1)
+_max_hash = np.uint64((1 << 32) - 1)
 _hash_range = (1 << 32)
 
 class MinHash(object):
@@ -69,6 +69,7 @@ class MinHash(object):
             raise ValueError("Cannot have more than %d number of\
                     permutation functions" % _hash_range)
         self.seed = seed
+        self.num_perm = num_perm
         # Check the hash function.
         if not callable(hashfunc):
             raise ValueError("The hashfunc must be a callable.")
@@ -86,18 +87,21 @@ class MinHash(object):
         if permutations is not None:
             self.permutations = permutations
         else:
-            generator = np.random.RandomState(self.seed)
-            # Create parameters for a random bijective permutation function
-            # that maps a 32-bit hash value to another 32-bit hash value.
-            # http://en.wikipedia.org/wiki/Universal_hashing
-            self.permutations = np.array([(generator.randint(1, _mersenne_prime, dtype=np.uint64),
-                                           generator.randint(0, _mersenne_prime, dtype=np.uint64))
-                                          for _ in range(num_perm)], dtype=np.uint64).T
+            self.permutations = self._init_permutations(num_perm)
         if len(self) != len(self.permutations[0]):
             raise ValueError("Numbers of hash values and permutations mismatch")
 
     def _init_hashvalues(self, num_perm):
         return np.ones(num_perm, dtype=np.uint64)*_max_hash
+
+    def _init_permutations(self, num_perm):
+        # Create parameters for a random bijective permutation function
+        # that maps a 32-bit hash value to another 32-bit hash value.
+        # http://en.wikipedia.org/wiki/Universal_hashing
+        gen = np.random.RandomState(self.seed)
+        return np.array([
+            (gen.randint(1, _mersenne_prime, dtype=np.uint64), gen.randint(0, _mersenne_prime, dtype=np.uint64)) for _ in range(num_perm)
+        ], dtype=np.uint64).T
 
     def _parse_hashvalues(self, hashvalues):
         return np.array(hashvalues, dtype=np.uint64)
@@ -131,8 +135,30 @@ class MinHash(object):
         '''
         hv = self.hashfunc(b)
         a, b = self.permutations
-        phv = np.bitwise_and((a * hv + b) % _mersenne_prime, np.uint64(_max_hash))
+        phv = np.bitwise_and((a * hv + b) % _mersenne_prime, _max_hash)
         self.hashvalues = np.minimum(phv, self.hashvalues)
+
+    def update_batch(self, b):
+        '''Update this MinHash with new values.
+        The values will be hashed using the hash function specified by
+        the `hashfunc` argument in the constructor.
+
+        Args:
+            b (list): List of values to be hashed using the hash function specified.
+
+        Example:
+            To update with new string values (using the default SHA1 hash
+            function, which requires bytes as input):
+
+            .. code-block:: python
+
+                minhash = Minhash()
+                minhash.update_batch([s.encode('utf-8') for s in ["token1", "token2"]])
+        '''
+        hv = np.array([self.hashfunc(_b) for _b in b], dtype=np.uint64)
+        a, b = self.permutations
+        phv = np.bitwise_and(((hv * np.tile(a, (len(hv), 1)).T).T + b) % _mersenne_prime, _max_hash)
+        self.hashvalues = np.vstack([phv, self.hashvalues]).min(axis=0)
 
     def jaccard(self, other):
         '''Estimate the `Jaccard similarity`_ (resemblance) between the sets
@@ -248,3 +274,64 @@ class MinHash(object):
         permutations = mhs[0].permutations
         return cls(num_perm=num_perm, seed=seed, hashvalues=hashvalues,
                 permutations=permutations)
+
+    @classmethod
+    def bulk(cls, b, **minhash_kwargs):
+        '''Compute MinHashes in bulk. This method avoids unnecessary
+        overhead when initializing many minhashes by reusing the initialized
+        state.
+
+        Args:
+            b (Iterable): An Iterable of lists of bytes, each list is
+                hashed in to one MinHash in the output.
+            minhash_kwargs: Keyword arguments used to initialize MinHash,
+                will be used for all minhashes.
+
+        Returns:
+            List[datasketch.MinHash]: A list of computed MinHashes.
+
+        Example:
+
+            .. code-block:: python
+
+                from datasketch import MinHash
+                data = [[b'token1', b'token2', b'token3'],
+                        [b'token4', b'token5', b'token6']]
+                minhashes = MinHash.bulk(data, num_perm=64)
+
+        '''
+        return list(cls.generator(b, **minhash_kwargs))
+
+    @classmethod
+    def generator(cls, b, **minhash_kwargs):
+        '''Compute MinHashes in a generator. This method avoids unnecessary
+        overhead when initializing many minhashes by reusing the initialized
+        state.
+
+        Args:
+            b (Iterable): An Iterable of lists of bytes, each list is
+                hashed in to one MinHash in the output.
+            minhash_kwargs: Keyword arguments used to initialize MinHash,
+                will be used for all minhashes.
+
+        Returns:
+            A generator of computed MinHashes.
+
+        Example:
+
+            .. code-block:: python
+
+                from datasketch import MinHash
+                data = [[b'token1', b'token2', b'token3'],
+                        [b'token4', b'token5', b'token6']]
+                for minhash in MinHash.generator(data, num_perm=64):
+                    # do something useful
+                    minhash
+
+        '''
+        m = cls(**minhash_kwargs)
+        for _b in b:
+            _m = m.copy()
+            _m.update_batch(_b)
+            yield _m
+

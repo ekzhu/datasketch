@@ -26,6 +26,20 @@ class TestMinHash(unittest.TestCase):
         for i in range(4):
             self.assertTrue(m1.hashvalues[i] < m2.hashvalues[i])
 
+    def test_update_batch(self):
+        m1 = minhash.MinHash(4, 1, hashfunc=fake_hash_func)
+        m2 = minhash.MinHash(4, 1, hashfunc=fake_hash_func)
+        m1.update_batch([12, 24])
+        for i in range(4):
+            self.assertTrue(m1.hashvalues[i] < m2.hashvalues[i])
+
+        m1 = minhash.MinHash(4, 1, hashfunc=fake_hash_func)
+        m1.update(12)
+        m1.update(24)
+        m2 = minhash.MinHash(4, 1, hashfunc=fake_hash_func)
+        m2.update_batch([12, 24])
+        self.assertTrue(all(m1.hashvalues == m2.hashvalues))
+
     def test_jaccard(self):
         m1 = minhash.MinHash(4, 1, hashfunc=fake_hash_func)
         m2 = minhash.MinHash(4, 1, hashfunc=fake_hash_func)
@@ -96,6 +110,16 @@ class TestMinHash(unittest.TestCase):
             m.hashvalues.tolist(),
             [734825475, 960773806, 359816889, 342714745],
         )
+
+    def test_bulk(self):
+        kwargs = dict(num_perm=4, seed=1, hashfunc=fake_hash_func)
+        b = [[n*4 for n in range(4)]]*2
+        m1 = minhash.MinHash(**kwargs)
+        m1.update_batch(b[0])
+        m2, m3 = minhash.MinHash.bulk(b, **kwargs)
+        self.assertTrue(np.array_equal(m1.hashvalues, m2.hashvalues))
+        self.assertTrue(np.array_equal(m1.hashvalues, m3.hashvalues))
+
 
 class TestbBitMinHash(unittest.TestCase):
 
