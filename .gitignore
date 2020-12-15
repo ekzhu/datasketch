@@ -76,3 +76,6 @@ benchmark/**/*.sqlite
 # Benchmark plots
 benchmark/**/*.png
 benchmark/**/*.pdf
+
+# Virtual env
+.venv

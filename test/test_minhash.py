@@ -111,6 +111,16 @@ class TestMinHash(unittest.TestCase):
             [734825475, 960773806, 359816889, 342714745],
         )
 
+    def test_bulk(self):
+        kwargs = dict(num_perm=4, seed=1, hashfunc=fake_hash_func)
+        b = [[n*4 for n in range(4)]]*2
+        m1 = minhash.MinHash(**kwargs)
+        m1.update_batch(b[0])
+        m2, m3 = minhash.MinHash.bulk(b, **kwargs)
+        self.assertTrue(np.array_equal(m1.hashvalues, m2.hashvalues))
+        self.assertTrue(np.array_equal(m1.hashvalues, m3.hashvalues))
+
+
 class TestbBitMinHash(unittest.TestCase):
 
     def setUp(self):

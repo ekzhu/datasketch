@@ -274,3 +274,42 @@ class MinHash(object):
         permutations = mhs[0].permutations
         return cls(num_perm=num_perm, seed=seed, hashvalues=hashvalues,
                 permutations=permutations)
+
+    @classmethod
+    def bulk(cls, b, **minhash_kwargs):
+        '''Compute MinHashes in bulk. This method avoids unnecessary
+        overhead when initializing many minhashes by reusing the initialized
+        state.
+
+        Args:
+            b (Iterable): An Iterable of lists of bytes, each list is
+                hashed in to one MinHash in the output.
+            minhash_kwargs: Keyword arguments used to initialize MinHash,
+                will be used for all minhashes.
+
+        Returns:
+            List[datasketch.MinHash]: A list of computed MinHashes.
+        '''
+        return list(cls.bulk_generator(b, **minhash_kwargs))
+
+    @classmethod
+    def bulk_generator(cls, b, **minhash_kwargs):
+        '''Compute MinHashes in a generator. This method avoids unnecessary
+        overhead when initializing many minhashes by reusing the initialized
+        state.
+
+        Args:
+            b (Iterable): An Iterable of lists of bytes, each list is
+                hashed in to one MinHash in the output.
+            minhash_kwargs: Keyword arguments used to initialize MinHash,
+                will be used for all minhashes.
+
+        Returns:
+            A generator of computed MinHashes.
+        '''
+        m = cls(**minhash_kwargs)
+        for _b in b:
+            _m = m.copy()
+            _m.update_batch(_b)
+            yield _m
+
