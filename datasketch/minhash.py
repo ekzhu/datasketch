@@ -289,11 +289,21 @@ class MinHash(object):
 
         Returns:
             List[datasketch.MinHash]: A list of computed MinHashes.
+
+        Example:
+
+            .. code-block:: python
+
+                from datasketch import MinHash
+                data = [[b'token1', b'token2', b'token3'],
+                        [b'token4', b'token5', b'token6']]
+                minhashes = MinHash.bulk(data, num_perm=64)
+
         '''
-        return list(cls.bulk_generator(b, **minhash_kwargs))
+        return list(cls.generator(b, **minhash_kwargs))
 
     @classmethod
-    def bulk_generator(cls, b, **minhash_kwargs):
+    def generator(cls, b, **minhash_kwargs):
         '''Compute MinHashes in a generator. This method avoids unnecessary
         overhead when initializing many minhashes by reusing the initialized
         state.
@@ -306,6 +316,18 @@ class MinHash(object):
 
         Returns:
             A generator of computed MinHashes.
+
+        Example:
+
+            .. code-block:: python
+
+                from datasketch import MinHash
+                data = [[b'token1', b'token2', b'token3'],
+                        [b'token4', b'token5', b'token6']]
+                for minhash in MinHash.generator(data, num_perm=64):
+                    # do something useful
+                    minhash
+
         '''
         m = cls(**minhash_kwargs)
         for _b in b:
