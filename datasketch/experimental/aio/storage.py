@@ -150,6 +150,8 @@ if motor is not None and ReturnDocument is not None:
             self._batch_size = 1000
             self._mongo_client = motor.motor_asyncio.AsyncIOMotorClient(dsn, **additional_args)
             self._collection = self._mongo_client.get_default_database(db_lsh).get_collection(self._collection_name)
+            self._collection.create_index("key", background=True)
+
             self._initialized = True
             self._buffer = AsyncMongoBuffer(self._collection, self._batch_size)
 
