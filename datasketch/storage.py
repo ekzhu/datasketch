@@ -840,7 +840,8 @@ if redis is not None:
 
                     storage_config={
                         'type': 'redis',
-                        'redis': {'host': 'localhost', 'port': 6379}
+                        'redis': {'host': 'localhost', 'port': 6379},
+                        'redis_buffer': {'transaction': True}
                     }
 
                 one can refer to system environment variables via::
@@ -851,7 +852,8 @@ if redis is not None:
                             'host': {'env': 'REDIS_HOSTNAME',
                                      'default':'localhost'},
                             'port': 6379}
-                        }
+                        },
+                        'redis_buffer': {'transaction': True}
                     }
 
             name (bytes, optional): A prefix to namespace all keys in
@@ -864,9 +866,10 @@ if redis is not None:
             self._buffer_size = 50000
             redis_param = self._parse_config(self.config['redis'])
             self._redis = redis.Redis(**redis_param)
+            redis_buffer_param = self._parse_config(self.config.get('redis_buffer', {}))
             self._buffer = RedisBuffer(self._redis.connection_pool,
                                        self._redis.response_callbacks,
-                                       transaction=True,
+                                       transaction=redis_buffer_param.get('transaction', True),
                                        buffer_size=self._buffer_size)
             if name is None:
                 name = _random_name(11)
