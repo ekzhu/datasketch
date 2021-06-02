@@ -176,8 +176,8 @@ class MinHash(object):
         if len(self) != len(other):
             raise ValueError("Cannot compute Jaccard given MinHash with\
                     different numbers of permutation functions")
-        return np.float(np.count_nonzero(self.hashvalues==other.hashvalues)) /\
-                np.float(len(self))
+        return float(np.count_nonzero(self.hashvalues==other.hashvalues)) /\
+                float(len(self))
 
     def count(self):
         '''Estimate the cardinality count based on the technique described in
@@ -187,7 +187,7 @@ class MinHash(object):
             int: The estimated cardinality of the set represented by this MinHash.
         '''
         k = len(self)
-        return np.float(k) / np.sum(self.hashvalues / np.float(_max_hash)) - 1.0
+        return float(k) / np.sum(self.hashvalues / float(_max_hash)) - 1.0
 
     def merge(self, other):
         '''Merge the other MinHash with this one, making this one the union
