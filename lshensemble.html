@@ -4,15 +4,16 @@
 <html>
   <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
     <title>MinHash LSH Ensemble &#8212; datasketch 1.0.0 documentation</title>
-    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
-    <link rel="stylesheet" href="_static/alabaster.css" type="text/css" />
-    <script id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="_static/alabaster.css" />
+    <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
     <script src="_static/jquery.js"></script>
     <script src="_static/underscore.js"></script>
     <script src="_static/doctools.js"></script>
-    <script async="async" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.7/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <script async="async" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
     <link rel="next" title="MinHash LSH Forest" href="lshforest.html" />
@@ -90,9 +91,9 @@
 
           <div class="body" role="main">
             
-  <div class="section" id="minhash-lsh-ensemble">
+  <section id="minhash-lsh-ensemble">
 <span id="id1"></span><h1>MinHash LSH Ensemble<a class="headerlink" href="#minhash-lsh-ensemble" title="Permalink to this headline">¶</a></h1>
-<div class="section" id="containment">
+<section id="containment">
 <span id="id2"></span><h2>Containment<a class="headerlink" href="#containment" title="Permalink to this headline">¶</a></h2>
 <p><a class="reference external" href="https://en.wikipedia.org/wiki/Jaccard_index">Jaccard similarity</a> is great for
 measuring resemblance between two sets, however, it can be a biased measure for
@@ -106,9 +107,9 @@ are very different, with the latter being much smaller, because its union
 size <span class="math notranslate nohighlight">\(|Q' \cup X'|\)</span> is much larger.
 This shows that Jaccard similarity is biased when measuring intersection size,
 as large sets are penalized.</p>
-<div class="figure align-center">
+<figure class="align-center">
 <a class="reference internal image-reference" href="_images/containment.png"><img alt="MinHashLSHEnsemble Benchmark" src="_images/containment.png" style="width: 505.6px; height: 225.60000000000002px;" /></a>
-</div>
+</figure>
 <p>We can use a better measure for intersection, called <em>containment</em>.
 It is computed as the intersection size divided by the size of one of the set,
 in this case Q.</p>
@@ -127,8 +128,8 @@ deduced from the intersection threshold by multiplying <span class="math notrans
 <p>Another way to think about containment: it is a “normalized” intersection
 (with value between 0 and 1), which measures the fraction of the query set Q
 contained in X.</p>
-</div>
-<div class="section" id="lsh-for-containment">
+</section>
+<section id="lsh-for-containment">
 <h2>LSH for Containment<a class="headerlink" href="#lsh-for-containment" title="Permalink to this headline">¶</a></h2>
 <p>Similar to <a class="reference internal" href="lsh.html#minhash-lsh"><span class="std std-ref">MinHash LSH</span></a>, there is an LSH index for containment search –
 given a query set, find sets with containment above a certain threshold.
@@ -185,15 +186,15 @@ See the documentation of <a class="reference internal" href="documentation.html#
 <a class="reference internal image-reference" href="_images/lshensemble_num_perm_256_recall.png"><img alt="MinHashLSHEnsemble Benchmark Recall" class="align-center" src="_images/lshensemble_num_perm_256_recall.png" style="width: 480.0px; height: 360.0px;" /></a>
 <a class="reference internal image-reference" href="_images/lshensemble_num_perm_256_fscore.png"><img alt="MinHashLSHEnsemble Benchmark F-Score" class="align-center" src="_images/lshensemble_num_perm_256_fscore.png" style="width: 480.0px; height: 360.0px;" /></a>
 <a class="reference internal image-reference" href="_images/lshensemble_num_perm_256_query_time.png"><img alt="MinHashLSHEnsemble Benchmark Query Time" class="align-center" src="_images/lshensemble_num_perm_256_query_time.png" style="width: 480.0px; height: 360.0px;" /></a>
-</div>
-<div class="section" id="common-issues-with-lsh-ensemble">
+</section>
+<section id="common-issues-with-lsh-ensemble">
 <h2>Common Issues with LSH Ensemble<a class="headerlink" href="#common-issues-with-lsh-ensemble" title="Permalink to this headline">¶</a></h2>
 <ol class="arabic simple">
 <li><p><a class="reference external" href="https://github.com/ekzhu/datasketch/issues/97">Can I get containment values from LSH Ensemble?</a></p></li>
 <li><p><a class="reference external" href="https://github.com/ekzhu/datasketch/issues/76#issuecomment-521275633">How to use LSH Ensemble to find containment-based duplicates?</a></p></li>
 </ol>
-</div>
-</div>
+</section>
+</section>
 
 
           </div>
@@ -206,7 +207,7 @@ See the documentation of <a class="reference internal" href="documentation.html#
       &copy;2021, Eric Zhu.
       
       |
-      Powered by <a href="http://sphinx-doc.org/">Sphinx 3.5.1</a>
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 4.0.2</a>
       &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
       
       |

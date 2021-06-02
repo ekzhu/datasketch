@@ -4,11 +4,12 @@
 <html>
   <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
     <title>MinHash LSH &#8212; datasketch 1.0.0 documentation</title>
-    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
-    <link rel="stylesheet" href="_static/alabaster.css" type="text/css" />
-    <script id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="_static/alabaster.css" />
+    <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
     <script src="_static/jquery.js"></script>
     <script src="_static/underscore.js"></script>
     <script src="_static/doctools.js"></script>
@@ -92,7 +93,7 @@
 
           <div class="body" role="main">
             
-  <div class="section" id="minhash-lsh">
+  <section id="minhash-lsh">
 <span id="id1"></span><h1>MinHash LSH<a class="headerlink" href="#minhash-lsh" title="Permalink to this headline">¶</a></h1>
 <p>Suppose you have a very large collection of
 <a class="reference external" href="https://en.wikipedia.org/wiki/Set_(mathematics)">sets</a>. Giving a
@@ -160,9 +161,9 @@ are plotted below.
 See the <cite>benchmark</cite>
 directory in the source code repository for more experiment and
 plotting code.</p>
-<div class="figure align-default">
+<figure class="align-default">
 <img alt="MinHashLSH Benchmark" src="_images/lsh_benchmark.png" />
-</div>
+</figure>
 <p>There are other optional parameters that can be used to tune the index.
 See the documentation of <a class="reference internal" href="documentation.html#datasketch.MinHashLSH" title="datasketch.MinHashLSH"><code class="xref py py-class docutils literal notranslate"><span class="pre">datasketch.MinHashLSH</span></code></a> for details.</p>
 <p>MinHash LSH does not support Top-K queries.
@@ -170,7 +171,7 @@ See <a class="reference internal" href="lshforest.html#minhash-lsh-forest"><span
 In addition, Jaccard similarity may not be the best measure if your intention is to
 find sets having high intersection with the query.
 For intersection search, see <a class="reference internal" href="lshensemble.html#minhash-lsh-ensemble"><span class="std std-ref">MinHash LSH Ensemble</span></a>.</p>
-<div class="section" id="minhash-lsh-at-scale">
+<section id="minhash-lsh-at-scale">
 <span id="id2"></span><h2>MinHash LSH at scale<a class="headerlink" href="#minhash-lsh-at-scale" title="Permalink to this headline">¶</a></h2>
 <p>MinHash LSH supports using Redis as the storage layer for handling large index and
 providing optional persistence as part of
@@ -228,7 +229,7 @@ or keyspace (and thus DROP existing ones), set <cite>drop_tables</cite> and <cit
 <cite>True</cite>.</p>
 <p>Like the Redis counterpart, you can use insert sessions
 to reduce the number of network calls during bulk insertion.</p>
-<div class="section" id="connecting-to-existing-minhash-lsh">
+<section id="connecting-to-existing-minhash-lsh">
 <h3>Connecting to Existing MinHash LSH<a class="headerlink" href="#connecting-to-existing-minhash-lsh" title="Permalink to this headline">¶</a></h3>
 <p>If you are using an external storage layer (e.g., Redis) for your LSH, you can
 share it across multiple processes. Ther are two ways to do it:</p>
@@ -285,9 +286,9 @@ LSH object with the same <cite>basename</cite>, you will be using the same under
 data in the storage layer associated with the old LSH.</p>
 <p>If you don’t specify <cite>basename</cite>, MinHash LSH will generate a random string
 as the base name, and collision is extremely unlikely.</p>
-</div>
-</div>
-<div class="section" id="asynchronous-minhash-lsh-at-scale">
+</section>
+</section>
+<section id="asynchronous-minhash-lsh-at-scale">
 <span id="minhash-lsh-async"></span><h2>Asynchronous MinHash LSH at scale<a class="headerlink" href="#asynchronous-minhash-lsh-at-scale" title="Permalink to this headline">¶</a></h2>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
@@ -421,8 +422,8 @@ processes see <a class="reference internal" href="#minhash-lsh-at-scale"><span c
             <span class="k">await</span> <span class="n">asyncio</span><span class="o">.</span><span class="n">gather</span><span class="p">(</span><span class="o">*</span><span class="n">fs</span><span class="p">)</span>
 </pre></div>
 </div>
-</div>
-<div class="section" id="common-issues-with-minhash-lsh">
+</section>
+<section id="common-issues-with-minhash-lsh">
 <h2>Common Issues with MinHash LSH<a class="headerlink" href="#common-issues-with-minhash-lsh" title="Permalink to this headline">¶</a></h2>
 <ol class="arabic simple">
 <li><p><a class="reference external" href="https://github.com/ekzhu/datasketch/issues/76">How to use MinHash LSH to compute all-pair duplicates?</a></p></li>
@@ -432,8 +433,8 @@ processes see <a class="reference internal" href="#minhash-lsh-at-scale"><span c
 <li><p><a class="reference external" href="https://github.com/ekzhu/datasketch/issues/93">Combining/Storing LSH with different thresholds</a></p></li>
 </ol>
 <p><a class="reference external" href="https://github.com/ekzhu/datasketch/issues?utf8=%E2%9C%93&amp;q=lsh">See more issues</a></p>
-</div>
-</div>
+</section>
+</section>
 
 
           </div>
@@ -446,7 +447,7 @@ processes see <a class="reference internal" href="#minhash-lsh-at-scale"><span c
       &copy;2021, Eric Zhu.
       
       |
-      Powered by <a href="http://sphinx-doc.org/">Sphinx 3.5.1</a>
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 4.0.2</a>
       &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
       
       |
