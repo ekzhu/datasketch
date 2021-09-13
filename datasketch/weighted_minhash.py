@@ -1,4 +1,7 @@
+from typing import Union, List
+
 import collections
+import collections.abc
 import copy
 
 import numpy as np
@@ -116,7 +119,7 @@ class WeightedMinHashGenerator(object):
         Args:
             v (numpy.array): The Jaccard vector. 
         '''
-        if not isinstance(v, collections.Iterable):
+        if not isinstance(v, collections.abc.Iterable):
             raise TypeError("Input vector must be an iterable")
         if not len(v) == self.dim:
             raise ValueError("Input dimension mismatch, expecting %d" % self.dim)
@@ -124,7 +127,7 @@ class WeightedMinHashGenerator(object):
             v = np.array(v, dtype=np.float32)
         elif v.dtype != np.float32:
             v = v.astype(np.float32)
-        hashvalues = np.zeros((self.sample_size, 2), dtype=np.int)
+        hashvalues = np.zeros((self.sample_size, 2), dtype=int)
         vzeros = (v == 0)
         if vzeros.all():
             raise ValueError("Input is all zeros")
@@ -138,7 +141,7 @@ class WeightedMinHashGenerator(object):
             hashvalues[i][0], hashvalues[i][1] = k, int(t[k])
         return WeightedMinHash(self.seed, hashvalues)
 
-    def minhash_many(self : WeightedMinHashGenerator, X : Union[sp.sparse.csr_matrix, np.ndarray]) \
+    def minhash_many(self, X : Union[sp.sparse.csr_matrix, np.ndarray]) \
             -> List[Union[WeightedMinHash, None]]:
         '''Create new WeightedMinHash instances given a matrix of weighted
         Jaccard vectors.  Each column of X should correspond to a minhash
@@ -156,7 +159,7 @@ class WeightedMinHashGenerator(object):
         '''
 
         # Input validation
-        if not isinstance(X, [sp.sparse.spmatrix, np.ndarray]):
+        if not isinstance(X, (sp.sparse.spmatrix, np.ndarray)):
             raise TypeError("Input X must be a sparse matrix or numpy matrix")
 
         if X.ndim != 2:
