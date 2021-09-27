@@ -144,18 +144,18 @@ class WeightedMinHashGenerator(object):
     def minhash_many(self, X : Union[sp.sparse.csr_matrix, np.ndarray]) \
             -> List[Union[WeightedMinHash, None]]:
         '''Create new WeightedMinHash instances given a matrix of weighted
-        Jaccard vectors.  Each column of X should correspond to a minhash
-        dimension.  The data should correspond to the integery frequency of the
-        element in the multi-set represented by each row.
+        Jaccard vectors.  In the input matrix X, each row corresponds to a
+        multi-set, and each column stores the integer frequency of the
+        element of a dimension.
 
         Args:
-            X (Union[sp.sparse.spmatrix, np.ndarray]): Matrix of Jaccard
+            X (Union[sp.sparse.spmatrix, np.ndarray]): A matrix of Jaccard
                 vectors (rows).
 
         Returns:
-            List[Union[WeightedMinHash, None]] - A list of length X.shape[0]
-                containing either a WeightedMinHash instance or None (if the
-                row is empty).  
+            List[Union[WeightedMinHash, None]] - A list of length X.shape[0].
+            Each element is either a WeightedMinHash instance or None 
+            (if the original row in X is empty).
         '''
 
         # Input validation
