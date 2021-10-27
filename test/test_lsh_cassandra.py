@@ -87,6 +87,24 @@ class TestMinHashLSHCassandra(unittest.TestCase):
         m3 = MinHash(18)
         self.assertRaises(ValueError, lsh.query, m3)
 
+    @unittest.skipIf(not DO_TEST_CASSANDRA, "Skipping test_cassandra__query")
+    def test_cassandra__query_buffer(self):
+        lsh = MinHashLSH(threshold=0.5, num_perm=16, storage_config=STORAGE_CONFIG_CASSANDRA)
+        m1 = MinHash(16)
+        m1.update("a".encode("utf8"))
+        m2 = MinHash(16)
+        m2.update("b".encode("utf8"))
+        lsh.insert("a", m1)
+        lsh.insert("b", m2)
+        lsh.add_to_query_buffer(m1)
+        result = lsh.collect_query_buffer()
+        self.assertTrue("a" in result)
+        lsh.add_to_query_buffer(m2)
+        result = lsh.collect_query_buffer()
+        self.assertTrue("b" in result)
+        m3 = MinHash(18)
+        self.assertRaises(ValueError, lsh.add_to_query_buffer, m3)
+
     @unittest.skipIf(not DO_TEST_CASSANDRA, "Skipping test_cassandra__remove")
     def test_cassandra__remove(self):
         lsh = MinHashLSH(threshold=0.5, num_perm=16, storage_config=STORAGE_CONFIG_CASSANDRA)

@@ -211,6 +211,47 @@ class MinHashLSH(object):
         else:
             return list(candidates)
 
+    def add_to_query_buffer(self, minhash):
+        '''
+        Giving the MinHash of the query set, buffer
+        queries to retrieve the keys that references
+        sets with Jaccard similarities greater than
+        the threshold.
+
+        Buffered queries can be executed using
+        `collect_query_buffer`. The combination of these
+        functions is way faster if cassandra backend
+        is used with `shared_buffer`.
+
+        Args:
+            minhash (datasketch.MinHash): The MinHash of the query set.
+        '''
+        if len(minhash) != self.h:
+            raise ValueError("Expecting minhash with length %d, got %d"
+                             % (self.h, len(minhash)))
+        for (start, end), hashtable in zip(self.hashranges, self.hashtables):
+            H = self._H(minhash.hashvalues[start:end])
+            hashtable.add_to_select_buffer([H])
+
+    def collect_query_buffer(self):
+        '''
+        Execute and return buffered queries given
+        by `add_to_query_buffer`.
+
+        Returns:
+            `list` of unique keys.
+        '''
+        collected_result_sets = [
+            set(collected_result_lists)
+            for hashtable in self.hashtables
+            for collected_result_lists in hashtable.collect_select_buffer()
+        ]
+        if not collected_result_sets:
+            return []
+        if self.prepickle:
+            return [pickle.loads(key) for key in set.intersection(*collected_result_sets)]
+        return list(set.intersection(*collected_result_sets))
+
     def __contains__(self, key):
         '''
         Args:
