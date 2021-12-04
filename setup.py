@@ -49,14 +49,12 @@ setup(
     keywords='database datamining',
     packages=['datasketch'],
     install_requires=[
-        'numpy>=1.11'
+        'numpy>=1.11',
+        'scipy>=1.0.0',
     ],
     extras_require={
         'cassandra': [
             'cassandra-driver>=3.20',
-        ],
-        'scipy': [
-            'scipy',
         ],
         'redis': [
             'redis>=2.10.0',
@@ -74,15 +72,15 @@ setup(
         'test': [
             'cassandra-driver>=3.20',
             'redis>=2.10.0',
-            'mock>=2.0.0', 
-            'mockredispy', 
-            'coverage', 
+            'mock>=2.0.0',
+            'mockredispy',
+            'coverage',
             'pymongo>=3.9.0',
             'nose>=1.3.7',
             'nose-exclude>=0.5.0',
         ],
         'experimental_aio': [
-            "aiounittest ; python_version>='3.6'", 
+            "aiounittest ; python_version>='3.6'",
             "motor ; python_version>='3.6'",
         ],
     },
