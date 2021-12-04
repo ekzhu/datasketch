@@ -89,21 +89,7 @@
 <span class="kn">from</span> <span class="nn">datasketch.storage</span> <span class="kn">import</span> <span class="p">(</span>
     <span class="n">ordered_storage</span><span class="p">,</span> <span class="n">unordered_storage</span><span class="p">,</span> <span class="n">_random_name</span><span class="p">)</span>
 
-<span class="n">_integration_precision</span> <span class="o">=</span> <span class="mf">0.001</span>
-<span class="k">def</span> <span class="nf">_integration</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">):</span>
-    <span class="n">p</span> <span class="o">=</span> <span class="n">_integration_precision</span>
-    <span class="n">area</span> <span class="o">=</span> <span class="mf">0.0</span>
-    <span class="n">x</span> <span class="o">=</span> <span class="n">a</span>
-    <span class="k">while</span> <span class="n">x</span> <span class="o">&lt;</span> <span class="n">b</span><span class="p">:</span>
-        <span class="n">area</span> <span class="o">+=</span> <span class="n">f</span><span class="p">(</span><span class="n">x</span><span class="o">+</span><span class="mf">0.5</span><span class="o">*</span><span class="n">p</span><span class="p">)</span><span class="o">*</span><span class="n">p</span>
-        <span class="n">x</span> <span class="o">+=</span> <span class="n">p</span>
-    <span class="k">return</span> <span class="n">area</span><span class="p">,</span> <span class="kc">None</span>
-
-<span class="k">try</span><span class="p">:</span>
-    <span class="kn">from</span> <span class="nn">scipy.integrate</span> <span class="kn">import</span> <span class="n">quad</span> <span class="k">as</span> <span class="n">integrate</span>
-<span class="k">except</span> <span class="ne">ImportError</span><span class="p">:</span>
-    <span class="c1"># For when no scipy installed</span>
-    <span class="n">integrate</span> <span class="o">=</span> <span class="n">_integration</span>
+<span class="kn">from</span> <span class="nn">scipy.integrate</span> <span class="kn">import</span> <span class="n">quad</span> <span class="k">as</span> <span class="n">integrate</span>
 
 
 <span class="k">def</span> <span class="nf">_false_positive_probability</span><span class="p">(</span><span class="n">threshold</span><span class="p">,</span> <span class="n">b</span><span class="p">,</span> <span class="n">r</span><span class="p">):</span>
@@ -206,7 +192,7 @@
                     <span class="n">false_positive_weight</span><span class="p">,</span> <span class="n">false_negative_weight</span><span class="p">)</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">prepickle</span> <span class="o">=</span> <span class="n">storage_config</span><span class="p">[</span><span class="s1">&#39;type&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="s1">&#39;redis&#39;</span> <span class="k">if</span> <span class="n">prepickle</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">prepickle</span>
-        
+
         <span class="bp">self</span><span class="o">.</span><span class="n">hashfunc</span> <span class="o">=</span> <span class="n">hashfunc</span>
         <span class="k">if</span> <span class="n">hashfunc</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_H</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_hashed_byteswap</span>
@@ -338,7 +324,7 @@
 
     <span class="k">def</span> <span class="nf">_hashed_byteswap</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">hs</span><span class="p">):</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">hashfunc</span><span class="p">(</span><span class="nb">bytes</span><span class="p">(</span><span class="n">hs</span><span class="o">.</span><span class="n">byteswap</span><span class="p">()</span><span class="o">.</span><span class="n">data</span><span class="p">))</span>
-    
+
     <span class="k">def</span> <span class="nf">_query_b</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">minhash</span><span class="p">,</span> <span class="n">b</span><span class="p">):</span>
         <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">minhash</span><span class="p">)</span> <span class="o">!=</span> <span class="bp">self</span><span class="o">.</span><span class="n">h</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Expecting minhash with length </span><span class="si">%d</span><span class="s2">, got </span><span class="si">%d</span><span class="s2">&quot;</span>

@@ -647,6 +647,26 @@ by the vector.</p>
 </dl>
 </dd></dl>
 
+<dl class="py method">
+<dt class="sig sig-object py" id="datasketch.WeightedMinHashGenerator.minhash_many">
+<span class="sig-name descname"><span class="pre">minhash_many</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">X</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><span class="pre">scipy.sparse.base.spmatrix</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">numpy.ndarray</span><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="#datasketch.WeightedMinHash" title="datasketch.weighted_minhash.WeightedMinHash"><span class="pre">datasketch.weighted_minhash.WeightedMinHash</span></a><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="_modules/datasketch/weighted_minhash.html#WeightedMinHashGenerator.minhash_many"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#datasketch.WeightedMinHashGenerator.minhash_many" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create new WeightedMinHash instances given a matrix of weighted
+Jaccard vectors.  In the input matrix X, each row corresponds to a
+multi-set, and each column stores the integer frequency of the
+element of a dimension.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>X</strong> (<em>Union</em><em>[</em><em>sp.sparse.spmatrix</em><em>, </em><em>np.ndarray</em><em>]</em>) – A matrix of Jaccard
+vectors (rows).</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>List[Union[WeightedMinHash, None]] - A list of length X.shape[0].
+Each element is either a WeightedMinHash instance or None
+(if the original row in X is empty).</p>
+</dd>
+</dl>
+</dd></dl>
+
 <dl class="py attribute">
 <dt class="sig sig-object py" id="datasketch.WeightedMinHashGenerator.__weakref__">
 <span class="sig-name descname"><span class="pre">__weakref__</span></span><a class="headerlink" href="#datasketch.WeightedMinHashGenerator.__weakref__" title="Permalink to this definition">¶</a></dt>
