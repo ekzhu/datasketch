@@ -4,21 +4,7 @@ import struct
 from datasketch.storage import (
     ordered_storage, unordered_storage, _random_name)
 
-_integration_precision = 0.001
-def _integration(f, a, b):
-    p = _integration_precision
-    area = 0.0
-    x = a
-    while x < b:
-        area += f(x+0.5*p)*p
-        x += p
-    return area, None
-
-try:
-    from scipy.integrate import quad as integrate
-except ImportError:
-    # For when no scipy installed
-    integrate = _integration
+from scipy.integrate import quad as integrate
 
 
 def _false_positive_probability(threshold, b, r):
@@ -121,7 +107,7 @@ class MinHashLSH(object):
                     false_positive_weight, false_negative_weight)
 
         self.prepickle = storage_config['type'] == 'redis' if prepickle is None else prepickle
-        
+
         self.hashfunc = hashfunc
         if hashfunc:
             self._H = self._hashed_byteswap
@@ -253,7 +239,7 @@ class MinHashLSH(object):
 
     def _hashed_byteswap(self, hs):
         return self.hashfunc(bytes(hs.byteswap().data))
-    
+
     def _query_b(self, minhash, b):
         if len(minhash) != self.h:
             raise ValueError("Expecting minhash with length %d, got %d"
