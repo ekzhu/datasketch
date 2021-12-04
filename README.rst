@@ -38,9 +38,7 @@ sub-linear query time:
 | `MinHash LSH Ensemble`_   | MinHash                     | Containment Threshold  |
 +---------------------------+-----------------------------+------------------------+
 
-datasketch must be used with Python 2.7 or above and NumPy 1.11 or
-above. Scipy is optional, but with it the LSH initialization can be much
-faster.
+datasketch must be used with Python 2.7 or above, NumPy 1.11 or above, and Scipy. 
 
 Note that `MinHash LSH`_ and `MinHash LSH Ensemble`_ also support Redis and Cassandra 
 storage layer (see `MinHash LSH at Scale`_).
@@ -68,11 +66,6 @@ To install with Cassandra dependency:
 
     pip install datasketch[cassandra]
 
-To install with Scipy for faster MinHashLSH initialization:
-
-::
-
-    pip install datasketch[scipy]
 
 .. _`MinHash`: https://ekzhu.github.io/datasketch/minhash.html
 .. _`Weighted MinHash`: https://ekzhu.github.io/datasketch/weightedminhash.html
