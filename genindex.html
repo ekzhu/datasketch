@@ -66,7 +66,7 @@
   <h3 id="searchlabel">Quick search</h3>
     <div class="searchformwrapper">
     <form class="search" action="search.html" method="get">
-      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
       <input type="submit" value="Go" />
     </form>
     </div>
@@ -119,6 +119,14 @@
         <li><a href="documentation.html#datasketch.MinHash.__eq__">(datasketch.MinHash method)</a>
 </li>
         <li><a href="documentation.html#datasketch.WeightedMinHash.__eq__">(datasketch.WeightedMinHash method)</a>
+</li>
+      </ul></li>
+      <li><a href="documentation.html#datasketch.HyperLogLog.__hash__">__hash__ (datasketch.HyperLogLog attribute)</a>
+
+      <ul>
+        <li><a href="documentation.html#datasketch.MinHash.__hash__">(datasketch.MinHash attribute)</a>
+</li>
+        <li><a href="documentation.html#datasketch.WeightedMinHash.__hash__">(datasketch.WeightedMinHash attribute)</a>
 </li>
       </ul></li>
       <li><a href="documentation.html#datasketch.LeanMinHash.__hash__">__hash__() (datasketch.LeanMinHash method)</a>
@@ -458,7 +466,7 @@
       &copy;2021, Eric Zhu.
       
       |
-      Powered by <a href="http://sphinx-doc.org/">Sphinx 4.0.2</a>
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 4.3.1</a>
       &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
       
     </div>
