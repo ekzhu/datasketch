@@ -121,7 +121,7 @@ class MinHashLSH(object):
                     false_positive_weight, false_negative_weight)
 
         self.prepickle = storage_config['type'] == 'redis' if prepickle is None else prepickle
-        
+
         self.hashfunc = hashfunc
         if hashfunc:
             self._H = self._hashed_byteswap
@@ -238,6 +238,9 @@ class MinHashLSH(object):
         Execute and return buffered queries given
         by `add_to_query_buffer`.
 
+        If multiple query MinHash were added to the query buffer,
+        the intersection of the results of all query MinHash will be returned.
+
         Returns:
             `list` of unique keys.
         '''
@@ -294,7 +297,7 @@ class MinHashLSH(object):
 
     def _hashed_byteswap(self, hs):
         return self.hashfunc(bytes(hs.byteswap().data))
-    
+
     def _query_b(self, minhash, b):
         if len(minhash) != self.h:
             raise ValueError("Expecting minhash with length %d, got %d"
