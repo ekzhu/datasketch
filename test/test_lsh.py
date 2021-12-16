@@ -79,6 +79,23 @@ class TestMinHashLSH(unittest.TestCase):
         m3 = MinHash(18)
         self.assertRaises(ValueError, lsh.query, m3)
 
+    def test_query_buffer(self):
+        lsh = MinHashLSH(threshold=0.5, num_perm=16)
+        m1 = MinHash(16)
+        m1.update("a".encode("utf8"))
+        m2 = MinHash(16)
+        m2.update("b".encode("utf8"))
+        lsh.insert("a", m1)
+        lsh.insert("b", m2)
+        lsh.add_to_query_buffer(m1)
+        result = lsh.collect_query_buffer()
+        self.assertTrue("a" in result)
+        lsh.add_to_query_buffer(m2)
+        result = lsh.collect_query_buffer()
+        self.assertTrue("b" in result)
+        m3 = MinHash(18)
+        self.assertRaises(ValueError, lsh.add_to_query_buffer, m3)
+
     def test_remove(self):
         lsh = MinHashLSH(threshold=0.5, num_perm=16)
         m1 = MinHash(16)
@@ -155,6 +172,28 @@ class TestMinHashLSH(unittest.TestCase):
 
             m3 = MinHash(18)
             self.assertRaises(ValueError, lsh.query, m3)
+
+    def test_query_buffer_redis(self):
+        with patch('redis.Redis', fake_redis) as mock_redis:
+            lsh = MinHashLSH(threshold=0.5, num_perm=16, storage_config={
+                'type': 'redis', 'redis': {'host': 'localhost', 'port': 6379}
+            })
+            m1 = MinHash(16)
+            m1.update("a".encode("utf8"))
+            m2 = MinHash(16)
+            m2.update("b".encode("utf8"))
+            lsh.insert("a", m1)
+            lsh.insert("b", m2)
+            lsh.query(m1)
+            lsh.add_to_query_buffer(m1)
+            result = lsh.collect_query_buffer()
+            self.assertTrue("a" in result)
+            lsh.add_to_query_buffer(m2)
+            result = lsh.collect_query_buffer()
+            self.assertTrue("b" in result)
+
+            m3 = MinHash(18)
+            self.assertRaises(ValueError, lsh.add_to_query_buffer, m3)
 
     def test_insertion_session(self):
         lsh = MinHashLSH(threshold=0.5, num_perm=16)

@@ -169,6 +169,21 @@ class Storage(ABC):
     def empty_buffer(self):
         pass
 
+    def add_to_select_buffer(self, keys):
+        '''Query keys and add them to internal buffer'''
+        if not hasattr(self, '_select_buffer'):
+            self._select_buffer = self.getmany(*keys)
+        else:
+            self._select_buffer.extend(self.getmany(*keys))
+
+    def collect_select_buffer(self):
+        '''Return buffered query results'''
+        if not hasattr(self, '_select_buffer'):
+            return []
+        buffer = list(self._select_buffer)
+        del self._select_buffer[:]
+        return buffer
+
 
 class OrderedStorage(Storage):
 
@@ -238,6 +253,7 @@ if cassandra is not None:
 
         __session = None
         __session_buffer = None
+        __session_select_buffer = None
 
         QUERY_CREATE_KEYSPACE = """
             CREATE KEYSPACE IF NOT EXISTS {keyspace}
@@ -272,6 +288,12 @@ if cassandra is not None:
             if cls.__session_buffer is None:
                 cls.__session_buffer = []
             return cls.__session_buffer
+
+        @classmethod
+        def get_select_buffer(cls):
+            if cls.__session_select_buffer is None:
+                cls.__session_select_buffer = []
+            return cls.__session_select_buffer
 
 
     class CassandraClient(object):
@@ -353,8 +375,10 @@ if cassandra is not None:
             # are increased.
             if cassandra_params.get("shared_buffer", False):
                 self._statements_and_parameters = CassandraSharedSession.get_buffer()
+                self._select_statements_and_parameters_with_decoders = CassandraSharedSession.get_select_buffer()
             else:
                 self._statements_and_parameters = []
+                self._select_statements_and_parameters_with_decoders = []
 
             # Buckets tables rely on byte strings as keys and normal strings as values.
             # Keys tables have normal strings as keys and byte strings as values.
@@ -444,8 +468,7 @@ if cassandra is not None:
                 for result in results:
                     success, rows = result
                     if success:
-                        for row in rows:
-                            ret.append(row)
+                        ret.append(rows)
                     else:
                         raise RuntimeError
             return ret
@@ -578,6 +601,41 @@ if cassandra is not None:
                     min_token = r.f_token + 1
             return keys
 
+        def add_to_select_buffer(self, keys):
+            """
+            Buffer query statements and parameters with decoders to be used on returned data.
+
+            :param iterable[byte|str] keys: the keys
+            """
+            statements_and_parameters_with_decoders = [
+                ((self._stmt_get, (self._key_encoder(key),)), (self._key_decoder, self._val_decoder))
+                for key in keys
+            ]
+            self._select_statements_and_parameters_with_decoders.extend(statements_and_parameters_with_decoders)
+
+        def collect_select_buffer(self):
+            """
+            Perform buffered select queries
+
+            :return: list of list of query results
+            """
+            if not self._select_statements_and_parameters_with_decoders:
+                return []
+            # copy the underlying list in a python2/3 compatible way
+            buffer = list(self._select_statements_and_parameters_with_decoders)
+            # delete the actual elements in a python2/3 compatible way
+            del self._select_statements_and_parameters_with_decoders[:]
+            statements_and_parameters, decoders = zip(*buffer)
+
+            ret = collections.defaultdict(list)
+            query_results = self._select(statements_and_parameters)
+            for rows, (key_decoder, val_decoder) in zip(query_results, decoders):
+                for row in rows:
+                    ret[key_decoder(row.key)].append((val_decoder(row.value), row.ts))
+            return [
+                [x[0] for x in sorted(v, key=operator.itemgetter(1))] for v in ret.values()
+            ]
+
         def select(self, keys):
             """
             Select all values for the given keys.
@@ -591,8 +649,9 @@ if cassandra is not None:
                 for key in keys
             ]
             ret = collections.defaultdict(list)
-            for row in self._select(statements_and_parameters):
-                ret[self._key_decoder(row.key)].append((self._val_decoder(row.value), row.ts))
+            for rows in self._select(statements_and_parameters):
+                for row in rows:
+                    ret[self._key_decoder(row.key)].append((self._val_decoder(row.value), row.ts))
             return {
                 k: [x[0] for x in sorted(v, key=operator.itemgetter(1))]
                 for k, v in ret.items()
@@ -612,7 +671,8 @@ if cassandra is not None:
             ]
             return {
                 self._key_decoder(row.key): row.count
-                for row in self._select(statements_and_parameters)
+                for rows in self._select(statements_and_parameters)
+                for row in rows
             }
 
         def one(self, key):
@@ -750,6 +810,14 @@ if cassandra is not None:
         def getmany(self, *keys):
             """Implement interface."""
             return self._client.select(keys).values()
+
+        def add_to_select_buffer(self, keys):
+            """Implement interface."""
+            self._client.add_to_select_buffer(keys)
+
+        def collect_select_buffer(self):
+            """Implement interface."""
+            return self._client.collect_select_buffer()
 
         def insert(self, key, *vals, **kwargs):
             """Implement interface."""
