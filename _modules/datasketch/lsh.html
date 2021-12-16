@@ -282,6 +282,50 @@
         <span class="k">else</span><span class="p">:</span>
             <span class="k">return</span> <span class="nb">list</span><span class="p">(</span><span class="n">candidates</span><span class="p">)</span></div>
 
+<div class="viewcode-block" id="MinHashLSH.add_to_query_buffer"><a class="viewcode-back" href="../../documentation.html#datasketch.MinHashLSH.add_to_query_buffer">[docs]</a>    <span class="k">def</span> <span class="nf">add_to_query_buffer</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">minhash</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">        Giving the MinHash of the query set, buffer</span>
+<span class="sd">        queries to retrieve the keys that references</span>
+<span class="sd">        sets with Jaccard similarities greater than</span>
+<span class="sd">        the threshold.</span>
+
+<span class="sd">        Buffered queries can be executed using</span>
+<span class="sd">        `collect_query_buffer`. The combination of these</span>
+<span class="sd">        functions is way faster if cassandra backend</span>
+<span class="sd">        is used with `shared_buffer`.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            minhash (datasketch.MinHash): The MinHash of the query set.</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">minhash</span><span class="p">)</span> <span class="o">!=</span> <span class="bp">self</span><span class="o">.</span><span class="n">h</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Expecting minhash with length </span><span class="si">%d</span><span class="s2">, got </span><span class="si">%d</span><span class="s2">&quot;</span>
+                             <span class="o">%</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">h</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">minhash</span><span class="p">)))</span>
+        <span class="k">for</span> <span class="p">(</span><span class="n">start</span><span class="p">,</span> <span class="n">end</span><span class="p">),</span> <span class="n">hashtable</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">hashranges</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">hashtables</span><span class="p">):</span>
+            <span class="n">H</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_H</span><span class="p">(</span><span class="n">minhash</span><span class="o">.</span><span class="n">hashvalues</span><span class="p">[</span><span class="n">start</span><span class="p">:</span><span class="n">end</span><span class="p">])</span>
+            <span class="n">hashtable</span><span class="o">.</span><span class="n">add_to_select_buffer</span><span class="p">([</span><span class="n">H</span><span class="p">])</span></div>
+
+<div class="viewcode-block" id="MinHashLSH.collect_query_buffer"><a class="viewcode-back" href="../../documentation.html#datasketch.MinHashLSH.collect_query_buffer">[docs]</a>    <span class="k">def</span> <span class="nf">collect_query_buffer</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">        Execute and return buffered queries given</span>
+<span class="sd">        by `add_to_query_buffer`.</span>
+
+<span class="sd">        If multiple query MinHash were added to the query buffer,</span>
+<span class="sd">        the intersection of the results of all query MinHash will be returned.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            `list` of unique keys.</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+        <span class="n">collected_result_sets</span> <span class="o">=</span> <span class="p">[</span>
+            <span class="nb">set</span><span class="p">(</span><span class="n">collected_result_lists</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">hashtable</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">hashtables</span>
+            <span class="k">for</span> <span class="n">collected_result_lists</span> <span class="ow">in</span> <span class="n">hashtable</span><span class="o">.</span><span class="n">collect_select_buffer</span><span class="p">()</span>
+        <span class="p">]</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">collected_result_sets</span><span class="p">:</span>
+            <span class="k">return</span> <span class="p">[]</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">prepickle</span><span class="p">:</span>
+            <span class="k">return</span> <span class="p">[</span><span class="n">pickle</span><span class="o">.</span><span class="n">loads</span><span class="p">(</span><span class="n">key</span><span class="p">)</span> <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="nb">set</span><span class="o">.</span><span class="n">intersection</span><span class="p">(</span><span class="o">*</span><span class="n">collected_result_sets</span><span class="p">)]</span>
+        <span class="k">return</span> <span class="nb">list</span><span class="p">(</span><span class="nb">set</span><span class="o">.</span><span class="n">intersection</span><span class="p">(</span><span class="o">*</span><span class="n">collected_result_sets</span><span class="p">))</span></div>
+
 <div class="viewcode-block" id="MinHashLSH.__contains__"><a class="viewcode-back" href="../../documentation.html#datasketch.MinHashLSH.__contains__">[docs]</a>    <span class="k">def</span> <span class="fm">__contains__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">):</span>
         <span class="sd">&#39;&#39;&#39;</span>
 <span class="sd">        Args:</span>

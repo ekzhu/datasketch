@@ -888,6 +888,38 @@ similarities greater than the threshold.</p>
 </dd></dl>
 
 <dl class="py method">
+<dt class="sig sig-object py" id="datasketch.MinHashLSH.add_to_query_buffer">
+<span class="sig-name descname"><span class="pre">add_to_query_buffer</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">minhash</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/datasketch/lsh.html#MinHashLSH.add_to_query_buffer"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#datasketch.MinHashLSH.add_to_query_buffer" title="Permalink to this definition">¶</a></dt>
+<dd><p>Giving the MinHash of the query set, buffer
+queries to retrieve the keys that references
+sets with Jaccard similarities greater than
+the threshold.</p>
+<p>Buffered queries can be executed using
+<cite>collect_query_buffer</cite>. The combination of these
+functions is way faster if cassandra backend
+is used with <cite>shared_buffer</cite>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>minhash</strong> (<a class="reference internal" href="#datasketch.MinHash" title="datasketch.MinHash"><em>datasketch.MinHash</em></a>) – The MinHash of the query set.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="datasketch.MinHashLSH.collect_query_buffer">
+<span class="sig-name descname"><span class="pre">collect_query_buffer</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/datasketch/lsh.html#MinHashLSH.collect_query_buffer"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#datasketch.MinHashLSH.collect_query_buffer" title="Permalink to this definition">¶</a></dt>
+<dd><p>Execute and return buffered queries given
+by <cite>add_to_query_buffer</cite>.</p>
+<p>If multiple query MinHash were added to the query buffer,
+the intersection of the results of all query MinHash will be returned.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p><cite>list</cite> of unique keys.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
 <dt class="sig sig-object py" id="datasketch.MinHashLSH.__contains__">
 <span class="sig-name descname"><span class="pre">__contains__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">key</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/datasketch/lsh.html#MinHashLSH.__contains__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#datasketch.MinHashLSH.__contains__" title="Permalink to this definition">¶</a></dt>
 <dd><dl class="field-list simple">
