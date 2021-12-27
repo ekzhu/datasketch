@@ -3,7 +3,7 @@ Setup script for datasketch package
 """
 
 # Always prefer setuptools over distutils
-from setuptools import setup
+from setuptools import setup, find_packages
 # To use a consistent encoding
 from codecs import open
 from os import path
@@ -47,7 +47,7 @@ setup(
         'Programming Language :: Python :: 3.8',
     ],
     keywords='database datamining',
-    packages=['datasketch'],
+    packages=find_packages(include=['datasketch*']),
     install_requires=[
         'numpy>=1.11',
         'scipy>=1.0.0',
