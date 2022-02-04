@@ -265,22 +265,24 @@ if cassandra is not None:
         @classmethod
         def get_session(cls, seeds, **kwargs):
             _ = kwargs
+            keyspace = kwargs["keyspace"]
+            replication = kwargs["replication"]
+
             if cls.__session is None:
                 # Allow dependency injection
                 session = kwargs.get("session")
                 if session is None:
                     cluster = c_cluster.Cluster(seeds)
                     session = cluster.connect()
-                keyspace = kwargs["keyspace"]
-                replication = kwargs["replication"]
+                cls.__session = session
+            if cls.__session.keyspace != keyspace:
                 if kwargs.get("drop_keyspace", False):
-                    session.execute(cls.QUERY_DROP_KEYSPACE.format(keyspace))
-                session.execute(cls.QUERY_CREATE_KEYSPACE.format(
+                    cls.__session.execute(cls.QUERY_DROP_KEYSPACE.format(keyspace))
+                cls.__session.execute(cls.QUERY_CREATE_KEYSPACE.format(
                     keyspace=keyspace,
                     replication=str(replication),
                 ))
-                session.set_keyspace(keyspace)
-                cls.__session = session
+                cls.__session.set_keyspace(keyspace)
             return cls.__session
 
         @classmethod
