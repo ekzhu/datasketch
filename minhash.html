@@ -1,10 +1,10 @@
 
 <!DOCTYPE html>
 
-<html>
+<html lang="en">
   <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
 
     <title>MinHash &#8212; datasketch 1.0.0 documentation</title>
     <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
@@ -12,6 +12,7 @@
     <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
     <script src="_static/jquery.js"></script>
     <script src="_static/underscore.js"></script>
+    <script src="_static/_sphinx_javascript_frameworks_compat.js"></script>
     <script src="_static/doctools.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
@@ -80,7 +81,7 @@
     </form>
     </div>
 </div>
-<script>$('#searchbox').show(0);</script>
+<script>document.getElementById('searchbox').style.display = "block"</script>
         </div>
       </div>
       <div class="documentwrapper">
@@ -90,7 +91,7 @@
           <div class="body" role="main">
             
   <section id="minhash">
-<span id="id1"></span><h1>MinHash<a class="headerlink" href="#minhash" title="Permalink to this headline">¶</a></h1>
+<span id="id1"></span><h1>MinHash<a class="headerlink" href="#minhash" title="Permalink to this heading">¶</a></h1>
 <p><a class="reference internal" href="documentation.html#datasketch.MinHash" title="datasketch.MinHash"><code class="xref py py-class docutils literal notranslate"><span class="pre">datasketch.MinHash</span></code></a> lets you estimate the <a class="reference external" href="https://en.wikipedia.org/wiki/Jaccard_index">Jaccard
 similarity</a>
 (resemblance) between
@@ -155,7 +156,7 @@ cardinality. The analysis is presented in <a class="reference external" href="ht
 <p>If you are handling billions of MinHash objects, consider using
 <a class="reference internal" href="documentation.html#datasketch.LeanMinHash" title="datasketch.LeanMinHash"><code class="xref py py-class docutils literal notranslate"><span class="pre">datasketch.LeanMinHash</span></code></a> to reduce your memory footprint.</p>
 <section id="use-different-hash-functions">
-<h2>Use Different Hash Functions<a class="headerlink" href="#use-different-hash-functions" title="Permalink to this headline">¶</a></h2>
+<h2>Use Different Hash Functions<a class="headerlink" href="#use-different-hash-functions" title="Permalink to this heading">¶</a></h2>
 <p>MinHash by default uses the SHA1 hash funciton from Python’s built-in
 <a class="reference external" href="https://docs.python.org/3.7/library/hashlib.html">hashlib</a> library.
 You can also change the hash function using the <cite>hashfunc</cite> parameter
@@ -190,7 +191,7 @@ available in Python.</p>
 </figure>
 </section>
 <section id="common-issues-with-minhash">
-<h2>Common Issues with MinHash<a class="headerlink" href="#common-issues-with-minhash" title="Permalink to this headline">¶</a></h2>
+<h2>Common Issues with MinHash<a class="headerlink" href="#common-issues-with-minhash" title="Permalink to this heading">¶</a></h2>
 <ol class="arabic simple">
 <li><p><a class="reference external" href="https://github.com/ekzhu/datasketch/issues/85">High estimation error when set sizes differ by a lot</a></p></li>
 <li><p><a class="reference external" href="https://github.com/ekzhu/datasketch/issues/85">Use Inclusion-Exclusion Principle (i.e., merge() and count() functions) instead of jaccard() to estimate similarity</a></p></li>
@@ -211,7 +212,7 @@ available in Python.</p>
       &copy;2022, Eric Zhu.
       
       |
-      Powered by <a href="http://sphinx-doc.org/">Sphinx 4.4.0</a>
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 5.0.1</a>
       &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
       
       |
