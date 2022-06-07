@@ -22,10 +22,11 @@ except ImportError:
     ReturnDocument = None
 
 try:
-    import redis.asyncio as redis
+    import redis
 
-    if metadata.version("redis") < '4.2.0rc1':
+    if redis.__version__ < '4.2.0rc1':
         raise ImportError("Can't use AsyncMinHashLSH module. Redis version should be >=4.2.0rc1")
+    import redis.asyncio as redis
 except ImportError:
     redis = None
 
