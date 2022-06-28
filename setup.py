@@ -27,6 +27,9 @@ setup(
     description='Probabilistic data structures for processing and searching very large datasets',
     long_description=long_description,
     url='https://ekzhu.github.io/datasketch',
+    project_urls={
+        'Source': 'https://github.com/ekzhu/datasketch',
+    },
     author='ekzhu',
     author_email='ekzhu@cs.toronto.edu',
     license='MIT',
