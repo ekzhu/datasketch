@@ -388,7 +388,7 @@ if cassandra is not None:
             # only one Cassandra table for both table types (so we can keep one single storage) and
             # we specify different encoders/decoders based on the table type.
             if b'bucket' in name:
-                basename, _, ret = name.split(b'_')
+                basename, _, ret = name.split(b'_', 2)
                 name = basename + b'_bucket_' + binascii.hexlify(ret)
                 self._key_decoder = lambda x: x
                 self._key_encoder = lambda x: x
