@@ -39,6 +39,16 @@ class TestMinHashLSH(unittest.TestCase):
             lsh.insert("m", m)
             sizes = [len(H) for ht in lsh.hashtables for H in ht]
             self.assertTrue(all(sizes[0] == s for s in sizes))
+    
+    def test_unpacking(self):
+        for b in range(1, 1024 + 1):
+            lsh = MinHashLSH(num_perm=b * 4, params=(b, 4))
+            m = MinHash(num_perm=b * 4)
+            m.update("abcdefg".encode("utf8"))
+            m.update("1234567".encode("utf8"))
+            lsh.insert("m", m)
+            sizes = [len(H) for ht in lsh.hashtables for H in ht]
+            self.assertTrue(all(sizes[0] == s for s in sizes))
 
     def test_insert(self):
         lsh = MinHashLSH(threshold=0.5, num_perm=16)
