@@ -373,7 +373,7 @@ To bulk remove keys from LSH index using asynchronous MinHash LSH.
                 fs = (session.remove(key) for key in keys_to_remove)
                 await asyncio.gather(*fs)
 
-If you also use `AsyncMinHashLSH` with redis, just change the storage config.
+For `AsyncMinHashLSH` with redis, put your redis configurations in the storage config under the key `redis`.
 
 .. code:: python
 
