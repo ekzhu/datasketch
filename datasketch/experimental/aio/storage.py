@@ -8,7 +8,7 @@ import asyncio
 
 from itertools import chain
 
-from datasketch.storage import UnorderedStorage, OrderedStorage, _random_name
+from datasketch.storage import UnorderedStorage, OrderedStorage, _random_name, RedisStorage, RedisBuffer, Storage
 from abc import ABCMeta
 
 ABC = ABCMeta('ABC', (object,), {})
@@ -20,6 +20,15 @@ except ImportError:
     motor = None
     ReturnDocument = None
 
+try:
+    import redis
+
+    if redis.__version__ < '4.2.0rc1':
+        raise ImportError("Can't use AsyncMinHashLSH module. Redis version should be >=4.2.0rc1")
+    import redis.asyncio as redis
+except ImportError:
+    redis = None
+
 
 async def async_ordered_storage(config, name=None):
     tp = config['type']
@@ -27,7 +36,10 @@ async def async_ordered_storage(config, name=None):
         if motor is None:
             raise RuntimeError('motor is not installed')
         return AsyncMongoListStorage(config, name=name)
-
+    elif tp == 'aioredis':
+        if redis is None:
+            raise RuntimeError('redis is not installed')
+        return AsyncRedisListStorage(config, name=name)
     raise ValueError('Unknown config ["type"]')
 
 
@@ -37,7 +49,10 @@ async def async_unordered_storage(config, name=None):
         if motor is None:
             raise RuntimeError('motor is not installed')
         return AsyncMongoSetStorage(config, name=name)
-
+    elif tp == 'aioredis':
+        if redis is None:
+            raise RuntimeError('redis is not installed')
+        return AsyncRedisSetStorage(config, name=name)
     raise ValueError('Unknown config ["type"]')
 
 
@@ -269,3 +284,143 @@ if motor is not None and ReturnDocument is not None:
                 await self._buffer.delete_many_by_val(val=val)
             else:
                 await self._collection.find_one_and_delete({'key': key, 'vals': val})
+
+if redis is not None:
+    class AsyncRedisBuffer(redis.client.Pipeline):
+        def __init__(self, connection_pool, response_callbacks, transaction, buffer_size,
+                     shard_hint=None):
+            self._buffer_size = buffer_size
+            super(AsyncRedisBuffer, self).__init__(
+                connection_pool, response_callbacks, transaction,
+                shard_hint=shard_hint)
+
+        @property
+        def buffer_size(self):
+            return self._buffer_size
+
+        @buffer_size.setter
+        def buffer_size(self, value):
+            self._buffer_size = value
+
+        async def execute_command(self, *args, **kwargs):
+            if len(self.command_stack) >= self._buffer_size:
+                self.execute()
+            await super(AsyncRedisBuffer, self).execute_command(*args, **kwargs)
+
+
+    class AsyncRedisStorage(RedisStorage):
+        def __init__(self, config, name=None):
+            super(AsyncRedisStorage, self).__init__(config, name)
+            self.config = config
+            self._buffer_size = 50000
+            redis_param = self._parse_config(self.config['redis'])
+            self._redis = redis.Redis(**redis_param)
+            redis_buffer_param = self._parse_config(self.config.get('redis_buffer', {}))
+            self._buffer = AsyncRedisBuffer(self._redis.connection_pool,
+                                            self._redis.response_callbacks,
+                                            transaction=redis_buffer_param.get('transaction', True),
+                                            buffer_size=self._buffer_size)
+            self._initialized = True
+
+        @property
+        def initialized(self):
+            return self._initialized
+
+
+    class AsyncRedisListStorage(OrderedStorage, AsyncRedisStorage):
+        async def keys(self):
+            return await self._redis.hkeys(self._name)
+
+        async def redis_keys(self):
+            return await self._redis.hvals(self._name)
+
+        def status(self):
+            status = self._parse_config(self.config['redis'])
+            status.update(Storage.status(self))
+            return status
+
+        async def get(self, key):
+            return await self._get_items(self._redis, self.redis_key(key))
+
+        async def getmany(self, *keys):
+            pipe = self._redis.pipeline()
+            pipe.multi()
+            for key in keys:
+                await self._get_items(pipe, self.redis_key(key))
+            return await pipe.execute()
+
+        @staticmethod
+        async def _get_items(r, k):
+            return await r.lrange(k, 0, -1)
+
+        async def remove(self, *keys):
+            await self._redis.hdel(self._name, *keys)
+            await self._redis.delete(*[self.redis_key(key) for key in keys])
+
+        async def remove_val(self, key, val):
+            redis_key = self.redis_key(key)
+            await self._redis.lrem(redis_key, val)
+            if not await self._redis.exists(redis_key):
+                await self._redis.hdel(self._name, redis_key)
+
+        async def insert(self, key, *vals, **kwargs):
+            # Using buffer=True outside of an `insertion_session`
+            # could lead to inconsistencies, because those
+            # insertion will not be processed until the
+            # buffer is cleared
+            buffer = kwargs.pop('buffer', False)
+            if buffer:
+                await self._insert(self._buffer, key, *vals)
+            else:
+                await self._insert(self._redis, key, *vals)
+
+        async def _insert(self, r, key, *values):
+            redis_key = self.redis_key(key)
+            await r.hset(self._name, key, redis_key)
+            await r.rpush(redis_key, *values)
+
+        async def size(self):
+            return await self._redis.hlen(self._name)
+
+        async def itemcounts(self):
+            pipe = self._redis.pipeline()
+            pipe.multi()
+            ks = await self.keys()
+            for k in ks:
+                await self._get_len(pipe, self.redis_key(k))
+            d = dict(zip(ks, await pipe.execute()))
+            return d
+
+        @staticmethod
+        async def _get_len(r, k):
+            return await r.llen(k)
+
+        async def has_key(self, key):
+            return await self._redis.hexists(self._name, key)
+
+        async def empty_buffer(self):
+            await self._buffer.execute()
+            # To avoid broken pipes, recreate the connection
+            # objects upon emptying the buffer
+            self.__init__(self.config, name=self._name)
+
+
+    class AsyncRedisSetStorage(UnorderedStorage, AsyncRedisListStorage):
+        @staticmethod
+        async def _get_items(r, k):
+            return await r.smembers(k)
+
+        async def remove_val(self, key, val):
+            redis_key = self.redis_key(key)
+            await self._redis.srem(redis_key, val)
+            if not await self._redis.exists(redis_key):
+                await self._redis.hdel(self._name, redis_key)
+
+        async def _insert(self, r, key, *values):
+            redis_key = self.redis_key(key)
+            await r.hset(self._name, key, redis_key)
+            await r.sadd(redis_key, *values)
+
+        @staticmethod
+        async def _get_len(r, k):
+            return await r.scard(k)

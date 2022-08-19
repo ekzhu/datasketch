@@ -1,3 +1,4 @@
+import pickle
 import sys
 
 if sys.version_info < (3, 6):
@@ -25,7 +26,9 @@ class AsyncMinHashLSH(object):
     :param dict storage_config: New type of storage service - aiomongo - to use for storing
                                 hashtables and keys are implemented.
                                 If storage_config is None aiomongo storage will be used.
-
+    :param prepickle (bool, optional): If True, all keys are pickled to bytes before
+            insertion. If None, a default value is chosen based on the
+            `storage_config`.
     For example usage see :ref:`minhash_lsh_async`.
 
     Example of supported storage configuration:
@@ -40,8 +43,8 @@ class AsyncMinHashLSH(object):
         * For additional information see :ref:`minhash_lsh_at_scale` and :ref:`minhash_lsh_async`
     """
 
-    def __init__(self, threshold: float=0.9, num_perm: int=128, weights: Tuple[float, float] =(0.5, 0.5),
-                 params: Tuple[int, int]=None, storage_config: Dict=None):
+    def __init__(self, threshold: float = 0.9, num_perm: int = 128, weights: Tuple[float, float] = (0.5, 0.5),
+                 params: Tuple[int, int] = None, storage_config: Dict = None, prepickle: bool = None):
         if storage_config is None:
             storage_config = {
                 'type': 'aiomongo',
@@ -55,6 +58,7 @@ class AsyncMinHashLSH(object):
         self._num_perm = num_perm
         self._weights = weights
         self._params = params
+        self.prepickle = storage_config['type'] == 'aioredis' if prepickle is None else prepickle
 
         if self._threshold > 1.0 or self._threshold < 0.0:
             raise ValueError("threshold must be in [0.0, 1.0]")
@@ -263,6 +267,9 @@ class AsyncMinHashLSH(object):
         if len(minhash) != self.h:
             raise ValueError("Expecting minhash with length %d, "
                              "got %d" % (self.h, len(minhash)))
+        if self.prepickle:
+            key = pickle.dumps(key)
+
         if check_duplication and await self.has_key(key):
             raise ValueError("The given key already exists")
         Hs = [self._H(minhash.hashvalues[start:end])
@@ -283,8 +290,10 @@ class AsyncMinHashLSH(object):
         fs = (hashtable.get(self._H(minhash.hashvalues[start:end]))
               for (start, end), hashtable in zip(self.hashranges, self.hashtables))
         candidates = frozenset(chain.from_iterable(await asyncio.gather(*fs)))
-
-        return list(candidates)
+        if self.prepickle:
+            return [pickle.loads(key) for key in candidates]
+        else:
+            return list(candidates)
 
     async def has_key(self, key):
         """

@@ -237,7 +237,7 @@ in streaming/batch mode using asynchronous RESTful API (for example, aiohttp)
 for clustering tasks,
 and maximize the throughput of your service.
 
-We currently provide asynchronous MongoDB storage (*python motor package*)
+We currently provide asynchronous MongoDB storage (*python motor package*) and Redis storage.
 
 For sharing across different Python
 processes see :ref:`minhash_lsh_at_scale`.
@@ -373,6 +373,13 @@ To bulk remove keys from LSH index using asynchronous MinHash LSH.
                 fs = (session.remove(key) for key in keys_to_remove)
                 await asyncio.gather(*fs)
 
+For `AsyncMinHashLSH` with redis, put your redis configurations in the storage config under the key `redis`.
+
+.. code:: python
+
+    _storage = {'type': 'aioredis', 'redis': {'host': '127.0.0.1', 'port': '6379'}}
+
+The `redis` key in `_storage` is passed in `redis.Redis` directly, which mean you can pass custom args for redis yourself.
 
 Common Issues with MinHash LSH
 ------------------------------
@@ -384,4 +391,3 @@ Common Issues with MinHash LSH
 5. `Combining/Storing LSH with different thresholds <https://github.com/ekzhu/datasketch/issues/93>`__
 
 `See more issues <https://github.com/ekzhu/datasketch/issues?utf8=%E2%9C%93&q=lsh>`__
-
