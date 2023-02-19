@@ -7,16 +7,15 @@ name: Python Test and Publish Doc.
 on: [push, pull_request]
 
 jobs:
-  service:
-    cassandra:
-      image: cassandra
   build:
     runs-on: "ubuntu-latest"
     strategy:
       matrix:
         python-version: ["3.7", "3.8", "3.9", "3.10", "3.11"]
         mongodb-version: ["latest"]
-
+    services:
+      cassandra:
+        image: cassandra
     steps:
       - uses: actions/checkout@v3
       - name: Setup Cassandra
