@@ -103,7 +103,7 @@ class MinHashLSHEnsemble(object):
     .. _`the paper`: http://www.vldb.org/pvldb/vol9/p1185-zhu.pdf
     '''
 
-    def __init__(self, threshold=0.9, num_perm=128, num_part=16, m=8, 
+    def __init__(self, threshold=0.9, num_perm=128, num_part=16, m=8,
             weights=(0.5,0.5), storage_config=None, prepickle=None):
         if threshold > 1.0 or threshold < 0.0:
             raise ValueError("threshold must be in [0.0, 1.0]")
@@ -142,7 +142,7 @@ class MinHashLSHEnsemble(object):
                                                xq,
                                                false_positive_weight,
                                                false_negative_weight)
-                                for xq in self.xqs], dtype=np.int)
+                                for xq in self.xqs], dtype=int)
         # Find all unique r
         rs = set()
         for _, r in self.params:
@@ -154,7 +154,7 @@ class MinHashLSHEnsemble(object):
         if i == len(self.params):
             i = i - 1
         return self.params[i]
-    
+
     def _get_storage_config(self, basename, base_config, partition, r):
         config = dict(base_config)
         config["basename"] = b"-".join(
@@ -200,7 +200,7 @@ class MinHashLSHEnsemble(object):
                 curr_part += 1
             for r in self.indexes[curr_part]:
                 self.indexes[curr_part][r].insert(key, minhash)
-    
+
     def query(self, minhash, size):
         '''
         Giving the MinHash and size of the query set, retrieve

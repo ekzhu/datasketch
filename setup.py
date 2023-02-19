@@ -81,6 +81,7 @@ setup(
             'pymongo>=3.9.0',
             'nose>=1.3.7',
             'nose-exclude>=0.5.0',
+            'pytest',
         ],
         'experimental_aio': [
             "aiounittest ; python_version>='3.6'",

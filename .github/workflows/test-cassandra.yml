@@ -1,0 +1,53 @@
+name: Test Cassandra
+
+on:
+  workflow_run:
+    workflows:
+      - Test
+    types:
+      - completed
+
+jobs:
+  build:
+    runs-on: "ubuntu-latest"
+    strategy:
+      matrix:
+        # python-version: ["3.7", "3.8", "3.9", "3.10", "3.11"]
+        python-version: ["3.11"]
+    services:
+      cassandra:
+        image: cassandra
+        ports:
+          - 9042:9042
+        options: --health-cmd "cqlsh --debug" --health-interval 5s --health-retries 10
+    steps:
+      - uses: actions/checkout@v3
+      # - name: Setup Cassandra
+      #   uses: fabasoad/setup-cassandra-action@v1.0.2
+      # - name: Install and Start Cassandra
+      #   run: |
+      #     echo "deb http://debian.datastax.com/community stable main" | sudo tee -a /etc/apt/sources.list.d/cassandra.sources.list
+      #     curl -L http://debian.datastax.com/debian/repo_key | sudo apt-key add -
+      #     sudo apt-get update
+      #     sudo apt-get install openjdk-8-jdk
+      #     java -version
+      #     sudo apt-get install cassandra cython3
+      #     bash travis/wait_for_cassandra.sh
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v4
+        with:
+          python-version: ${{ matrix.python-version }}
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install flake8 pytest
+          if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
+      - name: Install package
+        run: |
+          # Disable Cassandra optional extensions (faster testing).
+          export CASS_DRIVER_NO_EXTENSIONS=1
+          pip install -e .[test,experimental_aio]
+      - name: Test with pytest
+        run: |
+          export DO_TEST_CASSANDRA=true
+          pytest

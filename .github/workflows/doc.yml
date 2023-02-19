@@ -1,0 +1,40 @@
+name: Documentation
+
+on:
+  workflow_run:
+    workflows: ["Test", "Test Mongo", "Test Cassandra"]
+    types:
+      - completed
+    branches:
+      - master
+
+jobs:
+  build:
+    runs-on: "ubuntu-latest"
+    steps:
+      - uses: actions/checkout@v3
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v4
+        with:
+          python-version: "3.x"
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install flake8 pytest
+      - name: Install package
+        run: |
+          # Disable Cassandra optional extensions (faster testing).
+          export CASS_DRIVER_NO_EXTENSIONS=1
+          pip install -e .
+      - name: Compile documentation
+        run: |
+          python -m pip install sphinx
+          cd docs
+          make html
+      - name: Deploy to GitHub pages
+        uses: JamesIves/github-pages-deploy-action@v4
+        with:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          BRANCH: gh-pages
+          FOLDER: docs/_build/html
+          CLEAN: true
