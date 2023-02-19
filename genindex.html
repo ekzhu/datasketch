@@ -9,10 +9,8 @@
     <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
     <link rel="stylesheet" type="text/css" href="_static/alabaster.css" />
     <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
-    <script src="_static/jquery.js"></script>
-    <script src="_static/underscore.js"></script>
-    <script src="_static/_sphinx_javascript_frameworks_compat.js"></script>
     <script src="_static/doctools.js"></script>
+    <script src="_static/sphinx_highlight.js"></script>
     <link rel="index" title="Index" href="#" />
     <link rel="search" title="Search" href="search.html" />
    
@@ -122,6 +120,12 @@
         <li><a href="documentation.html#datasketch.WeightedMinHash.__eq__">(datasketch.WeightedMinHash method)</a>
 </li>
       </ul></li>
+      <li><a href="documentation.html#datasketch.HyperLogLog.__getstate__">__getstate__() (datasketch.HyperLogLog method)</a>
+
+      <ul>
+        <li><a href="documentation.html#datasketch.LeanMinHash.__getstate__">(datasketch.LeanMinHash method)</a>
+</li>
+      </ul></li>
       <li><a href="documentation.html#datasketch.HyperLogLog.__hash__">__hash__ (datasketch.HyperLogLog attribute)</a>
 
       <ul>
@@ -132,11 +136,9 @@
       </ul></li>
       <li><a href="documentation.html#datasketch.LeanMinHash.__hash__">__hash__() (datasketch.LeanMinHash method)</a>
 </li>
-      <li><a href="documentation.html#datasketch.experimental.aio.lsh.AsyncMinHashLSH.__init__">__init__() (datasketch.experimental.aio.lsh.AsyncMinHashLSH method)</a>
+      <li><a href="documentation.html#datasketch.HyperLogLog.__init__">__init__() (datasketch.HyperLogLog method)</a>
 
       <ul>
-        <li><a href="documentation.html#datasketch.HyperLogLog.__init__">(datasketch.HyperLogLog method)</a>
-</li>
         <li><a href="documentation.html#datasketch.HyperLogLogPlusPlus.__init__">(datasketch.HyperLogLogPlusPlus method)</a>
 </li>
         <li><a href="documentation.html#datasketch.LeanMinHash.__init__">(datasketch.LeanMinHash method)</a>
@@ -164,11 +166,9 @@
         <li><a href="documentation.html#datasketch.WeightedMinHash.__len__">(datasketch.WeightedMinHash method)</a>
 </li>
       </ul></li>
-      <li><a href="documentation.html#datasketch.experimental.aio.lsh.AsyncMinHashLSH.__weakref__">__weakref__ (datasketch.experimental.aio.lsh.AsyncMinHashLSH attribute)</a>
+      <li><a href="documentation.html#datasketch.HyperLogLogPlusPlus.__weakref__">__weakref__ (datasketch.HyperLogLogPlusPlus attribute)</a>
 
       <ul>
-        <li><a href="documentation.html#datasketch.HyperLogLogPlusPlus.__weakref__">(datasketch.HyperLogLogPlusPlus attribute)</a>
-</li>
         <li><a href="documentation.html#datasketch.MinHash.__weakref__">(datasketch.MinHash attribute)</a>
 </li>
         <li><a href="documentation.html#datasketch.MinHashLSH.__weakref__">(datasketch.MinHashLSH attribute)</a>
@@ -194,8 +194,6 @@
   <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="documentation.html#datasketch.MinHashLSH.add_to_query_buffer">add_to_query_buffer() (datasketch.MinHashLSH method)</a>
 </li>
-      <li><a href="documentation.html#datasketch.experimental.aio.lsh.AsyncMinHashLSH">AsyncMinHashLSH (class in datasketch.experimental.aio.lsh)</a>
-</li>
   </ul></td>
 </tr></table>
 
@@ -220,8 +218,6 @@
         <li><a href="documentation.html#datasketch.MinHash.clear">(datasketch.MinHash method)</a>
 </li>
       </ul></li>
-      <li><a href="documentation.html#datasketch.experimental.aio.lsh.AsyncMinHashLSH.close">close() (datasketch.experimental.aio.lsh.AsyncMinHashLSH method)</a>
-</li>
       <li><a href="documentation.html#datasketch.MinHashLSH.collect_query_buffer">collect_query_buffer() (datasketch.MinHashLSH method)</a>
 </li>
       <li><a href="documentation.html#datasketch.HyperLogLog.copy">copy() (datasketch.HyperLogLog method)</a>
@@ -250,12 +246,8 @@
 <h2 id="D">D</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="documentation.html#datasketch.experimental.aio.lsh.AsyncMinHashLSH.delete_session">delete_session() (datasketch.experimental.aio.lsh.AsyncMinHashLSH method)</a>
-</li>
       <li><a href="documentation.html#datasketch.LeanMinHash.deserialize">deserialize() (datasketch.LeanMinHash class method)</a>
 </li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="documentation.html#datasketch.HyperLogLog.digest">digest() (datasketch.HyperLogLog method)</a>
 
       <ul>
@@ -272,32 +264,22 @@
   <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="documentation.html#datasketch.MinHash.generator">generator() (datasketch.MinHash class method)</a>
 </li>
-      <li><a href="documentation.html#datasketch.experimental.aio.lsh.AsyncMinHashLSH.get_counts">get_counts() (datasketch.experimental.aio.lsh.AsyncMinHashLSH method)</a>
-
-      <ul>
-        <li><a href="documentation.html#datasketch.MinHashLSH.get_counts">(datasketch.MinHashLSH method)</a>
-</li>
-      </ul></li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="documentation.html#datasketch.experimental.aio.lsh.AsyncMinHashLSH.get_subset_counts">get_subset_counts() (datasketch.experimental.aio.lsh.AsyncMinHashLSH method)</a>
-
-      <ul>
-        <li><a href="documentation.html#datasketch.MinHashLSH.get_subset_counts">(datasketch.MinHashLSH method)</a>
+      <li><a href="documentation.html#datasketch.MinHashLSH.get_counts">get_counts() (datasketch.MinHashLSH method)</a>
 </li>
-      </ul></li>
+      <li><a href="documentation.html#datasketch.MinHashLSH.get_subset_counts">get_subset_counts() (datasketch.MinHashLSH method)</a>
+</li>
   </ul></td>
 </tr></table>
 
 <h2 id="H">H</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="documentation.html#datasketch.experimental.aio.lsh.AsyncMinHashLSH.has_key">has_key() (datasketch.experimental.aio.lsh.AsyncMinHashLSH method)</a>
+      <li><a href="documentation.html#datasketch.HyperLogLog">HyperLogLog (class in datasketch)</a>
 </li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="documentation.html#datasketch.HyperLogLog">HyperLogLog (class in datasketch)</a>
-</li>
       <li><a href="documentation.html#datasketch.HyperLogLogPlusPlus">HyperLogLogPlusPlus (class in datasketch)</a>
 </li>
   </ul></td>
@@ -312,25 +294,15 @@
         <li><a href="documentation.html#datasketch.MinHashLSHForest.index">(datasketch.MinHashLSHForest method)</a>
 </li>
       </ul></li>
-      <li><a href="documentation.html#datasketch.experimental.aio.lsh.AsyncMinHashLSH.insert">insert() (datasketch.experimental.aio.lsh.AsyncMinHashLSH method)</a>
-
-      <ul>
-        <li><a href="documentation.html#datasketch.MinHashLSH.insert">(datasketch.MinHashLSH method)</a>
+      <li><a href="documentation.html#datasketch.MinHashLSH.insert">insert() (datasketch.MinHashLSH method)</a>
 </li>
-      </ul></li>
-      <li><a href="documentation.html#datasketch.experimental.aio.lsh.AsyncMinHashLSH.insertion_session">insertion_session() (datasketch.experimental.aio.lsh.AsyncMinHashLSH method)</a>
-
-      <ul>
-        <li><a href="documentation.html#datasketch.MinHashLSH.insertion_session">(datasketch.MinHashLSH method)</a>
+      <li><a href="documentation.html#datasketch.MinHashLSH.insertion_session">insertion_session() (datasketch.MinHashLSH method)</a>
 </li>
-      </ul></li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="documentation.html#datasketch.experimental.aio.lsh.AsyncMinHashLSH.is_empty">is_empty() (datasketch.experimental.aio.lsh.AsyncMinHashLSH method)</a>
+      <li><a href="documentation.html#datasketch.HyperLogLog.is_empty">is_empty() (datasketch.HyperLogLog method)</a>
 
       <ul>
-        <li><a href="documentation.html#datasketch.HyperLogLog.is_empty">(datasketch.HyperLogLog method)</a>
-</li>
         <li><a href="documentation.html#datasketch.MinHash.is_empty">(datasketch.MinHash method)</a>
 </li>
         <li><a href="documentation.html#datasketch.MinHashLSH.is_empty">(datasketch.MinHashLSH method)</a>
@@ -392,11 +364,9 @@
 <h2 id="Q">Q</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="documentation.html#datasketch.experimental.aio.lsh.AsyncMinHashLSH.query">query() (datasketch.experimental.aio.lsh.AsyncMinHashLSH method)</a>
+      <li><a href="documentation.html#datasketch.MinHashLSH.query">query() (datasketch.MinHashLSH method)</a>
 
       <ul>
-        <li><a href="documentation.html#datasketch.MinHashLSH.query">(datasketch.MinHashLSH method)</a>
-</li>
         <li><a href="documentation.html#datasketch.MinHashLSHEnsemble.query">(datasketch.MinHashLSHEnsemble method)</a>
 </li>
         <li><a href="documentation.html#datasketch.MinHashLSHForest.query">(datasketch.MinHashLSHForest method)</a>
@@ -408,12 +378,8 @@
 <h2 id="R">R</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="documentation.html#datasketch.experimental.aio.lsh.AsyncMinHashLSH.remove">remove() (datasketch.experimental.aio.lsh.AsyncMinHashLSH method)</a>
-
-      <ul>
-        <li><a href="documentation.html#datasketch.MinHashLSH.remove">(datasketch.MinHashLSH method)</a>
+      <li><a href="documentation.html#datasketch.MinHashLSH.remove">remove() (datasketch.MinHashLSH method)</a>
 </li>
-      </ul></li>
   </ul></td>
 </tr></table>
 
@@ -470,11 +436,11 @@
     <div class="clearer"></div>
   </div>
     <div class="footer">
-      &copy;2022, Eric Zhu.
+      &copy;2023, Eric Zhu.
       
       |
-      Powered by <a href="http://sphinx-doc.org/">Sphinx 5.1.1</a>
-      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 6.1.3</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.13</a>
       
     </div>
 

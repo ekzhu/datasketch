@@ -9,10 +9,8 @@
     <link rel="stylesheet" type="text/css" href="../../_static/pygments.css" />
     <link rel="stylesheet" type="text/css" href="../../_static/alabaster.css" />
     <script data-url_root="../../" id="documentation_options" src="../../_static/documentation_options.js"></script>
-    <script src="../../_static/jquery.js"></script>
-    <script src="../../_static/underscore.js"></script>
-    <script src="../../_static/_sphinx_javascript_frameworks_compat.js"></script>
     <script src="../../_static/doctools.js"></script>
+    <script src="../../_static/sphinx_highlight.js"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
    
@@ -99,7 +97,7 @@
 <span class="n">_hash_range</span> <span class="o">=</span> <span class="p">(</span><span class="mi">1</span> <span class="o">&lt;&lt;</span> <span class="mi">32</span><span class="p">)</span>
 
 <div class="viewcode-block" id="MinHash"><a class="viewcode-back" href="../../documentation.html#datasketch.MinHash">[docs]</a><span class="k">class</span> <span class="nc">MinHash</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
-    <span class="sd">&#39;&#39;&#39;MinHash is a probabilistic data structure for computing</span>
+<span class="w">    </span><span class="sd">&#39;&#39;&#39;MinHash is a probabilistic data structure for computing</span>
 <span class="sd">    `Jaccard similarity`_ between sets.</span>
 
 <span class="sd">    Args:</span>
@@ -193,7 +191,7 @@
         <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">hashvalues</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">uint64</span><span class="p">)</span>
 
 <div class="viewcode-block" id="MinHash.update"><a class="viewcode-back" href="../../documentation.html#datasketch.MinHash.update">[docs]</a>    <span class="k">def</span> <span class="nf">update</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">b</span><span class="p">):</span>
-        <span class="sd">&#39;&#39;&#39;Update this MinHash with a new value.</span>
+<span class="w">        </span><span class="sd">&#39;&#39;&#39;Update this MinHash with a new value.</span>
 <span class="sd">        The value will be hashed using the hash function specified by</span>
 <span class="sd">        the `hashfunc` argument in the constructor.</span>
 
@@ -225,7 +223,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">hashvalues</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">minimum</span><span class="p">(</span><span class="n">phv</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">hashvalues</span><span class="p">)</span></div>
 
 <div class="viewcode-block" id="MinHash.update_batch"><a class="viewcode-back" href="../../documentation.html#datasketch.MinHash.update_batch">[docs]</a>    <span class="k">def</span> <span class="nf">update_batch</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">b</span><span class="p">):</span>
-        <span class="sd">&#39;&#39;&#39;Update this MinHash with new values.</span>
+<span class="w">        </span><span class="sd">&#39;&#39;&#39;Update this MinHash with new values.</span>
 <span class="sd">        The values will be hashed using the hash function specified by</span>
 <span class="sd">        the `hashfunc` argument in the constructor.</span>
 
@@ -247,7 +245,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">hashvalues</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">vstack</span><span class="p">([</span><span class="n">phv</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">hashvalues</span><span class="p">])</span><span class="o">.</span><span class="n">min</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span></div>
 
 <div class="viewcode-block" id="MinHash.jaccard"><a class="viewcode-back" href="../../documentation.html#datasketch.MinHash.jaccard">[docs]</a>    <span class="k">def</span> <span class="nf">jaccard</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
-        <span class="sd">&#39;&#39;&#39;Estimate the `Jaccard similarity`_ (resemblance) between the sets</span>
+<span class="w">        </span><span class="sd">&#39;&#39;&#39;Estimate the `Jaccard similarity`_ (resemblance) between the sets</span>
 <span class="sd">        represented by this MinHash and the other.</span>
 
 <span class="sd">        Args:</span>
@@ -266,7 +264,7 @@
                 <span class="nb">float</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="p">))</span></div>
 
 <div class="viewcode-block" id="MinHash.count"><a class="viewcode-back" href="../../documentation.html#datasketch.MinHash.count">[docs]</a>    <span class="k">def</span> <span class="nf">count</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&#39;&#39;&#39;Estimate the cardinality count based on the technique described in</span>
+<span class="w">        </span><span class="sd">&#39;&#39;&#39;Estimate the cardinality count based on the technique described in</span>
 <span class="sd">        `this paper &lt;http://ieeexplore.ieee.org/stamp/stamp.jsp?arnumber=365694&gt;`_.</span>
 
 <span class="sd">        Returns:</span>
@@ -276,7 +274,7 @@
         <span class="k">return</span> <span class="nb">float</span><span class="p">(</span><span class="n">k</span><span class="p">)</span> <span class="o">/</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">hashvalues</span> <span class="o">/</span> <span class="nb">float</span><span class="p">(</span><span class="n">_max_hash</span><span class="p">))</span> <span class="o">-</span> <span class="mf">1.0</span></div>
 
 <div class="viewcode-block" id="MinHash.merge"><a class="viewcode-back" href="../../documentation.html#datasketch.MinHash.merge">[docs]</a>    <span class="k">def</span> <span class="nf">merge</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
-        <span class="sd">&#39;&#39;&#39;Merge the other MinHash with this one, making this one the union</span>
+<span class="w">        </span><span class="sd">&#39;&#39;&#39;Merge the other MinHash with this one, making this one the union</span>
 <span class="sd">        of both.</span>
 
 <span class="sd">        Args:</span>
@@ -291,7 +289,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">hashvalues</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">minimum</span><span class="p">(</span><span class="n">other</span><span class="o">.</span><span class="n">hashvalues</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">hashvalues</span><span class="p">)</span></div>
 
 <div class="viewcode-block" id="MinHash.digest"><a class="viewcode-back" href="../../documentation.html#datasketch.MinHash.digest">[docs]</a>    <span class="k">def</span> <span class="nf">digest</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&#39;&#39;&#39;Export the hash values, which is the internal state of the</span>
+<span class="w">        </span><span class="sd">&#39;&#39;&#39;Export the hash values, which is the internal state of the</span>
 <span class="sd">        MinHash.</span>
 
 <span class="sd">        Returns:</span>
@@ -300,7 +298,7 @@
         <span class="k">return</span> <span class="n">copy</span><span class="o">.</span><span class="n">copy</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">hashvalues</span><span class="p">)</span></div>
 
 <div class="viewcode-block" id="MinHash.is_empty"><a class="viewcode-back" href="../../documentation.html#datasketch.MinHash.is_empty">[docs]</a>    <span class="k">def</span> <span class="nf">is_empty</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&#39;&#39;&#39;</span>
+<span class="w">        </span><span class="sd">&#39;&#39;&#39;</span>
 <span class="sd">        Returns:</span>
 <span class="sd">            bool: If the current MinHash is empty - at the state of just</span>
 <span class="sd">                initialized.</span>
@@ -310,14 +308,14 @@
         <span class="k">return</span> <span class="kc">True</span></div>
 
 <div class="viewcode-block" id="MinHash.clear"><a class="viewcode-back" href="../../documentation.html#datasketch.MinHash.clear">[docs]</a>    <span class="k">def</span> <span class="nf">clear</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&#39;&#39;&#39;</span>
+<span class="w">        </span><span class="sd">&#39;&#39;&#39;</span>
 <span class="sd">        Clear the current state of the MinHash.</span>
 <span class="sd">        All hash values are reset.</span>
 <span class="sd">        &#39;&#39;&#39;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">hashvalues</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_init_hashvalues</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="p">))</span></div>
 
 <div class="viewcode-block" id="MinHash.copy"><a class="viewcode-back" href="../../documentation.html#datasketch.MinHash.copy">[docs]</a>    <span class="k">def</span> <span class="nf">copy</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&#39;&#39;&#39;</span>
+<span class="w">        </span><span class="sd">&#39;&#39;&#39;</span>
 <span class="sd">        :returns: datasketch.MinHash -- A copy of this MinHash by exporting its state.</span>
 <span class="sd">        &#39;&#39;&#39;</span>
         <span class="k">return</span> <span class="n">MinHash</span><span class="p">(</span><span class="n">seed</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">seed</span><span class="p">,</span> <span class="n">hashfunc</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">hashfunc</span><span class="p">,</span>
@@ -325,13 +323,13 @@
                 <span class="n">permutations</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">permutations</span><span class="p">)</span></div>
 
 <div class="viewcode-block" id="MinHash.__len__"><a class="viewcode-back" href="../../documentation.html#datasketch.MinHash.__len__">[docs]</a>    <span class="k">def</span> <span class="fm">__len__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&#39;&#39;&#39;</span>
+<span class="w">        </span><span class="sd">&#39;&#39;&#39;</span>
 <span class="sd">        :returns: int -- The number of hash values.</span>
 <span class="sd">        &#39;&#39;&#39;</span>
         <span class="k">return</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">hashvalues</span><span class="p">)</span></div>
 
 <div class="viewcode-block" id="MinHash.__eq__"><a class="viewcode-back" href="../../documentation.html#datasketch.MinHash.__eq__">[docs]</a>    <span class="k">def</span> <span class="fm">__eq__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
-        <span class="sd">&#39;&#39;&#39;</span>
+<span class="w">        </span><span class="sd">&#39;&#39;&#39;</span>
 <span class="sd">        :returns: bool -- If their seeds and hash values are both equal then two are equivalent.</span>
 <span class="sd">        &#39;&#39;&#39;</span>
         <span class="k">return</span> <span class="nb">type</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="ow">is</span> <span class="nb">type</span><span class="p">(</span><span class="n">other</span><span class="p">)</span> <span class="ow">and</span> \
@@ -340,7 +338,7 @@
 
 <div class="viewcode-block" id="MinHash.union"><a class="viewcode-back" href="../../documentation.html#datasketch.MinHash.union">[docs]</a>    <span class="nd">@classmethod</span>
     <span class="k">def</span> <span class="nf">union</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="o">*</span><span class="n">mhs</span><span class="p">):</span>
-        <span class="sd">&#39;&#39;&#39;Create a MinHash which is the union of the MinHash objects passed as arguments.</span>
+<span class="w">        </span><span class="sd">&#39;&#39;&#39;Create a MinHash which is the union of the MinHash objects passed as arguments.</span>
 
 <span class="sd">        Args:</span>
 <span class="sd">            *mhs: The MinHash objects to be united. The argument list length is variable,</span>
@@ -363,7 +361,7 @@
 
 <div class="viewcode-block" id="MinHash.bulk"><a class="viewcode-back" href="../../documentation.html#datasketch.MinHash.bulk">[docs]</a>    <span class="nd">@classmethod</span>
     <span class="k">def</span> <span class="nf">bulk</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">b</span><span class="p">,</span> <span class="o">**</span><span class="n">minhash_kwargs</span><span class="p">):</span>
-        <span class="sd">&#39;&#39;&#39;Compute MinHashes in bulk. This method avoids unnecessary</span>
+<span class="w">        </span><span class="sd">&#39;&#39;&#39;Compute MinHashes in bulk. This method avoids unnecessary</span>
 <span class="sd">        overhead when initializing many minhashes by reusing the initialized</span>
 <span class="sd">        state.</span>
 
@@ -390,7 +388,7 @@
 
 <div class="viewcode-block" id="MinHash.generator"><a class="viewcode-back" href="../../documentation.html#datasketch.MinHash.generator">[docs]</a>    <span class="nd">@classmethod</span>
     <span class="k">def</span> <span class="nf">generator</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">b</span><span class="p">,</span> <span class="o">**</span><span class="n">minhash_kwargs</span><span class="p">):</span>
-        <span class="sd">&#39;&#39;&#39;Compute MinHashes in a generator. This method avoids unnecessary</span>
+<span class="w">        </span><span class="sd">&#39;&#39;&#39;Compute MinHashes in a generator. This method avoids unnecessary</span>
 <span class="sd">        overhead when initializing many minhashes by reusing the initialized</span>
 <span class="sd">        state.</span>
 
@@ -430,11 +428,11 @@
     <div class="clearer"></div>
   </div>
     <div class="footer">
-      &copy;2022, Eric Zhu.
+      &copy;2023, Eric Zhu.
       
       |
-      Powered by <a href="http://sphinx-doc.org/">Sphinx 5.1.1</a>
-      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 6.1.3</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.13</a>
       
     </div>
 

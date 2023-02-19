@@ -9,10 +9,8 @@
     <link rel="stylesheet" type="text/css" href="../../_static/pygments.css" />
     <link rel="stylesheet" type="text/css" href="../../_static/alabaster.css" />
     <script data-url_root="../../" id="documentation_options" src="../../_static/documentation_options.js"></script>
-    <script src="../../_static/jquery.js"></script>
-    <script src="../../_static/underscore.js"></script>
-    <script src="../../_static/_sphinx_javascript_frameworks_compat.js"></script>
     <script src="../../_static/doctools.js"></script>
+    <script src="../../_static/sphinx_highlight.js"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
    
@@ -94,7 +92,7 @@
 
 
 <span class="k">def</span> <span class="nf">_false_positive_probability</span><span class="p">(</span><span class="n">threshold</span><span class="p">,</span> <span class="n">b</span><span class="p">,</span> <span class="n">r</span><span class="p">,</span> <span class="n">xq</span><span class="p">):</span>
-    <span class="sd">&#39;&#39;&#39;</span>
+<span class="w">    </span><span class="sd">&#39;&#39;&#39;</span>
 <span class="sd">    Compute the false positive probability given the containment threshold.</span>
 <span class="sd">    xq is the ratio of x/q.</span>
 <span class="sd">    &#39;&#39;&#39;</span>
@@ -107,7 +105,7 @@
 
 
 <span class="k">def</span> <span class="nf">_false_negative_probability</span><span class="p">(</span><span class="n">threshold</span><span class="p">,</span> <span class="n">b</span><span class="p">,</span> <span class="n">r</span><span class="p">,</span> <span class="n">xq</span><span class="p">):</span>
-    <span class="sd">&#39;&#39;&#39;</span>
+<span class="w">    </span><span class="sd">&#39;&#39;&#39;</span>
 <span class="sd">    Compute the false negative probability given the containment threshold</span>
 <span class="sd">    &#39;&#39;&#39;</span>
     <span class="n">_probability</span> <span class="o">=</span> <span class="k">lambda</span> <span class="n">t</span> <span class="p">:</span> <span class="mi">1</span> <span class="o">-</span> <span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="p">(</span><span class="n">t</span><span class="o">/</span><span class="p">(</span><span class="mi">1</span> <span class="o">+</span> <span class="n">xq</span> <span class="o">-</span> <span class="n">t</span><span class="p">))</span><span class="o">**</span><span class="nb">float</span><span class="p">(</span><span class="n">r</span><span class="p">))</span><span class="o">**</span><span class="nb">float</span><span class="p">(</span><span class="n">b</span><span class="p">))</span>
@@ -122,7 +120,7 @@
 
 <span class="k">def</span> <span class="nf">_optimal_param</span><span class="p">(</span><span class="n">threshold</span><span class="p">,</span> <span class="n">num_perm</span><span class="p">,</span> <span class="n">max_r</span><span class="p">,</span> <span class="n">xq</span><span class="p">,</span> <span class="n">false_positive_weight</span><span class="p">,</span>
         <span class="n">false_negative_weight</span><span class="p">):</span>
-    <span class="sd">&#39;&#39;&#39;</span>
+<span class="w">    </span><span class="sd">&#39;&#39;&#39;</span>
 <span class="sd">    Compute the optimal parameters that minimizes the weighted sum</span>
 <span class="sd">    of probabilities of false positive and false negative.</span>
 <span class="sd">    xq is the ratio of x/q.</span>
@@ -143,7 +141,7 @@
 
 
 <div class="viewcode-block" id="MinHashLSHEnsemble"><a class="viewcode-back" href="../../documentation.html#datasketch.MinHashLSHEnsemble">[docs]</a><span class="k">class</span> <span class="nc">MinHashLSHEnsemble</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
-    <span class="sd">&#39;&#39;&#39;</span>
+<span class="w">    </span><span class="sd">&#39;&#39;&#39;</span>
 <span class="sd">    The :ref:`minhash_lsh_ensemble` index. It supports</span>
 <span class="sd">    :ref:`containment` queries.</span>
 <span class="sd">    The implementation is based on</span>
@@ -189,7 +187,7 @@
 <span class="sd">    .. _`the paper`: http://www.vldb.org/pvldb/vol9/p1185-zhu.pdf</span>
 <span class="sd">    &#39;&#39;&#39;</span>
 
-<div class="viewcode-block" id="MinHashLSHEnsemble.__init__"><a class="viewcode-back" href="../../documentation.html#datasketch.MinHashLSHEnsemble.__init__">[docs]</a>    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">threshold</span><span class="o">=</span><span class="mf">0.9</span><span class="p">,</span> <span class="n">num_perm</span><span class="o">=</span><span class="mi">128</span><span class="p">,</span> <span class="n">num_part</span><span class="o">=</span><span class="mi">16</span><span class="p">,</span> <span class="n">m</span><span class="o">=</span><span class="mi">8</span><span class="p">,</span> 
+<div class="viewcode-block" id="MinHashLSHEnsemble.__init__"><a class="viewcode-back" href="../../documentation.html#datasketch.MinHashLSHEnsemble.__init__">[docs]</a>    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">threshold</span><span class="o">=</span><span class="mf">0.9</span><span class="p">,</span> <span class="n">num_perm</span><span class="o">=</span><span class="mi">128</span><span class="p">,</span> <span class="n">num_part</span><span class="o">=</span><span class="mi">16</span><span class="p">,</span> <span class="n">m</span><span class="o">=</span><span class="mi">8</span><span class="p">,</span>
             <span class="n">weights</span><span class="o">=</span><span class="p">(</span><span class="mf">0.5</span><span class="p">,</span><span class="mf">0.5</span><span class="p">),</span> <span class="n">storage_config</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">prepickle</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
         <span class="k">if</span> <span class="n">threshold</span> <span class="o">&gt;</span> <span class="mf">1.0</span> <span class="ow">or</span> <span class="n">threshold</span> <span class="o">&lt;</span> <span class="mf">0.0</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;threshold must be in [0.0, 1.0]&quot;</span><span class="p">)</span>
@@ -228,7 +226,7 @@
                                                <span class="n">xq</span><span class="p">,</span>
                                                <span class="n">false_positive_weight</span><span class="p">,</span>
                                                <span class="n">false_negative_weight</span><span class="p">)</span>
-                                <span class="k">for</span> <span class="n">xq</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">xqs</span><span class="p">],</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">int</span><span class="p">)</span>
+                                <span class="k">for</span> <span class="n">xq</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">xqs</span><span class="p">],</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">int</span><span class="p">)</span>
         <span class="c1"># Find all unique r</span>
         <span class="n">rs</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
         <span class="k">for</span> <span class="n">_</span><span class="p">,</span> <span class="n">r</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">params</span><span class="p">:</span>
@@ -240,7 +238,7 @@
         <span class="k">if</span> <span class="n">i</span> <span class="o">==</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">params</span><span class="p">):</span>
             <span class="n">i</span> <span class="o">=</span> <span class="n">i</span> <span class="o">-</span> <span class="mi">1</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">params</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
-    
+
     <span class="k">def</span> <span class="nf">_get_storage_config</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">basename</span><span class="p">,</span> <span class="n">base_config</span><span class="p">,</span> <span class="n">partition</span><span class="p">,</span> <span class="n">r</span><span class="p">):</span>
         <span class="n">config</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="n">base_config</span><span class="p">)</span>
         <span class="n">config</span><span class="p">[</span><span class="s2">&quot;basename&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="sa">b</span><span class="s2">&quot;-&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span>
@@ -248,7 +246,7 @@
         <span class="k">return</span> <span class="n">config</span>
 
 <div class="viewcode-block" id="MinHashLSHEnsemble.index"><a class="viewcode-back" href="../../documentation.html#datasketch.MinHashLSHEnsemble.index">[docs]</a>    <span class="k">def</span> <span class="nf">index</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">entries</span><span class="p">):</span>
-        <span class="sd">&#39;&#39;&#39;</span>
+<span class="w">        </span><span class="sd">&#39;&#39;&#39;</span>
 <span class="sd">        Index all sets given their keys, MinHashes, and sizes.</span>
 <span class="sd">        It can be called only once after the index is created.</span>
 
@@ -286,9 +284,9 @@
                 <span class="n">curr_part</span> <span class="o">+=</span> <span class="mi">1</span>
             <span class="k">for</span> <span class="n">r</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">indexes</span><span class="p">[</span><span class="n">curr_part</span><span class="p">]:</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">indexes</span><span class="p">[</span><span class="n">curr_part</span><span class="p">][</span><span class="n">r</span><span class="p">]</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="n">minhash</span><span class="p">)</span></div>
-    
+
 <div class="viewcode-block" id="MinHashLSHEnsemble.query"><a class="viewcode-back" href="../../documentation.html#datasketch.MinHashLSHEnsemble.query">[docs]</a>    <span class="k">def</span> <span class="nf">query</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">minhash</span><span class="p">,</span> <span class="n">size</span><span class="p">):</span>
-        <span class="sd">&#39;&#39;&#39;</span>
+<span class="w">        </span><span class="sd">&#39;&#39;&#39;</span>
 <span class="sd">        Giving the MinHash and size of the query set, retrieve</span>
 <span class="sd">        keys that references sets with containment with respect to</span>
 <span class="sd">        the query set greater than the threshold.</span>
@@ -309,7 +307,7 @@
                 <span class="k">yield</span> <span class="n">key</span></div>
 
 <div class="viewcode-block" id="MinHashLSHEnsemble.__contains__"><a class="viewcode-back" href="../../documentation.html#datasketch.MinHashLSHEnsemble.__contains__">[docs]</a>    <span class="k">def</span> <span class="fm">__contains__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">):</span>
-        <span class="sd">&#39;&#39;&#39;</span>
+<span class="w">        </span><span class="sd">&#39;&#39;&#39;</span>
 <span class="sd">        Args:</span>
 <span class="sd">            key (hashable): The unique identifier of a set.</span>
 
@@ -320,7 +318,7 @@
                    <span class="k">for</span> <span class="n">index</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">indexes</span><span class="p">)</span></div>
 
 <div class="viewcode-block" id="MinHashLSHEnsemble.is_empty"><a class="viewcode-back" href="../../documentation.html#datasketch.MinHashLSHEnsemble.is_empty">[docs]</a>    <span class="k">def</span> <span class="nf">is_empty</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&#39;&#39;&#39;</span>
+<span class="w">        </span><span class="sd">&#39;&#39;&#39;</span>
 <span class="sd">        Returns:</span>
 <span class="sd">            bool: Check if the index is empty.</span>
 <span class="sd">        &#39;&#39;&#39;</span>
@@ -348,11 +346,11 @@
     <div class="clearer"></div>
   </div>
     <div class="footer">
-      &copy;2022, Eric Zhu.
+      &copy;2023, Eric Zhu.
       
       |
-      Powered by <a href="http://sphinx-doc.org/">Sphinx 5.1.1</a>
-      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 6.1.3</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.13</a>
       
     </div>
 
