@@ -780,6 +780,10 @@ by the vector.</p>
 Jaccard vectors.  In the input matrix X, each row corresponds to a
 multi-set, and each column stores the integer frequency of the
 element of a dimension.</p>
+<dl class="simple">
+<dt>Note: this method is experimental and does not yield the same MinHash</dt><dd><p>hash values as <cite>minhash</cite>.</p>
+</dd>
+</dl>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><p><strong>X</strong> (<em>Union</em><em>[</em><em>sp.sparse.spmatrix</em><em>, </em><em>np.ndarray</em><em>]</em>) – A matrix of Jaccard
