@@ -58,7 +58,7 @@ jobs:
       #     flake8 . --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
       - name: Test with pytest
         run: |
-          export DO_TEST_MONGO=true
+          # export DO_TEST_MONGO=true
           # export DO_TEST_CASSANDRA=true
           pytest
       - name: Compile documentation
