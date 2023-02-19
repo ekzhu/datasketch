@@ -7,6 +7,9 @@ name: Python Test and Publish Doc.
 on: [push, pull_request]
 
 jobs:
+  service:
+    cassandra:
+      image: cassandra
   build:
     runs-on: "ubuntu-latest"
     strategy:
