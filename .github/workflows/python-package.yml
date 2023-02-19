@@ -16,6 +16,8 @@ jobs:
     services:
       cassandra:
         image: cassandra
+        ports:
+          - 9042:9042
     steps:
       - uses: actions/checkout@v3
       # - name: Setup Cassandra
