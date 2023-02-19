@@ -59,7 +59,7 @@ jobs:
       - name: Test with pytest
         run: |
           # export DO_TEST_MONGO=true
-          # export DO_TEST_CASSANDRA=true
+          export DO_TEST_CASSANDRA=true
           pytest
       - name: Compile documentation
         if: ${{ matrix.python-version == '3.8' }}
