@@ -1,11 +1,6 @@
 name: Test Mongo
 
-on:
-  workflow_run:
-    workflows:
-      - Test
-    types:
-      - completed
+on: [push, pull_request]
 
 jobs:
   build:
