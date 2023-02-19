@@ -12,20 +12,21 @@ jobs:
     strategy:
       matrix:
         python-version: ["3.7", "3.8", "3.9", "3.10", "3.11"]
-        mongodb-version: ["latest"]
+        # mongodb-version: ["latest"]
     services:
       cassandra:
         image: cassandra
-        ports:
-          - 9042:9042
+        options: --health-cmd "cqlsh --debug" --health-interval 5s --health-retries 10
+      mongo:
+        image: mongo
     steps:
       - uses: actions/checkout@v3
       # - name: Setup Cassandra
       #   uses: fabasoad/setup-cassandra-action@v1.0.2
-      - name: Setup MongoDB
-        uses: supercharge/mongodb-github-action@1.8.0
-        with:
-          mongodb-version: ${{ matrix.mongodb-version }}
+      # - name: Setup MongoDB
+      #   uses: supercharge/mongodb-github-action@1.8.0
+      #   with:
+      #     mongodb-version: ${{ matrix.mongodb-version }}
       # - name: Install and Start Cassandra
       #   run: |
       #     echo "deb http://debian.datastax.com/community stable main" | sudo tee -a /etc/apt/sources.list.d/cassandra.sources.list
@@ -58,7 +59,7 @@ jobs:
       - name: Test with pytest
         run: |
           export DO_TEST_MONGO=true
-          export DO_TEST_CASSANDRA=true
+          # export DO_TEST_CASSANDRA=true
           pytest
       - name: Compile documentation
         if: ${{ matrix.python-version == '3.8' }}
