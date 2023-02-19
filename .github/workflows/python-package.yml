@@ -18,8 +18,8 @@ jobs:
         image: cassandra
     steps:
       - uses: actions/checkout@v3
-      - name: Setup Cassandra
-        uses: fabasoad/setup-cassandra-action@v1.0.2
+      # - name: Setup Cassandra
+      #   uses: fabasoad/setup-cassandra-action@v1.0.2
       - name: Setup MongoDB
         uses: supercharge/mongodb-github-action@1.8.0
         with:
