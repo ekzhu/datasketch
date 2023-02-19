@@ -12,7 +12,6 @@ jobs:
     runs-on: "ubuntu-latest"
     strategy:
       matrix:
-        # python-version: ["3.7", "3.8", "3.9", "3.10", "3.11"]
         python-version: ["3.11"]
     services:
       cassandra:
@@ -22,17 +21,6 @@ jobs:
         options: --health-cmd "cqlsh --debug" --health-interval 5s --health-retries 10
     steps:
       - uses: actions/checkout@v3
-      # - name: Setup Cassandra
-      #   uses: fabasoad/setup-cassandra-action@v1.0.2
-      # - name: Install and Start Cassandra
-      #   run: |
-      #     echo "deb http://debian.datastax.com/community stable main" | sudo tee -a /etc/apt/sources.list.d/cassandra.sources.list
-      #     curl -L http://debian.datastax.com/debian/repo_key | sudo apt-key add -
-      #     sudo apt-get update
-      #     sudo apt-get install openjdk-8-jdk
-      #     java -version
-      #     sudo apt-get install cassandra cython3
-      #     bash travis/wait_for_cassandra.sh
       - name: Set up Python ${{ matrix.python-version }}
         uses: actions/setup-python@v4
         with:
