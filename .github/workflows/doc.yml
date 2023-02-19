@@ -1,12 +1,7 @@
-name: Documentation
+name: Build Documentation
 
-on:
-  workflow_run:
-    workflows: ["Test", "Test Mongo", "Test Cassandra"]
-    types:
-      - completed
-    branches:
-      - master
+# Triggers the workflow on push or pull request events
+on: [push, pull_request]
 
 jobs:
   build:
@@ -32,6 +27,7 @@ jobs:
           cd docs
           make html
       - name: Deploy to GitHub pages
+        if: ${{ github.ref == 'refs/heads/master' }}
         uses: JamesIves/github-pages-deploy-action@v4
         with:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

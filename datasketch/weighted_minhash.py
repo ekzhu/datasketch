@@ -147,6 +147,9 @@ class WeightedMinHashGenerator(object):
         multi-set, and each column stores the integer frequency of the
         element of a dimension.
 
+        Note: this method is experimental and does not yield the same MinHash 
+            hash values as `minhash`.
+
         Args:
             X (Union[sp.sparse.spmatrix, np.ndarray]): A matrix of Jaccard
                 vectors (rows).
