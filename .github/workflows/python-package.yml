@@ -1,7 +1,7 @@
 # This workflow will install Python dependencies, run tests and lint with a variety of Python versions
 # For more information see: https://help.github.com/actions/language-and-framework-guides/using-python-with-github-actions
 
-name: Python package
+name: Python Test and Publish Doc.
 
 # Triggers the workflow on push or pull request events
 on: [push, pull_request]
@@ -16,6 +16,21 @@ jobs:
 
     steps:
       - uses: actions/checkout@v3
+      - name: Setup Cassandra
+        uses: fabasoad/setup-cassandra-action@v1.0.2
+      - name: Setup MongoDB
+        uses: supercharge/mongodb-github-action@1.8.0
+        with:
+          mongodb-version: ${{ matrix.mongodb-version }}
+      # - name: Install and Start Cassandra
+      #   run: |
+      #     echo "deb http://debian.datastax.com/community stable main" | sudo tee -a /etc/apt/sources.list.d/cassandra.sources.list
+      #     curl -L http://debian.datastax.com/debian/repo_key | sudo apt-key add -
+      #     sudo apt-get update
+      #     sudo apt-get install openjdk-8-jdk
+      #     java -version
+      #     sudo apt-get install cassandra cython3
+      #     bash travis/wait_for_cassandra.sh
       - name: Set up Python ${{ matrix.python-version }}
         uses: actions/setup-python@v4
         with:
@@ -36,21 +51,6 @@ jobs:
       #     flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
       #     # exit-zero treats all errors as warnings. The GitHub editor is 127 chars wide
       #     flake8 . --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
-      - name: Setup MongoDB
-        uses: supercharge/mongodb-github-action@1.8.0
-        with:
-          mongodb-version: ${{ matrix.mongodb-version }}
-      # - name: Install and Start Cassandra
-      #   run: |
-      #     echo "deb http://debian.datastax.com/community stable main" | sudo tee -a /etc/apt/sources.list.d/cassandra.sources.list
-      #     curl -L http://debian.datastax.com/debian/repo_key | sudo apt-key add -
-      #     sudo apt-get update
-      #     sudo apt-get install openjdk-8-jdk
-      #     java -version
-      #     sudo apt-get install cassandra cython3
-      #     bash travis/wait_for_cassandra.sh
-      - name: Setup Cassandra Action
-        uses: fabasoad/setup-cassandra-action@v1.0.2
       - name: Test with pytest
         run: |
           export DO_TEST_MONGO=true
