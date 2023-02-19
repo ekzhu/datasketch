@@ -2,7 +2,8 @@ name: Test Mongo
 
 on:
   workflow_run:
-    workflows: ["Test"]
+    workflows:
+      - Test
     types:
       - completed
 
