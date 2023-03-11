@@ -175,8 +175,13 @@ class MinHashLSH(object):
     def query(self, minhash):
         '''
         Giving the MinHash of the query set, retrieve
-        the keys that references sets with Jaccard
-        similarities greater than the threshold.
+        the keys that reference sets with Jaccard
+        similarities likely greater than the threshold.
+
+        Results are based on minhash segment collision
+        and are thus approximate. For more accurate results,
+        filter again with `minhash.jaccard`. For exact results,
+        filter by computing Jaccard similarity using original sets.
 
         Args:
             minhash (datasketch.MinHash): The MinHash of the query set.
