@@ -179,8 +179,9 @@ class MinHashLSH(object):
         similarities likely greater than the threshold.
 
         Results are based on minhash segment collision
-        and are thus approximate. For exact results,
-        filter again with `minhash.jaccard`.
+        and are thus approximate. For more accurate results,
+        filter again with `minhash.jaccard`. For exact results,
+        filter by computing Jaccard similarity using original sets.
 
         Args:
             minhash (datasketch.MinHash): The MinHash of the query set.
