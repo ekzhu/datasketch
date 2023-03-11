@@ -259,8 +259,13 @@
 <div class="viewcode-block" id="MinHashLSH.query"><a class="viewcode-back" href="../../documentation.html#datasketch.MinHashLSH.query">[docs]</a>    <span class="k">def</span> <span class="nf">query</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">minhash</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&#39;&#39;&#39;</span>
 <span class="sd">        Giving the MinHash of the query set, retrieve</span>
-<span class="sd">        the keys that references sets with Jaccard</span>
-<span class="sd">        similarities greater than the threshold.</span>
+<span class="sd">        the keys that reference sets with Jaccard</span>
+<span class="sd">        similarities likely greater than the threshold.</span>
+
+<span class="sd">        Results are based on minhash segment collision</span>
+<span class="sd">        and are thus approximate. For more accurate results,</span>
+<span class="sd">        filter again with `minhash.jaccard`. For exact results,</span>
+<span class="sd">        filter by computing Jaccard similarity using original sets.</span>
 
 <span class="sd">        Args:</span>
 <span class="sd">            minhash (datasketch.MinHash): The MinHash of the query set.</span>

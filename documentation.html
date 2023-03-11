@@ -1005,8 +1005,12 @@ you can set <cite>check_duplication = False</cite>.</p></li>
 <dt class="sig sig-object py" id="datasketch.MinHashLSH.query">
 <span class="sig-name descname"><span class="pre">query</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">minhash</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/datasketch/lsh.html#MinHashLSH.query"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#datasketch.MinHashLSH.query" title="Permalink to this definition">¶</a></dt>
 <dd><p>Giving the MinHash of the query set, retrieve
-the keys that references sets with Jaccard
-similarities greater than the threshold.</p>
+the keys that reference sets with Jaccard
+similarities likely greater than the threshold.</p>
+<p>Results are based on minhash segment collision
+and are thus approximate. For more accurate results,
+filter again with <cite>minhash.jaccard</cite>. For exact results,
+filter by computing Jaccard similarity using original sets.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><p><strong>minhash</strong> (<a class="reference internal" href="#datasketch.MinHash" title="datasketch.MinHash"><em>datasketch.MinHash</em></a>) – The MinHash of the query set.</p>
