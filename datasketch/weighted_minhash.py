@@ -116,7 +116,10 @@ class WeightedMinHashGenerator(object):
         by the vector.
 
         Args:
-            v (numpy.array): The Jaccard vector.
+            v (numpy.ndarray): The Jaccard vector.
+        
+        Returns:
+            datasketch.WeightedMinHash: The weighted MinHash.
         '''
         if not isinstance(v, collections.abc.Iterable):
             raise TypeError("Input vector must be an iterable")
@@ -147,15 +150,16 @@ class WeightedMinHashGenerator(object):
         multi-set, and each column stores the integer frequency of the
         element of a dimension.
 
-        Note: this method is experimental and does not yield the same MinHash 
-            hash values as `minhash`.
+        Note: 
+            This method is experimental and does not yield the same MinHash 
+            hash values as :func:`~datasketch.WeightedMinHashGenerator.minhash`.
 
         Args:
-            X (Union[sp.sparse.spmatrix, np.ndarray]): A matrix of Jaccard
+            X (Union[scipy.sparse.spmatrix, numpy.ndarray]): A matrix of Jaccard
                 vectors (rows).
 
         Returns:
-            List[Union[WeightedMinHash, None]] - A list of length X.shape[0].
+            List[Union[datasketch.WeightedMinHash, None]] - A list of length X.shape[0].
             Each element is either a WeightedMinHash instance or None
             (if the original row in X is empty).
         '''
