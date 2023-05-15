@@ -46,39 +46,15 @@ def read_sets_from_file(sets_file, sample_ratio, skip=1):
     return (sets, keys)
 
 
-def create_minhashes_from_sets(sets, num_perms, hashfunc, pad_for_asym=False):
-    # Generate paddings for asym.
-    max_size = max(len(s) for s in sets)
-    paddings = dict()
-    if pad_for_asym:
-        padding_sizes = sorted(list(set([max_size - len(s) for s in sets])))
-        for num_perm in num_perms:
-            paddings[num_perm] = dict()
-            for i, padding_size in enumerate(padding_sizes):
-                if i == 0:
-                    prev_size = 0
-                    pad = MinHash(num_perm, hashfunc=hashfunc)
-                else:
-                    prev_size = padding_sizes[i - 1]
-                    pad = paddings[num_perm][prev_size].copy()
-                for w in range(prev_size, padding_size):
-                    pad.update(str(w) + "_tmZZRe8DE23s")
-                paddings[num_perm][padding_size] = pad
+def create_minhashes_from_sets(sets, num_perms, hashfunc):
     # Generate minhash
     minhashes = dict()
     for num_perm in num_perms:
-        print("Using num_perm = {}".format(num_perm))
-        ms = []
-        for s in sets:
-            m = MinHash(num_perm, hashfunc=hashfunc)
-            for word in s:
-                m.update(str(word))
-            if pad_for_asym:
-                # Add padding to the minhash
-                m.merge(paddings[num_perm][max_size - len(s)])
-            ms.append(m)
-            sys.stdout.write("\rMinhashed {} sets".format(len(ms)))
-        sys.stdout.write("\n")
+        print(f"Generating {len(sets)} MinHashes with {num_perm} permutations...")
+        ms = MinHash.bulk(
+            ([str(w) for w in s] for s in sets), num_perm=num_perm, hashfunc=hashfunc
+        )
+        print("Done.")
         minhashes[num_perm] = ms
     return minhashes
 
@@ -107,7 +83,8 @@ def init_results_db(output_sqlite):
         time datetime not null,
         k integer,
         threshold real,
-        params text not null
+        params text not null,
+        indexing_time real
     )"""
     )
     cursor.execute(
@@ -127,14 +104,16 @@ def init_results_db(output_sqlite):
     conn.close()
 
 
-def save_results(run_name, k, threshold, params, results, times, output_sqlite):
+def save_results(
+    run_name, k, threshold, params, indexing_time, results, times, output_sqlite
+):
     conn = sqlite3.connect(output_sqlite)
     cursor = conn.cursor()
     cursor.execute(
         """INSERT INTO runs 
-            (name, time, k, threshold, params)
-            VALUES (?, datetime('now'), ?, ?, ?)""",
-        (run_name, k, threshold, json.dumps(params)),
+            (name, time, k, threshold, params, indexing_time)
+            VALUES (?, datetime('now'), ?, ?, ?, ?)""",
+        (run_name, k, threshold, json.dumps(params), indexing_time),
     )
     cursor.execute("SELECT last_insert_rowid()")
     run_key = cursor.fetchone()[0]
@@ -163,33 +142,52 @@ def load_results(run_key, conn):
     times = []
     for query_key, result, time in cursor:
         results.append((query_key, json.loads(result)))
-        times.append(time)
+        times.append((query_key, time))
     cursor.close()
     return (results, times)
 
 
-def _compute_recall(result, ground):
-    result_keys = [x[0] for x in result]
-    ground_keys = [x[0] for x in ground]
+def _compute_recall(result, ground, ignore_key=None):
+    result_keys = [x[0] for x in result if x[0] != ignore_key]
+    ground_keys = [x[0] for x in ground if x[0] != ignore_key]
+    if len(ground_keys) == 0:
+        return None
     intersection = len(np.intersect1d(result_keys, ground_keys))
     return float(intersection) / float(len(ground_keys))
 
 
-def compute_recalls(results, grounds):
+def get_similarities_at_k(grounds):
+    grounds.sort(key=lambda x: x[0])
+    thresholds = []
+    for query_key, ground in grounds:
+        threshold = np.min([x[1] for x in ground])
+        thresholds.append((query_key, threshold))
+    return thresholds
+
+
+def compute_recalls(results, grounds, ignore_query=False):
     results.sort(key=lambda x: x[0])
     grounds.sort(key=lambda x: x[0])
     recalls = []
     for (query_key_1, result), (query_key_2, ground) in zip(results, grounds):
         assert query_key_1 == query_key_2
-        recall = _compute_recall(result, ground)
+        if ignore_query:
+            ignore_key = query_key_1
+        else:
+            ignore_key = None
+        recall = _compute_recall(result, ground, ignore_key=ignore_key)
         recalls.append((query_key_1, recall))
     return recalls
 
 
-def compute_similarities(results):
+def compute_mean_similarities(results, ignore_query=False):
     similarities = []
     for query_key_1, result in results:
-        similarity = np.mean([x[1] for x in result])
+        sims = [x[1] for x in result if not ignore_query or x[0] != query_key_1]
+        if len(sims) == 0:
+            similarity = None
+        else:
+            similarity = np.mean(sims)
         similarities.append((query_key_1, similarity))
     return similarities
 
@@ -198,7 +196,7 @@ def get_run(name, k, threshold, params, result_sqlite):
     conn = sqlite3.connect(result_sqlite)
     cursor = conn.cursor()
     cursor.execute(
-        """SELECT key, k, threshold, params 
+        """SELECT key, k, threshold, params, indexing_time 
             FROM runs WHERE name = ?""",
         (name,),
     )
@@ -213,14 +211,16 @@ def get_run(name, k, threshold, params, result_sqlite):
     return None
 
 
-def evaluate_runs(result_sqlite, names=None):
+def evaluate_runs(result_sqlite, names=None, ignore_query=False):
     conn = sqlite3.connect(result_sqlite)
     cursor = conn.cursor()
     if not names:
-        cursor.execute("""SELECT key, name, k, threshold, params FROM runs""")
+        cursor.execute(
+            """SELECT key, name, k, threshold, params, indexing_time FROM runs"""
+        )
     else:
         cursor.execute(
-            """SELECT key, name, k, threshold, params 
+            """SELECT key, name, k, threshold, params, indexing_time
                 FROM runs 
                 WHERE name IN ? OR name == 'ground_truth""",
             (names,),
@@ -232,8 +232,9 @@ def evaluate_runs(result_sqlite, names=None):
             "k": k,
             "threshold": threshold,
             **json.loads(params),
+            "indexing_time": indexing_time,
         }
-        for (key, name, k, threshold, params) in cursor
+        for (key, name, k, threshold, params, indexing_time) in cursor
     ]
     cursor.close()
 
@@ -245,12 +246,12 @@ def evaluate_runs(result_sqlite, names=None):
     ]
 
     # Get ground truth results first.
-    for i, run in enumerate([run for run in runs if run["name"] == "ground_truth"]):
+    for run in [run for run in runs if run["name"] == "ground_truth"]:
         results, times = load_results(run["key"], conn)
         run.update({"results": results, "times": times})
 
     # Compute mean recall and query time of every run.
-    for i, run in enumerate([run for run in runs if run["name"] != "ground_truth"]):
+    for run in [run for run in runs if run["name"] != "ground_truth"]:
         # Load results of this run.
         results, times = load_results(run["key"], conn)
         # Find the corresponding ground truth run with the same
@@ -261,18 +262,22 @@ def evaluate_runs(result_sqlite, names=None):
             if x["name"] == "ground_truth" and x["benchmark"] == run["benchmark"]
         ][0]
         # Compute metrics.
-        recalls = compute_recalls(results, ground_truth["results"])
-        similarities = compute_similarities(results)
-        mean_recall = np.mean([x[1] for x in recalls])
-        mean_similarity = np.mean([x[1] for x in similarities])
-        mean_time = np.mean(times * 1000)
+        similarities_at_k = get_similarities_at_k(ground_truth["results"])
+        recalls = compute_recalls(
+            results, ground_truth["results"], ignore_query=ignore_query
+        )
+        mean_similarities = compute_mean_similarities(
+            results, ignore_query=ignore_query
+        )
         # Update run with computed metrics.
         run.update(
             {
-                "mean_recall": mean_recall,
-                "mean_similarity": mean_similarity,
-                "mean_time": mean_time,
+                "similarities_at_k": similarities_at_k,
+                "recalls": recalls,
+                "mean_similarities": mean_similarities,
+                "times": times,
             }
         )
+
     conn.close()
     return runs
