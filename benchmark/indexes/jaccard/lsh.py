@@ -12,10 +12,17 @@ def search_lsh_jaccard_topk(index_data, query_data, b, r, k):
     num_perm = b * r
     print("Building LSH Index.")
     start = time.perf_counter()
-    index = MinHashLSH(num_perm=num_perm, params=(b, r))
+    index = MinHashLSH(
+        num_perm=num_perm,
+        params=(b, r),
+    )
     # Use the indices of the indexed sets as keys in LSH.
     for i in range(len(index_keys)):
-        index.insert(i, index_minhashes[num_perm][i])
+        index.insert(
+            i,
+            index_minhashes[num_perm][i],
+            check_duplication=False,
+        )
     indexing_time = time.perf_counter() - start
     print("Indexing time: {:.3f}.".format(indexing_time))
     print("Querying.")
