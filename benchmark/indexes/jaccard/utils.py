@@ -10,6 +10,18 @@ import numpy as np
 from datasketch import MinHash
 
 
+def read_set_sizes_from_file(sets_file, skip=1):
+    set_sizes = collections.deque([])
+    with open(sets_file, "rt") as f:
+        for i, line in enumerate(f):
+            if i < skip:
+                # Skip lines
+                continue
+            size = int(line.strip().split("\t")[0])
+            set_sizes.append(size)
+    return list(set_sizes)
+
+
 def read_sets_from_file(sets_file, sample_ratio, skip=1):
     """Read sets from set-similarity-search benchmark:
     https://github.com/ekzhu/set-similarity-search-benchmark.
@@ -192,6 +204,18 @@ def compute_mean_similarities(results, ignore_query=False):
     return similarities
 
 
+def compute_mean_distances(results, ignore_query=False):
+    distances = []
+    for query_key_1, result in results:
+        ds = [1.0 - x[1] for x in result if not ignore_query or x[0] != query_key_1]
+        if len(ds) == 0:
+            distance = None
+        else:
+            distance = np.mean(ds)
+        distances.append((query_key_1, distance))
+    return distances
+
+
 def get_run(name, k, threshold, params, result_sqlite):
     conn = sqlite3.connect(result_sqlite)
     cursor = conn.cursor()
@@ -251,31 +275,42 @@ def evaluate_runs(result_sqlite, names=None, ignore_query=False):
         run.update({"results": results, "times": times})
 
     # Compute mean recall and query time of every run.
-    for run in [run for run in runs if run["name"] != "ground_truth"]:
+    for run in [run for run in runs]:
         # Load results of this run.
         results, times = load_results(run["key"], conn)
         # Find the corresponding ground truth run with the same
         # benchmark settings.
-        ground_truth = [
-            x
-            for x in runs
-            if x["name"] == "ground_truth" and x["benchmark"] == run["benchmark"]
-        ][0]
+        if run["name"] == "ground_truth":
+            ground_truth = run
+        else:
+            ground_truth = [
+                x
+                for x in runs
+                if x["name"] == "ground_truth" and x["benchmark"] == run["benchmark"]
+            ][0]
         # Compute metrics.
+        counts = [(query_key, len(result)) for query_key, result in results]
         similarities_at_k = get_similarities_at_k(ground_truth["results"])
+        distances_at_k = [
+            (query_key, 1.0 - sim) for query_key, sim in similarities_at_k
+        ]
         recalls = compute_recalls(
             results, ground_truth["results"], ignore_query=ignore_query
         )
         mean_similarities = compute_mean_similarities(
             results, ignore_query=ignore_query
         )
+        mean_distances = compute_mean_distances(results, ignore_query=ignore_query)
         # Update run with computed metrics.
         run.update(
             {
                 "similarities_at_k": similarities_at_k,
+                "distances_at_k": distances_at_k,
                 "recalls": recalls,
                 "mean_similarities": mean_similarities,
+                "mean_distances": mean_distances,
                 "times": times,
+                "counts": counts,
             }
         )
 
