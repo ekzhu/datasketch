@@ -389,5 +389,8 @@ Common Issues with MinHash LSH
 3. `How to speedup MinHash LSH indexing for hundreds of millions of MinHashes? <https://github.com/ekzhu/datasketch/issues/41>`__
 4. `Can MinHash LSH find similar points under Euclidean (L2) distance? <https://github.com/ekzhu/datasketch/issues/100>`__
 5. `Combining/Storing LSH with different thresholds <https://github.com/ekzhu/datasketch/issues/93>`__
+6. `Memory and On-disk size of LSH indexes <https://github.com/ekzhu/datasketch/issues/207>`_
+7. `Distributed LSH indexes <https://github.com/ekzhu/datasketch/issues/198>`_
+8. `Is the return of MinHashLSH.query() in order? <https://github.com/ekzhu/datasketch/issues/180>`_
 
 `See more issues <https://github.com/ekzhu/datasketch/issues?utf8=%E2%9C%93&q=lsh>`__
