@@ -392,5 +392,6 @@ Common Issues with MinHash LSH
 6. `Memory and On-disk size of LSH indexes <https://github.com/ekzhu/datasketch/issues/207>`_
 7. `Distributed LSH indexes <https://github.com/ekzhu/datasketch/issues/198>`_
 8. `Is the return of MinHashLSH.query() in order? <https://github.com/ekzhu/datasketch/issues/180>`_
+9. `Billion-scale minhash lsh index for dedpulication <https://github.com/ekzhu/datasketch/issues/207>`__
 
 `See more issues <https://github.com/ekzhu/datasketch/issues?utf8=%E2%9C%93&q=lsh>`__
