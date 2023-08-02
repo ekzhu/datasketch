@@ -135,7 +135,7 @@ class MinHash(object):
         '''
         hv = self.hashfunc(b)
         a, b = self.permutations
-        phv = np.bitwise_and((a * hv + b) % _mersenne_prime, _max_hash)
+        phv = np.bitwise_and(np.mod((a * hv + b), _mersenne_prime), _max_hash)
         self.hashvalues = np.minimum(phv, self.hashvalues)
 
     def update_batch(self, b):
@@ -157,7 +157,7 @@ class MinHash(object):
         '''
         hv = np.array([self.hashfunc(_b) for _b in b], dtype=np.uint64)
         a, b = self.permutations
-        phv = np.bitwise_and(((hv * np.tile(a, (len(hv), 1)).T).T + b) % _mersenne_prime, _max_hash)
+        phv = np.bitwise_and(np.mod(((hv * np.tile(a, (len(hv), 1)).T).T + b), _mersenne_prime), _max_hash)
         self.hashvalues = np.vstack([phv, self.hashvalues]).min(axis=0)
 
     def jaccard(self, other):
