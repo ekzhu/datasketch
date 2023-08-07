@@ -9,7 +9,7 @@ hashvalue_byte_size = len(bytes(np.int64(42).data))
 
 # http://en.wikipedia.org/wiki/Mersenne_prime
 _mersenne_prime = np.uint64((1 << 61) - 1)
-_max_hash = np.uint64((1 << 32) - 1)
+_max_hash = np.uint32((1 << 32) - 1)
 _hash_range = (1 << 32)
 
 class MinHash(object):
