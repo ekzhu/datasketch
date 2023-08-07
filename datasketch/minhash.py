@@ -135,7 +135,7 @@ class MinHash(object):
         '''
         hv = self.hashfunc(b)
         a, b = self.permutations
-        phv = np.bitwise_and(np.bitwise_and((a * hv + b), _mersenne_prime), _max_hash)
+        phv = np.bitwise_and(np.mod((a * hv + b), _mersenne_prime), _max_hash)
         self.hashvalues = np.minimum(phv, self.hashvalues)
 
     def update_batch(self, b):
