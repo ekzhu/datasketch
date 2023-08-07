@@ -104,7 +104,7 @@ class MinHash(object):
         ], dtype=np.uint64).T
 
     def _parse_hashvalues(self, hashvalues):
-        return np.array(hashvalues, dtype=np.uint64)
+        return np.array(hashvalues, dtype=np.uint32)
 
     def update(self, b):
         '''Update this MinHash with a new value.
@@ -135,7 +135,7 @@ class MinHash(object):
         '''
         hv = self.hashfunc(b)
         a, b = self.permutations
-        phv = np.bitwise_and(np.mod((a * hv + b), _mersenne_prime), _max_hash)
+        phv = np.bitwise_and(np.mod((a * hv + b), _mersenne_prime), _max_hash).astype(np.uint32)
         self.hashvalues = np.minimum(phv, self.hashvalues)
 
     def update_batch(self, b):
@@ -155,9 +155,9 @@ class MinHash(object):
                 minhash = Minhash()
                 minhash.update_batch([s.encode('utf-8') for s in ["token1", "token2"]])
         '''
-        hv = np.array([self.hashfunc(_b) for _b in b], dtype=np.uint64)
+        hv = np.array([self.hashfunc(_b) for _b in b], dtype=np.uint32)
         a, b = self.permutations
-        phv = np.bitwise_and(np.mod(((hv * np.tile(a, (len(hv), 1)).T).T + b), _mersenne_prime), _max_hash)
+        phv = np.bitwise_and(np.mod(((hv * np.tile(a, (len(hv), 1)).T).T + b), _mersenne_prime), _max_hash).astype(np.uint32)
         self.hashvalues = np.vstack([phv, self.hashvalues]).min(axis=0)
 
     def jaccard(self, other):
