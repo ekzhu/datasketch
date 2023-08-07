@@ -92,7 +92,7 @@ class MinHash(object):
             raise ValueError("Numbers of hash values and permutations mismatch")
 
     def _init_hashvalues(self, num_perm):
-        return np.ones(num_perm, dtype=np.uint64)*_max_hash
+        return np.full(num_perm, _max_hash,dtype=np.uint32)
 
     def _init_permutations(self, num_perm):
         # Create parameters for a random bijective permutation function
