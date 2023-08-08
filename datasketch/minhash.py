@@ -9,6 +9,7 @@ hashvalue_byte_size = len(bytes(np.int64(42).data))
 
 # http://en.wikipedia.org/wiki/Mersenne_prime
 _mersenne_prime = np.uint64((1 << 61) - 1)
+_mersenne_exponent = np.uint8(61)
 _max_hash = np.uint32((1 << 32) - 1)
 _hash_range = (1 << 32)
 
@@ -135,10 +136,14 @@ class MinHash(object):
         '''
         hv = self.hashfunc(b)
         a, b = self.permutations
+        _dividend = np.uint64(a * hv + b)
+
         phv = np.bitwise_and(
             # we can apply mersenne's modulo trick here
-            np.mod((a * hv + b), _mersenne_prime), 
-            
+            np.add(
+                np.bitwise_and(_dividend, _mersenne_prime),
+                np.right_shift(_dividend, _mersenne_exponent)
+            ),
             _max_hash
             ).astype(np.uint32)
         self.hashvalues = np.minimum(phv, self.hashvalues)
