@@ -4,18 +4,18 @@
   <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>MinHash LSH Ensemble &mdash; datasketch 1.5.9 documentation</title>
+  <title>MinHash LSH Ensemble &mdash; datasketch 1.6.0 documentation</title>
       <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
   <!--[if lt IE 9]>
     <script src="_static/js/html5shiv.min.js"></script>
   <![endif]-->
   
-        <script src="_static/jquery.js"></script>
-        <script src="_static/_sphinx_javascript_frameworks_compat.js"></script>
-        <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
-        <script src="_static/doctools.js"></script>
-        <script src="_static/sphinx_highlight.js"></script>
+        <script src="_static/jquery.js?v=5d32c60e"></script>
+        <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+        <script src="_static/documentation_options.js?v=72d88caf"></script>
+        <script src="_static/doctools.js?v=888ff710"></script>
+        <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
         <script async="async" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
     <script src="_static/js/theme.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
@@ -36,7 +36,7 @@
             datasketch
           </a>
               <div class="version">
-                1.5.9
+                1.6.0
               </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
@@ -87,9 +87,9 @@
            <div itemprop="articleBody">
              
   <section id="minhash-lsh-ensemble">
-<span id="id1"></span><h1>MinHash LSH Ensemble<a class="headerlink" href="#minhash-lsh-ensemble" title="Permalink to this heading"></a></h1>
+<span id="id1"></span><h1>MinHash LSH Ensemble<a class="headerlink" href="#minhash-lsh-ensemble" title="Link to this heading"></a></h1>
 <section id="containment">
-<span id="id2"></span><h2>Containment<a class="headerlink" href="#containment" title="Permalink to this heading"></a></h2>
+<span id="id2"></span><h2>Containment<a class="headerlink" href="#containment" title="Link to this heading"></a></h2>
 <p><a class="reference external" href="https://en.wikipedia.org/wiki/Jaccard_index">Jaccard similarity</a> is great for
 measuring resemblance between two sets, however, it can be a biased measure for
 set intersection. This issue can be illustrated in the following Venn diagrams.
@@ -125,7 +125,7 @@ deduced from the intersection threshold by multiplying <span class="math notrans
 contained in X.</p>
 </section>
 <section id="lsh-for-containment">
-<h2>LSH for Containment<a class="headerlink" href="#lsh-for-containment" title="Permalink to this heading"></a></h2>
+<h2>LSH for Containment<a class="headerlink" href="#lsh-for-containment" title="Link to this heading"></a></h2>
 <p>Similar to <a class="reference internal" href="lsh.html#minhash-lsh"><span class="std std-ref">MinHash LSH</span></a>, there is an LSH index for containment search –
 given a query set, find sets with containment above a certain threshold.
 It is <em>LSH Ensemble</em> by <a class="reference external" href="http://www.vldb.org/pvldb/vol9/p1185-zhu.pdf">E. Zhu et al</a>.
@@ -183,7 +183,7 @@ See the documentation of <a class="reference internal" href="documentation.html#
 <a class="reference internal image-reference" href="_images/lshensemble_num_perm_256_query_time.png"><img alt="MinHashLSHEnsemble Benchmark Query Time" class="align-center" src="_images/lshensemble_num_perm_256_query_time.png" style="width: 480.0px; height: 360.0px;" /></a>
 </section>
 <section id="common-issues-with-lsh-ensemble">
-<h2>Common Issues with LSH Ensemble<a class="headerlink" href="#common-issues-with-lsh-ensemble" title="Permalink to this heading"></a></h2>
+<h2>Common Issues with LSH Ensemble<a class="headerlink" href="#common-issues-with-lsh-ensemble" title="Link to this heading"></a></h2>
 <ol class="arabic simple">
 <li><p><a class="reference external" href="https://github.com/ekzhu/datasketch/issues/97">Can I get containment values from LSH Ensemble?</a></p></li>
 <li><p><a class="reference external" href="https://github.com/ekzhu/datasketch/issues/76#issuecomment-521275633">How to use LSH Ensemble to find containment-based duplicates?</a></p></li>

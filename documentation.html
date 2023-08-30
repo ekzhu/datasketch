@@ -4,18 +4,18 @@
   <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>API Documentation &mdash; datasketch 1.5.9 documentation</title>
+  <title>API Documentation &mdash; datasketch 1.6.0 documentation</title>
       <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
   <!--[if lt IE 9]>
     <script src="_static/js/html5shiv.min.js"></script>
   <![endif]-->
   
-        <script src="_static/jquery.js"></script>
-        <script src="_static/_sphinx_javascript_frameworks_compat.js"></script>
-        <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
-        <script src="_static/doctools.js"></script>
-        <script src="_static/sphinx_highlight.js"></script>
+        <script src="_static/jquery.js?v=5d32c60e"></script>
+        <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+        <script src="_static/documentation_options.js?v=72d88caf"></script>
+        <script src="_static/doctools.js?v=888ff710"></script>
+        <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="_static/js/theme.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
@@ -35,7 +35,7 @@
             datasketch
           </a>
               <div class="version">
-                1.5.9
+                1.6.0
               </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
@@ -177,6 +177,17 @@
 </li>
 </ul>
 </li>
+<li class="toctree-l2"><a class="reference internal" href="#hnsw">HNSW</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#datasketch.HNSW"><code class="docutils literal notranslate"><span class="pre">HNSW</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#datasketch.HNSW.__init__"><code class="docutils literal notranslate"><span class="pre">HNSW.__init__()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#datasketch.HNSW.__repr__"><code class="docutils literal notranslate"><span class="pre">HNSW.__repr__()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#datasketch.HNSW.add"><code class="docutils literal notranslate"><span class="pre">HNSW.add()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#datasketch.HNSW.search"><code class="docutils literal notranslate"><span class="pre">HNSW.search()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#datasketch.HNSW.__weakref__"><code class="docutils literal notranslate"><span class="pre">HNSW.__weakref__</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="hyperloglog.html">HyperLogLog</a></li>
@@ -213,12 +224,12 @@
            <div itemprop="articleBody">
              
   <section id="api-documentation">
-<h1>API Documentation<a class="headerlink" href="#api-documentation" title="Permalink to this heading"></a></h1>
+<h1>API Documentation<a class="headerlink" href="#api-documentation" title="Link to this heading"></a></h1>
 <section id="minhash">
-<h2>MinHash<a class="headerlink" href="#minhash" title="Permalink to this heading"></a></h2>
+<h2>MinHash<a class="headerlink" href="#minhash" title="Link to this heading"></a></h2>
 <dl class="py class">
 <dt class="sig sig-object py" id="datasketch.MinHash">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">datasketch.</span></span><span class="sig-name descname"><span class="pre">MinHash</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">num_perm=128</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">seed=1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">hashfunc=&lt;function</span> <span class="pre">sha1_hash32&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">hashobj=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">hashvalues=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">permutations=None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/datasketch/minhash.html#MinHash"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#datasketch.MinHash" title="Permalink to this definition"></a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">datasketch.</span></span><span class="sig-name descname"><span class="pre">MinHash</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">num_perm=128</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">seed=1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">hashfunc=&lt;function</span> <span class="pre">sha1_hash32&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">hashobj=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">hashvalues=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">permutations=None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/datasketch/minhash.html#MinHash"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#datasketch.MinHash" title="Link to this definition"></a></dt>
 <dd><p>MinHash is a probabilistic data structure for computing
 <a class="reference external" href="https://en.wikipedia.org/wiki/Jaccard_index">Jaccard similarity</a> between sets.</p>
 <dl class="field-list simple">
@@ -266,12 +277,12 @@ with those created after.</p>
 </div>
 <dl class="py method">
 <dt class="sig sig-object py" id="datasketch.MinHash.__init__">
-<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">num_perm=128</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">seed=1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">hashfunc=&lt;function</span> <span class="pre">sha1_hash32&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">hashobj=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">hashvalues=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">permutations=None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/datasketch/minhash.html#MinHash.__init__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#datasketch.MinHash.__init__" title="Permalink to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">num_perm=128</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">seed=1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">hashfunc=&lt;function</span> <span class="pre">sha1_hash32&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">hashobj=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">hashvalues=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">permutations=None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/datasketch/minhash.html#MinHash.__init__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#datasketch.MinHash.__init__" title="Link to this definition"></a></dt>
 <dd></dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="datasketch.MinHash.update">
-<span class="sig-name descname"><span class="pre">update</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">b</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/datasketch/minhash.html#MinHash.update"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#datasketch.MinHash.update" title="Permalink to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">update</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">b</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/datasketch/minhash.html#MinHash.update"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#datasketch.MinHash.update" title="Link to this definition"></a></dt>
 <dd><p>Update this MinHash with a new value.
 The value will be hashed using the hash function specified by
 the <cite>hashfunc</cite> argument in the constructor.</p>
@@ -299,7 +310,7 @@ function, which requires bytes as input):</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="datasketch.MinHash.update_batch">
-<span class="sig-name descname"><span class="pre">update_batch</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">b</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/datasketch/minhash.html#MinHash.update_batch"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#datasketch.MinHash.update_batch" title="Permalink to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">update_batch</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">b</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/datasketch/minhash.html#MinHash.update_batch"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#datasketch.MinHash.update_batch" title="Link to this definition"></a></dt>
 <dd><p>Update this MinHash with new values.
 The values will be hashed using the hash function specified by
 the <cite>hashfunc</cite> argument in the constructor.</p>
@@ -319,7 +330,7 @@ function, which requires bytes as input):</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="datasketch.MinHash.jaccard">
-<span class="sig-name descname"><span class="pre">jaccard</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">other</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/datasketch/minhash.html#MinHash.jaccard"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#datasketch.MinHash.jaccard" title="Permalink to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">jaccard</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">other</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/datasketch/minhash.html#MinHash.jaccard"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#datasketch.MinHash.jaccard" title="Link to this definition"></a></dt>
 <dd><p>Estimate the <a class="reference external" href="https://en.wikipedia.org/wiki/Jaccard_index">Jaccard similarity</a> (resemblance) between the sets
 represented by this MinHash and the other.</p>
 <dl class="field-list simple">
@@ -337,7 +348,7 @@ represented by this MinHash and the other.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="datasketch.MinHash.count">
-<span class="sig-name descname"><span class="pre">count</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/datasketch/minhash.html#MinHash.count"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#datasketch.MinHash.count" title="Permalink to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">count</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/datasketch/minhash.html#MinHash.count"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#datasketch.MinHash.count" title="Link to this definition"></a></dt>
 <dd><p>Estimate the cardinality count based on the technique described in
 <a class="reference external" href="http://ieeexplore.ieee.org/stamp/stamp.jsp?arnumber=365694">this paper</a>.</p>
 <dl class="field-list simple">
@@ -352,7 +363,7 @@ represented by this MinHash and the other.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="datasketch.MinHash.merge">
-<span class="sig-name descname"><span class="pre">merge</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">other</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/datasketch/minhash.html#MinHash.merge"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#datasketch.MinHash.merge" title="Permalink to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">merge</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">other</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/datasketch/minhash.html#MinHash.merge"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#datasketch.MinHash.merge" title="Link to this definition"></a></dt>
 <dd><p>Merge the other MinHash with this one, making this one the union
 of both.</p>
 <dl class="field-list simple">
@@ -364,7 +375,7 @@ of both.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="datasketch.MinHash.digest">
-<span class="sig-name descname"><span class="pre">digest</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/datasketch/minhash.html#MinHash.digest"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#datasketch.MinHash.digest" title="Permalink to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">digest</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/datasketch/minhash.html#MinHash.digest"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#datasketch.MinHash.digest" title="Link to this definition"></a></dt>
 <dd><p>Export the hash values, which is the internal state of the
 MinHash.</p>
 <dl class="field-list simple">
@@ -379,7 +390,7 @@ MinHash.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="datasketch.MinHash.is_empty">
-<span class="sig-name descname"><span class="pre">is_empty</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/datasketch/minhash.html#MinHash.is_empty"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#datasketch.MinHash.is_empty" title="Permalink to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">is_empty</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/datasketch/minhash.html#MinHash.is_empty"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#datasketch.MinHash.is_empty" title="Link to this definition"></a></dt>
 <dd><dl class="field-list simple">
 <dt class="field-odd">Returns<span class="colon">:</span></dt>
 <dd class="field-odd"><p><dl class="simple">
@@ -396,14 +407,14 @@ MinHash.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="datasketch.MinHash.clear">
-<span class="sig-name descname"><span class="pre">clear</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/datasketch/minhash.html#MinHash.clear"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#datasketch.MinHash.clear" title="Permalink to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">clear</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/datasketch/minhash.html#MinHash.clear"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#datasketch.MinHash.clear" title="Link to this definition"></a></dt>
 <dd><p>Clear the current state of the MinHash.
 All hash values are reset.</p>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="datasketch.MinHash.copy">
-<span class="sig-name descname"><span class="pre">copy</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/datasketch/minhash.html#MinHash.copy"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#datasketch.MinHash.copy" title="Permalink to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">copy</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/datasketch/minhash.html#MinHash.copy"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#datasketch.MinHash.copy" title="Link to this definition"></a></dt>
 <dd><dl class="field-list simple">
 <dt class="field-odd">Returns<span class="colon">:</span></dt>
 <dd class="field-odd"><p>datasketch.MinHash – A copy of this MinHash by exporting its state.</p>
@@ -413,7 +424,7 @@ All hash values are reset.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="datasketch.MinHash.__len__">
-<span class="sig-name descname"><span class="pre">__len__</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/datasketch/minhash.html#MinHash.__len__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#datasketch.MinHash.__len__" title="Permalink to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">__len__</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/datasketch/minhash.html#MinHash.__len__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#datasketch.MinHash.__len__" title="Link to this definition"></a></dt>
 <dd><dl class="field-list simple">
 <dt class="field-odd">Returns<span class="colon">:</span></dt>
 <dd class="field-odd"><p>int – The number of hash values.</p>
@@ -423,7 +434,7 @@ All hash values are reset.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="datasketch.MinHash.__eq__">
-<span class="sig-name descname"><span class="pre">__eq__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">other</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/datasketch/minhash.html#MinHash.__eq__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#datasketch.MinHash.__eq__" title="Permalink to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">__eq__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">other</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/datasketch/minhash.html#MinHash.__eq__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#datasketch.MinHash.__eq__" title="Link to this definition"></a></dt>
 <dd><dl class="field-list simple">
 <dt class="field-odd">Returns<span class="colon">:</span></dt>
 <dd class="field-odd"><p>bool – If their seeds and hash values are both equal then two are equivalent.</p>
@@ -433,7 +444,7 @@ All hash values are reset.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="datasketch.MinHash.union">
-<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">union</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">mhs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/datasketch/minhash.html#MinHash.union"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#datasketch.MinHash.union" title="Permalink to this definition"></a></dt>
+<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">union</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">mhs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/datasketch/minhash.html#MinHash.union"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#datasketch.MinHash.union" title="Link to this definition"></a></dt>
 <dd><p>Create a MinHash which is the union of the MinHash objects passed as arguments.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -451,18 +462,18 @@ but must be at least 2.</p>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="datasketch.MinHash.__hash__">
-<span class="sig-name descname"><span class="pre">__hash__</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#datasketch.MinHash.__hash__" title="Permalink to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">__hash__</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#datasketch.MinHash.__hash__" title="Link to this definition"></a></dt>
 <dd></dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="datasketch.MinHash.__weakref__">
-<span class="sig-name descname"><span class="pre">__weakref__</span></span><a class="headerlink" href="#datasketch.MinHash.__weakref__" title="Permalink to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">__weakref__</span></span><a class="headerlink" href="#datasketch.MinHash.__weakref__" title="Link to this definition"></a></dt>
 <dd><p>list of weak references to the object (if defined)</p>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="datasketch.MinHash.bulk">
-<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">bulk</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">b</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">minhash_kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/datasketch/minhash.html#MinHash.bulk"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#datasketch.MinHash.bulk" title="Permalink to this definition"></a></dt>
+<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">bulk</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">b</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">minhash_kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/datasketch/minhash.html#MinHash.bulk"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#datasketch.MinHash.bulk" title="Link to this definition"></a></dt>
 <dd><p>Compute MinHashes in bulk. This method avoids unnecessary
 overhead when initializing many minhashes by reusing the initialized
 state.</p>
@@ -493,7 +504,7 @@ will be used for all minhashes.</p></li>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="datasketch.MinHash.generator">
-<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">generator</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">b</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">minhash_kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/datasketch/minhash.html#MinHash.generator"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#datasketch.MinHash.generator" title="Permalink to this definition"></a></dt>
+<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">generator</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">b</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">minhash_kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/datasketch/minhash.html#MinHash.generator"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#datasketch.MinHash.generator" title="Link to this definition"></a></dt>
 <dd><p>Compute MinHashes in a generator. This method avoids unnecessary
 overhead when initializing many minhashes by reusing the initialized
 state.</p>
@@ -525,10 +536,10 @@ will be used for all minhashes.</p></li>
 
 </section>
 <section id="lean-minhash">
-<h2>Lean MinHash<a class="headerlink" href="#lean-minhash" title="Permalink to this heading"></a></h2>
+<h2>Lean MinHash<a class="headerlink" href="#lean-minhash" title="Link to this heading"></a></h2>
 <dl class="py class">
 <dt class="sig sig-object py" id="datasketch.LeanMinHash">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">datasketch.</span></span><span class="sig-name descname"><span class="pre">LeanMinHash</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">minhash</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">seed</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">hashvalues</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/datasketch/lean_minhash.html#LeanMinHash"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#datasketch.LeanMinHash" title="Permalink to this definition"></a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">datasketch.</span></span><span class="sig-name descname"><span class="pre">LeanMinHash</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">minhash</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">seed</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">hashvalues</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/datasketch/lean_minhash.html#LeanMinHash"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#datasketch.LeanMinHash" title="Link to this definition"></a></dt>
 <dd><p>Lean MinHash is MinHash with a smaller memory footprint
 and faster deserialization, but with its internal state frozen
 – no <cite>update()</cite>.</p>
@@ -585,19 +596,19 @@ of the LeanMinHash. This parameter must be used together with
 </dl>
 <dl class="py method">
 <dt class="sig sig-object py" id="datasketch.LeanMinHash.__init__">
-<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">minhash</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">seed</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">hashvalues</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/datasketch/lean_minhash.html#LeanMinHash.__init__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#datasketch.LeanMinHash.__init__" title="Permalink to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">minhash</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">seed</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">hashvalues</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/datasketch/lean_minhash.html#LeanMinHash.__init__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#datasketch.LeanMinHash.__init__" title="Link to this definition"></a></dt>
 <dd></dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="datasketch.LeanMinHash.update">
-<span class="sig-name descname"><span class="pre">update</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">b</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/datasketch/lean_minhash.html#LeanMinHash.update"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#datasketch.LeanMinHash.update" title="Permalink to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">update</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">b</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/datasketch/lean_minhash.html#LeanMinHash.update"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#datasketch.LeanMinHash.update" title="Link to this definition"></a></dt>
 <dd><p>This method is not available on a LeanMinHash.
 Calling it raises a TypeError.</p>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="datasketch.LeanMinHash.copy">
-<span class="sig-name descname"><span class="pre">copy</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/datasketch/lean_minhash.html#LeanMinHash.copy"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#datasketch.LeanMinHash.copy" title="Permalink to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">copy</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/datasketch/lean_minhash.html#LeanMinHash.copy"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#datasketch.LeanMinHash.copy" title="Link to this definition"></a></dt>
 <dd><dl class="field-list simple">
 <dt class="field-odd">Returns<span class="colon">:</span></dt>
 <dd class="field-odd"><p>datasketch.MinHash – A copy of this MinHash by exporting its state.</p>
@@ -607,7 +618,7 @@ Calling it raises a TypeError.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="datasketch.LeanMinHash.bytesize">
-<span class="sig-name descname"><span class="pre">bytesize</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">byteorder</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'&#64;'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/datasketch/lean_minhash.html#LeanMinHash.bytesize"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#datasketch.LeanMinHash.bytesize" title="Permalink to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">bytesize</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">byteorder</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'&#64;'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/datasketch/lean_minhash.html#LeanMinHash.bytesize"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#datasketch.LeanMinHash.bytesize" title="Link to this definition"></a></dt>
 <dd><p>Compute the byte size after serialization.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -627,7 +638,7 @@ Default is <code class="docutils literal notranslate"><span class="pre">&#64;</s
 
 <dl class="py method">
 <dt class="sig sig-object py" id="datasketch.LeanMinHash.serialize">
-<span class="sig-name descname"><span class="pre">serialize</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">buf</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">byteorder</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'&#64;'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/datasketch/lean_minhash.html#LeanMinHash.serialize"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#datasketch.LeanMinHash.serialize" title="Permalink to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">serialize</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">buf</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">byteorder</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'&#64;'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/datasketch/lean_minhash.html#LeanMinHash.serialize"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#datasketch.LeanMinHash.serialize" title="Link to this definition"></a></dt>
 <dd><p>Serialize this lean MinHash and store the result in an allocated buffer.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -670,7 +681,7 @@ to be used by another program in a different programming language.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="datasketch.LeanMinHash.deserialize">
-<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">deserialize</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">buf</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">byteorder</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'&#64;'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/datasketch/lean_minhash.html#LeanMinHash.deserialize"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#datasketch.LeanMinHash.deserialize" title="Permalink to this definition"></a></dt>
+<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">deserialize</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">buf</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">byteorder</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'&#64;'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/datasketch/lean_minhash.html#LeanMinHash.deserialize"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#datasketch.LeanMinHash.deserialize" title="Link to this definition"></a></dt>
 <dd><p>Deserialize a lean MinHash from a buffer.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -700,19 +711,19 @@ Default is <code class="docutils literal notranslate"><span class="pre">&#64;</s
 
 <dl class="py method">
 <dt class="sig sig-object py" id="datasketch.LeanMinHash.__getstate__">
-<span class="sig-name descname"><span class="pre">__getstate__</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/datasketch/lean_minhash.html#LeanMinHash.__getstate__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#datasketch.LeanMinHash.__getstate__" title="Permalink to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">__getstate__</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/datasketch/lean_minhash.html#LeanMinHash.__getstate__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#datasketch.LeanMinHash.__getstate__" title="Link to this definition"></a></dt>
 <dd><p>Helper for pickle.</p>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="datasketch.LeanMinHash.__hash__">
-<span class="sig-name descname"><span class="pre">__hash__</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/datasketch/lean_minhash.html#LeanMinHash.__hash__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#datasketch.LeanMinHash.__hash__" title="Permalink to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">__hash__</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/datasketch/lean_minhash.html#LeanMinHash.__hash__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#datasketch.LeanMinHash.__hash__" title="Link to this definition"></a></dt>
 <dd><p>Return hash(self).</p>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="datasketch.LeanMinHash.union">
-<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">union</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">lmhs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/datasketch/lean_minhash.html#LeanMinHash.union"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#datasketch.LeanMinHash.union" title="Permalink to this definition"></a></dt>
+<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">union</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">lmhs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/datasketch/lean_minhash.html#LeanMinHash.union"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#datasketch.LeanMinHash.union" title="Link to this definition"></a></dt>
 <dd><p>Create a MinHash which is the union of the MinHash objects passed as arguments.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -732,10 +743,10 @@ but must be at least 2.</p>
 
 </section>
 <section id="weighted-minhash">
-<h2>Weighted MinHash<a class="headerlink" href="#weighted-minhash" title="Permalink to this heading"></a></h2>
+<h2>Weighted MinHash<a class="headerlink" href="#weighted-minhash" title="Link to this heading"></a></h2>
 <dl class="py class">
 <dt class="sig sig-object py" id="datasketch.WeightedMinHashGenerator">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">datasketch.</span></span><span class="sig-name descname"><span class="pre">WeightedMinHashGenerator</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dim</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sample_size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">128</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">seed</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/datasketch/weighted_minhash.html#WeightedMinHashGenerator"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#datasketch.WeightedMinHashGenerator" title="Permalink to this definition"></a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">datasketch.</span></span><span class="sig-name descname"><span class="pre">WeightedMinHashGenerator</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dim</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sample_size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">128</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">seed</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/datasketch/weighted_minhash.html#WeightedMinHashGenerator"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#datasketch.WeightedMinHashGenerator" title="Link to this definition"></a></dt>
 <dd><p>The weighted MinHash generator is used for creating
 new <a class="reference internal" href="#datasketch.WeightedMinHash" title="datasketch.WeightedMinHash"><code class="xref py py-class docutils literal notranslate"><span class="pre">datasketch.WeightedMinHash</span></code></a> objects.</p>
 <p>This weighted MinHash implementation is based on Sergey Ioffe’s paper,
@@ -752,12 +763,12 @@ weighted MinHash.</p></li>
 </dl>
 <dl class="py method">
 <dt class="sig sig-object py" id="datasketch.WeightedMinHashGenerator.__init__">
-<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dim</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sample_size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">128</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">seed</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/datasketch/weighted_minhash.html#WeightedMinHashGenerator.__init__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#datasketch.WeightedMinHashGenerator.__init__" title="Permalink to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dim</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sample_size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">128</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">seed</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/datasketch/weighted_minhash.html#WeightedMinHashGenerator.__init__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#datasketch.WeightedMinHashGenerator.__init__" title="Link to this definition"></a></dt>
 <dd></dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="datasketch.WeightedMinHashGenerator.minhash">
-<span class="sig-name descname"><span class="pre">minhash</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">v</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/datasketch/weighted_minhash.html#WeightedMinHashGenerator.minhash"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#datasketch.WeightedMinHashGenerator.minhash" title="Permalink to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">minhash</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">v</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/datasketch/weighted_minhash.html#WeightedMinHashGenerator.minhash"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#datasketch.WeightedMinHashGenerator.minhash" title="Link to this definition"></a></dt>
 <dd><p>Create a new weighted MinHash given a weighted Jaccard vector.
 Each dimension is an integer
 frequency of the corresponding element in the multi-set represented
@@ -777,7 +788,7 @@ by the vector.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="datasketch.WeightedMinHashGenerator.minhash_many">
-<span class="sig-name descname"><span class="pre">minhash_many</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">X</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">spmatrix</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">ndarray</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="#datasketch.WeightedMinHash" title="datasketch.weighted_minhash.WeightedMinHash"><span class="pre">WeightedMinHash</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="_modules/datasketch/weighted_minhash.html#WeightedMinHashGenerator.minhash_many"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#datasketch.WeightedMinHashGenerator.minhash_many" title="Permalink to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">minhash_many</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">X</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">spmatrix</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">ndarray</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="#datasketch.WeightedMinHash" title="datasketch.weighted_minhash.WeightedMinHash"><span class="pre">WeightedMinHash</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="_modules/datasketch/weighted_minhash.html#WeightedMinHashGenerator.minhash_many"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#datasketch.WeightedMinHashGenerator.minhash_many" title="Link to this definition"></a></dt>
 <dd><p>Create new WeightedMinHash instances given a matrix of weighted
 Jaccard vectors.  In the input matrix X, each row corresponds to a
 multi-set, and each column stores the integer frequency of the
@@ -802,7 +813,7 @@ Each element is either a WeightedMinHash instance or None
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="datasketch.WeightedMinHashGenerator.__weakref__">
-<span class="sig-name descname"><span class="pre">__weakref__</span></span><a class="headerlink" href="#datasketch.WeightedMinHashGenerator.__weakref__" title="Permalink to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">__weakref__</span></span><a class="headerlink" href="#datasketch.WeightedMinHashGenerator.__weakref__" title="Link to this definition"></a></dt>
 <dd><p>list of weak references to the object (if defined)</p>
 </dd></dl>
 
@@ -810,7 +821,7 @@ Each element is either a WeightedMinHash instance or None
 
 <dl class="py class">
 <dt class="sig sig-object py" id="datasketch.WeightedMinHash">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">datasketch.</span></span><span class="sig-name descname"><span class="pre">WeightedMinHash</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">seed</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">hashvalues</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/datasketch/weighted_minhash.html#WeightedMinHash"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#datasketch.WeightedMinHash" title="Permalink to this definition"></a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">datasketch.</span></span><span class="sig-name descname"><span class="pre">WeightedMinHash</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">seed</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">hashvalues</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/datasketch/weighted_minhash.html#WeightedMinHash"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#datasketch.WeightedMinHash" title="Link to this definition"></a></dt>
 <dd><p>New weighted MinHash is generated by
 <a class="reference internal" href="#datasketch.WeightedMinHashGenerator" title="datasketch.WeightedMinHashGenerator"><code class="xref py py-class docutils literal notranslate"><span class="pre">datasketch.WeightedMinHashGenerator</span></code></a>.
 You can also initialize weighted MinHash by using the state
@@ -826,12 +837,12 @@ MinHash.</p></li>
 </dl>
 <dl class="py method">
 <dt class="sig sig-object py" id="datasketch.WeightedMinHash.__init__">
-<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">seed</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">hashvalues</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/datasketch/weighted_minhash.html#WeightedMinHash.__init__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#datasketch.WeightedMinHash.__init__" title="Permalink to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">seed</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">hashvalues</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/datasketch/weighted_minhash.html#WeightedMinHash.__init__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#datasketch.WeightedMinHash.__init__" title="Link to this definition"></a></dt>
 <dd></dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="datasketch.WeightedMinHash.jaccard">
-<span class="sig-name descname"><span class="pre">jaccard</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">other</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/datasketch/weighted_minhash.html#WeightedMinHash.jaccard"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#datasketch.WeightedMinHash.jaccard" title="Permalink to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">jaccard</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">other</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/datasketch/weighted_minhash.html#WeightedMinHash.jaccard"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#datasketch.WeightedMinHash.jaccard" title="Link to this definition"></a></dt>
 <dd><p>Estimate the <a class="reference external" href="http://mathoverflow.net/questions/123339/weighted-jaccard-similarity">weighted Jaccard similarity</a> between the
 multi-sets represented by this weighted MinHash and the other.</p>
 <dl class="field-list simple">
@@ -849,7 +860,7 @@ multi-sets represented by this weighted MinHash and the other.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="datasketch.WeightedMinHash.digest">
-<span class="sig-name descname"><span class="pre">digest</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/datasketch/weighted_minhash.html#WeightedMinHash.digest"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#datasketch.WeightedMinHash.digest" title="Permalink to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">digest</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/datasketch/weighted_minhash.html#WeightedMinHash.digest"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#datasketch.WeightedMinHash.digest" title="Link to this definition"></a></dt>
 <dd><p>Export the hash values, which is the internal state of the
 weighted MinHash.</p>
 <dl class="field-list simple">
@@ -864,7 +875,7 @@ weighted MinHash.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="datasketch.WeightedMinHash.copy">
-<span class="sig-name descname"><span class="pre">copy</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/datasketch/weighted_minhash.html#WeightedMinHash.copy"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#datasketch.WeightedMinHash.copy" title="Permalink to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">copy</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/datasketch/weighted_minhash.html#WeightedMinHash.copy"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#datasketch.WeightedMinHash.copy" title="Link to this definition"></a></dt>
 <dd><dl class="field-list simple">
 <dt class="field-odd">Returns<span class="colon">:</span></dt>
 <dd class="field-odd"><p>A copy of this weighted MinHash by exporting
@@ -878,7 +889,7 @@ its state.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="datasketch.WeightedMinHash.__len__">
-<span class="sig-name descname"><span class="pre">__len__</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/datasketch/weighted_minhash.html#WeightedMinHash.__len__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#datasketch.WeightedMinHash.__len__" title="Permalink to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">__len__</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/datasketch/weighted_minhash.html#WeightedMinHash.__len__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#datasketch.WeightedMinHash.__len__" title="Link to this definition"></a></dt>
 <dd><dl class="field-list simple">
 <dt class="field-odd">Returns<span class="colon">:</span></dt>
 <dd class="field-odd"><p>The number of hash values.</p>
@@ -891,7 +902,7 @@ its state.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="datasketch.WeightedMinHash.__eq__">
-<span class="sig-name descname"><span class="pre">__eq__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">other</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/datasketch/weighted_minhash.html#WeightedMinHash.__eq__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#datasketch.WeightedMinHash.__eq__" title="Permalink to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">__eq__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">other</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/datasketch/weighted_minhash.html#WeightedMinHash.__eq__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#datasketch.WeightedMinHash.__eq__" title="Link to this definition"></a></dt>
 <dd><dl class="field-list simple">
 <dt class="field-odd">Returns<span class="colon">:</span></dt>
 <dd class="field-odd"><p>If their seeds and hash values are both equal then two
@@ -905,12 +916,12 @@ are equivalent.</p>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="datasketch.WeightedMinHash.__hash__">
-<span class="sig-name descname"><span class="pre">__hash__</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#datasketch.WeightedMinHash.__hash__" title="Permalink to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">__hash__</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#datasketch.WeightedMinHash.__hash__" title="Link to this definition"></a></dt>
 <dd></dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="datasketch.WeightedMinHash.__weakref__">
-<span class="sig-name descname"><span class="pre">__weakref__</span></span><a class="headerlink" href="#datasketch.WeightedMinHash.__weakref__" title="Permalink to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">__weakref__</span></span><a class="headerlink" href="#datasketch.WeightedMinHash.__weakref__" title="Link to this definition"></a></dt>
 <dd><p>list of weak references to the object (if defined)</p>
 </dd></dl>
 
@@ -918,10 +929,10 @@ are equivalent.</p>
 
 </section>
 <section id="minhash-lsh">
-<h2>MinHash LSH<a class="headerlink" href="#minhash-lsh" title="Permalink to this heading"></a></h2>
+<h2>MinHash LSH<a class="headerlink" href="#minhash-lsh" title="Link to this heading"></a></h2>
 <dl class="py class">
 <dt class="sig sig-object py" id="datasketch.MinHashLSH">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">datasketch.</span></span><span class="sig-name descname"><span class="pre">MinHashLSH</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">threshold</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.9</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">num_perm</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">128</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">weights</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">(0.5,</span> <span class="pre">0.5)</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">params</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">storage_config</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">prepickle</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">hashfunc</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/datasketch/lsh.html#MinHashLSH"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#datasketch.MinHashLSH" title="Permalink to this definition"></a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">datasketch.</span></span><span class="sig-name descname"><span class="pre">MinHashLSH</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">threshold</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.9</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">num_perm</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">128</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">weights</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">(0.5,</span> <span class="pre">0.5)</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">params</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">storage_config</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">prepickle</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">hashfunc</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/datasketch/lsh.html#MinHashLSH"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#datasketch.MinHashLSH" title="Link to this definition"></a></dt>
 <dd><p>The <a class="reference internal" href="lsh.html#minhash-lsh"><span class="std std-ref">MinHash LSH</span></a> index.
 It supports query with <a class="reference external" href="https://en.wikipedia.org/wiki/Jaccard_index">Jaccard similarity</a> threshold.
 Reference: <a class="reference external" href="http://www.mmds.org/">Chapter 3, Mining of Massive Datasets</a>.</p>
@@ -967,12 +978,12 @@ Try to live with a small difference between weights (i.e. &lt; 0.5).</p>
 </div>
 <dl class="py method">
 <dt class="sig sig-object py" id="datasketch.MinHashLSH.__init__">
-<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">threshold</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.9</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">num_perm</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">128</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">weights</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">(0.5,</span> <span class="pre">0.5)</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">params</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">storage_config</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">prepickle</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">hashfunc</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/datasketch/lsh.html#MinHashLSH.__init__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#datasketch.MinHashLSH.__init__" title="Permalink to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">threshold</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.9</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">num_perm</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">128</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">weights</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">(0.5,</span> <span class="pre">0.5)</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">params</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">storage_config</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">prepickle</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">hashfunc</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/datasketch/lsh.html#MinHashLSH.__init__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#datasketch.MinHashLSH.__init__" title="Link to this definition"></a></dt>
 <dd></dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="datasketch.MinHashLSH.insert">
-<span class="sig-name descname"><span class="pre">insert</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">key</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">minhash</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">check_duplication</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/datasketch/lsh.html#MinHashLSH.insert"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#datasketch.MinHashLSH.insert" title="Permalink to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">insert</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">key</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">minhash</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">check_duplication</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/datasketch/lsh.html#MinHashLSH.insert"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#datasketch.MinHashLSH.insert" title="Link to this definition"></a></dt>
 <dd><p>Insert a key to the index, together
 with a MinHash (or weighted MinHash) of the set referenced by
 the key.</p>
@@ -992,7 +1003,7 @@ you can set <cite>check_duplication = False</cite>.</p></li>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="datasketch.MinHashLSH.insertion_session">
-<span class="sig-name descname"><span class="pre">insertion_session</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">buffer_size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">50000</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/datasketch/lsh.html#MinHashLSH.insertion_session"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#datasketch.MinHashLSH.insertion_session" title="Permalink to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">insertion_session</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">buffer_size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">50000</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/datasketch/lsh.html#MinHashLSH.insertion_session"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#datasketch.MinHashLSH.insertion_session" title="Link to this definition"></a></dt>
 <dd><p>Create a context manager for fast insertion into this index.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -1006,7 +1017,7 @@ you can set <cite>check_duplication = False</cite>.</p></li>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="datasketch.MinHashLSH.query">
-<span class="sig-name descname"><span class="pre">query</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">minhash</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/datasketch/lsh.html#MinHashLSH.query"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#datasketch.MinHashLSH.query" title="Permalink to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">query</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">minhash</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/datasketch/lsh.html#MinHashLSH.query"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#datasketch.MinHashLSH.query" title="Link to this definition"></a></dt>
 <dd><p>Giving the MinHash of the query set, retrieve
 the keys that reference sets with Jaccard
 similarities likely greater than the threshold.</p>
@@ -1026,7 +1037,7 @@ filter by computing Jaccard similarity using original sets.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="datasketch.MinHashLSH.add_to_query_buffer">
-<span class="sig-name descname"><span class="pre">add_to_query_buffer</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">minhash</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/datasketch/lsh.html#MinHashLSH.add_to_query_buffer"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#datasketch.MinHashLSH.add_to_query_buffer" title="Permalink to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">add_to_query_buffer</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">minhash</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/datasketch/lsh.html#MinHashLSH.add_to_query_buffer"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#datasketch.MinHashLSH.add_to_query_buffer" title="Link to this definition"></a></dt>
 <dd><p>Giving the MinHash of the query set, buffer
 queries to retrieve the keys that references
 sets with Jaccard similarities greater than
@@ -1044,7 +1055,7 @@ is used with <cite>shared_buffer</cite>.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="datasketch.MinHashLSH.collect_query_buffer">
-<span class="sig-name descname"><span class="pre">collect_query_buffer</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/datasketch/lsh.html#MinHashLSH.collect_query_buffer"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#datasketch.MinHashLSH.collect_query_buffer" title="Permalink to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">collect_query_buffer</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/datasketch/lsh.html#MinHashLSH.collect_query_buffer"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#datasketch.MinHashLSH.collect_query_buffer" title="Link to this definition"></a></dt>
 <dd><p>Execute and return buffered queries given
 by <cite>add_to_query_buffer</cite>.</p>
 <p>If multiple query MinHash were added to the query buffer,
@@ -1058,7 +1069,7 @@ the intersection of the results of all query MinHash will be returned.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="datasketch.MinHashLSH.__contains__">
-<span class="sig-name descname"><span class="pre">__contains__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">key</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/datasketch/lsh.html#MinHashLSH.__contains__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#datasketch.MinHashLSH.__contains__" title="Permalink to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">__contains__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">key</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/datasketch/lsh.html#MinHashLSH.__contains__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#datasketch.MinHashLSH.__contains__" title="Link to this definition"></a></dt>
 <dd><dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><p><strong>key</strong> (<em>hashable</em>) – The unique identifier of a set.</p>
@@ -1074,7 +1085,7 @@ the intersection of the results of all query MinHash will be returned.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="datasketch.MinHashLSH.remove">
-<span class="sig-name descname"><span class="pre">remove</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">key</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/datasketch/lsh.html#MinHashLSH.remove"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#datasketch.MinHashLSH.remove" title="Permalink to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">remove</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">key</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/datasketch/lsh.html#MinHashLSH.remove"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#datasketch.MinHashLSH.remove" title="Link to this definition"></a></dt>
 <dd><p>Remove the key from the index.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -1085,7 +1096,7 @@ the intersection of the results of all query MinHash will be returned.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="datasketch.MinHashLSH.is_empty">
-<span class="sig-name descname"><span class="pre">is_empty</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/datasketch/lsh.html#MinHashLSH.is_empty"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#datasketch.MinHashLSH.is_empty" title="Permalink to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">is_empty</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/datasketch/lsh.html#MinHashLSH.is_empty"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#datasketch.MinHashLSH.is_empty" title="Link to this definition"></a></dt>
 <dd><dl class="field-list simple">
 <dt class="field-odd">Returns<span class="colon">:</span></dt>
 <dd class="field-odd"><p>Check if the index is empty.</p>
@@ -1098,14 +1109,14 @@ the intersection of the results of all query MinHash will be returned.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="datasketch.MinHashLSH.get_counts">
-<span class="sig-name descname"><span class="pre">get_counts</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/datasketch/lsh.html#MinHashLSH.get_counts"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#datasketch.MinHashLSH.get_counts" title="Permalink to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">get_counts</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/datasketch/lsh.html#MinHashLSH.get_counts"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#datasketch.MinHashLSH.get_counts" title="Link to this definition"></a></dt>
 <dd><p>Returns a list of length <code class="docutils literal notranslate"><span class="pre">self.b</span></code> with elements representing the
 number of keys stored under each bucket for the given permutation.</p>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="datasketch.MinHashLSH.get_subset_counts">
-<span class="sig-name descname"><span class="pre">get_subset_counts</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">keys</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/datasketch/lsh.html#MinHashLSH.get_subset_counts"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#datasketch.MinHashLSH.get_subset_counts" title="Permalink to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">get_subset_counts</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">keys</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/datasketch/lsh.html#MinHashLSH.get_subset_counts"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#datasketch.MinHashLSH.get_subset_counts" title="Link to this definition"></a></dt>
 <dd><p>Returns the bucket allocation counts (see <a class="reference internal" href="#datasketch.MinHashLSH.get_counts" title="datasketch.MinHashLSH.get_counts"><code class="xref py py-func docutils literal notranslate"><span class="pre">get_counts()</span></code></a> above)
 restricted to the list of keys given.</p>
 <dl class="field-list simple">
@@ -1118,7 +1129,7 @@ counts</p>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="datasketch.MinHashLSH.__weakref__">
-<span class="sig-name descname"><span class="pre">__weakref__</span></span><a class="headerlink" href="#datasketch.MinHashLSH.__weakref__" title="Permalink to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">__weakref__</span></span><a class="headerlink" href="#datasketch.MinHashLSH.__weakref__" title="Link to this definition"></a></dt>
 <dd><p>list of weak references to the object (if defined)</p>
 </dd></dl>
 
@@ -1126,13 +1137,13 @@ counts</p>
 
 </section>
 <section id="asynchronous-minhash-lsh">
-<h2>Asynchronous MinHash LSH<a class="headerlink" href="#asynchronous-minhash-lsh" title="Permalink to this heading"></a></h2>
+<h2>Asynchronous MinHash LSH<a class="headerlink" href="#asynchronous-minhash-lsh" title="Link to this heading"></a></h2>
 </section>
 <section id="minhash-lsh-forest">
-<h2>MinHash LSH Forest<a class="headerlink" href="#minhash-lsh-forest" title="Permalink to this heading"></a></h2>
+<h2>MinHash LSH Forest<a class="headerlink" href="#minhash-lsh-forest" title="Link to this heading"></a></h2>
 <dl class="py class">
 <dt class="sig sig-object py" id="datasketch.MinHashLSHForest">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">datasketch.</span></span><span class="sig-name descname"><span class="pre">MinHashLSHForest</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">num_perm</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">128</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">l</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">8</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/datasketch/lshforest.html#MinHashLSHForest"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#datasketch.MinHashLSHForest" title="Permalink to this definition"></a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">datasketch.</span></span><span class="sig-name descname"><span class="pre">MinHashLSHForest</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">num_perm</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">128</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">l</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">8</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/datasketch/lshforest.html#MinHashLSHForest"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#datasketch.MinHashLSHForest" title="Link to this definition"></a></dt>
 <dd><p>The LSH Forest for MinHash. It supports top-k query in Jaccard
 similarity.
 Instead of using prefix trees as the <a class="reference external" href="http://ilpubs.stanford.edu:8090/678/1/2005-14.pdf">original paper</a>,
@@ -1156,12 +1167,12 @@ and weighted MinHash without modification.</p>
 </div>
 <dl class="py method">
 <dt class="sig sig-object py" id="datasketch.MinHashLSHForest.__init__">
-<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">num_perm</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">128</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">l</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">8</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/datasketch/lshforest.html#MinHashLSHForest.__init__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#datasketch.MinHashLSHForest.__init__" title="Permalink to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">num_perm</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">128</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">l</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">8</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/datasketch/lshforest.html#MinHashLSHForest.__init__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#datasketch.MinHashLSHForest.__init__" title="Link to this definition"></a></dt>
 <dd></dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="datasketch.MinHashLSHForest.add">
-<span class="sig-name descname"><span class="pre">add</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">key</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">minhash</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/datasketch/lshforest.html#MinHashLSHForest.add"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#datasketch.MinHashLSHForest.add" title="Permalink to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">add</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">key</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">minhash</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/datasketch/lshforest.html#MinHashLSHForest.add"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#datasketch.MinHashLSHForest.add" title="Link to this definition"></a></dt>
 <dd><p>Add a unique key, together
 with a MinHash (or weighted MinHash) of the set referenced by the key.</p>
 <div class="admonition note">
@@ -1181,13 +1192,13 @@ with a MinHash (or weighted MinHash) of the set referenced by the key.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="datasketch.MinHashLSHForest.index">
-<span class="sig-name descname"><span class="pre">index</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/datasketch/lshforest.html#MinHashLSHForest.index"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#datasketch.MinHashLSHForest.index" title="Permalink to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">index</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/datasketch/lshforest.html#MinHashLSHForest.index"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#datasketch.MinHashLSHForest.index" title="Link to this definition"></a></dt>
 <dd><p>Index all the keys added so far and make them searchable.</p>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="datasketch.MinHashLSHForest.query">
-<span class="sig-name descname"><span class="pre">query</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">minhash</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">k</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/datasketch/lshforest.html#MinHashLSHForest.query"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#datasketch.MinHashLSHForest.query" title="Permalink to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">query</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">minhash</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">k</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/datasketch/lshforest.html#MinHashLSHForest.query"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#datasketch.MinHashLSHForest.query" title="Link to this definition"></a></dt>
 <dd><p>Return the approximate top-k keys that have the
 (approximately) highest Jaccard similarities to the query set.</p>
 <dl class="field-list simple">
@@ -1218,7 +1229,7 @@ can make references to them.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="datasketch.MinHashLSHForest.is_empty">
-<span class="sig-name descname"><span class="pre">is_empty</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/datasketch/lshforest.html#MinHashLSHForest.is_empty"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#datasketch.MinHashLSHForest.is_empty" title="Permalink to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">is_empty</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/datasketch/lshforest.html#MinHashLSHForest.is_empty"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#datasketch.MinHashLSHForest.is_empty" title="Link to this definition"></a></dt>
 <dd><p>Check whether there is any searchable keys in the index.
 Note that keys won’t be searchable until <cite>index</cite> is called.</p>
 <dl class="field-list simple">
@@ -1233,7 +1244,7 @@ Note that keys won’t be searchable until <cite>index</cite> is called.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="datasketch.MinHashLSHForest.__contains__">
-<span class="sig-name descname"><span class="pre">__contains__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">key</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/datasketch/lshforest.html#MinHashLSHForest.__contains__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#datasketch.MinHashLSHForest.__contains__" title="Permalink to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">__contains__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">key</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/datasketch/lshforest.html#MinHashLSHForest.__contains__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#datasketch.MinHashLSHForest.__contains__" title="Link to this definition"></a></dt>
 <dd><dl class="field-list simple">
 <dt class="field-odd">Returns<span class="colon">:</span></dt>
 <dd class="field-odd"><p>True only if the key has been added to the index.</p>
@@ -1246,7 +1257,7 @@ Note that keys won’t be searchable until <cite>index</cite> is called.</p>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="datasketch.MinHashLSHForest.__weakref__">
-<span class="sig-name descname"><span class="pre">__weakref__</span></span><a class="headerlink" href="#datasketch.MinHashLSHForest.__weakref__" title="Permalink to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">__weakref__</span></span><a class="headerlink" href="#datasketch.MinHashLSHForest.__weakref__" title="Link to this definition"></a></dt>
 <dd><p>list of weak references to the object (if defined)</p>
 </dd></dl>
 
@@ -1254,10 +1265,10 @@ Note that keys won’t be searchable until <cite>index</cite> is called.</p>
 
 </section>
 <section id="minhash-lsh-ensemble">
-<h2>MinHash LSH Ensemble<a class="headerlink" href="#minhash-lsh-ensemble" title="Permalink to this heading"></a></h2>
+<h2>MinHash LSH Ensemble<a class="headerlink" href="#minhash-lsh-ensemble" title="Link to this heading"></a></h2>
 <dl class="py class">
 <dt class="sig sig-object py" id="datasketch.MinHashLSHEnsemble">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">datasketch.</span></span><span class="sig-name descname"><span class="pre">MinHashLSHEnsemble</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">threshold</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.9</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">num_perm</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">128</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">num_part</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">16</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">m</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">8</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">weights</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">(0.5,</span> <span class="pre">0.5)</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">storage_config</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">prepickle</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/datasketch/lshensemble.html#MinHashLSHEnsemble"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#datasketch.MinHashLSHEnsemble" title="Permalink to this definition"></a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">datasketch.</span></span><span class="sig-name descname"><span class="pre">MinHashLSHEnsemble</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">threshold</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.9</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">num_perm</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">128</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">num_part</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">16</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">m</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">8</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">weights</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">(0.5,</span> <span class="pre">0.5)</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">storage_config</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">prepickle</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/datasketch/lshensemble.html#MinHashLSHEnsemble"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#datasketch.MinHashLSHEnsemble" title="Link to this definition"></a></dt>
 <dd><p>The <a class="reference internal" href="lshensemble.html#minhash-lsh-ensemble"><span class="std std-ref">MinHash LSH Ensemble</span></a> index. It supports
 <a class="reference internal" href="lshensemble.html#containment"><span class="std std-ref">Containment</span></a> queries.
 The implementation is based on
@@ -1306,12 +1317,12 @@ of LSH Ensemble, in which <cite>m</cite> is named <cite>MaxK</cite>.</p>
 </div>
 <dl class="py method">
 <dt class="sig sig-object py" id="datasketch.MinHashLSHEnsemble.__init__">
-<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">threshold</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.9</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">num_perm</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">128</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">num_part</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">16</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">m</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">8</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">weights</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">(0.5,</span> <span class="pre">0.5)</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">storage_config</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">prepickle</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/datasketch/lshensemble.html#MinHashLSHEnsemble.__init__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#datasketch.MinHashLSHEnsemble.__init__" title="Permalink to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">threshold</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.9</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">num_perm</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">128</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">num_part</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">16</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">m</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">8</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">weights</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">(0.5,</span> <span class="pre">0.5)</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">storage_config</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">prepickle</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/datasketch/lshensemble.html#MinHashLSHEnsemble.__init__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#datasketch.MinHashLSHEnsemble.__init__" title="Link to this definition"></a></dt>
 <dd></dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="datasketch.MinHashLSHEnsemble.index">
-<span class="sig-name descname"><span class="pre">index</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">entries</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/datasketch/lshensemble.html#MinHashLSHEnsemble.index"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#datasketch.MinHashLSHEnsemble.index" title="Permalink to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">index</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">entries</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/datasketch/lshensemble.html#MinHashLSHEnsemble.index"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#datasketch.MinHashLSHEnsemble.index" title="Link to this definition"></a></dt>
 <dd><p>Index all sets given their keys, MinHashes, and sizes.
 It can be called only once after the index is created.</p>
 <dl class="field-list simple">
@@ -1330,7 +1341,7 @@ and <cite>size</cite> is the size or number of unique items in the set.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="datasketch.MinHashLSHEnsemble.query">
-<span class="sig-name descname"><span class="pre">query</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">minhash</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">size</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/datasketch/lshensemble.html#MinHashLSHEnsemble.query"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#datasketch.MinHashLSHEnsemble.query" title="Permalink to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">query</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">minhash</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">size</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/datasketch/lshensemble.html#MinHashLSHEnsemble.query"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#datasketch.MinHashLSHEnsemble.query" title="Link to this definition"></a></dt>
 <dd><p>Giving the MinHash and size of the query set, retrieve
 keys that references sets with containment with respect to
 the query set greater than the threshold.</p>
@@ -1349,7 +1360,7 @@ the query set greater than the threshold.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="datasketch.MinHashLSHEnsemble.__contains__">
-<span class="sig-name descname"><span class="pre">__contains__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">key</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/datasketch/lshensemble.html#MinHashLSHEnsemble.__contains__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#datasketch.MinHashLSHEnsemble.__contains__" title="Permalink to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">__contains__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">key</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/datasketch/lshensemble.html#MinHashLSHEnsemble.__contains__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#datasketch.MinHashLSHEnsemble.__contains__" title="Link to this definition"></a></dt>
 <dd><dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><p><strong>key</strong> (<em>hashable</em>) – The unique identifier of a set.</p>
@@ -1365,7 +1376,7 @@ the query set greater than the threshold.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="datasketch.MinHashLSHEnsemble.is_empty">
-<span class="sig-name descname"><span class="pre">is_empty</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/datasketch/lshensemble.html#MinHashLSHEnsemble.is_empty"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#datasketch.MinHashLSHEnsemble.is_empty" title="Permalink to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">is_empty</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/datasketch/lshensemble.html#MinHashLSHEnsemble.is_empty"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#datasketch.MinHashLSHEnsemble.is_empty" title="Link to this definition"></a></dt>
 <dd><dl class="field-list simple">
 <dt class="field-odd">Returns<span class="colon">:</span></dt>
 <dd class="field-odd"><p>Check if the index is empty.</p>
@@ -1378,7 +1389,7 @@ the query set greater than the threshold.</p>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="datasketch.MinHashLSHEnsemble.__weakref__">
-<span class="sig-name descname"><span class="pre">__weakref__</span></span><a class="headerlink" href="#datasketch.MinHashLSHEnsemble.__weakref__" title="Permalink to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">__weakref__</span></span><a class="headerlink" href="#datasketch.MinHashLSHEnsemble.__weakref__" title="Link to this definition"></a></dt>
 <dd><p>list of weak references to the object (if defined)</p>
 </dd></dl>
 
@@ -1386,10 +1397,10 @@ the query set greater than the threshold.</p>
 
 </section>
 <section id="hyperloglog">
-<h2>HyperLogLog<a class="headerlink" href="#hyperloglog" title="Permalink to this heading"></a></h2>
+<h2>HyperLogLog<a class="headerlink" href="#hyperloglog" title="Link to this heading"></a></h2>
 <dl class="py class">
 <dt class="sig sig-object py" id="datasketch.HyperLogLog">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">datasketch.</span></span><span class="sig-name descname"><span class="pre">HyperLogLog</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">p=8</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">reg=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">hashfunc=&lt;function</span> <span class="pre">sha1_hash32&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">hashobj=None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/datasketch/hyperloglog.html#HyperLogLog"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#datasketch.HyperLogLog" title="Permalink to this definition"></a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">datasketch.</span></span><span class="sig-name descname"><span class="pre">HyperLogLog</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">p=8</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">reg=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">hashfunc=&lt;function</span> <span class="pre">sha1_hash32&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">hashobj=None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/datasketch/hyperloglog.html#HyperLogLog"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#datasketch.HyperLogLog" title="Link to this definition"></a></dt>
 <dd><p>The HyperLogLog data sketch for estimating
 cardinality of very large dataset in a single pass.
 The original HyperLogLog is described <a class="reference external" href="http://algo.inria.fr/flajolet/Publications/FlFuGaMe07.pdf">here</a>.</p>
@@ -1414,12 +1425,12 @@ The default hash function is based on SHA1 from <a class="reference external" hr
 </dl>
 <dl class="py method">
 <dt class="sig sig-object py" id="datasketch.HyperLogLog.__init__">
-<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">p=8</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">reg=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">hashfunc=&lt;function</span> <span class="pre">sha1_hash32&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">hashobj=None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/datasketch/hyperloglog.html#HyperLogLog.__init__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#datasketch.HyperLogLog.__init__" title="Permalink to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">p=8</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">reg=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">hashfunc=&lt;function</span> <span class="pre">sha1_hash32&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">hashobj=None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/datasketch/hyperloglog.html#HyperLogLog.__init__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#datasketch.HyperLogLog.__init__" title="Link to this definition"></a></dt>
 <dd></dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="datasketch.HyperLogLog.update">
-<span class="sig-name descname"><span class="pre">update</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">b</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/datasketch/hyperloglog.html#HyperLogLog.update"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#datasketch.HyperLogLog.update" title="Permalink to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">update</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">b</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/datasketch/hyperloglog.html#HyperLogLog.update"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#datasketch.HyperLogLog.update" title="Link to this definition"></a></dt>
 <dd><p>Update the HyperLogLog with a new data value in bytes.
 The value will be hashed using the hash function specified by
 the <cite>hashfunc</cite> argument in the constructor.</p>
@@ -1447,7 +1458,7 @@ function, which requires bytes as input):</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="datasketch.HyperLogLog.count">
-<span class="sig-name descname"><span class="pre">count</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/datasketch/hyperloglog.html#HyperLogLog.count"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#datasketch.HyperLogLog.count" title="Permalink to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">count</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/datasketch/hyperloglog.html#HyperLogLog.count"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#datasketch.HyperLogLog.count" title="Link to this definition"></a></dt>
 <dd><p>Estimate the cardinality of the data values seen so far.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Returns<span class="colon">:</span></dt>
@@ -1461,7 +1472,7 @@ function, which requires bytes as input):</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="datasketch.HyperLogLog.merge">
-<span class="sig-name descname"><span class="pre">merge</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">other</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/datasketch/hyperloglog.html#HyperLogLog.merge"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#datasketch.HyperLogLog.merge" title="Permalink to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">merge</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">other</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/datasketch/hyperloglog.html#HyperLogLog.merge"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#datasketch.HyperLogLog.merge" title="Link to this definition"></a></dt>
 <dd><p>Merge the other HyperLogLog with this one, making this the union of the
 two.</p>
 <dl class="field-list simple">
@@ -1473,7 +1484,7 @@ two.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="datasketch.HyperLogLog.digest">
-<span class="sig-name descname"><span class="pre">digest</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/datasketch/hyperloglog.html#HyperLogLog.digest"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#datasketch.HyperLogLog.digest" title="Permalink to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">digest</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/datasketch/hyperloglog.html#HyperLogLog.digest"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#datasketch.HyperLogLog.digest" title="Link to this definition"></a></dt>
 <dd><dl class="field-list simple">
 <dt class="field-odd">Returns<span class="colon">:</span></dt>
 <dd class="field-odd"><p>The current internal state.</p>
@@ -1486,7 +1497,7 @@ two.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="datasketch.HyperLogLog.copy">
-<span class="sig-name descname"><span class="pre">copy</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/datasketch/hyperloglog.html#HyperLogLog.copy"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#datasketch.HyperLogLog.copy" title="Permalink to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">copy</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/datasketch/hyperloglog.html#HyperLogLog.copy"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#datasketch.HyperLogLog.copy" title="Link to this definition"></a></dt>
 <dd><p>Create a copy of the current HyperLogLog by exporting its state.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
@@ -1497,7 +1508,7 @@ two.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="datasketch.HyperLogLog.is_empty">
-<span class="sig-name descname"><span class="pre">is_empty</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/datasketch/hyperloglog.html#HyperLogLog.is_empty"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#datasketch.HyperLogLog.is_empty" title="Permalink to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">is_empty</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/datasketch/hyperloglog.html#HyperLogLog.is_empty"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#datasketch.HyperLogLog.is_empty" title="Link to this definition"></a></dt>
 <dd><dl class="field-list simple">
 <dt class="field-odd">Returns<span class="colon">:</span></dt>
 <dd class="field-odd"><p>True if the current HyperLogLog is empty - at the state of just
@@ -1511,13 +1522,13 @@ initialized.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="datasketch.HyperLogLog.clear">
-<span class="sig-name descname"><span class="pre">clear</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/datasketch/hyperloglog.html#HyperLogLog.clear"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#datasketch.HyperLogLog.clear" title="Permalink to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">clear</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/datasketch/hyperloglog.html#HyperLogLog.clear"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#datasketch.HyperLogLog.clear" title="Link to this definition"></a></dt>
 <dd><p>Reset the current HyperLogLog to empty.</p>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="datasketch.HyperLogLog.__len__">
-<span class="sig-name descname"><span class="pre">__len__</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/datasketch/hyperloglog.html#HyperLogLog.__len__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#datasketch.HyperLogLog.__len__" title="Permalink to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">__len__</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/datasketch/hyperloglog.html#HyperLogLog.__len__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#datasketch.HyperLogLog.__len__" title="Link to this definition"></a></dt>
 <dd><dl class="field-list simple">
 <dt class="field-odd">Returns<span class="colon">:</span></dt>
 <dd class="field-odd"><p><dl class="simple">
@@ -1534,7 +1545,7 @@ initialized.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="datasketch.HyperLogLog.__eq__">
-<span class="sig-name descname"><span class="pre">__eq__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">other</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/datasketch/hyperloglog.html#HyperLogLog.__eq__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#datasketch.HyperLogLog.__eq__" title="Permalink to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">__eq__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">other</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/datasketch/hyperloglog.html#HyperLogLog.__eq__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#datasketch.HyperLogLog.__eq__" title="Link to this definition"></a></dt>
 <dd><p>Check equivalence between two HyperLogLogs</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -1551,23 +1562,23 @@ initialized.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="datasketch.HyperLogLog.__getstate__">
-<span class="sig-name descname"><span class="pre">__getstate__</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/datasketch/hyperloglog.html#HyperLogLog.__getstate__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#datasketch.HyperLogLog.__getstate__" title="Permalink to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">__getstate__</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/datasketch/hyperloglog.html#HyperLogLog.__getstate__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#datasketch.HyperLogLog.__getstate__" title="Link to this definition"></a></dt>
 <dd><p>Helper for pickle.</p>
 </dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="datasketch.HyperLogLog.__hash__">
-<span class="sig-name descname"><span class="pre">__hash__</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#datasketch.HyperLogLog.__hash__" title="Permalink to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">__hash__</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#datasketch.HyperLogLog.__hash__" title="Link to this definition"></a></dt>
 <dd></dd></dl>
 
 </dd></dl>
 
 </section>
 <section id="id3">
-<h2>HyperLogLog++<a class="headerlink" href="#id3" title="Permalink to this heading"></a></h2>
+<h2>HyperLogLog++<a class="headerlink" href="#id3" title="Link to this heading"></a></h2>
 <dl class="py class">
 <dt class="sig sig-object py" id="datasketch.HyperLogLogPlusPlus">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">datasketch.</span></span><span class="sig-name descname"><span class="pre">HyperLogLogPlusPlus</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">p=8</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">reg=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">hashfunc=&lt;function</span> <span class="pre">sha1_hash64&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">hashobj=None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/datasketch/hyperloglog.html#HyperLogLogPlusPlus"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#datasketch.HyperLogLogPlusPlus" title="Permalink to this definition"></a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">datasketch.</span></span><span class="sig-name descname"><span class="pre">HyperLogLogPlusPlus</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">p=8</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">reg=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">hashfunc=&lt;function</span> <span class="pre">sha1_hash64&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">hashobj=None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/datasketch/hyperloglog.html#HyperLogLogPlusPlus"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#datasketch.HyperLogLogPlusPlus" title="Link to this definition"></a></dt>
 <dd><p>HyperLogLog++ is an enhanced HyperLogLog <a class="reference external" href="http://research.google.com/pubs/pub40671.html">from Google</a>.
 Main changes from the original HyperLogLog:</p>
 <ol class="arabic simple">
@@ -1594,18 +1605,18 @@ The default hash function is based on SHA1 from <a class="reference external" hr
 </dl>
 <dl class="py method">
 <dt class="sig sig-object py" id="datasketch.HyperLogLogPlusPlus.__init__">
-<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">p=8</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">reg=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">hashfunc=&lt;function</span> <span class="pre">sha1_hash64&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">hashobj=None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/datasketch/hyperloglog.html#HyperLogLogPlusPlus.__init__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#datasketch.HyperLogLogPlusPlus.__init__" title="Permalink to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">p=8</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">reg=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">hashfunc=&lt;function</span> <span class="pre">sha1_hash64&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">hashobj=None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/datasketch/hyperloglog.html#HyperLogLogPlusPlus.__init__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#datasketch.HyperLogLogPlusPlus.__init__" title="Link to this definition"></a></dt>
 <dd></dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="datasketch.HyperLogLogPlusPlus.__weakref__">
-<span class="sig-name descname"><span class="pre">__weakref__</span></span><a class="headerlink" href="#datasketch.HyperLogLogPlusPlus.__weakref__" title="Permalink to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">__weakref__</span></span><a class="headerlink" href="#datasketch.HyperLogLogPlusPlus.__weakref__" title="Link to this definition"></a></dt>
 <dd><p>list of weak references to the object (if defined)</p>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="datasketch.HyperLogLogPlusPlus.count">
-<span class="sig-name descname"><span class="pre">count</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/datasketch/hyperloglog.html#HyperLogLogPlusPlus.count"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#datasketch.HyperLogLogPlusPlus.count" title="Permalink to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">count</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/datasketch/hyperloglog.html#HyperLogLogPlusPlus.count"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#datasketch.HyperLogLogPlusPlus.count" title="Link to this definition"></a></dt>
 <dd><p>Estimate the cardinality of the data values seen so far.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Returns<span class="colon">:</span></dt>
@@ -1615,6 +1626,108 @@ The default hash function is based on SHA1 from <a class="reference external" hr
 <dd class="field-even"><p>int</p>
 </dd>
 </dl>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+<section id="hnsw">
+<h2>HNSW<a class="headerlink" href="#hnsw" title="Link to this heading"></a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="datasketch.HNSW">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">datasketch.</span></span><span class="sig-name descname"><span class="pre">HNSW</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">distance_func</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Callable</span><span class="p"><span class="pre">[</span></span><span class="p"><span class="pre">[</span></span><span class="pre">ndarray</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">ndarray</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">float</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">m</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">5</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ef_construction</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">200</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">m0</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/datasketch/hnsw.html#HNSW"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#datasketch.HNSW" title="Link to this definition"></a></dt>
+<dd><p>Hierarchical Navigable Small World (HNSW) graph index for approximate
+nearest neighbor search. This implementation is based on the paper
+“Efficient and robust approximate nearest neighbor search using Hierarchical
+Navigable Small World graphs” by Yu. A. Malkov, D. A. Yashunin (2016),
+&lt;<a class="reference external" href="https://arxiv.org/abs/1603.09320">https://arxiv.org/abs/1603.09320</a>&gt;`_.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>distance_func</strong> – A function that takes two vectors and returns a float
+representing the distance between them.</p></li>
+<li><p><strong>m</strong> (<em>int</em>) – The number of neighbors to keep for each node.</p></li>
+<li><p><strong>ef_construction</strong> (<em>int</em>) – The number of neighbors to consider during
+construction.</p></li>
+<li><p><strong>m0</strong> (<em>Optional</em><em>[</em><em>int</em><em>]</em>) – The number of neighbors to keep for each node at
+the 0th level. If None, defaults to 2 * m.</p></li>
+</ul>
+</dd>
+</dl>
+<p class="rubric">Example</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">hnsw</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="n">data</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">random_sample</span><span class="p">((</span><span class="mi">1000</span><span class="p">,</span> <span class="mi">10</span><span class="p">))</span>
+<span class="n">index</span> <span class="o">=</span> <span class="n">hnsw</span><span class="o">.</span><span class="n">HNSW</span><span class="p">(</span><span class="n">distance_func</span><span class="o">=</span><span class="k">lambda</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">x</span> <span class="o">-</span> <span class="n">y</span><span class="p">),</span> <span class="n">m</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span> <span class="n">efConstruction</span><span class="o">=</span><span class="mi">200</span><span class="p">)</span>
+<span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">d</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">data</span><span class="p">):</span>
+    <span class="n">index</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="n">d</span><span class="p">)</span>
+<span class="n">index</span><span class="o">.</span><span class="n">search</span><span class="p">(</span><span class="n">data</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">k</span><span class="o">=</span><span class="mi">10</span><span class="p">)</span>
+</pre></div>
+</div>
+<dl class="py method">
+<dt class="sig sig-object py" id="datasketch.HNSW.__init__">
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">distance_func</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Callable</span><span class="p"><span class="pre">[</span></span><span class="p"><span class="pre">[</span></span><span class="pre">ndarray</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">ndarray</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">float</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">m</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">5</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ef_construction</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">200</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">m0</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="reference internal" href="_modules/datasketch/hnsw.html#HNSW.__init__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#datasketch.HNSW.__init__" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="datasketch.HNSW.__repr__">
+<span class="sig-name descname"><span class="pre">__repr__</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/datasketch/hnsw.html#HNSW.__repr__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#datasketch.HNSW.__repr__" title="Link to this definition"></a></dt>
+<dd><p>Return repr(self).</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="datasketch.HNSW.add">
+<span class="sig-name descname"><span class="pre">add</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">new_id</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Any</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">new_point</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ef</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">level</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="reference internal" href="_modules/datasketch/hnsw.html#HNSW.add"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#datasketch.HNSW.add" title="Link to this definition"></a></dt>
+<dd><p>Add a new point to the index.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>new_id</strong> (<em>Any</em>) – The id of the new point.</p></li>
+<li><p><strong>new_point</strong> (<em>np.ndarray</em>) – The new point to add to the index.</p></li>
+<li><p><strong>ef</strong> (<em>Optional</em><em>[</em><em>int</em><em>]</em>) – The number of neighbors to consider during insertion.</p></li>
+<li><p><strong>level</strong> (<em>Optional</em><em>[</em><em>int</em><em>]</em>) – The level at which to insert the new point.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>ValueError</strong> – If the new_id already exists in the index.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="datasketch.HNSW.search">
+<span class="sig-name descname"><span class="pre">search</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">query</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">k</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ef</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">Any</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">float</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="_modules/datasketch/hnsw.html#HNSW.search"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#datasketch.HNSW.search" title="Link to this definition"></a></dt>
+<dd><p>Search for the k nearest neighbors of the query point.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>query</strong> (<em>np.ndarray</em>) – The query point.</p></li>
+<li><p><strong>k</strong> (<em>Optional</em><em>[</em><em>int</em><em>]</em>) – The number of neighbors to return. If None, return
+all neighbors found.</p></li>
+<li><p><strong>ef</strong> (<em>Optional</em><em>[</em><em>int</em><em>]</em>) – The number of neighbors to consider during search.
+If None, use the construction ef.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><dl class="simple">
+<dt>A list of (id, distance) pairs for the k</dt><dd><p>nearest neighbors of the query point.</p>
+</dd>
+</dl>
+</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>List[Tuple[Any, float]]</p>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>ValueError</strong> – If the entry point is not found.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="datasketch.HNSW.__weakref__">
+<span class="sig-name descname"><span class="pre">__weakref__</span></span><a class="headerlink" href="#datasketch.HNSW.__weakref__" title="Link to this definition"></a></dt>
+<dd><p>list of weak references to the object (if defined)</p>
 </dd></dl>
 
 </dd></dl>

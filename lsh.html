@@ -4,18 +4,18 @@
   <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>MinHash LSH &mdash; datasketch 1.5.9 documentation</title>
+  <title>MinHash LSH &mdash; datasketch 1.6.0 documentation</title>
       <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
   <!--[if lt IE 9]>
     <script src="_static/js/html5shiv.min.js"></script>
   <![endif]-->
   
-        <script src="_static/jquery.js"></script>
-        <script src="_static/_sphinx_javascript_frameworks_compat.js"></script>
-        <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
-        <script src="_static/doctools.js"></script>
-        <script src="_static/sphinx_highlight.js"></script>
+        <script src="_static/jquery.js?v=5d32c60e"></script>
+        <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+        <script src="_static/documentation_options.js?v=72d88caf"></script>
+        <script src="_static/doctools.js?v=888ff710"></script>
+        <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="_static/js/theme.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
@@ -35,7 +35,7 @@
             datasketch
           </a>
               <div class="version">
-                1.5.9
+                1.6.0
               </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
@@ -89,7 +89,7 @@
            <div itemprop="articleBody">
              
   <section id="minhash-lsh">
-<span id="id1"></span><h1>MinHash LSH<a class="headerlink" href="#minhash-lsh" title="Permalink to this heading"></a></h1>
+<span id="id1"></span><h1>MinHash LSH<a class="headerlink" href="#minhash-lsh" title="Link to this heading"></a></h1>
 <p>Suppose you have a very large collection of
 <a class="reference external" href="https://en.wikipedia.org/wiki/Set_(mathematics)">sets</a>. Giving a
 query, which is also a set, you want to find sets in your collection
@@ -167,7 +167,7 @@ In addition, Jaccard similarity may not be the best measure if your intention is
 find sets having high intersection with the query.
 For intersection search, see <a class="reference internal" href="lshensemble.html#minhash-lsh-ensemble"><span class="std std-ref">MinHash LSH Ensemble</span></a>.</p>
 <section id="minhash-lsh-at-scale">
-<span id="id2"></span><h2>MinHash LSH at scale<a class="headerlink" href="#minhash-lsh-at-scale" title="Permalink to this heading"></a></h2>
+<span id="id2"></span><h2>MinHash LSH at scale<a class="headerlink" href="#minhash-lsh-at-scale" title="Link to this heading"></a></h2>
 <p>MinHash LSH supports using Redis as the storage layer for handling large index and
 providing optional persistence as part of
 a production environment.
@@ -225,7 +225,7 @@ or keyspace (and thus DROP existing ones), set <cite>drop_tables</cite> and <cit
 <p>Like the Redis counterpart, you can use insert sessions
 to reduce the number of network calls during bulk insertion.</p>
 <section id="connecting-to-existing-minhash-lsh">
-<h3>Connecting to Existing MinHash LSH<a class="headerlink" href="#connecting-to-existing-minhash-lsh" title="Permalink to this heading"></a></h3>
+<h3>Connecting to Existing MinHash LSH<a class="headerlink" href="#connecting-to-existing-minhash-lsh" title="Link to this heading"></a></h3>
 <p>If you are using an external storage layer (e.g., Redis) for your LSH, you can
 share it across multiple processes. Ther are two ways to do it:</p>
 <p>The recommended way is to use “pickling”. The MinHash LSH object is serializable
@@ -284,7 +284,7 @@ as the base name, and collision is extremely unlikely.</p>
 </section>
 </section>
 <section id="asynchronous-minhash-lsh-at-scale">
-<span id="minhash-lsh-async"></span><h2>Asynchronous MinHash LSH at scale<a class="headerlink" href="#asynchronous-minhash-lsh-at-scale" title="Permalink to this heading"></a></h2>
+<span id="minhash-lsh-async"></span><h2>Asynchronous MinHash LSH at scale<a class="headerlink" href="#asynchronous-minhash-lsh-at-scale" title="Link to this heading"></a></h2>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
 <p>The module supports Python version &gt;=3.6, and is currently experimental.
@@ -424,7 +424,7 @@ processes see <a class="reference internal" href="#minhash-lsh-at-scale"><span c
 <p>The <cite>redis</cite> key in <cite>_storage</cite> is passed in <cite>redis.Redis</cite> directly, which mean you can pass custom args for redis yourself.</p>
 </section>
 <section id="common-issues-with-minhash-lsh">
-<h2>Common Issues with MinHash LSH<a class="headerlink" href="#common-issues-with-minhash-lsh" title="Permalink to this heading"></a></h2>
+<h2>Common Issues with MinHash LSH<a class="headerlink" href="#common-issues-with-minhash-lsh" title="Link to this heading"></a></h2>
 <ol class="arabic simple">
 <li><p><a class="reference external" href="https://github.com/ekzhu/datasketch/issues/76">How to use MinHash LSH to compute all-pair duplicates?</a></p></li>
 <li><p><a class="reference external" href="https://github.com/ekzhu/datasketch/issues/120">MinHash LSH for document clustering</a></p></li>

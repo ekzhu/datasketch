@@ -1,0 +1,452 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>datasketch.hnsw &mdash; datasketch 1.6.0 documentation</title>
+      <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="../../_static/jquery.js?v=5d32c60e"></script>
+        <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+        <script src="../../_static/documentation_options.js?v=72d88caf"></script>
+        <script src="../../_static/doctools.js?v=888ff710"></script>
+        <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../index.html" class="icon icon-home">
+            datasketch
+          </a>
+              <div class="version">
+                1.6.0
+              </div>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../documentation.html">API Documentation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../hyperloglog.html">HyperLogLog</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../hyperloglog.html#hyperloglog-plusplus">HyperLogLog++</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../lsh.html">MinHash LSH</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../lshensemble.html">MinHash LSH Ensemble</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../lshforest.html">MinHash LSH Forest</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../minhash.html">MinHash</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../weightedminhash.html">Weighted MinHash</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">datasketch</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">datasketch.hnsw</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for datasketch.hnsw</h1><div class="highlight"><pre>
+<span></span><span class="kn">import</span> <span class="nn">heapq</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Callable</span><span class="p">,</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">List</span><span class="p">,</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Tuple</span>
+
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+
+
+<div class="viewcode-block" id="HNSW">
+<a class="viewcode-back" href="../../documentation.html#datasketch.HNSW">[docs]</a>
+<span class="k">class</span> <span class="nc">HNSW</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Hierarchical Navigable Small World (HNSW) graph index for approximate</span>
+<span class="sd">    nearest neighbor search. This implementation is based on the paper</span>
+<span class="sd">    &quot;Efficient and robust approximate nearest neighbor search using Hierarchical</span>
+<span class="sd">    Navigable Small World graphs&quot; by Yu. A. Malkov, D. A. Yashunin (2016),</span>
+<span class="sd">    &lt;https://arxiv.org/abs/1603.09320&gt;`_.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        distance_func: A function that takes two vectors and returns a float</span>
+<span class="sd">            representing the distance between them.</span>
+<span class="sd">        m (int): The number of neighbors to keep for each node.</span>
+<span class="sd">        ef_construction (int): The number of neighbors to consider during</span>
+<span class="sd">            construction.</span>
+<span class="sd">        m0 (Optional[int]): The number of neighbors to keep for each node at</span>
+<span class="sd">            the 0th level. If None, defaults to 2 * m.</span>
+
+<span class="sd">    Example:</span>
+
+<span class="sd">        .. code-block:: python</span>
+
+<span class="sd">            import hnsw</span>
+<span class="sd">            import numpy as np</span>
+<span class="sd">            data = np.random.random_sample((1000, 10))</span>
+<span class="sd">            index = hnsw.HNSW(distance_func=lambda x, y: np.linalg.norm(x - y), m=5, efConstruction=200)</span>
+<span class="sd">            for i, d in enumerate(data):</span>
+<span class="sd">                index.add(i, d)</span>
+<span class="sd">            index.search(data[0], k=10)</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+<div class="viewcode-block" id="HNSW.__init__">
+<a class="viewcode-back" href="../../documentation.html#datasketch.HNSW.__init__">[docs]</a>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">distance_func</span><span class="p">:</span> <span class="n">Callable</span><span class="p">[[</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">],</span> <span class="nb">float</span><span class="p">],</span>
+        <span class="n">m</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">5</span><span class="p">,</span>
+        <span class="n">ef_construction</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">200</span><span class="p">,</span>
+        <span class="n">m0</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_data</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="n">Any</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_distance_func</span> <span class="o">=</span> <span class="n">distance_func</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_m</span> <span class="o">=</span> <span class="n">m</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_efConstruction</span> <span class="o">=</span> <span class="n">ef_construction</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_m0</span> <span class="o">=</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">m</span> <span class="k">if</span> <span class="n">m0</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">m0</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_level_mult</span> <span class="o">=</span> <span class="mi">1</span> <span class="o">/</span> <span class="n">np</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">m</span><span class="p">)</span>
+        <span class="c1"># self._graphs[level][i] contains a {j: dist} dictionary,</span>
+        <span class="c1"># where j is a neighbor of i and dist is distance</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_graphs</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Dict</span><span class="p">[</span><span class="n">Any</span><span class="p">,</span> <span class="n">Dict</span><span class="p">[</span><span class="n">Any</span><span class="p">,</span> <span class="nb">float</span><span class="p">]]]</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_entry_point</span> <span class="o">=</span> <span class="kc">None</span></div>
+
+
+    <span class="k">def</span> <span class="fm">__len__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_data</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="fm">__contains__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">idx</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">idx</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_data</span>
+
+    <span class="k">def</span> <span class="fm">__iter__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="nb">iter</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_data</span><span class="p">)</span>
+
+<div class="viewcode-block" id="HNSW.__repr__">
+<a class="viewcode-back" href="../../documentation.html#datasketch.HNSW.__repr__">[docs]</a>
+    <span class="k">def</span> <span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="p">(</span>
+            <span class="sa">f</span><span class="s2">&quot;HNSW(</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_distance_func</span><span class="si">}</span><span class="s2">, m=</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_m</span><span class="si">}</span><span class="s2">, &quot;</span>
+            <span class="sa">f</span><span class="s2">&quot;efConstruction=</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_efConstruction</span><span class="si">}</span><span class="s2">, m0=</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_m0</span><span class="si">}</span><span class="s2">, &quot;</span>
+            <span class="sa">f</span><span class="s2">&quot;num_points=</span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_data</span><span class="p">)</span><span class="si">}</span><span class="s2">, num_levels=</span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_graphs</span><span class="p">)</span><span class="si">}</span><span class="s2">)&quot;</span>
+        <span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="HNSW.add">
+<a class="viewcode-back" href="../../documentation.html#datasketch.HNSW.add">[docs]</a>
+    <span class="k">def</span> <span class="nf">add</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">new_id</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span>
+        <span class="n">new_point</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>
+        <span class="n">ef</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">level</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Add a new point to the index.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            new_id (Any): The id of the new point.</span>
+<span class="sd">            new_point (np.ndarray): The new point to add to the index.</span>
+<span class="sd">            ef (Optional[int]): The number of neighbors to consider during insertion.</span>
+<span class="sd">            level (Optional[int]): The level at which to insert the new point.</span>
+
+<span class="sd">        Raises:</span>
+<span class="sd">            ValueError: If the new_id already exists in the index.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">ef</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">ef</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_efConstruction</span>
+        <span class="k">if</span> <span class="n">new_id</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_data</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Duplicate element&quot;</span><span class="p">)</span>
+        <span class="c1"># level is the level at which we insert the element.</span>
+        <span class="k">if</span> <span class="n">level</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">level</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="o">-</span><span class="n">np</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">random_sample</span><span class="p">())</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">_level_mult</span><span class="p">)</span> <span class="o">+</span> <span class="mi">1</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_data</span><span class="p">[</span><span class="n">new_id</span><span class="p">]</span> <span class="o">=</span> <span class="n">new_point</span>
+        <span class="k">if</span> <span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_entry_point</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
+        <span class="p">):</span>  <span class="c1"># The HNSW is not empty, we have an entry point</span>
+            <span class="n">dist</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_distance_func</span><span class="p">(</span><span class="n">new_point</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_data</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">_entry_point</span><span class="p">])</span>
+            <span class="n">point</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_entry_point</span>
+            <span class="c1"># For all levels in which we dont have to insert elem,</span>
+            <span class="c1"># we search for the closest neighbor using greedy search.</span>
+            <span class="k">for</span> <span class="n">layer</span> <span class="ow">in</span> <span class="nb">reversed</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_graphs</span><span class="p">[</span><span class="n">level</span><span class="p">:]):</span>
+                <span class="n">point</span><span class="p">,</span> <span class="n">dist</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_search_ef1</span><span class="p">(</span><span class="n">new_point</span><span class="p">,</span> <span class="n">point</span><span class="p">,</span> <span class="n">dist</span><span class="p">,</span> <span class="n">layer</span><span class="p">)</span>
+            <span class="c1"># Entry points for search at each level to insert.</span>
+            <span class="n">entry_points</span> <span class="o">=</span> <span class="p">[(</span><span class="o">-</span><span class="n">dist</span><span class="p">,</span> <span class="n">point</span><span class="p">)]</span>
+            <span class="k">for</span> <span class="n">layer</span> <span class="ow">in</span> <span class="nb">reversed</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_graphs</span><span class="p">[:</span><span class="n">level</span><span class="p">]):</span>
+                <span class="c1"># Maximum number of neighbors to keep at this level.</span>
+                <span class="n">level_m</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_m</span> <span class="k">if</span> <span class="n">layer</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_graphs</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="k">else</span> <span class="bp">self</span><span class="o">.</span><span class="n">_m0</span>
+                <span class="c1"># Search this layer for neighbors to insert, and update entry points</span>
+                <span class="c1"># for the next level.</span>
+                <span class="n">entry_points</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_search_base_layer</span><span class="p">(</span>
+                    <span class="n">new_point</span><span class="p">,</span> <span class="n">entry_points</span><span class="p">,</span> <span class="n">layer</span><span class="p">,</span> <span class="n">ef</span>
+                <span class="p">)</span>
+                <span class="c1"># Insert the new node into the graph with out-going edges.</span>
+                <span class="c1"># We prune the out-going edges to keep only the top level_m neighbors.</span>
+                <span class="n">layer</span><span class="p">[</span><span class="n">new_id</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span>
+                    <span class="n">p</span><span class="p">:</span> <span class="n">d</span>
+                    <span class="k">for</span> <span class="n">d</span><span class="p">,</span> <span class="n">p</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_heuristic_prune</span><span class="p">(</span>
+                        <span class="p">[(</span><span class="o">-</span><span class="n">mdist</span><span class="p">,</span> <span class="n">p</span><span class="p">)</span> <span class="k">for</span> <span class="n">mdist</span><span class="p">,</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">entry_points</span><span class="p">],</span> <span class="n">level_m</span>
+                    <span class="p">)</span>
+                <span class="p">}</span>
+                <span class="c1"># For each neighbor of the new node, we insert the new node as a neighbor.</span>
+                <span class="k">for</span> <span class="n">neighbor_idx</span><span class="p">,</span> <span class="n">dist</span> <span class="ow">in</span> <span class="n">layer</span><span class="p">[</span><span class="n">new_id</span><span class="p">]</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+                    <span class="n">layer</span><span class="p">[</span><span class="n">neighbor_idx</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span>
+                        <span class="n">p</span><span class="p">:</span> <span class="n">d</span>
+                        <span class="c1"># We prune the edges to keep only the top level_m neighbors</span>
+                        <span class="c1"># based on heuristic.</span>
+                        <span class="k">for</span> <span class="n">d</span><span class="p">,</span> <span class="n">p</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_heuristic_prune</span><span class="p">(</span>
+                            <span class="p">[(</span><span class="n">d</span><span class="p">,</span> <span class="n">p</span><span class="p">)</span> <span class="k">for</span> <span class="n">p</span><span class="p">,</span> <span class="n">d</span> <span class="ow">in</span> <span class="n">layer</span><span class="p">[</span><span class="n">neighbor_idx</span><span class="p">]</span><span class="o">.</span><span class="n">items</span><span class="p">()]</span>
+                            <span class="o">+</span> <span class="p">[(</span><span class="n">dist</span><span class="p">,</span> <span class="n">new_id</span><span class="p">)],</span>
+                            <span class="n">level_m</span><span class="p">,</span>
+                        <span class="p">)</span>
+                    <span class="p">}</span>
+        <span class="c1"># For all levels above the current level, we create an empty graph.</span>
+        <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_graphs</span><span class="p">),</span> <span class="n">level</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_graphs</span><span class="o">.</span><span class="n">append</span><span class="p">({</span><span class="n">new_id</span><span class="p">:</span> <span class="p">{}})</span>
+            <span class="c1"># We set the entry point for each new level to be the new node.</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_entry_point</span> <span class="o">=</span> <span class="n">new_id</span></div>
+
+
+<div class="viewcode-block" id="HNSW.search">
+<a class="viewcode-back" href="../../documentation.html#datasketch.HNSW.search">[docs]</a>
+    <span class="k">def</span> <span class="nf">search</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">query</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">k</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">ef</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">Tuple</span><span class="p">[</span><span class="n">Any</span><span class="p">,</span> <span class="nb">float</span><span class="p">]]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Search for the k nearest neighbors of the query point.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            query (np.ndarray): The query point.</span>
+<span class="sd">            k (Optional[int]): The number of neighbors to return. If None, return</span>
+<span class="sd">                all neighbors found.</span>
+<span class="sd">            ef (Optional[int]): The number of neighbors to consider during search.</span>
+<span class="sd">                If None, use the construction ef.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            List[Tuple[Any, float]]: A list of (id, distance) pairs for the k</span>
+<span class="sd">                nearest neighbors of the query point.</span>
+
+<span class="sd">        Raises:</span>
+<span class="sd">            ValueError: If the entry point is not found.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">ef</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">ef</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_efConstruction</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_entry_point</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Entry point not found.&quot;</span><span class="p">)</span>
+        <span class="n">entry_point_dist</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_distance_func</span><span class="p">(</span><span class="n">query</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_data</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">_entry_point</span><span class="p">])</span>
+        <span class="n">entry_point</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_entry_point</span>
+        <span class="c1"># Search for the closest neighbor from the highest level to the 2nd</span>
+        <span class="c1"># level using greedy search.</span>
+        <span class="k">for</span> <span class="n">layer</span> <span class="ow">in</span> <span class="nb">reversed</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_graphs</span><span class="p">[</span><span class="mi">1</span><span class="p">:]):</span>
+            <span class="n">entry_point</span><span class="p">,</span> <span class="n">entry_point_dist</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_search_ef1</span><span class="p">(</span>
+                <span class="n">query</span><span class="p">,</span> <span class="n">entry_point</span><span class="p">,</span> <span class="n">entry_point_dist</span><span class="p">,</span> <span class="n">layer</span>
+            <span class="p">)</span>
+        <span class="c1"># Search for the neighbors at the base layer using ef search.</span>
+        <span class="n">candidates</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_search_base_layer</span><span class="p">(</span>
+            <span class="n">query</span><span class="p">,</span> <span class="p">[(</span><span class="o">-</span><span class="n">entry_point_dist</span><span class="p">,</span> <span class="n">entry_point</span><span class="p">)],</span> <span class="bp">self</span><span class="o">.</span><span class="n">_graphs</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">ef</span>
+        <span class="p">)</span>
+        <span class="k">if</span> <span class="n">k</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="c1"># If k is specified, we return the k nearest neighbors.</span>
+            <span class="n">candidates</span> <span class="o">=</span> <span class="n">heapq</span><span class="o">.</span><span class="n">nlargest</span><span class="p">(</span><span class="n">k</span><span class="p">,</span> <span class="n">candidates</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="c1"># Otherwise, we return all neighbors found.</span>
+            <span class="n">candidates</span><span class="o">.</span><span class="n">sort</span><span class="p">(</span><span class="n">reverse</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="c1"># Return the neighbors as a list of (id, distance) pairs.</span>
+        <span class="k">return</span> <span class="p">[(</span><span class="n">idx</span><span class="p">,</span> <span class="o">-</span><span class="n">mdist</span><span class="p">)</span> <span class="k">for</span> <span class="n">mdist</span><span class="p">,</span> <span class="n">idx</span> <span class="ow">in</span> <span class="n">candidates</span><span class="p">]</span></div>
+
+
+    <span class="k">def</span> <span class="nf">_search_ef1</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">query</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>
+        <span class="n">entry_point</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span>
+        <span class="n">entry_point_dist</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
+        <span class="n">layer</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="n">Any</span><span class="p">,</span> <span class="n">Dict</span><span class="p">[</span><span class="n">Any</span><span class="p">,</span> <span class="nb">float</span><span class="p">]],</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">Any</span><span class="p">,</span> <span class="nb">float</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;The greedy search algorithm for finding the closest neighbor only.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            query (np.ndarray): The query point.</span>
+<span class="sd">            entry_point (Any): The entry point for the search.</span>
+<span class="sd">            entry_point_dist (float): The distance from the query point to the</span>
+<span class="sd">                entry point.</span>
+<span class="sd">            layer (Dict[Any, Dict[Any, float]]): The graph for the layer.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            Tuple[Any, float]: A tuple of (id, distance) representing the closest</span>
+<span class="sd">                neighbor found.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">candidates</span> <span class="o">=</span> <span class="p">[(</span><span class="n">entry_point_dist</span><span class="p">,</span> <span class="n">entry_point</span><span class="p">)]</span>
+        <span class="n">visited</span> <span class="o">=</span> <span class="nb">set</span><span class="p">([</span><span class="n">entry_point</span><span class="p">])</span>
+        <span class="n">best</span> <span class="o">=</span> <span class="n">entry_point</span>
+        <span class="n">best_dist</span> <span class="o">=</span> <span class="n">entry_point_dist</span>
+        <span class="k">while</span> <span class="n">candidates</span><span class="p">:</span>
+            <span class="c1"># Pop the closest node from the heap.</span>
+            <span class="n">dist</span><span class="p">,</span> <span class="n">curr</span> <span class="o">=</span> <span class="n">heapq</span><span class="o">.</span><span class="n">heappop</span><span class="p">(</span><span class="n">candidates</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">dist</span> <span class="o">&gt;</span> <span class="n">best_dist</span><span class="p">:</span>
+                <span class="c1"># Terminate the search if the distance to the current closest node</span>
+                <span class="c1"># is larger than the distance to the best node.</span>
+                <span class="k">break</span>
+            <span class="n">neighbors</span> <span class="o">=</span> <span class="p">[</span><span class="n">p</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">layer</span><span class="p">[</span><span class="n">curr</span><span class="p">]</span> <span class="k">if</span> <span class="n">p</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">visited</span><span class="p">]</span>
+            <span class="n">visited</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">neighbors</span><span class="p">)</span>
+            <span class="n">dists</span> <span class="o">=</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">_distance_func</span><span class="p">(</span><span class="n">query</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_data</span><span class="p">[</span><span class="n">p</span><span class="p">])</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">neighbors</span><span class="p">]</span>
+            <span class="k">for</span> <span class="n">p</span><span class="p">,</span> <span class="n">d</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">neighbors</span><span class="p">,</span> <span class="n">dists</span><span class="p">):</span>
+                <span class="c1"># Update the best node if we find a closer node.</span>
+                <span class="k">if</span> <span class="n">d</span> <span class="o">&lt;</span> <span class="n">best_dist</span><span class="p">:</span>
+                    <span class="n">best</span><span class="p">,</span> <span class="n">best_dist</span> <span class="o">=</span> <span class="n">p</span><span class="p">,</span> <span class="n">d</span>
+                    <span class="c1"># Add the neighbor to the heap.</span>
+                    <span class="n">heapq</span><span class="o">.</span><span class="n">heappush</span><span class="p">(</span><span class="n">candidates</span><span class="p">,</span> <span class="p">(</span><span class="n">d</span><span class="p">,</span> <span class="n">p</span><span class="p">))</span>
+        <span class="k">return</span> <span class="n">best</span><span class="p">,</span> <span class="n">best_dist</span>
+
+    <span class="k">def</span> <span class="nf">_search_base_layer</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">query</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>
+        <span class="n">entry_points</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Tuple</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="n">Any</span><span class="p">]],</span>
+        <span class="n">layer</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="n">Any</span><span class="p">,</span> <span class="n">Dict</span><span class="p">[</span><span class="n">Any</span><span class="p">,</span> <span class="nb">float</span><span class="p">]],</span>
+        <span class="n">ef</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">Tuple</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;The ef search algorithm for finding neighbors in a given layer.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            query (np.ndarray): The query point.</span>
+<span class="sd">            entry_points (List[Tuple[float, Any]]): A list of (-distance, idx) pairs</span>
+<span class="sd">                representing the entry points for the search.</span>
+<span class="sd">            layer (Dict[Any, Dict[Any, float]]): The graph for the layer.</span>
+<span class="sd">            ef (int): The number of neighbors to consider during search.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            List[Tuple[float, Any]]: A heap of (-distance, idx) pairs representing</span>
+<span class="sd">                the neighbors found.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># candidates is a heap of (distance, idx) pairs.</span>
+        <span class="n">candidates</span> <span class="o">=</span> <span class="p">[(</span><span class="o">-</span><span class="n">mdist</span><span class="p">,</span> <span class="n">p</span><span class="p">)</span> <span class="k">for</span> <span class="n">mdist</span><span class="p">,</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">entry_points</span><span class="p">]</span>
+        <span class="n">heapq</span><span class="o">.</span><span class="n">heapify</span><span class="p">(</span><span class="n">candidates</span><span class="p">)</span>
+        <span class="n">visited</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">p</span> <span class="k">for</span> <span class="n">_</span><span class="p">,</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">entry_points</span><span class="p">)</span>
+        <span class="k">while</span> <span class="n">candidates</span><span class="p">:</span>
+            <span class="c1"># Pop the closest node from the heap.</span>
+            <span class="n">dist</span><span class="p">,</span> <span class="n">curr_idx</span> <span class="o">=</span> <span class="n">heapq</span><span class="o">.</span><span class="n">heappop</span><span class="p">(</span><span class="n">candidates</span><span class="p">)</span>
+            <span class="c1"># Terminate the search if the distance to the current closest node</span>
+            <span class="c1"># is larger than the distance to the best node.</span>
+            <span class="n">closet_dist</span> <span class="o">=</span> <span class="o">-</span><span class="n">entry_points</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span>
+            <span class="k">if</span> <span class="n">dist</span> <span class="o">&gt;</span> <span class="n">closet_dist</span><span class="p">:</span>
+                <span class="k">break</span>
+            <span class="n">neighbors</span> <span class="o">=</span> <span class="p">[</span><span class="n">p</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">layer</span><span class="p">[</span><span class="n">curr_idx</span><span class="p">]</span> <span class="k">if</span> <span class="n">p</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">visited</span><span class="p">]</span>
+            <span class="n">visited</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">neighbors</span><span class="p">)</span>
+            <span class="n">dists</span> <span class="o">=</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">_distance_func</span><span class="p">(</span><span class="n">query</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_data</span><span class="p">[</span><span class="n">p</span><span class="p">])</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">neighbors</span><span class="p">]</span>
+            <span class="k">for</span> <span class="n">p</span><span class="p">,</span> <span class="n">dist</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">neighbors</span><span class="p">,</span> <span class="n">dists</span><span class="p">):</span>
+                <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">entry_points</span><span class="p">)</span> <span class="o">&lt;</span> <span class="n">ef</span><span class="p">:</span>
+                    <span class="n">heapq</span><span class="o">.</span><span class="n">heappush</span><span class="p">(</span><span class="n">candidates</span><span class="p">,</span> <span class="p">(</span><span class="n">dist</span><span class="p">,</span> <span class="n">p</span><span class="p">))</span>
+                    <span class="c1"># If we have not found enough neighbors, we add the neighbor</span>
+                    <span class="c1"># to the heap.</span>
+                    <span class="n">heapq</span><span class="o">.</span><span class="n">heappush</span><span class="p">(</span><span class="n">entry_points</span><span class="p">,</span> <span class="p">(</span><span class="o">-</span><span class="n">dist</span><span class="p">,</span> <span class="n">p</span><span class="p">))</span>
+                    <span class="n">closet_dist</span> <span class="o">=</span> <span class="o">-</span><span class="n">entry_points</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span>
+                <span class="k">elif</span> <span class="n">dist</span> <span class="o">&lt;=</span> <span class="n">closet_dist</span><span class="p">:</span>
+                    <span class="n">heapq</span><span class="o">.</span><span class="n">heappush</span><span class="p">(</span><span class="n">candidates</span><span class="p">,</span> <span class="p">(</span><span class="n">dist</span><span class="p">,</span> <span class="n">p</span><span class="p">))</span>
+                    <span class="c1"># If we have found enough neighbors, we replace the worst</span>
+                    <span class="c1"># neighbor with the neighbor if the neighbor is closer.</span>
+                    <span class="n">heapq</span><span class="o">.</span><span class="n">heapreplace</span><span class="p">(</span><span class="n">entry_points</span><span class="p">,</span> <span class="p">(</span><span class="o">-</span><span class="n">dist</span><span class="p">,</span> <span class="n">p</span><span class="p">))</span>
+                    <span class="n">closet_dist</span> <span class="o">=</span> <span class="o">-</span><span class="n">entry_points</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span>
+        <span class="k">return</span> <span class="n">entry_points</span>
+
+    <span class="k">def</span> <span class="nf">_heuristic_prune</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">candidates</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Tuple</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="n">Any</span><span class="p">]],</span> <span class="n">max_size</span><span class="p">:</span> <span class="nb">int</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">Tuple</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Prune the potential neigbors to keep only the top max_size neighbors.</span>
+<span class="sd">        This algorithm is based on hnswlib&#39;s heuristic pruning algorithm:</span>
+<span class="sd">        &lt;https://github.com/nmslib/hnswlib/blob/978f7137bc9555a1b61920f05d9d0d8252ca9169/hnswlib/hnswalg.h#L382&gt;`_.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            candidates (List[Tuple[float, Any]]): A list of (distance, idx) pairs</span>
+<span class="sd">                representing the potential neighbors.</span>
+<span class="sd">            max_size (int): The maximum number of neighbors to keep.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            List[Tuple[float, Any]]: A list of (distance, idx) pairs representing</span>
+<span class="sd">                the pruned neighbors.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">candidates</span><span class="p">)</span> <span class="o">&lt;</span> <span class="n">max_size</span><span class="p">:</span>
+            <span class="c1"># If the number of entry points is smaller than max_size, we return</span>
+            <span class="c1"># all entry points.</span>
+            <span class="k">return</span> <span class="n">candidates</span>
+        <span class="c1"># candidates is a heap of (distance, idx) pairs.</span>
+        <span class="n">heapq</span><span class="o">.</span><span class="n">heapify</span><span class="p">(</span><span class="n">candidates</span><span class="p">)</span>
+        <span class="n">pruned</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">while</span> <span class="n">candidates</span><span class="p">:</span>
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">pruned</span><span class="p">)</span> <span class="o">&gt;=</span> <span class="n">max_size</span><span class="p">:</span>
+                <span class="k">break</span>
+            <span class="c1"># Pop the closest node from the heap.</span>
+            <span class="n">candidate_dist</span><span class="p">,</span> <span class="n">candidate_idx</span> <span class="o">=</span> <span class="n">heapq</span><span class="o">.</span><span class="n">heappop</span><span class="p">(</span><span class="n">candidates</span><span class="p">)</span>
+            <span class="n">good</span> <span class="o">=</span> <span class="kc">True</span>
+            <span class="k">for</span> <span class="n">_</span><span class="p">,</span> <span class="n">selected_idx</span> <span class="ow">in</span> <span class="n">pruned</span><span class="p">:</span>
+                <span class="n">dist_to_selected_neighbor</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_distance_func</span><span class="p">(</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">_data</span><span class="p">[</span><span class="n">selected_idx</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">_data</span><span class="p">[</span><span class="n">candidate_idx</span><span class="p">]</span>
+                <span class="p">)</span>
+                <span class="k">if</span> <span class="n">dist_to_selected_neighbor</span> <span class="o">&lt;</span> <span class="n">candidate_dist</span><span class="p">:</span>
+                    <span class="n">good</span> <span class="o">=</span> <span class="kc">False</span>
+                    <span class="k">break</span>
+            <span class="k">if</span> <span class="n">good</span><span class="p">:</span>
+                <span class="n">pruned</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">candidate_dist</span><span class="p">,</span> <span class="n">candidate_idx</span><span class="p">))</span>
+        <span class="k">return</span> <span class="n">pruned</span></div>
+
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2023, Eric Zhu.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+    <!-- Theme Analytics -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=UA-93507731-1"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+
+      gtag('config', 'UA-93507731-1', {
+          'anonymize_ip': false,
+      });
+    </script> 
+
+</body>
+</html>

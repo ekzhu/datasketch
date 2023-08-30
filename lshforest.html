@@ -4,18 +4,18 @@
   <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>MinHash LSH Forest &mdash; datasketch 1.5.9 documentation</title>
+  <title>MinHash LSH Forest &mdash; datasketch 1.6.0 documentation</title>
       <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
   <!--[if lt IE 9]>
     <script src="_static/js/html5shiv.min.js"></script>
   <![endif]-->
   
-        <script src="_static/jquery.js"></script>
-        <script src="_static/_sphinx_javascript_frameworks_compat.js"></script>
-        <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
-        <script src="_static/doctools.js"></script>
-        <script src="_static/sphinx_highlight.js"></script>
+        <script src="_static/jquery.js?v=5d32c60e"></script>
+        <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+        <script src="_static/documentation_options.js?v=72d88caf"></script>
+        <script src="_static/doctools.js?v=888ff710"></script>
+        <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="_static/js/theme.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
@@ -35,7 +35,7 @@
             datasketch
           </a>
               <div class="version">
-                1.5.9
+                1.6.0
               </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
@@ -85,7 +85,7 @@
            <div itemprop="articleBody">
              
   <section id="minhash-lsh-forest">
-<span id="id1"></span><h1>MinHash LSH Forest<a class="headerlink" href="#minhash-lsh-forest" title="Permalink to this heading"></a></h1>
+<span id="id1"></span><h1>MinHash LSH Forest<a class="headerlink" href="#minhash-lsh-forest" title="Link to this heading"></a></h1>
 <p><a class="reference internal" href="lsh.html#minhash-lsh"><span class="std std-ref">MinHash LSH</span></a> is useful for radius (or threshold) queries. However,
 <strong>top-k</strong> queries are often more useful in some cases. <a class="reference external" href="http://ilpubs.stanford.edu:8090/678/1/2005-14.pdf">LSH
 Forest</a> by Bawa et
@@ -167,7 +167,7 @@ the interface of <code class="docutils literal notranslate"><span class="pre">Mi
 </pre></div>
 </div>
 <section id="tips-for-improving-accuracy">
-<h2>Tips for Improving Accuracy<a class="headerlink" href="#tips-for-improving-accuracy" title="Permalink to this heading"></a></h2>
+<h2>Tips for Improving Accuracy<a class="headerlink" href="#tips-for-improving-accuracy" title="Link to this heading"></a></h2>
 <p>The default parameters may not be good enough for all data. Here are
 some tips for improving the accuracy of LSH Forest.</p>
 <p><strong>Use 2*k</strong>: You can use a multiple of <cite>k</cite> (e.g., <cite>2*k</cite>) in the argument, then
@@ -202,7 +202,7 @@ the original sets (or MinHashes) around somewhere
 can make references to them.</p>
 </section>
 <section id="common-issues-with-minhash-lsh-forest">
-<h2>Common Issues with MinHash LSH Forest<a class="headerlink" href="#common-issues-with-minhash-lsh-forest" title="Permalink to this heading"></a></h2>
+<h2>Common Issues with MinHash LSH Forest<a class="headerlink" href="#common-issues-with-minhash-lsh-forest" title="Link to this heading"></a></h2>
 <ol class="arabic simple">
 <li><p><a class="reference external" href="https://github.com/ekzhu/datasketch/issues/89">Unexpected/Incorrect results by MinHash LSH Forest</a></p></li>
 <li><p><a class="reference external" href="https://github.com/ekzhu/datasketch/issues/52">MinHash LSH Forest Accuracy</a></p></li>
