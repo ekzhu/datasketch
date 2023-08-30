@@ -37,8 +37,10 @@ sub-linear query time:
 +---------------------------+-----------------------------+------------------------+
 | `MinHash LSH Ensemble`_   | MinHash                     | Containment Threshold  |
 +---------------------------+-----------------------------+------------------------+
+| HNSW                      | Customizable                | Metric Distances       |
++---------------------------+-----------------------------+------------------------+
 
-datasketch must be used with Python 2.7 or above, NumPy 1.11 or above, and Scipy. 
+datasketch must be used with Python 3.7 or above, NumPy 1.11 or above, and Scipy. 
 
 Note that `MinHash LSH`_ and `MinHash LSH Ensemble`_ also support Redis and Cassandra 
 storage layer (see `MinHash LSH at Scale`_).
