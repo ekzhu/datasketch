@@ -69,3 +69,11 @@ HyperLogLog++
 .. autoclass:: datasketch.HyperLogLogPlusPlus
     :members:
     :special-members:
+
+
+HNSW
+----
+
+.. autoclass:: datasketch.HNSW
+    :members:
+    :special-members:

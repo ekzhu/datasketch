@@ -9,25 +9,28 @@ class HNSW(object):
     nearest neighbor search. This implementation is based on the paper
     "Efficient and robust approximate nearest neighbor search using Hierarchical
     Navigable Small World graphs" by Yu. A. Malkov, D. A. Yashunin (2016),
-    https://arxiv.org/abs/1603.09320.
+    <https://arxiv.org/abs/1603.09320>`_.
 
     Args:
         distance_func: A function that takes two vectors and returns a float
             representing the distance between them.
         m (int): The number of neighbors to keep for each node.
-        efConstruction (int): The number of neighbors to consider during
+        ef_construction (int): The number of neighbors to consider during
             construction.
         m0 (Optional[int]): The number of neighbors to keep for each node at
             the 0th level. If None, defaults to 2 * m.
 
     Example:
-        >>> import hnsw
-        >>> import numpy as np
-        >>> data = np.random.random_sample((1000, 10))
-        >>> index = hnsw.HNSW(distance_func=lambda x, y: np.linalg.norm(x - y), m=5, efConstruction=200)
-        >>> for i, d in enumerate(data):
-        ...     index.add(i, d)
-        >>> index.search(data[0], k=10)
+
+        .. code-block:: python
+
+            import hnsw
+            import numpy as np
+            data = np.random.random_sample((1000, 10))
+            index = hnsw.HNSW(distance_func=lambda x, y: np.linalg.norm(x - y), m=5, efConstruction=200)
+            for i, d in enumerate(data):
+                index.add(i, d)
+            index.search(data[0], k=10)
 
     """
 
@@ -35,13 +38,13 @@ class HNSW(object):
         self,
         distance_func: Callable[[np.ndarray, np.ndarray], float],
         m: int = 5,
-        efConstruction: int = 200,
+        ef_construction: int = 200,
         m0: Optional[int] = None,
-    ):
+    ) -> None:
         self._data: Dict[Any, np.ndarray] = {}
         self._distance_func = distance_func
         self._m = m
-        self._efConstruction = efConstruction
+        self._efConstruction = ef_construction
         self._m0 = 2 * m if m0 is None else m0
         self._level_mult = 1 / np.log(m)
         # self._graphs[level][i] contains a {j: dist} dictionary,
@@ -71,7 +74,7 @@ class HNSW(object):
         new_point: np.ndarray,
         ef: Optional[int] = None,
         level: Optional[int] = None,
-    ):
+    ) -> None:
         """Add a new point to the index.
 
         Args:
@@ -79,6 +82,9 @@ class HNSW(object):
             new_point (np.ndarray): The new point to add to the index.
             ef (Optional[int]): The number of neighbors to consider during insertion.
             level (Optional[int]): The level at which to insert the new point.
+
+        Raises:
+            ValueError: If the new_id already exists in the index.
         """
         if ef is None:
             ef = self._efConstruction
@@ -110,18 +116,20 @@ class HNSW(object):
                 # Insert the new node into the graph with out-going edges.
                 # We prune the out-going edges to keep only the top level_m neighbors.
                 layer[new_id] = {
-                    p: -mdist
-                    for mdist, p in self._heuristic_prune(entry_points, level_m)
+                    p: d
+                    for d, p in self._heuristic_prune(
+                        [(-mdist, p) for mdist, p in entry_points], level_m
+                    )
                 }
                 # For each neighbor of the new node, we insert the new node as a neighbor.
                 for neighbor_idx, dist in layer[new_id].items():
                     layer[neighbor_idx] = {
-                        p: -md
+                        p: d
                         # We prune the edges to keep only the top level_m neighbors
                         # based on heuristic.
-                        for md, p in self._heuristic_prune(
-                            [(-d, p) for p, d in layer[neighbor_idx].items()]
-                            + [(-dist, new_id)],
+                        for d, p in self._heuristic_prune(
+                            [(d, p) for p, d in layer[neighbor_idx].items()]
+                            + [(dist, new_id)],
                             level_m,
                         )
                     }
@@ -133,7 +141,7 @@ class HNSW(object):
 
     def search(
         self, query: np.ndarray, k: Optional[int] = None, ef: Optional[int] = None
-    ):
+    ) -> List[Tuple[Any, float]]:
         """Search for the k nearest neighbors of the query point.
 
         Args:
@@ -146,6 +154,9 @@ class HNSW(object):
         Returns:
             List[Tuple[Any, float]]: A list of (id, distance) pairs for the k
                 nearest neighbors of the query point.
+
+        Raises:
+            ValueError: If the entry point is not found.
         """
         if ef is None:
             ef = self._efConstruction
@@ -231,7 +242,7 @@ class HNSW(object):
             ef (int): The number of neighbors to consider during search.
 
         Returns:
-            List[Tuple[float, Any]]: A list of (-distance, idx) pairs representing
+            List[Tuple[float, Any]]: A heap of (-distance, idx) pairs representing
                 the neighbors found.
         """
         # candidates is a heap of (distance, idx) pairs.
@@ -265,35 +276,35 @@ class HNSW(object):
         return entry_points
 
     def _heuristic_prune(
-        self, entry_points: List[Tuple[float, Any]], max_size: int
+        self, candidates: List[Tuple[float, Any]], max_size: int
     ) -> List[Tuple[float, Any]]:
-        """Prune the entry points to keep only the top max_size neighbors.
+        """Prune the potential neigbors to keep only the top max_size neighbors.
         This algorithm is based on hnswlib's heuristic pruning algorithm:
-        https://github.com/nmslib/hnswlib/blob/978f7137bc9555a1b61920f05d9d0d8252ca9169/hnswlib/hnswalg.h#L382
+        <https://github.com/nmslib/hnswlib/blob/978f7137bc9555a1b61920f05d9d0d8252ca9169/hnswlib/hnswalg.h#L382>`_.
 
         Args:
-            entry_points (List[Tuple[float, Any]]): A list of (-distance, idx) pairs
-                representing the entry points to prune.
+            candidates (List[Tuple[float, Any]]): A list of (distance, idx) pairs
+                representing the potential neighbors.
             max_size (int): The maximum number of neighbors to keep.
 
         Returns:
-            List[Tuple[float, Any]]: A list of (-distance, idx) pairs representing
-                the pruned entry points.
+            List[Tuple[float, Any]]: A list of (distance, idx) pairs representing
+                the pruned neighbors.
         """
-        if len(entry_points) < max_size:
+        if len(candidates) < max_size:
             # If the number of entry points is smaller than max_size, we return
             # all entry points.
-            return entry_points
+            return candidates
         # candidates is a heap of (distance, idx) pairs.
-        candidates = [(-mdist, p) for mdist, p in entry_points]
         heapq.heapify(candidates)
-        pruned_entry_points = []
+        pruned = []
         while candidates:
-            if len(pruned_entry_points) >= max_size:
+            if len(pruned) >= max_size:
                 break
+            # Pop the closest node from the heap.
             candidate_dist, candidate_idx = heapq.heappop(candidates)
             good = True
-            for _, selected_idx in pruned_entry_points:
+            for _, selected_idx in pruned:
                 dist_to_selected_neighbor = self._distance_func(
                     self._data[selected_idx], self._data[candidate_idx]
                 )
@@ -301,5 +312,5 @@ class HNSW(object):
                     good = False
                     break
             if good:
-                pruned_entry_points.append((-candidate_dist, candidate_idx))
-        return pruned_entry_points
+                pruned.append((candidate_dist, candidate_idx))
+        return pruned
