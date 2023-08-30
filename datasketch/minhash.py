@@ -9,7 +9,8 @@ hashvalue_byte_size = len(bytes(np.int64(42).data))
 
 # http://en.wikipedia.org/wiki/Mersenne_prime
 _mersenne_prime = np.uint64((1 << 61) - 1)
-_max_hash = np.uint64((1 << 32) - 1)
+_mersenne_exponent = np.uint8(61)
+_max_hash = np.uint32((1 << 32) - 1)
 _hash_range = (1 << 32)
 
 class MinHash(object):
@@ -92,7 +93,7 @@ class MinHash(object):
             raise ValueError("Numbers of hash values and permutations mismatch")
 
     def _init_hashvalues(self, num_perm):
-        return np.ones(num_perm, dtype=np.uint64)*_max_hash
+        return np.full(num_perm, _max_hash,dtype=np.uint32)
 
     def _init_permutations(self, num_perm):
         # Create parameters for a random bijective permutation function
@@ -104,7 +105,7 @@ class MinHash(object):
         ], dtype=np.uint64).T
 
     def _parse_hashvalues(self, hashvalues):
-        return np.array(hashvalues, dtype=np.uint64)
+        return np.array(hashvalues, dtype=np.uint32)
 
     def update(self, b):
         '''Update this MinHash with a new value.
@@ -135,7 +136,16 @@ class MinHash(object):
         '''
         hv = self.hashfunc(b)
         a, b = self.permutations
-        phv = np.bitwise_and((a * hv + b) % _mersenne_prime, _max_hash)
+        _dividend = np.uint64(a * hv + b)
+
+        phv = np.bitwise_and(
+            # we can apply mersenne's modulo trick here
+            np.add(
+                np.bitwise_and(_dividend, _mersenne_prime),
+                np.right_shift(_dividend, _mersenne_exponent)
+            ),
+            _max_hash
+            ).astype(np.uint32)
         self.hashvalues = np.minimum(phv, self.hashvalues)
 
     def update_batch(self, b):
@@ -155,9 +165,9 @@ class MinHash(object):
                 minhash = Minhash()
                 minhash.update_batch([s.encode('utf-8') for s in ["token1", "token2"]])
         '''
-        hv = np.array([self.hashfunc(_b) for _b in b], dtype=np.uint64)
+        hv = np.array([self.hashfunc(_b) for _b in b], dtype=np.uint32)
         a, b = self.permutations
-        phv = np.bitwise_and(((hv * np.tile(a, (len(hv), 1)).T).T + b) % _mersenne_prime, _max_hash)
+        phv = np.bitwise_and(np.mod(((hv * np.tile(a, (len(hv), 1)).T).T + b), _mersenne_prime), _max_hash).astype(np.uint32)
         self.hashvalues = np.vstack([phv, self.hashvalues]).min(axis=0)
 
     def jaccard(self, other):
