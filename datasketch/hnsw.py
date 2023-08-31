@@ -55,8 +55,8 @@ class HNSW(object):
     def __len__(self):
         return len(self._data)
 
-    def __contains__(self, idx):
-        return idx in self._data
+    def __contains__(self, key):
+        return key in self._data
 
     def __iter__(self):
         return iter(self._data)
@@ -70,7 +70,7 @@ class HNSW(object):
 
     def add(
         self,
-        new_id: Any,
+        key: Any,
         new_point: np.ndarray,
         ef: Optional[int] = None,
         level: Optional[int] = None,
@@ -78,22 +78,20 @@ class HNSW(object):
         """Add a new point to the index.
 
         Args:
-            new_id (Any): The id of the new point.
+            key (Any): The key of the new point.
             new_point (np.ndarray): The new point to add to the index.
             ef (Optional[int]): The number of neighbors to consider during insertion.
             level (Optional[int]): The level at which to insert the new point.
 
-        Raises:
-            ValueError: If the new_id already exists in the index.
         """
         if ef is None:
             ef = self._efConstruction
-        if new_id in self._data:
-            raise ValueError("Duplicate element")
+        if key in self._data:
+            self._update(key, new_point, ef)
         # level is the level at which we insert the element.
         if level is None:
-            level = int(-np.log(np.random.random_sample()) * self._level_mult) + 1
-        self._data[new_id] = new_point
+            level = int(-np.log(np.random.random_sample()) * self._level_mult)
+        self._data[key] = new_point
         if (
             self._entry_point is not None
         ):  # The HNSW is not empty, we have an entry point
@@ -101,11 +99,11 @@ class HNSW(object):
             point = self._entry_point
             # For all levels in which we dont have to insert elem,
             # we search for the closest neighbor using greedy search.
-            for layer in reversed(self._graphs[level:]):
+            for layer in reversed(self._graphs[level + 1 :]):
                 point, dist = self._search_ef1(new_point, point, dist, layer)
             # Entry points for search at each level to insert.
             entry_points = [(-dist, point)]
-            for layer in reversed(self._graphs[:level]):
+            for layer in reversed(self._graphs[: level + 1]):
                 # Maximum number of neighbors to keep at this level.
                 level_m = self._m if layer is not self._graphs[0] else self._m0
                 # Search this layer for neighbors to insert, and update entry points
@@ -115,29 +113,112 @@ class HNSW(object):
                 )
                 # Insert the new node into the graph with out-going edges.
                 # We prune the out-going edges to keep only the top level_m neighbors.
-                layer[new_id] = {
+                layer[key] = {
                     p: d
                     for d, p in self._heuristic_prune(
                         [(-mdist, p) for mdist, p in entry_points], level_m
                     )
                 }
                 # For each neighbor of the new node, we insert the new node as a neighbor.
-                for neighbor_idx, dist in layer[new_id].items():
-                    layer[neighbor_idx] = {
+                for neighbor_key, dist in layer[key].items():
+                    layer[neighbor_key] = {
                         p: d
                         # We prune the edges to keep only the top level_m neighbors
                         # based on heuristic.
                         for d, p in self._heuristic_prune(
-                            [(d, p) for p, d in layer[neighbor_idx].items()]
-                            + [(dist, new_id)],
+                            [(d, p) for p, d in layer[neighbor_key].items()]
+                            + [(dist, key)],
                             level_m,
                         )
                     }
         # For all levels above the current level, we create an empty graph.
         for _ in range(len(self._graphs), level):
-            self._graphs.append({new_id: {}})
+            self._graphs.append({key: {}})
             # We set the entry point for each new level to be the new node.
-            self._entry_point = new_id
+            self._entry_point = key
+
+    def _update(self, key: Any, new_point: np.ndarray, ef: int) -> None:
+        """Update the point associated with the key in the index.
+
+        Args:
+            key (Any): The key of the point.
+            new_point (np.ndarray): The new point to update to.
+            ef (int): The number of neighbors to consider during insertion.
+
+        Raises:
+            ValueError: If the key does not exist in the index.
+        """
+        if key not in self._data:
+            raise ValueError("Element not found")
+        # Update the point.
+        self._data[key] = new_point
+        # If the entry point is the only point in the index, we do not need to
+        # update the index.
+        if self._entry_point == key and len(self._data) == 1:
+            return
+        for layer in self._graphs:
+            if key not in layer:
+                break
+            if len(layer[key]) == 0:
+                continue
+            layer_m = self._m if layer is not self._graphs[0] else self._m0
+            # Create a set of points in the 2nd-degree neighborhood of the key.
+            neighborhood_keys = set([key])
+            for p in layer[key].keys():
+                neighborhood_keys.add(p)
+                for p2 in layer[p].keys():
+                    neighborhood_keys.add(p2)
+            for p in layer[key].keys():
+                # For each neighbor of the key, we connects it with the top ef
+                # neighbors in the 2nd-degree neighborhood of the key.
+                cands = []
+                elem_to_keep = min(ef, len(neighborhood_keys) - 1)
+                for candidate_key in neighborhood_keys:
+                    if candidate_key == p:
+                        continue
+                    dist = self._distance_func(self._data[candidate_key], self._data[p])
+                    if len(cands) < elem_to_keep:
+                        heapq.heappush(cands, (-dist, candidate_key))
+                    elif dist < -cands[0][0]:
+                        heapq.heappushpop(cands, (-dist, candidate_key))
+                layer[p] = {
+                    p2: d2
+                    for d2, p2 in self._heuristic_prune(
+                        [(-md, p) for md, p in cands], layer_m
+                    )
+                }
+        self._repair_connections_for_update(key, new_point, ef)
+
+    def _repair_connections_for_update(
+        self,
+        key: Any,
+        new_point: np.ndarray,
+        ef: int,
+    ) -> None:
+        entry_point = self._entry_point
+        entry_point_dist = self._distance_func(new_point, self._data[entry_point])
+        entry_points = [(-entry_point_dist, entry_point)]
+        for layer in reversed(self._graphs):
+            if key not in layer:
+                entry_point, entry_point_dist = self._search_ef1(
+                    new_point, entry_point, entry_point_dist, layer
+                )
+                entry_points = [(-entry_point_dist, entry_point)]
+            else:
+                level_m = self._m if layer is not self._graphs[0] else self._m0
+                entry_points = self._search_base_layer(
+                    new_point, entry_points, layer, ef
+                )
+                filtered_entry_points = [(md, p) for md, p in entry_points if p != key]
+                if len(filtered_entry_points) == 0:
+                    continue
+                # Update the out-going edges of the updated node.
+                layer[key] = {
+                    p: d
+                    for d, p in self._heuristic_prune(
+                        [(-mdist, p) for mdist, p in filtered_entry_points], level_m
+                    )
+                }
 
     def search(
         self, query: np.ndarray, k: Optional[int] = None, ef: Optional[int] = None
@@ -152,7 +233,7 @@ class HNSW(object):
                 If None, use the construction ef.
 
         Returns:
-            List[Tuple[Any, float]]: A list of (id, distance) pairs for the k
+            List[Tuple[Any, float]]: A list of (key, distance) pairs for the k
                 nearest neighbors of the query point.
 
         Raises:
@@ -181,7 +262,7 @@ class HNSW(object):
             # Otherwise, we return all neighbors found.
             candidates.sort(reverse=True)
         # Return the neighbors as a list of (id, distance) pairs.
-        return [(idx, -mdist) for mdist, idx in candidates]
+        return [(key, -mdist) for mdist, key in candidates]
 
     def _search_ef1(
         self,
@@ -200,7 +281,7 @@ class HNSW(object):
             layer (Dict[Any, Dict[Any, float]]): The graph for the layer.
 
         Returns:
-            Tuple[Any, float]: A tuple of (id, distance) representing the closest
+            Tuple[Any, float]: A tuple of (key, distance) representing the closest
                 neighbor found.
         """
         candidates = [(entry_point_dist, entry_point)]
@@ -236,28 +317,28 @@ class HNSW(object):
 
         Args:
             query (np.ndarray): The query point.
-            entry_points (List[Tuple[float, Any]]): A list of (-distance, idx) pairs
+            entry_points (List[Tuple[float, Any]]): A list of (-distance, key) pairs
                 representing the entry points for the search.
             layer (Dict[Any, Dict[Any, float]]): The graph for the layer.
             ef (int): The number of neighbors to consider during search.
 
         Returns:
-            List[Tuple[float, Any]]: A heap of (-distance, idx) pairs representing
+            List[Tuple[float, Any]]: A heap of (-distance, key) pairs representing
                 the neighbors found.
         """
-        # candidates is a heap of (distance, idx) pairs.
+        # candidates is a heap of (distance, key) pairs.
         candidates = [(-mdist, p) for mdist, p in entry_points]
         heapq.heapify(candidates)
         visited = set(p for _, p in entry_points)
         while candidates:
             # Pop the closest node from the heap.
-            dist, curr_idx = heapq.heappop(candidates)
+            dist, curr_key = heapq.heappop(candidates)
             # Terminate the search if the distance to the current closest node
             # is larger than the distance to the best node.
             closet_dist = -entry_points[0][0]
             if dist > closet_dist:
                 break
-            neighbors = [p for p in layer[curr_idx] if p not in visited]
+            neighbors = [p for p in layer[curr_key] if p not in visited]
             visited.update(neighbors)
             dists = [self._distance_func(query, self._data[p]) for p in neighbors]
             for p, dist in zip(neighbors, dists):
@@ -283,34 +364,34 @@ class HNSW(object):
         <https://github.com/nmslib/hnswlib/blob/978f7137bc9555a1b61920f05d9d0d8252ca9169/hnswlib/hnswalg.h#L382>`_.
 
         Args:
-            candidates (List[Tuple[float, Any]]): A list of (distance, idx) pairs
+            candidates (List[Tuple[float, Any]]): A list of (distance, key) pairs
                 representing the potential neighbors.
             max_size (int): The maximum number of neighbors to keep.
 
         Returns:
-            List[Tuple[float, Any]]: A list of (distance, idx) pairs representing
+            List[Tuple[float, Any]]: A list of (distance, key) pairs representing
                 the pruned neighbors.
         """
         if len(candidates) < max_size:
             # If the number of entry points is smaller than max_size, we return
             # all entry points.
             return candidates
-        # candidates is a heap of (distance, idx) pairs.
+        # candidates is a heap of (distance, key) pairs.
         heapq.heapify(candidates)
         pruned = []
         while candidates:
             if len(pruned) >= max_size:
                 break
             # Pop the closest node from the heap.
-            candidate_dist, candidate_idx = heapq.heappop(candidates)
+            candidate_dist, candidate_key = heapq.heappop(candidates)
             good = True
-            for _, selected_idx in pruned:
+            for _, selected_key in pruned:
                 dist_to_selected_neighbor = self._distance_func(
-                    self._data[selected_idx], self._data[candidate_idx]
+                    self._data[selected_key], self._data[candidate_key]
                 )
                 if dist_to_selected_neighbor < candidate_dist:
                     good = False
                     break
             if good:
-                pruned.append((candidate_dist, candidate_idx))
+                pruned.append((candidate_dist, candidate_key))
         return pruned
