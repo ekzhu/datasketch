@@ -88,6 +88,7 @@ class HNSW(object):
             ef = self._efConstruction
         if key in self._data:
             self._update(key, new_point, ef)
+            return
         # level is the level at which we insert the element.
         if level is None:
             level = int(-np.log(np.random.random_sample()) * self._level_mult)
@@ -149,7 +150,7 @@ class HNSW(object):
             ValueError: If the key does not exist in the index.
         """
         if key not in self._data:
-            raise ValueError("Element not found")
+            raise ValueError("Key not found in index.")
         # Update the point.
         self._data[key] = new_point
         # If the entry point is the only point in the index, we do not need to
@@ -200,24 +201,24 @@ class HNSW(object):
         entry_points = [(-entry_point_dist, entry_point)]
         for layer in reversed(self._graphs):
             if key not in layer:
+                # Greedy search for the closest neighbor from the highest layer down.
                 entry_point, entry_point_dist = self._search_ef1(
                     new_point, entry_point, entry_point_dist, layer
                 )
                 entry_points = [(-entry_point_dist, entry_point)]
             else:
+                # Search for the neighbors at this layer using ef search.
                 level_m = self._m if layer is not self._graphs[0] else self._m0
                 entry_points = self._search_base_layer(
                     new_point, entry_points, layer, ef
                 )
-                filtered_entry_points = [(md, p) for md, p in entry_points if p != key]
-                if len(filtered_entry_points) == 0:
+                # Filter out the updated node itself.
+                filtered_candidates = [(-md, p) for md, p in entry_points if p != key]
+                if len(filtered_candidates) == 0:
                     continue
-                # Update the out-going edges of the updated node.
+                # Update the out-going edges of the updated node at this level.
                 layer[key] = {
-                    p: d
-                    for d, p in self._heuristic_prune(
-                        [(-mdist, p) for mdist, p in filtered_entry_points], level_m
-                    )
+                    p: d for d, p in self._heuristic_prune(filtered_candidates, level_m)
                 }
 
     def search(
