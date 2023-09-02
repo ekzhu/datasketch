@@ -189,6 +189,8 @@
             <span class="n">false_positive_weight</span><span class="p">,</span> <span class="n">false_negative_weight</span> <span class="o">=</span> <span class="n">weights</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">b</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">r</span> <span class="o">=</span> <span class="n">_optimal_param</span><span class="p">(</span><span class="n">threshold</span><span class="p">,</span> <span class="n">num_perm</span><span class="p">,</span>
                     <span class="n">false_positive_weight</span><span class="p">,</span> <span class="n">false_negative_weight</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">b</span> <span class="o">&lt;</span> <span class="mi">2</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;The number of bands are too small (b &lt; 2)&quot;</span><span class="p">)</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">prepickle</span> <span class="o">=</span> <span class="n">storage_config</span><span class="p">[</span><span class="s1">&#39;type&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="s1">&#39;redis&#39;</span> <span class="k">if</span> <span class="n">prepickle</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">prepickle</span>
 
