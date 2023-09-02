@@ -41,7 +41,7 @@ class TestMinHashLSH(unittest.TestCase):
             self.assertTrue(all(sizes[0] == s for s in sizes))
     
     def test_unpacking(self):
-        for b in range(1, 1024 + 1):
+        for b in range(2, 1024 + 1):
             lsh = MinHashLSH(num_perm=b * 4, params=(b, 4))
             m = MinHash(num_perm=b * 4)
             m.update("abcdefg".encode("utf8"))

@@ -105,6 +105,8 @@ class MinHashLSH(object):
             false_positive_weight, false_negative_weight = weights
             self.b, self.r = _optimal_param(threshold, num_perm,
                     false_positive_weight, false_negative_weight)
+        if self.b < 2:
+            raise ValueError("The number of bands are too small (b < 2)")
 
         self.prepickle = storage_config['type'] == 'redis' if prepickle is None else prepickle
 
