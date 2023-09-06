@@ -69,7 +69,7 @@ class HNSW(object):
     nearest neighbor search. This implementation is based on the paper
     "Efficient and robust approximate nearest neighbor search using Hierarchical
     Navigable Small World graphs" by Yu. A. Malkov, D. A. Yashunin (2016),
-    <https://arxiv.org/abs/1603.09320>`_.
+    `<https://arxiv.org/abs/1603.09320>`_.
 
     Args:
         distance_func: A function that takes two vectors and returns a float
