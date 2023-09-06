@@ -1677,7 +1677,7 @@ generator.</p></li>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="datasketch.HNSW.__getitem__">
-<span class="sig-name descname"><span class="pre">__getitem__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">key</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">ndarray</span></span></span><a class="reference internal" href="_modules/datasketch/hnsw.html#HNSW.__getitem__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#datasketch.HNSW.__getitem__" title="Link to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">__getitem__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">key</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Any</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">ndarray</span></span></span><a class="reference internal" href="_modules/datasketch/hnsw.html#HNSW.__getitem__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#datasketch.HNSW.__getitem__" title="Link to this definition"></a></dt>
 <dd><p>Get the point associated with the key.</p>
 </dd></dl>
 
@@ -1718,7 +1718,8 @@ generator.</p></li>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>key</strong> (<em>Any</em>) – The key of the new point.</p></li>
+<li><p><strong>key</strong> (<em>Any</em>) – The key of the new point. If the key already exists in the
+index, the point will be updated and the index will be repaired.</p></li>
 <li><p><strong>new_point</strong> (<em>np.ndarray</em>) – The new point to add to the index.</p></li>
 <li><p><strong>ef</strong> (<em>Optional</em><em>[</em><em>int</em><em>]</em>) – The number of neighbors to consider during insertion.</p></li>
 <li><p><strong>level</strong> (<em>Optional</em><em>[</em><em>int</em><em>]</em>) – The level at which to insert the new point.</p></li>
