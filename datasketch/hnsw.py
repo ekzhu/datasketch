@@ -1,5 +1,5 @@
 import heapq
-from typing import Any, Callable, Dict, List, Optional, Set, Tuple
+from typing import Any, Callable, Dict, Iterable, List, Optional, Set, Tuple
 
 import numpy as np
 
@@ -84,7 +84,7 @@ class HNSW(object):
         self._entry_point = None
         self._random = np.random.RandomState(seed)
 
-    def __len__(self):
+    def __len__(self) -> int:
         return len(self._data)
 
     def __contains__(self, key) -> bool:
@@ -93,6 +93,24 @@ class HNSW(object):
     def __getitem__(self, key) -> np.ndarray:
         """Get the point associated with the key."""
         return self._data[key]
+
+    def items(self) -> Iterable[Tuple[Any, np.ndarray]]:
+        """Get an iterator over (key, point) pairs in the index."""
+        return self._data.items()
+
+    def keys(self) -> Iterable[Any]:
+        """Get an iterator over keys in the index."""
+        return self._data.keys()
+
+    def values(self) -> Iterable[np.ndarray]:
+        """Get an iterator over points in the index."""
+        return self._data.values()
+
+    def clear(self) -> None:
+        """Clear the index of all data points."""
+        self._data = {}
+        self._graphs = []
+        self._entry_point = None
 
     def insert(
         self,
@@ -163,12 +181,6 @@ class HNSW(object):
             self._graphs.append(_Layer(key))
             # We set the entry point for each new level to be the new node.
             self._entry_point = key
-
-    def clear(self) -> None:
-        """Clear the index of all data points."""
-        self._data = {}
-        self._graphs = []
-        self._entry_point = None
 
     def _update(self, key: Any, new_point: np.ndarray, ef: int) -> None:
         """Update the point associated with the key in the index.
