@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Index &mdash; datasketch 1.6.0 documentation</title>
+  <title>Index &mdash; datasketch 1.6.1 documentation</title>
       <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
   <!--[if lt IE 9]>
@@ -12,7 +12,7 @@
   
         <script src="_static/jquery.js?v=5d32c60e"></script>
         <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-        <script src="_static/documentation_options.js?v=72d88caf"></script>
+        <script src="_static/documentation_options.js?v=d6a008b6"></script>
         <script src="_static/doctools.js?v=888ff710"></script>
         <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="_static/js/theme.js"></script>
@@ -32,7 +32,7 @@
             datasketch
           </a>
               <div class="version">
-                1.6.0
+                1.6.1
               </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
@@ -117,6 +117,8 @@
         <li><a href="documentation.html#datasketch.WeightedMinHash.__eq__">(datasketch.WeightedMinHash method)</a>
 </li>
       </ul></li>
+      <li><a href="documentation.html#datasketch.HNSW.__getitem__">__getitem__() (datasketch.HNSW method)</a>
+</li>
       <li><a href="documentation.html#datasketch.HyperLogLog.__getstate__">__getstate__() (datasketch.HyperLogLog method)</a>
 
       <ul>
@@ -191,12 +193,8 @@
 <h2 id="A">A</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="documentation.html#datasketch.HNSW.add">add() (datasketch.HNSW method)</a>
-
-      <ul>
-        <li><a href="documentation.html#datasketch.MinHashLSHForest.add">(datasketch.MinHashLSHForest method)</a>
+      <li><a href="documentation.html#datasketch.MinHashLSHForest.add">add() (datasketch.MinHashLSHForest method)</a>
 </li>
-      </ul></li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="documentation.html#datasketch.MinHashLSH.add_to_query_buffer">add_to_query_buffer() (datasketch.MinHashLSH method)</a>
@@ -219,9 +217,11 @@
 <h2 id="C">C</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="documentation.html#datasketch.HyperLogLog.clear">clear() (datasketch.HyperLogLog method)</a>
+      <li><a href="documentation.html#datasketch.HNSW.clear">clear() (datasketch.HNSW method)</a>
 
       <ul>
+        <li><a href="documentation.html#datasketch.HyperLogLog.clear">(datasketch.HyperLogLog method)</a>
+</li>
         <li><a href="documentation.html#datasketch.MinHash.clear">(datasketch.MinHash method)</a>
 </li>
       </ul></li>
@@ -303,8 +303,12 @@
         <li><a href="documentation.html#datasketch.MinHashLSHForest.index">(datasketch.MinHashLSHForest method)</a>
 </li>
       </ul></li>
-      <li><a href="documentation.html#datasketch.MinHashLSH.insert">insert() (datasketch.MinHashLSH method)</a>
+      <li><a href="documentation.html#datasketch.HNSW.insert">insert() (datasketch.HNSW method)</a>
+
+      <ul>
+        <li><a href="documentation.html#datasketch.MinHashLSH.insert">(datasketch.MinHashLSH method)</a>
 </li>
+      </ul></li>
       <li><a href="documentation.html#datasketch.MinHashLSH.insertion_session">insertion_session() (datasketch.MinHashLSH method)</a>
 </li>
   </ul></td>
@@ -373,9 +377,11 @@
 <h2 id="Q">Q</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="documentation.html#datasketch.MinHashLSH.query">query() (datasketch.MinHashLSH method)</a>
+      <li><a href="documentation.html#datasketch.HNSW.query">query() (datasketch.HNSW method)</a>
 
       <ul>
+        <li><a href="documentation.html#datasketch.MinHashLSH.query">(datasketch.MinHashLSH method)</a>
+</li>
         <li><a href="documentation.html#datasketch.MinHashLSHEnsemble.query">(datasketch.MinHashLSHEnsemble method)</a>
 </li>
         <li><a href="documentation.html#datasketch.MinHashLSHForest.query">(datasketch.MinHashLSHForest method)</a>
@@ -394,10 +400,6 @@
 
 <h2 id="S">S</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
-  <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="documentation.html#datasketch.HNSW.search">search() (datasketch.HNSW method)</a>
-</li>
-  </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="documentation.html#datasketch.LeanMinHash.serialize">serialize() (datasketch.LeanMinHash method)</a>
 </li>
