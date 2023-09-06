@@ -78,8 +78,21 @@
            <div itemprop="articleBody">
              
   <h1>Source code for datasketch.hnsw</h1><div class="highlight"><pre>
-<span></span><span class="kn">import</span> <span class="nn">heapq</span>
-<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Callable</span><span class="p">,</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">Iterable</span><span class="p">,</span> <span class="n">List</span><span class="p">,</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Set</span><span class="p">,</span> <span class="n">Tuple</span>
+<span></span><span class="kn">from</span> <span class="nn">__future__</span> <span class="kn">import</span> <span class="n">annotations</span>
+<span class="kn">import</span> <span class="nn">heapq</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="p">(</span>
+    <span class="n">Any</span><span class="p">,</span>
+    <span class="n">Callable</span><span class="p">,</span>
+    <span class="n">Dict</span><span class="p">,</span>
+    <span class="n">Iterable</span><span class="p">,</span>
+    <span class="n">List</span><span class="p">,</span>
+    <span class="n">Mapping</span><span class="p">,</span>
+    <span class="n">MutableMapping</span><span class="p">,</span>
+    <span class="n">Optional</span><span class="p">,</span>
+    <span class="n">Set</span><span class="p">,</span>
+    <span class="n">Tuple</span><span class="p">,</span>
+    <span class="n">Union</span><span class="p">,</span>
+<span class="p">)</span>
 
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
 
@@ -143,10 +156,25 @@
         <span class="k">for</span> <span class="n">neighbor</span> <span class="ow">in</span> <span class="n">value</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_reverse_edges</span><span class="o">.</span><span class="n">setdefault</span><span class="p">(</span><span class="n">neighbor</span><span class="p">,</span> <span class="nb">set</span><span class="p">())</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">key</span><span class="p">)</span>
 
+    <span class="k">def</span> <span class="fm">__eq__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">__value</span><span class="p">:</span> <span class="nb">object</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">__value</span><span class="p">,</span> <span class="n">_Layer</span><span class="p">):</span>
+            <span class="k">return</span> <span class="kc">False</span>
+        <span class="k">return</span> <span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_graph</span> <span class="o">==</span> <span class="n">__value</span><span class="o">.</span><span class="n">_graph</span>
+            <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">_reverse_edges</span> <span class="o">==</span> <span class="n">__value</span><span class="o">.</span><span class="n">_reverse_edges</span>
+        <span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">copy</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">_Layer</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Create a copy of the layer.&quot;&quot;&quot;</span>
+        <span class="n">new_layer</span> <span class="o">=</span> <span class="n">_Layer</span><span class="p">(</span><span class="kc">None</span><span class="p">)</span>
+        <span class="n">new_layer</span><span class="o">.</span><span class="n">_graph</span> <span class="o">=</span> <span class="p">{</span><span class="n">k</span><span class="p">:</span> <span class="n">v</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_graph</span><span class="o">.</span><span class="n">items</span><span class="p">()}</span>
+        <span class="n">new_layer</span><span class="o">.</span><span class="n">_reverse_edges</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_reverse_edges</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+        <span class="k">return</span> <span class="n">new_layer</span>
+
 
 <div class="viewcode-block" id="HNSW">
 <a class="viewcode-back" href="../../documentation.html#datasketch.HNSW">[docs]</a>
-<span class="k">class</span> <span class="nc">HNSW</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+<span class="k">class</span> <span class="nc">HNSW</span><span class="p">(</span><span class="n">MutableMapping</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Hierarchical Navigable Small World (HNSW) graph index for approximate</span>
 <span class="sd">    nearest neighbor search. This implementation is based on the paper</span>
 <span class="sd">    &quot;Efficient and robust approximate nearest neighbor search using Hierarchical</span>
@@ -164,16 +192,45 @@
 <span class="sd">        seed (Optional[int]): The random seed to use for the random number</span>
 <span class="sd">            generator.</span>
 
-<span class="sd">    Example:</span>
+<span class="sd">    Examples:</span>
+
+<span class="sd">        Create an HNSW index with Euclidean distance and insert 1000 random</span>
+<span class="sd">        vectors of dimension 10.</span>
 
 <span class="sd">        .. code-block:: python</span>
 
-<span class="sd">            import hnsw</span>
+<span class="sd">            from datasketch.hnsw import HNSW</span>
 <span class="sd">            import numpy as np</span>
+
 <span class="sd">            data = np.random.random_sample((1000, 10))</span>
-<span class="sd">            index = hnsw.HNSW(distance_func=lambda x, y: np.linalg.norm(x - y))</span>
+<span class="sd">            index = HNSW(distance_func=lambda x, y: np.linalg.norm(x - y))</span>
 <span class="sd">            for i, d in enumerate(data):</span>
 <span class="sd">                index.insert(i, d)</span>
+
+<span class="sd">            # Query the index for the 10 nearest neighbors of the first vector.</span>
+<span class="sd">            index.query(data[0], k=10)</span>
+
+<span class="sd">        Create an HNSW index with Jaccard distance and insert 1000 random</span>
+<span class="sd">        sets of 10 elements each.</span>
+
+<span class="sd">        .. code-block:: python</span>
+
+<span class="sd">            from datasketch.hnsw import HNSW</span>
+<span class="sd">            import numpy as np</span>
+
+<span class="sd">            # Each set is represented as a 10-element vector of random integers</span>
+<span class="sd">            # between 0 and 100.</span>
+<span class="sd">            # Deduplication is handled by the distance function.</span>
+<span class="sd">            data = np.random.randint(0, 100, size=(1000, 10))</span>
+<span class="sd">            jaccard_distance = lambda x, y: (</span>
+<span class="sd">                1.0 - float(len(np.intersect1d(x, y, assume_unique=False)))</span>
+<span class="sd">                / float(len(np.union1d(x, y)))</span>
+<span class="sd">            )</span>
+<span class="sd">            index = HNSW(distance_func=jaccard_distance)</span>
+<span class="sd">            for i, d in enumerate(data):</span>
+<span class="sd">                index[i] = d</span>
+
+<span class="sd">            # Query the index for the 10 nearest neighbors of the first set.</span>
 <span class="sd">            index.query(data[0], k=10)</span>
 
 <span class="sd">    &quot;&quot;&quot;</span>
@@ -199,47 +256,230 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">_random</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">RandomState</span><span class="p">(</span><span class="n">seed</span><span class="p">)</span></div>
 
 
+<div class="viewcode-block" id="HNSW.__len__">
+<a class="viewcode-back" href="../../documentation.html#datasketch.HNSW.__len__">[docs]</a>
     <span class="k">def</span> <span class="fm">__len__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
-        <span class="k">return</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_data</span><span class="p">)</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return the number of points in the index.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_data</span><span class="p">)</span></div>
 
+
+<div class="viewcode-block" id="HNSW.__contains__">
+<a class="viewcode-back" href="../../documentation.html#datasketch.HNSW.__contains__">[docs]</a>
     <span class="k">def</span> <span class="fm">__contains__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
-        <span class="k">return</span> <span class="n">key</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_data</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return ``True`` if the index contains the key, else ``False``.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">key</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_data</span></div>
+
 
 <div class="viewcode-block" id="HNSW.__getitem__">
 <a class="viewcode-back" href="../../documentation.html#datasketch.HNSW.__getitem__">[docs]</a>
     <span class="k">def</span> <span class="fm">__getitem__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Get the point associated with the key.&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Get the point associated with the key. Raises KeyError if the key</span>
+<span class="sd">        does not exist in the index.&quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_data</span><span class="p">[</span><span class="n">key</span><span class="p">]</span></div>
+
+
+<div class="viewcode-block" id="HNSW.__setitem__">
+<a class="viewcode-back" href="../../documentation.html#datasketch.HNSW.__setitem__">[docs]</a>
+    <span class="k">def</span> <span class="fm">__setitem__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span> <span class="n">value</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Set the point associated with the key and update the index.</span>
+<span class="sd">        This is equivalent to calling :meth:`insert` with the key and point.&quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="n">value</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="HNSW.__delitem__">
+<a class="viewcode-back" href="../../documentation.html#datasketch.HNSW.__delitem__">[docs]</a>
+    <span class="k">def</span> <span class="fm">__delitem__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Delete the point associated with the key. Raises a KeyError if the</span>
+<span class="sd">        key does not exist in the index.</span>
+
+<span class="sd">        NOTE: This method is not implemented yet.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s2">&quot;del is not implemented yet.&quot;</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="HNSW.__iter__">
+<a class="viewcode-back" href="../../documentation.html#datasketch.HNSW.__iter__">[docs]</a>
+    <span class="k">def</span> <span class="fm">__iter__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Iterable</span><span class="p">[</span><span class="n">Any</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return an iterator over the keys of the index.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="nb">iter</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_data</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span></div>
+
+
+<div class="viewcode-block" id="HNSW.__eq__">
+<a class="viewcode-back" href="../../documentation.html#datasketch.HNSW.__eq__">[docs]</a>
+    <span class="k">def</span> <span class="fm">__eq__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">__value</span><span class="p">:</span> <span class="nb">object</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">__value</span><span class="p">,</span> <span class="n">HNSW</span><span class="p">):</span>
+            <span class="k">return</span> <span class="kc">False</span>
+        <span class="c1"># Check if the index parameters are equal.</span>
+        <span class="k">if</span> <span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_distance_func</span> <span class="o">!=</span> <span class="n">__value</span><span class="o">.</span><span class="n">_distance_func</span>
+            <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">_m</span> <span class="o">!=</span> <span class="n">__value</span><span class="o">.</span><span class="n">_m</span>
+            <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">_ef_construction</span> <span class="o">!=</span> <span class="n">__value</span><span class="o">.</span><span class="n">_ef_construction</span>
+            <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">_m0</span> <span class="o">!=</span> <span class="n">__value</span><span class="o">.</span><span class="n">_m0</span>
+            <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">_level_mult</span> <span class="o">!=</span> <span class="n">__value</span><span class="o">.</span><span class="n">_level_mult</span>
+            <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">_entry_point</span> <span class="o">!=</span> <span class="n">__value</span><span class="o">.</span><span class="n">_entry_point</span>
+        <span class="p">):</span>
+            <span class="k">return</span> <span class="kc">False</span>
+        <span class="c1"># Check if the random states are equal.</span>
+        <span class="n">rand_state_1</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_random</span><span class="o">.</span><span class="n">get_state</span><span class="p">()</span>
+        <span class="n">rand_state_2</span> <span class="o">=</span> <span class="n">__value</span><span class="o">.</span><span class="n">_random</span><span class="o">.</span><span class="n">get_state</span><span class="p">()</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">rand_state_1</span><span class="p">)):</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">rand_state_1</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">):</span>
+                <span class="k">if</span> <span class="ow">not</span> <span class="n">np</span><span class="o">.</span><span class="n">array_equal</span><span class="p">(</span><span class="n">rand_state_1</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">rand_state_2</span><span class="p">[</span><span class="n">i</span><span class="p">]):</span>
+                    <span class="k">return</span> <span class="kc">False</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">rand_state_1</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">!=</span> <span class="n">rand_state_2</span><span class="p">[</span><span class="n">i</span><span class="p">]:</span>
+                    <span class="k">return</span> <span class="kc">False</span>
+        <span class="c1"># Check if keys and points are equal.</span>
+        <span class="k">return</span> <span class="p">(</span>
+            <span class="nb">all</span><span class="p">(</span><span class="n">key</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_data</span> <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">__value</span><span class="o">.</span><span class="n">_data</span><span class="p">)</span>
+            <span class="ow">and</span> <span class="nb">all</span><span class="p">(</span><span class="n">key</span> <span class="ow">in</span> <span class="n">__value</span><span class="o">.</span><span class="n">_data</span> <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_data</span><span class="p">)</span>
+            <span class="ow">and</span> <span class="nb">all</span><span class="p">(</span>
+                <span class="n">np</span><span class="o">.</span><span class="n">array_equal</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_data</span><span class="p">[</span><span class="n">key</span><span class="p">],</span> <span class="n">__value</span><span class="o">.</span><span class="n">_data</span><span class="p">[</span><span class="n">key</span><span class="p">])</span>
+                <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_data</span>
+            <span class="p">)</span>
+            <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">_graphs</span> <span class="o">==</span> <span class="n">__value</span><span class="o">.</span><span class="n">_graphs</span>
+        <span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="HNSW.get">
+<a class="viewcode-back" href="../../documentation.html#datasketch.HNSW.get">[docs]</a>
+    <span class="k">def</span> <span class="nf">get</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span> <span class="n">default</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return the point for key in the index, else default. If default is not</span>
+<span class="sd">        given and key is not in the index, return None.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">key</span><span class="p">)</span></div>
 
 
 <div class="viewcode-block" id="HNSW.items">
 <a class="viewcode-back" href="../../documentation.html#datasketch.HNSW.items">[docs]</a>
     <span class="k">def</span> <span class="nf">items</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Iterable</span><span class="p">[</span><span class="n">Tuple</span><span class="p">[</span><span class="n">Any</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">]]:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Get an iterator over (key, point) pairs in the index.&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return a new view of the indexed points as (key, point) pairs.&quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_data</span><span class="o">.</span><span class="n">items</span><span class="p">()</span></div>
 
 
 <div class="viewcode-block" id="HNSW.keys">
 <a class="viewcode-back" href="../../documentation.html#datasketch.HNSW.keys">[docs]</a>
     <span class="k">def</span> <span class="nf">keys</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Iterable</span><span class="p">[</span><span class="n">Any</span><span class="p">]:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Get an iterator over keys in the index.&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return a new view of the keys of the index points.&quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_data</span><span class="o">.</span><span class="n">keys</span><span class="p">()</span></div>
 
 
 <div class="viewcode-block" id="HNSW.values">
 <a class="viewcode-back" href="../../documentation.html#datasketch.HNSW.values">[docs]</a>
     <span class="k">def</span> <span class="nf">values</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Iterable</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">]:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Get an iterator over points in the index.&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return a new view of the index points.&quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_data</span><span class="o">.</span><span class="n">values</span><span class="p">()</span></div>
+
+
+<div class="viewcode-block" id="HNSW.pop">
+<a class="viewcode-back" href="../../documentation.html#datasketch.HNSW.pop">[docs]</a>
+    <span class="k">def</span> <span class="nf">pop</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span> <span class="n">default</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;If key is in the index, remove it and return its associated point,</span>
+<span class="sd">        else return default. If default is not given and key is not in the index,</span>
+<span class="sd">        raise KeyError.</span>
+
+<span class="sd">        NOTE: This method is not implemented yet.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s2">&quot;pop is not implemented yet.&quot;</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="HNSW.popitem">
+<a class="viewcode-back" href="../../documentation.html#datasketch.HNSW.popitem">[docs]</a>
+    <span class="k">def</span> <span class="nf">popitem</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">Any</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Remove and return a (key, point) pair from the index. Pairs are</span>
+<span class="sd">        returned in LIFO order. If the index is empty, raise KeyError.</span>
+
+<span class="sd">        NOTE: This method is not implemented yet.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s2">&quot;popitem is not implemented yet.&quot;</span><span class="p">)</span></div>
 
 
 <div class="viewcode-block" id="HNSW.clear">
 <a class="viewcode-back" href="../../documentation.html#datasketch.HNSW.clear">[docs]</a>
     <span class="k">def</span> <span class="nf">clear</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Clear the index of all data points.&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Clear the index of all data points. This will not reset the random</span>
+<span class="sd">        number generator.&quot;&quot;&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_data</span> <span class="o">=</span> <span class="p">{}</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_graphs</span> <span class="o">=</span> <span class="p">[]</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_entry_point</span> <span class="o">=</span> <span class="kc">None</span></div>
+
+
+<div class="viewcode-block" id="HNSW.copy">
+<a class="viewcode-back" href="../../documentation.html#datasketch.HNSW.copy">[docs]</a>
+    <span class="k">def</span> <span class="nf">copy</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">HNSW</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Create a copy of the index. The copy will have the same parameters</span>
+<span class="sd">        as the original index and the same keys and points, but will not share</span>
+<span class="sd">        any index data structures (i.e., graphs) with the original index.</span>
+<span class="sd">        The new index&#39;s random state will start from a copy of the original</span>
+<span class="sd">        index&#39;s.&quot;&quot;&quot;</span>
+        <span class="n">new_index</span> <span class="o">=</span> <span class="n">HNSW</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_distance_func</span><span class="p">,</span>
+            <span class="n">m</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_m</span><span class="p">,</span>
+            <span class="n">ef_construction</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_ef_construction</span><span class="p">,</span>
+            <span class="n">m0</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_m0</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="n">new_index</span><span class="o">.</span><span class="n">_data</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_data</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+        <span class="n">new_index</span><span class="o">.</span><span class="n">_graphs</span> <span class="o">=</span> <span class="p">[</span><span class="n">layer</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span> <span class="k">for</span> <span class="n">layer</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_graphs</span><span class="p">]</span>
+        <span class="n">new_index</span><span class="o">.</span><span class="n">_entry_point</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_entry_point</span>
+        <span class="n">new_index</span><span class="o">.</span><span class="n">_random</span><span class="o">.</span><span class="n">set_state</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_random</span><span class="o">.</span><span class="n">get_state</span><span class="p">())</span>
+        <span class="k">return</span> <span class="n">new_index</span></div>
+
+
+<div class="viewcode-block" id="HNSW.update">
+<a class="viewcode-back" href="../../documentation.html#datasketch.HNSW.update">[docs]</a>
+    <span class="k">def</span> <span class="nf">update</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">Mapping</span><span class="p">,</span> <span class="n">HNSW</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Update the index with the points from the other Mapping or HNSW object,</span>
+<span class="sd">        overwriting existing keys.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            other (Union[Mapping, HNSW]): The other Mapping or HNSW object.</span>
+
+<span class="sd">        Examples:</span>
+
+<span class="sd">            Create an HNSW index with a dictionary of points.</span>
+
+<span class="sd">            .. code-block:: python</span>
+
+<span class="sd">                from datasketch.hnsw import HNSW</span>
+<span class="sd">                import numpy as np</span>
+
+<span class="sd">                data = np.random.random_sample((1000, 10))</span>
+<span class="sd">                index = HNSW(distance_func=lambda x, y: np.linalg.norm(x - y))</span>
+
+<span class="sd">                # Batch insert 1000 points.</span>
+<span class="sd">                index.update({i: d for i, d in enumerate(data)})</span>
+
+<span class="sd">            Create an HNSW index with another HNSW index.</span>
+
+<span class="sd">            .. code-block:: python</span>
+
+<span class="sd">                from datasketch.hnsw import HNSW</span>
+<span class="sd">                import numpy as np</span>
+
+<span class="sd">                data = np.random.random_sample((1000, 10))</span>
+<span class="sd">                index1 = HNSW(distance_func=lambda x, y: np.linalg.norm(x - y))</span>
+<span class="sd">                index2 = HNSW(distance_func=lambda x, y: np.linalg.norm(x - y))</span>
+
+<span class="sd">                # Batch insert 1000 points.</span>
+<span class="sd">                index1.update({i: d for i, d in enumerate(data)})</span>
+
+<span class="sd">                # Update index2 with the points from index1.</span>
+<span class="sd">                index2.update(index1)</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">point</span> <span class="ow">in</span> <span class="n">other</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="n">point</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="HNSW.setdefault">
+<a class="viewcode-back" href="../../documentation.html#datasketch.HNSW.setdefault">[docs]</a>
+    <span class="k">def</span> <span class="nf">setdefault</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span> <span class="n">default</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;If key is in the index, return its associated point. If not, insert</span>
+<span class="sd">        key with a value of default and return default. default cannot be None.&quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">default</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Default value cannot be None.&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">key</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_data</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="n">default</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_data</span><span class="p">[</span><span class="n">key</span><span class="p">]</span></div>
 
 
 <div class="viewcode-block" id="HNSW.insert">
@@ -258,7 +498,9 @@
 <span class="sd">                index, the point will be updated and the index will be repaired.</span>
 <span class="sd">            new_point (np.ndarray): The new point to add to the index.</span>
 <span class="sd">            ef (Optional[int]): The number of neighbors to consider during insertion.</span>
+<span class="sd">                If None, use the construction ef.</span>
 <span class="sd">            level (Optional[int]): The level at which to insert the new point.</span>
+<span class="sd">                If None, the level will be chosen automatically.</span>
 
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="n">ef</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
@@ -310,7 +552,7 @@
                         <span class="p">)</span>
                     <span class="p">}</span>
         <span class="c1"># For all levels above the current level, we create an empty graph.</span>
-        <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_graphs</span><span class="p">),</span> <span class="n">level</span><span class="p">):</span>
+        <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_graphs</span><span class="p">),</span> <span class="n">level</span> <span class="o">+</span> <span class="mi">1</span><span class="p">):</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_graphs</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">_Layer</span><span class="p">(</span><span class="n">key</span><span class="p">))</span>
             <span class="c1"># We set the entry point for each new level to be the new node.</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_entry_point</span> <span class="o">=</span> <span class="n">key</span></div>
@@ -408,7 +650,7 @@
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Search for the k nearest neighbors of the query point.</span>
 
 <span class="sd">        Args:</span>
-<span class="sd">            query (np.ndarray): The query point.</span>
+<span class="sd">            query_point (np.ndarray): The query point.</span>
 <span class="sd">            k (Optional[int]): The number of neighbors to return. If None, return</span>
 <span class="sd">                all neighbors found.</span>
 <span class="sd">            ef (Optional[int]): The number of neighbors to consider during search.</span>
@@ -579,7 +821,63 @@
                     <span class="k">break</span>
             <span class="k">if</span> <span class="n">good</span><span class="p">:</span>
                 <span class="n">pruned</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">candidate_dist</span><span class="p">,</span> <span class="n">candidate_key</span><span class="p">))</span>
-        <span class="k">return</span> <span class="n">pruned</span></div>
+        <span class="k">return</span> <span class="n">pruned</span>
+
+<div class="viewcode-block" id="HNSW.remove">
+<a class="viewcode-back" href="../../documentation.html#datasketch.HNSW.remove">[docs]</a>
+    <span class="k">def</span> <span class="nf">remove</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Remove a point from the index.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            key (Any): The key of the point to remove.</span>
+
+<span class="sd">        Raises:</span>
+<span class="sd">            ValueError: If the key does not exist in the index.</span>
+
+<span class="sd">        NOTE: This method is not implemented yet.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s2">&quot;Remove is not implemented yet.&quot;</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="HNSW.merge">
+<a class="viewcode-back" href="../../documentation.html#datasketch.HNSW.merge">[docs]</a>
+    <span class="k">def</span> <span class="nf">merge</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">:</span> <span class="n">HNSW</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">HNSW</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Create a new index by merging the current index with another index.</span>
+<span class="sd">        The new index will contain all points from both indexes.</span>
+<span class="sd">        If a point exists in both, the point from the other index will be used.</span>
+<span class="sd">        The new index will have the same parameters as the current index and</span>
+<span class="sd">        a copy of the current index&#39;s random state.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            other (HNSW): The other index to merge with.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            HNSW: A new index containing all points from both indexes.</span>
+
+<span class="sd">        Example:</span>
+
+<span class="sd">            .. code-block:: python</span>
+
+<span class="sd">                from datasketch.hnsw import HNSW</span>
+<span class="sd">                import numpy as np</span>
+
+<span class="sd">                data1 = np.random.random_sample((1000, 10))</span>
+<span class="sd">                data2 = np.random.random_sample((1000, 10))</span>
+<span class="sd">                index1 = HNSW(distance_func=lambda x, y: np.linalg.norm(x - y))</span>
+<span class="sd">                index2 = HNSW(distance_func=lambda x, y: np.linalg.norm(x - y))</span>
+
+<span class="sd">                # Batch insert data into the indexes.</span>
+<span class="sd">                index1.update({i: d for i, d in enumerate(data1)})</span>
+<span class="sd">                index2.update({i + len(data1): d for i, d in enumerate(data2)})</span>
+
+<span class="sd">                # Merge the indexes.</span>
+<span class="sd">                index = index1.merge(index2)</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">new_index</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+        <span class="n">new_index</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">other</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">new_index</span></div>
+</div>
 
 </pre></div>
 
