@@ -117,10 +117,10 @@ class HNSW(object):
     def __len__(self) -> int:
         return len(self._data)
 
-    def __contains__(self, key) -> bool:
+    def __contains__(self, key: Any) -> bool:
         return key in self._data
 
-    def __getitem__(self, key) -> np.ndarray:
+    def __getitem__(self, key: Any) -> np.ndarray:
         """Get the point associated with the key."""
         return self._data[key]
 
@@ -152,7 +152,8 @@ class HNSW(object):
         """Add a new point to the index.
 
         Args:
-            key (Any): The key of the new point.
+            key (Any): The key of the new point. If the key already exists in the
+                index, the point will be updated and the index will be repaired.
             new_point (np.ndarray): The new point to add to the index.
             ef (Optional[int]): The number of neighbors to consider during insertion.
             level (Optional[int]): The level at which to insert the new point.
