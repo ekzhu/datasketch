@@ -34,6 +34,36 @@ class _Layer(object):
             self._reverse_edges.setdefault(neighbor, set()).add(key)
 
 
+class _Layer(object):
+    """A graph layer in the HNSW index. This is a dictionary-like object
+    that maps a key to a dictionary of neighbors.
+
+    Args:
+        key (Any): The first key to insert into the graph.
+    """
+
+    def __init__(self, key: Any) -> None:
+        # self._graph[key] contains a {j: dist} dictionary,
+        # where j is a neighbor of key and dist is distance.
+        self._graph: Dict[Any, Dict[Any, float]] = {key: {}}
+        # self._reverse_edges[key] contains a set of neighbors of key.
+        self._reverse_edges: Dict[Any, Set] = {}
+
+    def __contains__(self, key: Any) -> bool:
+        return key in self._graph
+
+    def __getitem__(self, key: Any) -> Dict[Any, float]:
+        return self._graph[key]
+
+    def __setitem__(self, key: Any, value: Dict[Any, float]) -> None:
+        old_neighbors = self._graph.get(key, {})
+        self._graph[key] = value
+        for neighbor in old_neighbors:
+            self._reverse_edges[neighbor].discard(key)
+        for neighbor in value:
+            self._reverse_edges.setdefault(neighbor, set()).add(key)
+
+
 class HNSW(object):
     """Hierarchical Navigable Small World (HNSW) graph index for approximate
     nearest neighbor search. This implementation is based on the paper
