@@ -5,6 +5,10 @@ import numpy as np
 from datasketch.hnsw import HNSW
 
 
+def l2_distance(x, y):
+    return np.linalg.norm(x - y)
+
+
 class TestHNSW(unittest.TestCase):
     def test_search_l2(self):
         data = np.random.rand(100, 10)
@@ -91,3 +95,22 @@ class TestHNSW(unittest.TestCase):
                     jaccard_func(hnsw[results[j][0]], data[i]),
                     jaccard_func(hnsw[results[j + 1][0]], data[i]),
                 )
+
+    def test_pickle(self):
+        data = np.random.rand(100, 10)
+        hnsw = HNSW(
+            distance_func=l2_distance,
+            m=16,
+            ef_construction=100,
+        )
+        for i in range(len(data)):
+            hnsw.insert(i, data[i])
+
+        import pickle
+
+        hnsw2 = pickle.loads(pickle.dumps(hnsw))
+
+        for i in range(len(data)):
+            results1 = hnsw.query(data[i], 10)
+            results2 = hnsw2.query(data[i], 10)
+            self.assertEqual(results1, results2)

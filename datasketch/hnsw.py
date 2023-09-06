@@ -1,7 +1,37 @@
 import heapq
-from typing import Any, Callable, Dict, List, Optional, Set, Tuple
+from typing import Any, Callable, Dict, Iterable, List, Optional, Set, Tuple
 
 import numpy as np
+
+
+class _Layer(object):
+    """A graph layer in the HNSW index. This is a dictionary-like object
+    that maps a key to a dictionary of neighbors.
+
+    Args:
+        key (Any): The first key to insert into the graph.
+    """
+
+    def __init__(self, key: Any) -> None:
+        # self._graph[key] contains a {j: dist} dictionary,
+        # where j is a neighbor of key and dist is distance.
+        self._graph: Dict[Any, Dict[Any, float]] = {key: {}}
+        # self._reverse_edges[key] contains a set of neighbors of key.
+        self._reverse_edges: Dict[Any, Set] = {}
+
+    def __contains__(self, key: Any) -> bool:
+        return key in self._graph
+
+    def __getitem__(self, key: Any) -> Dict[Any, float]:
+        return self._graph[key]
+
+    def __setitem__(self, key: Any, value: Dict[Any, float]) -> None:
+        old_neighbors = self._graph.get(key, {})
+        self._graph[key] = value
+        for neighbor in old_neighbors:
+            self._reverse_edges[neighbor].discard(key)
+        for neighbor in value:
+            self._reverse_edges.setdefault(neighbor, set()).add(key)
 
 
 class _Layer(object):
@@ -39,7 +69,7 @@ class HNSW(object):
     nearest neighbor search. This implementation is based on the paper
     "Efficient and robust approximate nearest neighbor search using Hierarchical
     Navigable Small World graphs" by Yu. A. Malkov, D. A. Yashunin (2016),
-    <https://arxiv.org/abs/1603.09320>`_.
+    `<https://arxiv.org/abs/1603.09320>`_.
 
     Args:
         distance_func: A function that takes two vectors and returns a float
@@ -59,7 +89,7 @@ class HNSW(object):
             import hnsw
             import numpy as np
             data = np.random.random_sample((1000, 10))
-            index = hnsw.HNSW(distance_func=lambda x, y: np.linalg.norm(x - y), m=5, efConstruction=200)
+            index = hnsw.HNSW(distance_func=lambda x, y: np.linalg.norm(x - y))
             for i, d in enumerate(data):
                 index.insert(i, d)
             index.query(data[0], k=10)
@@ -69,7 +99,7 @@ class HNSW(object):
     def __init__(
         self,
         distance_func: Callable[[np.ndarray, np.ndarray], float],
-        m: int = 5,
+        m: int = 16,
         ef_construction: int = 200,
         m0: Optional[int] = None,
         seed: Optional[int] = None,
@@ -84,23 +114,33 @@ class HNSW(object):
         self._entry_point = None
         self._random = np.random.RandomState(seed)
 
-    def __len__(self):
+    def __len__(self) -> int:
         return len(self._data)
 
     def __contains__(self, key) -> bool:
         return key in self._data
 
-    def __repr__(self):
-        return (
-            f"HNSW({self._distance_func}, m={self._m}, "
-            f"ef_construction={self._ef_construction}, m0={self._m0}, "
-            f"num_points={len(self._data)}, num_levels={len(self._graphs)}), "
-            f"random_state={self._random.get_state()}"
-        )
-
     def __getitem__(self, key) -> np.ndarray:
         """Get the point associated with the key."""
         return self._data[key]
+
+    def items(self) -> Iterable[Tuple[Any, np.ndarray]]:
+        """Get an iterator over (key, point) pairs in the index."""
+        return self._data.items()
+
+    def keys(self) -> Iterable[Any]:
+        """Get an iterator over keys in the index."""
+        return self._data.keys()
+
+    def values(self) -> Iterable[np.ndarray]:
+        """Get an iterator over points in the index."""
+        return self._data.values()
+
+    def clear(self) -> None:
+        """Clear the index of all data points."""
+        self._data = {}
+        self._graphs = []
+        self._entry_point = None
 
     def insert(
         self,
@@ -171,19 +211,6 @@ class HNSW(object):
             self._graphs.append(_Layer(key))
             # We set the entry point for each new level to be the new node.
             self._entry_point = key
-
-    def clear(self) -> None:
-        """Clear the index of all data points.
-
-        Args:
-            None
-
-        Returns:
-            None
-        """
-        self._data = {}
-        self._graphs = []
-        self._entry_point = None
 
     def _update(self, key: Any, new_point: np.ndarray, ef: int) -> None:
         """Update the point associated with the key in the index.

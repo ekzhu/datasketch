@@ -37,7 +37,7 @@ sub-linear query time:
 +---------------------------+-----------------------------+------------------------+
 | `MinHash LSH Ensemble`_   | MinHash                     | Containment Threshold  |
 +---------------------------+-----------------------------+------------------------+
-| HNSW                      | Customizable                | Metric Distances       |
+| `HNSW`_                   | Customizable                | Metric Distances       |
 +---------------------------+-----------------------------+------------------------+
 
 datasketch must be used with Python 3.7 or above, NumPy 1.11 or above, and Scipy. 
@@ -77,3 +77,4 @@ To install with Cassandra dependency:
 .. _`MinHash LSH Forest`: https://ekzhu.github.io/datasketch/lshforest.html
 .. _`MinHash LSH Ensemble`: https://ekzhu.github.io/datasketch/lshensemble.html
 .. _`Minhash LSH at Scale`: http://ekzhu.github.io/datasketch/lsh.html#minhash-lsh-at-scale
+.. _`HNSW`: https://ekzhu.github.io/datasketch/documentation.html#hnsw
