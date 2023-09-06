@@ -59,7 +59,7 @@ class HNSW(object):
             import hnsw
             import numpy as np
             data = np.random.random_sample((1000, 10))
-            index = hnsw.HNSW(distance_func=lambda x, y: np.linalg.norm(x - y), m=5, efConstruction=200)
+            index = hnsw.HNSW(distance_func=lambda x, y: np.linalg.norm(x - y))
             for i, d in enumerate(data):
                 index.insert(i, d)
             index.query(data[0], k=10)
@@ -69,7 +69,7 @@ class HNSW(object):
     def __init__(
         self,
         distance_func: Callable[[np.ndarray, np.ndarray], float],
-        m: int = 5,
+        m: int = 16,
         ef_construction: int = 200,
         m0: Optional[int] = None,
         seed: Optional[int] = None,
@@ -89,14 +89,6 @@ class HNSW(object):
 
     def __contains__(self, key) -> bool:
         return key in self._data
-
-    def __repr__(self):
-        return (
-            f"HNSW({self._distance_func}, m={self._m}, "
-            f"ef_construction={self._ef_construction}, m0={self._m0}, "
-            f"num_points={len(self._data)}, num_levels={len(self._graphs)}), "
-            f"random_state={self._random.get_state()}"
-        )
 
     def __getitem__(self, key) -> np.ndarray:
         """Get the point associated with the key."""
@@ -173,14 +165,7 @@ class HNSW(object):
             self._entry_point = key
 
     def clear(self) -> None:
-        """Clear the index of all data points.
-
-        Args:
-            None
-
-        Returns:
-            None
-        """
+        """Clear the index of all data points."""
         self._data = {}
         self._graphs = []
         self._entry_point = None
