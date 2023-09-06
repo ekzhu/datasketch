@@ -43,6 +43,8 @@ class TestHNSW(unittest.TestCase):
                 index.insert(key, point)
             else:
                 index[key] = point
+            # Make sure the entry point is set.
+            self.assertTrue(index._entry_point is not None)
             # Test contains.
             self.assertIn(key, index)
             if original_length == 0:
