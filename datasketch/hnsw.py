@@ -414,7 +414,7 @@ class HNSW(MutableMapping):
                         )
                     }
         # For all levels above the current level, we create an empty graph.
-        for _ in range(len(self._graphs), level):
+        for _ in range(len(self._graphs), level + 1):
             self._graphs.append(_Layer(key))
             # We set the entry point for each new level to be the new node.
             self._entry_point = key
