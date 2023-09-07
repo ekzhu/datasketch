@@ -78,7 +78,9 @@
            <div itemprop="articleBody">
              
   <h1>Source code for datasketch.minhash</h1><div class="highlight"><pre>
-<span></span><span class="kn">import</span> <span class="nn">random</span><span class="o">,</span> <span class="nn">copy</span><span class="o">,</span> <span class="nn">struct</span>
+<span></span><span class="kn">from</span> <span class="nn">__future__</span> <span class="kn">import</span> <span class="n">annotations</span>
+<span class="kn">import</span> <span class="nn">copy</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Callable</span><span class="p">,</span> <span class="n">Generator</span><span class="p">,</span> <span class="n">Iterable</span><span class="p">,</span> <span class="n">List</span><span class="p">,</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Tuple</span>
 <span class="kn">import</span> <span class="nn">warnings</span>
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
 
@@ -90,38 +92,43 @@
 <span class="c1"># http://en.wikipedia.org/wiki/Mersenne_prime</span>
 <span class="n">_mersenne_prime</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">uint64</span><span class="p">((</span><span class="mi">1</span> <span class="o">&lt;&lt;</span> <span class="mi">61</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span>
 <span class="n">_max_hash</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">uint64</span><span class="p">((</span><span class="mi">1</span> <span class="o">&lt;&lt;</span> <span class="mi">32</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span>
-<span class="n">_hash_range</span> <span class="o">=</span> <span class="p">(</span><span class="mi">1</span> <span class="o">&lt;&lt;</span> <span class="mi">32</span><span class="p">)</span>
+<span class="n">_hash_range</span> <span class="o">=</span> <span class="mi">1</span> <span class="o">&lt;&lt;</span> <span class="mi">32</span>
+
 
 <div class="viewcode-block" id="MinHash">
 <a class="viewcode-back" href="../../documentation.html#datasketch.MinHash">[docs]</a>
 <span class="k">class</span> <span class="nc">MinHash</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&#39;&#39;&#39;MinHash is a probabilistic data structure for computing</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;MinHash is a probabilistic data structure for computing</span>
 <span class="sd">    `Jaccard similarity`_ between sets.</span>
 
 <span class="sd">    Args:</span>
-<span class="sd">        num_perm (int, optional): Number of random permutation functions.</span>
+<span class="sd">        num_perm (int): Number of random permutation functions.</span>
 <span class="sd">            It will be ignored if `hashvalues` is not None.</span>
-<span class="sd">        seed (int, optional): The random seed controls the set of random</span>
+<span class="sd">        seed (int): The random seed controls the set of random</span>
 <span class="sd">            permutation functions generated for this MinHash.</span>
-<span class="sd">        hashfunc (optional): The hash function used by this MinHash.</span>
-<span class="sd">            It takes the input passed to the `update` method and</span>
+<span class="sd">        hashfunc (Callable): The hash function used by</span>
+<span class="sd">            this MinHash.</span>
+<span class="sd">            It takes the input passed to the :meth:`update` method and</span>
 <span class="sd">            returns an integer that can be encoded with 32 bits.</span>
 <span class="sd">            The default hash function is based on SHA1 from hashlib_.</span>
+<span class="sd">            Users can use `farmhash` for better performance.</span>
+<span class="sd">            See the example in :meth:`update`.</span>
 <span class="sd">        hashobj (**deprecated**): This argument is deprecated since version</span>
 <span class="sd">            1.4.0. It is a no-op and has been replaced by `hashfunc`.</span>
-<span class="sd">        hashvalues (`numpy.array` or `list`, optional): The hash values is</span>
+<span class="sd">        hashvalues (Optional[Iterable]): The hash values is</span>
 <span class="sd">            the internal state of the MinHash. It can be specified for faster</span>
-<span class="sd">            initialization using the existing state from another MinHash.</span>
-<span class="sd">        permutations (optional): The permutation function parameters. This argument</span>
+<span class="sd">            initialization using the existing :attr:`hashvalues` of another MinHash.</span>
+<span class="sd">        permutations (Optional[Tuple[Iterable, Iterable]]): The permutation</span>
+<span class="sd">            function parameters as a tuple of two lists. This argument</span>
 <span class="sd">            can be specified for faster initialization using the existing</span>
-<span class="sd">            state from another MinHash.</span>
+<span class="sd">            :attr:`permutations` from another MinHash.</span>
 
 <span class="sd">    Note:</span>
 <span class="sd">        To save memory usage, consider using :class:`datasketch.LeanMinHash`.</span>
 
 <span class="sd">    Note:</span>
 <span class="sd">        Since version 1.1.1, MinHash will only support serialization using</span>
-<span class="sd">        `pickle`_. ``serialize`` and ``deserialize`` methods are removed,</span>
+<span class="sd">        pickle_. ``serialize`` and ``deserialize`` methods are removed,</span>
 <span class="sd">        and are supported in :class:`datasketch.LeanMinHash` instead.</span>
 <span class="sd">        MinHash serialized before version 1.1.1 cannot be deserialized properly</span>
 <span class="sd">        in newer versions (`need to migrate? &lt;https://github.com/ekzhu/datasketch/issues/18&gt;`_).</span>
@@ -131,27 +138,35 @@
 <span class="sd">        instead of Python&#39;s built-in random package. This change makes the</span>
 <span class="sd">        hash values consistent across different Python versions.</span>
 <span class="sd">        The side-effect is that now MinHash created before version 1.1.3 won&#39;t</span>
-<span class="sd">        work (i.e., ``jaccard``, ``merge`` and ``union``)</span>
+<span class="sd">        work (i.e., :meth:`jaccard`, :meth:`merge` and :meth:`union`)</span>
 <span class="sd">        with those created after.</span>
 
 <span class="sd">    .. _`Jaccard similarity`: https://en.wikipedia.org/wiki/Jaccard_index</span>
 <span class="sd">    .. _hashlib: https://docs.python.org/3.5/library/hashlib.html</span>
 <span class="sd">    .. _`pickle`: https://docs.python.org/3/library/pickle.html</span>
-<span class="sd">    &#39;&#39;&#39;</span>
+<span class="sd">    &quot;&quot;&quot;</span>
 
 <div class="viewcode-block" id="MinHash.__init__">
 <a class="viewcode-back" href="../../documentation.html#datasketch.MinHash.__init__">[docs]</a>
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">num_perm</span><span class="o">=</span><span class="mi">128</span><span class="p">,</span> <span class="n">seed</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
-            <span class="n">hashfunc</span><span class="o">=</span><span class="n">sha1_hash32</span><span class="p">,</span>
-            <span class="n">hashobj</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="c1"># Deprecated.</span>
-            <span class="n">hashvalues</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">permutations</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">num_perm</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">128</span><span class="p">,</span>
+        <span class="n">seed</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span>
+        <span class="n">hashfunc</span><span class="p">:</span> <span class="n">Callable</span> <span class="o">=</span> <span class="n">sha1_hash32</span><span class="p">,</span>
+        <span class="n">hashobj</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">object</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>  <span class="c1"># Deprecated.</span>
+        <span class="n">hashvalues</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Iterable</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">permutations</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Tuple</span><span class="p">[</span><span class="n">Iterable</span><span class="p">,</span> <span class="n">Iterable</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
         <span class="k">if</span> <span class="n">hashvalues</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
             <span class="n">num_perm</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">hashvalues</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">num_perm</span> <span class="o">&gt;</span> <span class="n">_hash_range</span><span class="p">:</span>
             <span class="c1"># Because 1) we don&#39;t want the size to be too large, and</span>
             <span class="c1"># 2) we are using 4 bytes to store the size value</span>
-            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Cannot have more than </span><span class="si">%d</span><span class="s2"> number of</span><span class="se">\</span>
-<span class="s2">                    permutation functions&quot;</span> <span class="o">%</span> <span class="n">_hash_range</span><span class="p">)</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="s2">&quot;Cannot have more than </span><span class="si">%d</span><span class="s2"> number of</span><span class="se">\</span>
+<span class="s2">                    permutation functions&quot;</span>
+                <span class="o">%</span> <span class="n">_hash_range</span>
+            <span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">seed</span> <span class="o">=</span> <span class="n">seed</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">num_perm</span> <span class="o">=</span> <span class="n">num_perm</span>
         <span class="c1"># Check the hash function.</span>
@@ -160,8 +175,9 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">hashfunc</span> <span class="o">=</span> <span class="n">hashfunc</span>
         <span class="c1"># Check for use of hashobj and issue warning.</span>
         <span class="k">if</span> <span class="n">hashobj</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span><span class="s2">&quot;hashobj is deprecated, use hashfunc instead.&quot;</span><span class="p">,</span>
-                    <span class="ne">DeprecationWarning</span><span class="p">)</span>
+            <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span>
+                <span class="s2">&quot;hashobj is deprecated, use hashfunc instead.&quot;</span><span class="p">,</span> <span class="ne">DeprecationWarning</span>
+            <span class="p">)</span>
         <span class="c1"># Initialize hash values</span>
         <span class="k">if</span> <span class="n">hashvalues</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">hashvalues</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_parse_hashvalues</span><span class="p">(</span><span class="n">hashvalues</span><span class="p">)</span>
@@ -176,25 +192,32 @@
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Numbers of hash values and permutations mismatch&quot;</span><span class="p">)</span></div>
 
 
-    <span class="k">def</span> <span class="nf">_init_hashvalues</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">num_perm</span><span class="p">):</span>
-        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">(</span><span class="n">num_perm</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">uint64</span><span class="p">)</span><span class="o">*</span><span class="n">_max_hash</span>
+    <span class="k">def</span> <span class="nf">_init_hashvalues</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">num_perm</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">(</span><span class="n">num_perm</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">uint64</span><span class="p">)</span> <span class="o">*</span> <span class="n">_max_hash</span>
 
-    <span class="k">def</span> <span class="nf">_init_permutations</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">num_perm</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">_init_permutations</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">num_perm</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
         <span class="c1"># Create parameters for a random bijective permutation function</span>
         <span class="c1"># that maps a 32-bit hash value to another 32-bit hash value.</span>
         <span class="c1"># http://en.wikipedia.org/wiki/Universal_hashing</span>
         <span class="n">gen</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">RandomState</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">seed</span><span class="p">)</span>
-        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span>
-            <span class="p">(</span><span class="n">gen</span><span class="o">.</span><span class="n">randint</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">_mersenne_prime</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">uint64</span><span class="p">),</span> <span class="n">gen</span><span class="o">.</span><span class="n">randint</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">_mersenne_prime</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">uint64</span><span class="p">))</span> <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">num_perm</span><span class="p">)</span>
-        <span class="p">],</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">uint64</span><span class="p">)</span><span class="o">.</span><span class="n">T</span>
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span>
+            <span class="p">[</span>
+                <span class="p">(</span>
+                    <span class="n">gen</span><span class="o">.</span><span class="n">randint</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">_mersenne_prime</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">uint64</span><span class="p">),</span>
+                    <span class="n">gen</span><span class="o">.</span><span class="n">randint</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">_mersenne_prime</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">uint64</span><span class="p">),</span>
+                <span class="p">)</span>
+                <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">num_perm</span><span class="p">)</span>
+            <span class="p">],</span>
+            <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">uint64</span><span class="p">,</span>
+        <span class="p">)</span><span class="o">.</span><span class="n">T</span>
 
     <span class="k">def</span> <span class="nf">_parse_hashvalues</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">hashvalues</span><span class="p">):</span>
         <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">hashvalues</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">uint64</span><span class="p">)</span>
 
 <div class="viewcode-block" id="MinHash.update">
 <a class="viewcode-back" href="../../documentation.html#datasketch.MinHash.update">[docs]</a>
-    <span class="k">def</span> <span class="nf">update</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">b</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&#39;&#39;&#39;Update this MinHash with a new value.</span>
+    <span class="k">def</span> <span class="nf">update</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">b</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Update this MinHash with a new value.</span>
 <span class="sd">        The value will be hashed using the hash function specified by</span>
 <span class="sd">        the `hashfunc` argument in the constructor.</span>
 
@@ -219,7 +242,7 @@
 <span class="sd">                    return farmhash.hash32(b)</span>
 <span class="sd">                minhash = MinHash(hashfunc=_hash_32)</span>
 <span class="sd">                minhash.update(&quot;new value&quot;)</span>
-<span class="sd">        &#39;&#39;&#39;</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">hv</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">hashfunc</span><span class="p">(</span><span class="n">b</span><span class="p">)</span>
         <span class="n">a</span><span class="p">,</span> <span class="n">b</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">permutations</span>
         <span class="n">phv</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">bitwise_and</span><span class="p">((</span><span class="n">a</span> <span class="o">*</span> <span class="n">hv</span> <span class="o">+</span> <span class="n">b</span><span class="p">)</span> <span class="o">%</span> <span class="n">_mersenne_prime</span><span class="p">,</span> <span class="n">_max_hash</span><span class="p">)</span>
@@ -228,13 +251,13 @@
 
 <div class="viewcode-block" id="MinHash.update_batch">
 <a class="viewcode-back" href="../../documentation.html#datasketch.MinHash.update_batch">[docs]</a>
-    <span class="k">def</span> <span class="nf">update_batch</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">b</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&#39;&#39;&#39;Update this MinHash with new values.</span>
+    <span class="k">def</span> <span class="nf">update_batch</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">b</span><span class="p">:</span> <span class="n">Iterable</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Update this MinHash with new values.</span>
 <span class="sd">        The values will be hashed using the hash function specified by</span>
 <span class="sd">        the `hashfunc` argument in the constructor.</span>
 
 <span class="sd">        Args:</span>
-<span class="sd">            b (list): List of values to be hashed using the hash function specified.</span>
+<span class="sd">            b (Iterable): Values to be hashed using the hash function specified.</span>
 
 <span class="sd">        Example:</span>
 <span class="sd">            To update with new string values (using the default SHA1 hash</span>
@@ -244,8 +267,8 @@
 
 <span class="sd">                minhash = Minhash()</span>
 <span class="sd">                minhash.update_batch([s.encode(&#39;utf-8&#39;) for s in [&quot;token1&quot;, &quot;token2&quot;]])</span>
-<span class="sd">        &#39;&#39;&#39;</span>
-        <span class="n">hv</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="bp">self</span><span class="o">.</span><span class="n">hashfunc</span><span class="p">(</span><span class="n">_b</span><span class="p">)</span> <span class="k">for</span> <span class="n">_b</span> <span class="ow">in</span> <span class="n">b</span><span class="p">],</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">uint64</span><span class="p">,</span><span class="n">ndmin</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span><span class="o">.</span><span class="n">T</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">hv</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="bp">self</span><span class="o">.</span><span class="n">hashfunc</span><span class="p">(</span><span class="n">_b</span><span class="p">)</span> <span class="k">for</span> <span class="n">_b</span> <span class="ow">in</span> <span class="n">b</span><span class="p">],</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">uint64</span><span class="p">,</span> <span class="n">ndmin</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span><span class="o">.</span><span class="n">T</span>
         <span class="n">a</span><span class="p">,</span> <span class="n">b</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">permutations</span>
         <span class="n">phv</span> <span class="o">=</span> <span class="p">(</span><span class="n">hv</span> <span class="o">*</span> <span class="n">a</span> <span class="o">+</span> <span class="n">b</span><span class="p">)</span> <span class="o">%</span> <span class="n">_mersenne_prime</span> <span class="o">&amp;</span> <span class="n">_max_hash</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">hashvalues</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">vstack</span><span class="p">([</span><span class="n">phv</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">hashvalues</span><span class="p">])</span><span class="o">.</span><span class="n">min</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span></div>
@@ -253,77 +276,94 @@
 
 <div class="viewcode-block" id="MinHash.jaccard">
 <a class="viewcode-back" href="../../documentation.html#datasketch.MinHash.jaccard">[docs]</a>
-    <span class="k">def</span> <span class="nf">jaccard</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&#39;&#39;&#39;Estimate the `Jaccard similarity`_ (resemblance) between the sets</span>
+    <span class="k">def</span> <span class="nf">jaccard</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">:</span> <span class="n">MinHash</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Estimate the `Jaccard similarity`_ (resemblance) between the sets</span>
 <span class="sd">        represented by this MinHash and the other.</span>
 
 <span class="sd">        Args:</span>
-<span class="sd">            other (datasketch.MinHash): The other MinHash.</span>
+<span class="sd">            other (MinHash): The other MinHash.</span>
 
 <span class="sd">        Returns:</span>
 <span class="sd">            float: The Jaccard similarity, which is between 0.0 and 1.0.</span>
-<span class="sd">        &#39;&#39;&#39;</span>
+
+<span class="sd">        Raises:</span>
+<span class="sd">            ValueError: If the two MinHashes have different numbers of</span>
+<span class="sd">                permutation functions or different seeds.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="n">other</span><span class="o">.</span><span class="n">seed</span> <span class="o">!=</span> <span class="bp">self</span><span class="o">.</span><span class="n">seed</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Cannot compute Jaccard given MinHash with</span><span class="se">\</span>
-<span class="s2">                    different seeds&quot;</span><span class="p">)</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="s2">&quot;Cannot compute Jaccard given MinHash with</span><span class="se">\</span>
+<span class="s2">                    different seeds&quot;</span>
+            <span class="p">)</span>
         <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">!=</span> <span class="nb">len</span><span class="p">(</span><span class="n">other</span><span class="p">):</span>
-            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Cannot compute Jaccard given MinHash with</span><span class="se">\</span>
-<span class="s2">                    different numbers of permutation functions&quot;</span><span class="p">)</span>
-        <span class="k">return</span> <span class="nb">float</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">count_nonzero</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">hashvalues</span><span class="o">==</span><span class="n">other</span><span class="o">.</span><span class="n">hashvalues</span><span class="p">))</span> <span class="o">/</span>\
-                <span class="nb">float</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="p">))</span></div>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="s2">&quot;Cannot compute Jaccard given MinHash with</span><span class="se">\</span>
+<span class="s2">                    different numbers of permutation functions&quot;</span>
+            <span class="p">)</span>
+        <span class="k">return</span> <span class="nb">float</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">count_nonzero</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">hashvalues</span> <span class="o">==</span> <span class="n">other</span><span class="o">.</span><span class="n">hashvalues</span><span class="p">))</span> <span class="o">/</span> <span class="nb">float</span><span class="p">(</span>
+            <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+        <span class="p">)</span></div>
 
 
 <div class="viewcode-block" id="MinHash.count">
 <a class="viewcode-back" href="../../documentation.html#datasketch.MinHash.count">[docs]</a>
-    <span class="k">def</span> <span class="nf">count</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&#39;&#39;&#39;Estimate the cardinality count based on the technique described in</span>
+    <span class="k">def</span> <span class="nf">count</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Estimate the cardinality count based on the technique described in</span>
 <span class="sd">        `this paper &lt;http://ieeexplore.ieee.org/stamp/stamp.jsp?arnumber=365694&gt;`_.</span>
 
 <span class="sd">        Returns:</span>
 <span class="sd">            int: The estimated cardinality of the set represented by this MinHash.</span>
-<span class="sd">        &#39;&#39;&#39;</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">k</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
         <span class="k">return</span> <span class="nb">float</span><span class="p">(</span><span class="n">k</span><span class="p">)</span> <span class="o">/</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">hashvalues</span> <span class="o">/</span> <span class="nb">float</span><span class="p">(</span><span class="n">_max_hash</span><span class="p">))</span> <span class="o">-</span> <span class="mf">1.0</span></div>
 
 
 <div class="viewcode-block" id="MinHash.merge">
 <a class="viewcode-back" href="../../documentation.html#datasketch.MinHash.merge">[docs]</a>
-    <span class="k">def</span> <span class="nf">merge</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&#39;&#39;&#39;Merge the other MinHash with this one, making this one the union</span>
+    <span class="k">def</span> <span class="nf">merge</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">:</span> <span class="n">MinHash</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Merge the other MinHash with this one, making this one the union</span>
 <span class="sd">        of both.</span>
 
 <span class="sd">        Args:</span>
-<span class="sd">            other (datasketch.MinHash): The other MinHash.</span>
-<span class="sd">        &#39;&#39;&#39;</span>
+<span class="sd">            other (MinHash): The other MinHash.</span>
+
+<span class="sd">        Raises:</span>
+<span class="sd">            ValueError: If the two MinHashes have different numbers of</span>
+<span class="sd">                permutation functions or different seeds.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="n">other</span><span class="o">.</span><span class="n">seed</span> <span class="o">!=</span> <span class="bp">self</span><span class="o">.</span><span class="n">seed</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Cannot merge MinHash with</span><span class="se">\</span>
-<span class="s2">                    different seeds&quot;</span><span class="p">)</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="s2">&quot;Cannot merge MinHash with</span><span class="se">\</span>
+<span class="s2">                    different seeds&quot;</span>
+            <span class="p">)</span>
         <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">!=</span> <span class="nb">len</span><span class="p">(</span><span class="n">other</span><span class="p">):</span>
-            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Cannot merge MinHash with</span><span class="se">\</span>
-<span class="s2">                    different numbers of permutation functions&quot;</span><span class="p">)</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="s2">&quot;Cannot merge MinHash with</span><span class="se">\</span>
+<span class="s2">                    different numbers of permutation functions&quot;</span>
+            <span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">hashvalues</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">minimum</span><span class="p">(</span><span class="n">other</span><span class="o">.</span><span class="n">hashvalues</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">hashvalues</span><span class="p">)</span></div>
 
 
 <div class="viewcode-block" id="MinHash.digest">
 <a class="viewcode-back" href="../../documentation.html#datasketch.MinHash.digest">[docs]</a>
-    <span class="k">def</span> <span class="nf">digest</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&#39;&#39;&#39;Export the hash values, which is the internal state of the</span>
+    <span class="k">def</span> <span class="nf">digest</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Export the hash values, which is the internal state of the</span>
 <span class="sd">        MinHash.</span>
 
 <span class="sd">        Returns:</span>
-<span class="sd">            numpy.array: The hash values which is a Numpy array.</span>
-<span class="sd">        &#39;&#39;&#39;</span>
+<span class="sd">            numpy.ndarray: The hash values which is a Numpy array.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="n">copy</span><span class="o">.</span><span class="n">copy</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">hashvalues</span><span class="p">)</span></div>
 
 
 <div class="viewcode-block" id="MinHash.is_empty">
 <a class="viewcode-back" href="../../documentation.html#datasketch.MinHash.is_empty">[docs]</a>
-    <span class="k">def</span> <span class="nf">is_empty</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&#39;&#39;&#39;</span>
+    <span class="k">def</span> <span class="nf">is_empty</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Returns:</span>
 <span class="sd">            bool: If the current MinHash is empty - at the state of just</span>
 <span class="sd">                initialized.</span>
-<span class="sd">        &#39;&#39;&#39;</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">any</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">hashvalues</span> <span class="o">!=</span> <span class="n">_max_hash</span><span class="p">):</span>
             <span class="k">return</span> <span class="kc">False</span>
         <span class="k">return</span> <span class="kc">True</span></div>
@@ -331,83 +371,118 @@
 
 <div class="viewcode-block" id="MinHash.clear">
 <a class="viewcode-back" href="../../documentation.html#datasketch.MinHash.clear">[docs]</a>
-    <span class="k">def</span> <span class="nf">clear</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&#39;&#39;&#39;</span>
+    <span class="k">def</span> <span class="nf">clear</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Clear the current state of the MinHash.</span>
 <span class="sd">        All hash values are reset.</span>
-<span class="sd">        &#39;&#39;&#39;</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">hashvalues</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_init_hashvalues</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="p">))</span></div>
 
 
 <div class="viewcode-block" id="MinHash.copy">
 <a class="viewcode-back" href="../../documentation.html#datasketch.MinHash.copy">[docs]</a>
-    <span class="k">def</span> <span class="nf">copy</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&#39;&#39;&#39;</span>
-<span class="sd">        :returns: datasketch.MinHash -- A copy of this MinHash by exporting its state.</span>
-<span class="sd">        &#39;&#39;&#39;</span>
-        <span class="k">return</span> <span class="n">MinHash</span><span class="p">(</span><span class="n">seed</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">seed</span><span class="p">,</span> <span class="n">hashfunc</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">hashfunc</span><span class="p">,</span>
-                <span class="n">hashvalues</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">digest</span><span class="p">(),</span>
-                <span class="n">permutations</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">permutations</span><span class="p">)</span></div>
+    <span class="k">def</span> <span class="nf">copy</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">MinHash</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Returns:</span>
+<span class="sd">            MinHash: a copy of this MinHash by exporting its state.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">MinHash</span><span class="p">(</span>
+            <span class="n">seed</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">seed</span><span class="p">,</span>
+            <span class="n">hashfunc</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">hashfunc</span><span class="p">,</span>
+            <span class="n">hashvalues</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">digest</span><span class="p">(),</span>
+            <span class="n">permutations</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">permutations</span><span class="p">,</span>
+        <span class="p">)</span></div>
 
 
 <div class="viewcode-block" id="MinHash.__len__">
 <a class="viewcode-back" href="../../documentation.html#datasketch.MinHash.__len__">[docs]</a>
-    <span class="k">def</span> <span class="fm">__len__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&#39;&#39;&#39;</span>
-<span class="sd">        :returns: int -- The number of hash values.</span>
-<span class="sd">        &#39;&#39;&#39;</span>
+    <span class="k">def</span> <span class="fm">__len__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Returns:</span>
+<span class="sd">            int: The number of hash values.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">hashvalues</span><span class="p">)</span></div>
 
 
 <div class="viewcode-block" id="MinHash.__eq__">
 <a class="viewcode-back" href="../../documentation.html#datasketch.MinHash.__eq__">[docs]</a>
-    <span class="k">def</span> <span class="fm">__eq__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&#39;&#39;&#39;</span>
-<span class="sd">        :returns: bool -- If their seeds and hash values are both equal then two are equivalent.</span>
-<span class="sd">        &#39;&#39;&#39;</span>
-        <span class="k">return</span> <span class="nb">type</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="ow">is</span> <span class="nb">type</span><span class="p">(</span><span class="n">other</span><span class="p">)</span> <span class="ow">and</span> \
-            <span class="bp">self</span><span class="o">.</span><span class="n">seed</span> <span class="o">==</span> <span class="n">other</span><span class="o">.</span><span class="n">seed</span> <span class="ow">and</span> \
-            <span class="n">np</span><span class="o">.</span><span class="n">array_equal</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">hashvalues</span><span class="p">,</span> <span class="n">other</span><span class="o">.</span><span class="n">hashvalues</span><span class="p">)</span></div>
+    <span class="k">def</span> <span class="fm">__eq__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">:</span> <span class="n">MinHash</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Returns:</span>
+<span class="sd">            bool: If their seeds and hash values are both equal then two are equivalent.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="p">(</span>
+            <span class="nb">type</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="ow">is</span> <span class="nb">type</span><span class="p">(</span><span class="n">other</span><span class="p">)</span>
+            <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">seed</span> <span class="o">==</span> <span class="n">other</span><span class="o">.</span><span class="n">seed</span>
+            <span class="ow">and</span> <span class="n">np</span><span class="o">.</span><span class="n">array_equal</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">hashvalues</span><span class="p">,</span> <span class="n">other</span><span class="o">.</span><span class="n">hashvalues</span><span class="p">)</span>
+        <span class="p">)</span></div>
 
 
 <div class="viewcode-block" id="MinHash.union">
 <a class="viewcode-back" href="../../documentation.html#datasketch.MinHash.union">[docs]</a>
     <span class="nd">@classmethod</span>
-    <span class="k">def</span> <span class="nf">union</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="o">*</span><span class="n">mhs</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&#39;&#39;&#39;Create a MinHash which is the union of the MinHash objects passed as arguments.</span>
+    <span class="k">def</span> <span class="nf">union</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="o">*</span><span class="n">mhs</span><span class="p">:</span> <span class="n">MinHash</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">MinHash</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Create a MinHash which is the union of the MinHash objects passed as arguments.</span>
 
 <span class="sd">        Args:</span>
-<span class="sd">            *mhs: The MinHash objects to be united. The argument list length is variable,</span>
+<span class="sd">            *mhs (MinHash): The MinHash objects to be united. The argument list length is variable,</span>
 <span class="sd">                but must be at least 2.</span>
 
 <span class="sd">        Returns:</span>
-<span class="sd">            datasketch.MinHash: A new union MinHash.</span>
-<span class="sd">        &#39;&#39;&#39;</span>
+<span class="sd">            MinHash: a new union MinHash.</span>
+
+<span class="sd">        Raises:</span>
+<span class="sd">            ValueError: If the number of MinHash objects passed as arguments is less than 2,</span>
+<span class="sd">                or if the MinHash objects passed as arguments have different seeds or</span>
+<span class="sd">                different numbers of permutation functions.</span>
+
+<span class="sd">        Example:</span>
+
+<span class="sd">            .. code-block:: python</span>
+
+<span class="sd">                from datasketch import MinHash</span>
+<span class="sd">                import numpy as np</span>
+
+<span class="sd">                m1 = MinHash(num_perm=128)</span>
+<span class="sd">                m1.update_batch(np.random.randint(low=0, high=30, size=10))</span>
+
+<span class="sd">                m2 = MinHash(num_perm=128)</span>
+<span class="sd">                m2.update_batch(np.random.randint(low=0, high=30, size=10))</span>
+
+<span class="sd">                # Union m1 and m2.</span>
+<span class="sd">                m = MinHash.union(m1, m2)</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">mhs</span><span class="p">)</span> <span class="o">&lt;</span> <span class="mi">2</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Cannot union less than 2 MinHash&quot;</span><span class="p">)</span>
         <span class="n">num_perm</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">mhs</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
         <span class="n">seed</span> <span class="o">=</span> <span class="n">mhs</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">seed</span>
         <span class="k">if</span> <span class="nb">any</span><span class="p">((</span><span class="n">seed</span> <span class="o">!=</span> <span class="n">m</span><span class="o">.</span><span class="n">seed</span> <span class="ow">or</span> <span class="n">num_perm</span> <span class="o">!=</span> <span class="nb">len</span><span class="p">(</span><span class="n">m</span><span class="p">))</span> <span class="k">for</span> <span class="n">m</span> <span class="ow">in</span> <span class="n">mhs</span><span class="p">):</span>
-            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;The unioning MinHash must have the</span><span class="se">\</span>
-<span class="s2">                    same seed and number of permutation functions&quot;</span><span class="p">)</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="s2">&quot;The unioning MinHash must have the</span><span class="se">\</span>
+<span class="s2">                    same seed and number of permutation functions&quot;</span>
+            <span class="p">)</span>
         <span class="n">hashvalues</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">minimum</span><span class="o">.</span><span class="n">reduce</span><span class="p">([</span><span class="n">m</span><span class="o">.</span><span class="n">hashvalues</span> <span class="k">for</span> <span class="n">m</span> <span class="ow">in</span> <span class="n">mhs</span><span class="p">])</span>
         <span class="n">permutations</span> <span class="o">=</span> <span class="n">mhs</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">permutations</span>
-        <span class="k">return</span> <span class="bp">cls</span><span class="p">(</span><span class="n">num_perm</span><span class="o">=</span><span class="n">num_perm</span><span class="p">,</span> <span class="n">seed</span><span class="o">=</span><span class="n">seed</span><span class="p">,</span> <span class="n">hashvalues</span><span class="o">=</span><span class="n">hashvalues</span><span class="p">,</span>
-                <span class="n">permutations</span><span class="o">=</span><span class="n">permutations</span><span class="p">)</span></div>
+        <span class="k">return</span> <span class="bp">cls</span><span class="p">(</span>
+            <span class="n">num_perm</span><span class="o">=</span><span class="n">num_perm</span><span class="p">,</span>
+            <span class="n">seed</span><span class="o">=</span><span class="n">seed</span><span class="p">,</span>
+            <span class="n">hashvalues</span><span class="o">=</span><span class="n">hashvalues</span><span class="p">,</span>
+            <span class="n">permutations</span><span class="o">=</span><span class="n">permutations</span><span class="p">,</span>
+        <span class="p">)</span></div>
 
 
 <div class="viewcode-block" id="MinHash.bulk">
 <a class="viewcode-back" href="../../documentation.html#datasketch.MinHash.bulk">[docs]</a>
     <span class="nd">@classmethod</span>
-    <span class="k">def</span> <span class="nf">bulk</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">b</span><span class="p">,</span> <span class="o">**</span><span class="n">minhash_kwargs</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&#39;&#39;&#39;Compute MinHashes in bulk. This method avoids unnecessary</span>
+    <span class="k">def</span> <span class="nf">bulk</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">b</span><span class="p">:</span> <span class="n">Iterable</span><span class="p">,</span> <span class="o">**</span><span class="n">minhash_kwargs</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">MinHash</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Compute MinHashes in bulk. This method avoids unnecessary</span>
 <span class="sd">        overhead when initializing many minhashes by reusing the initialized</span>
 <span class="sd">        state.</span>
 
 <span class="sd">        Args:</span>
 <span class="sd">            b (Iterable): An Iterable of lists of bytes, each list is</span>
 <span class="sd">                hashed in to one MinHash in the output.</span>
-<span class="sd">            minhash_kwargs: Keyword arguments used to initialize MinHash,</span>
+<span class="sd">            **minhash_kwargs: Keyword arguments used to initialize MinHash,</span>
 <span class="sd">                will be used for all minhashes.</span>
 
 <span class="sd">        Returns:</span>
@@ -422,15 +497,15 @@
 <span class="sd">                        [b&#39;token4&#39;, b&#39;token5&#39;, b&#39;token6&#39;]]</span>
 <span class="sd">                minhashes = MinHash.bulk(data, num_perm=64)</span>
 
-<span class="sd">        &#39;&#39;&#39;</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="nb">list</span><span class="p">(</span><span class="bp">cls</span><span class="o">.</span><span class="n">generator</span><span class="p">(</span><span class="n">b</span><span class="p">,</span> <span class="o">**</span><span class="n">minhash_kwargs</span><span class="p">))</span></div>
 
 
 <div class="viewcode-block" id="MinHash.generator">
 <a class="viewcode-back" href="../../documentation.html#datasketch.MinHash.generator">[docs]</a>
     <span class="nd">@classmethod</span>
-    <span class="k">def</span> <span class="nf">generator</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">b</span><span class="p">,</span> <span class="o">**</span><span class="n">minhash_kwargs</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&#39;&#39;&#39;Compute MinHashes in a generator. This method avoids unnecessary</span>
+    <span class="k">def</span> <span class="nf">generator</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">b</span><span class="p">:</span> <span class="n">Iterable</span><span class="p">,</span> <span class="o">**</span><span class="n">minhash_kwargs</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Generator</span><span class="p">[</span><span class="n">MinHash</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Compute MinHashes in a generator. This method avoids unnecessary</span>
 <span class="sd">        overhead when initializing many minhashes by reusing the initialized</span>
 <span class="sd">        state.</span>
 
@@ -441,7 +516,7 @@
 <span class="sd">                will be used for all minhashes.</span>
 
 <span class="sd">        Returns:</span>
-<span class="sd">            A generator of computed MinHashes.</span>
+<span class="sd">            Generator[MinHash, None, None]: a generator of computed MinHashes.</span>
 
 <span class="sd">        Example:</span>
 
@@ -454,14 +529,13 @@
 <span class="sd">                    # do something useful</span>
 <span class="sd">                    minhash</span>
 
-<span class="sd">        &#39;&#39;&#39;</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">m</span> <span class="o">=</span> <span class="bp">cls</span><span class="p">(</span><span class="o">**</span><span class="n">minhash_kwargs</span><span class="p">)</span>
         <span class="k">for</span> <span class="n">_b</span> <span class="ow">in</span> <span class="n">b</span><span class="p">:</span>
             <span class="n">_m</span> <span class="o">=</span> <span class="n">m</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
             <span class="n">_m</span><span class="o">.</span><span class="n">update_batch</span><span class="p">(</span><span class="n">_b</span><span class="p">)</span>
             <span class="k">yield</span> <span class="n">_m</span></div>
 </div>
-
 
 </pre></div>
 

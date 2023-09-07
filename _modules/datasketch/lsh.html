@@ -78,50 +78,52 @@
            <div itemprop="articleBody">
              
   <h1>Source code for datasketch.lsh</h1><div class="highlight"><pre>
-<span></span><span class="kn">import</span> <span class="nn">pickle</span>
+<span></span><span class="kn">from</span> <span class="nn">__future__</span> <span class="kn">import</span> <span class="n">annotations</span>
+<span class="kn">import</span> <span class="nn">pickle</span>
 <span class="kn">import</span> <span class="nn">struct</span>
-
-<span class="kn">from</span> <span class="nn">datasketch.storage</span> <span class="kn">import</span> <span class="p">(</span>
-    <span class="n">ordered_storage</span><span class="p">,</span> <span class="n">unordered_storage</span><span class="p">,</span> <span class="n">_random_name</span><span class="p">)</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Callable</span><span class="p">,</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">Hashable</span><span class="p">,</span> <span class="n">List</span><span class="p">,</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">,</span> <span class="n">Union</span>
+<span class="kn">from</span> <span class="nn">datasketch.minhash</span> <span class="kn">import</span> <span class="n">MinHash</span>
+<span class="kn">from</span> <span class="nn">datasketch.weighted_minhash</span> <span class="kn">import</span> <span class="n">WeightedMinHash</span>
+<span class="kn">from</span> <span class="nn">datasketch.storage</span> <span class="kn">import</span> <span class="n">ordered_storage</span><span class="p">,</span> <span class="n">unordered_storage</span><span class="p">,</span> <span class="n">_random_name</span>
 
 <span class="kn">from</span> <span class="nn">scipy.integrate</span> <span class="kn">import</span> <span class="n">quad</span> <span class="k">as</span> <span class="n">integrate</span>
 
 
 <span class="k">def</span> <span class="nf">_false_positive_probability</span><span class="p">(</span><span class="n">threshold</span><span class="p">,</span> <span class="n">b</span><span class="p">,</span> <span class="n">r</span><span class="p">):</span>
-    <span class="n">_probability</span> <span class="o">=</span> <span class="k">lambda</span> <span class="n">s</span> <span class="p">:</span> <span class="mi">1</span> <span class="o">-</span> <span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="n">s</span><span class="o">**</span><span class="nb">float</span><span class="p">(</span><span class="n">r</span><span class="p">))</span><span class="o">**</span><span class="nb">float</span><span class="p">(</span><span class="n">b</span><span class="p">)</span>
+    <span class="n">_probability</span> <span class="o">=</span> <span class="k">lambda</span> <span class="n">s</span><span class="p">:</span> <span class="mi">1</span> <span class="o">-</span> <span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="n">s</span> <span class="o">**</span> <span class="nb">float</span><span class="p">(</span><span class="n">r</span><span class="p">))</span> <span class="o">**</span> <span class="nb">float</span><span class="p">(</span><span class="n">b</span><span class="p">)</span>
     <span class="n">a</span><span class="p">,</span> <span class="n">err</span> <span class="o">=</span> <span class="n">integrate</span><span class="p">(</span><span class="n">_probability</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="n">threshold</span><span class="p">)</span>
     <span class="k">return</span> <span class="n">a</span>
 
 
 <span class="k">def</span> <span class="nf">_false_negative_probability</span><span class="p">(</span><span class="n">threshold</span><span class="p">,</span> <span class="n">b</span><span class="p">,</span> <span class="n">r</span><span class="p">):</span>
-    <span class="n">_probability</span> <span class="o">=</span> <span class="k">lambda</span> <span class="n">s</span> <span class="p">:</span> <span class="mi">1</span> <span class="o">-</span> <span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="n">s</span><span class="o">**</span><span class="nb">float</span><span class="p">(</span><span class="n">r</span><span class="p">))</span><span class="o">**</span><span class="nb">float</span><span class="p">(</span><span class="n">b</span><span class="p">))</span>
+    <span class="n">_probability</span> <span class="o">=</span> <span class="k">lambda</span> <span class="n">s</span><span class="p">:</span> <span class="mi">1</span> <span class="o">-</span> <span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="n">s</span> <span class="o">**</span> <span class="nb">float</span><span class="p">(</span><span class="n">r</span><span class="p">))</span> <span class="o">**</span> <span class="nb">float</span><span class="p">(</span><span class="n">b</span><span class="p">))</span>
     <span class="n">a</span><span class="p">,</span> <span class="n">err</span> <span class="o">=</span> <span class="n">integrate</span><span class="p">(</span><span class="n">_probability</span><span class="p">,</span> <span class="n">threshold</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">)</span>
     <span class="k">return</span> <span class="n">a</span>
 
 
-<span class="k">def</span> <span class="nf">_optimal_param</span><span class="p">(</span><span class="n">threshold</span><span class="p">,</span> <span class="n">num_perm</span><span class="p">,</span> <span class="n">false_positive_weight</span><span class="p">,</span>
-        <span class="n">false_negative_weight</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&#39;&#39;&#39;</span>
+<span class="k">def</span> <span class="nf">_optimal_param</span><span class="p">(</span><span class="n">threshold</span><span class="p">,</span> <span class="n">num_perm</span><span class="p">,</span> <span class="n">false_positive_weight</span><span class="p">,</span> <span class="n">false_negative_weight</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Compute the optimal `MinHashLSH` parameter that minimizes the weighted sum</span>
 <span class="sd">    of probabilities of false positive and false negative.</span>
-<span class="sd">    &#39;&#39;&#39;</span>
+<span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">min_error</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="s2">&quot;inf&quot;</span><span class="p">)</span>
     <span class="n">opt</span> <span class="o">=</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
-    <span class="k">for</span> <span class="n">b</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">num_perm</span><span class="o">+</span><span class="mi">1</span><span class="p">):</span>
+    <span class="k">for</span> <span class="n">b</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">num_perm</span> <span class="o">+</span> <span class="mi">1</span><span class="p">):</span>
         <span class="n">max_r</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">num_perm</span> <span class="o">/</span> <span class="n">b</span><span class="p">)</span>
-        <span class="k">for</span> <span class="n">r</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">max_r</span><span class="o">+</span><span class="mi">1</span><span class="p">):</span>
+        <span class="k">for</span> <span class="n">r</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">max_r</span> <span class="o">+</span> <span class="mi">1</span><span class="p">):</span>
             <span class="n">fp</span> <span class="o">=</span> <span class="n">_false_positive_probability</span><span class="p">(</span><span class="n">threshold</span><span class="p">,</span> <span class="n">b</span><span class="p">,</span> <span class="n">r</span><span class="p">)</span>
             <span class="n">fn</span> <span class="o">=</span> <span class="n">_false_negative_probability</span><span class="p">(</span><span class="n">threshold</span><span class="p">,</span> <span class="n">b</span><span class="p">,</span> <span class="n">r</span><span class="p">)</span>
-            <span class="n">error</span> <span class="o">=</span> <span class="n">fp</span><span class="o">*</span><span class="n">false_positive_weight</span> <span class="o">+</span> <span class="n">fn</span><span class="o">*</span><span class="n">false_negative_weight</span>
+            <span class="n">error</span> <span class="o">=</span> <span class="n">fp</span> <span class="o">*</span> <span class="n">false_positive_weight</span> <span class="o">+</span> <span class="n">fn</span> <span class="o">*</span> <span class="n">false_negative_weight</span>
             <span class="k">if</span> <span class="n">error</span> <span class="o">&lt;</span> <span class="n">min_error</span><span class="p">:</span>
                 <span class="n">min_error</span> <span class="o">=</span> <span class="n">error</span>
                 <span class="n">opt</span> <span class="o">=</span> <span class="p">(</span><span class="n">b</span><span class="p">,</span> <span class="n">r</span><span class="p">)</span>
     <span class="k">return</span> <span class="n">opt</span>
 
+
 <div class="viewcode-block" id="MinHashLSH">
 <a class="viewcode-back" href="../../documentation.html#datasketch.MinHashLSH">[docs]</a>
 <span class="k">class</span> <span class="nc">MinHashLSH</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&#39;&#39;&#39;</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    The :ref:`minhash_lsh` index.</span>
 <span class="sd">    It supports query with `Jaccard similarity`_ threshold.</span>
 <span class="sd">    Reference: `Chapter 3, Mining of Massive Datasets</span>
@@ -131,27 +133,27 @@
 <span class="sd">        threshold (float): The Jaccard similarity threshold between 0.0 and</span>
 <span class="sd">            1.0. The initialized MinHash LSH will be optimized for the threshold by</span>
 <span class="sd">            minizing the false positive and false negative.</span>
-<span class="sd">        num_perm (int, optional): The number of permutation functions used</span>
+<span class="sd">        num_perm (int): The number of permutation functions used</span>
 <span class="sd">            by the MinHash to be indexed. For weighted MinHash, this</span>
 <span class="sd">            is the sample size (`sample_size`).</span>
-<span class="sd">        weights (tuple, optional): Used to adjust the relative importance of</span>
+<span class="sd">        weights (Tuple[float, float]): Used to adjust the relative importance of</span>
 <span class="sd">            minimizing false positive and false negative when optimizing</span>
 <span class="sd">            for the Jaccard similarity threshold.</span>
 <span class="sd">            `weights` is a tuple in the format of</span>
 <span class="sd">            :code:`(false_positive_weight, false_negative_weight)`.</span>
-<span class="sd">        params (tuple, optional): The LSH parameters (i.e., number of bands and size</span>
+<span class="sd">        params (Optiona[Tuple[int, int]]): The LSH parameters (i.e., number of bands and size</span>
 <span class="sd">            of each bands). This is used to bypass the parameter optimization</span>
 <span class="sd">            step in the constructor. `threshold` and `weights` will be ignored</span>
 <span class="sd">            if this is given.</span>
-<span class="sd">        storage_config (dict, optional): Type of storage service to use for storing</span>
+<span class="sd">        storage_config (Optional[Dict]): Type of storage service to use for storing</span>
 <span class="sd">            hashtables and keys.</span>
 <span class="sd">            `basename` is an optional property whose value will be used as the prefix to</span>
 <span class="sd">            stored keys. If this is not set, a random string will be generated instead. If you</span>
 <span class="sd">            set this, you will be responsible for ensuring there are no key collisions.</span>
-<span class="sd">        prepickle (bool, optional): If True, all keys are pickled to bytes before</span>
-<span class="sd">            insertion. If None, a default value is chosen based on the</span>
+<span class="sd">        prepickle (Optional[bool]): If True, all keys are pickled to bytes before</span>
+<span class="sd">            insertion. If not specified, a default value is chosen based on the</span>
 <span class="sd">            `storage_config`.</span>
-<span class="sd">        hashfunc (function, optional): If a hash function is provided it will be used to</span>
+<span class="sd">        hashfunc (Optional[Callable[[bytes], bytes]]): If a hash function is provided it will be used to</span>
 <span class="sd">            compress the index keys to reduce the memory footprint. This could cause a higher</span>
 <span class="sd">            false positive rate.</span>
 
@@ -161,13 +163,72 @@
 <span class="sd">        For example, if minimizing false negative (or maintaining high recall) is more</span>
 <span class="sd">        important, assign more weight toward false negative: weights=(0.4, 0.6).</span>
 <span class="sd">        Try to live with a small difference between weights (i.e. &lt; 0.5).</span>
-<span class="sd">    &#39;&#39;&#39;</span>
+
+<span class="sd">    Examples:</span>
+
+<span class="sd">        Create an index with 128 permutation functions optimized for Jaccard</span>
+<span class="sd">        threshold 0.9:</span>
+
+<span class="sd">        .. code-block:: python</span>
+
+<span class="sd">            lsh = MinHashLSH(threshold=0.9, num_perm=128)</span>
+<span class="sd">            print(lsh.b, lsh.r)</span>
+<span class="sd">            # 5 25</span>
+
+<span class="sd">        The built-in optimizer will try to minimize the weighted sum of</span>
+<span class="sd">        probabilities of false positive and false negative. The algorithm is</span>
+<span class="sd">        a simple grid search over the space of possible parameters.</span>
+
+<span class="sd">        Note that it is possible to get :attr:`b` (number of bands) and</span>
+<span class="sd">        :attr:`r` (band size) that do not sum to :attr:`num_perm`, leading to</span>
+<span class="sd">        unused permutation values in the indexed MinHash.</span>
+<span class="sd">        This is because the optimizer only considers bands of</span>
+<span class="sd">        the same size, and the number of bands is not necessarily a divisor of</span>
+<span class="sd">        :attr:`num_perm`.</span>
+
+<span class="sd">        Instead of using the built-in optimizer, you can customize the LSH</span>
+<span class="sd">        parameters your self. The snippet below creates an index with 128</span>
+<span class="sd">        permutation functions and 16 bands each with size 8, skipping the</span>
+<span class="sd">        optimization step:</span>
+
+<span class="sd">        .. code-block:: python</span>
+
+<span class="sd">            lsh = MinHashLSH(num_perm=128, params=(16, 8))</span>
+<span class="sd">            print(lsh.b, lsh.r)</span>
+<span class="sd">            # 16 8</span>
+
+<span class="sd">        Create an index backed by Redis storage:</span>
+
+<span class="sd">        .. code-block:: python</span>
+
+<span class="sd">            lsh = MinHashLSH(threshold=0.9, num_perm=128, storage_config={</span>
+<span class="sd">                &#39;type&#39;: &#39;redis&#39;,</span>
+<span class="sd">                &#39;basename&#39;: b&#39;mylsh&#39;, # optional, defaults to a random string.</span>
+<span class="sd">                &#39;redis&#39;: {&#39;host&#39;: &#39;localhost&#39;, &#39;port&#39;: 6379},</span>
+<span class="sd">            })</span>
+
+<span class="sd">        The `basename` property is optional. It is used to generate key prefixes</span>
+<span class="sd">        in the storage layer to uniquely identify data associated with this LSH.</span>
+<span class="sd">        Thus, if you create a new LSH object with the same `basename`, you will</span>
+<span class="sd">        be using the same underlying data in the storage layer associated with</span>
+<span class="sd">        a previous LSH object. If you do not set this property, a random string</span>
+<span class="sd">        will be generated instead.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
 
 <div class="viewcode-block" id="MinHashLSH.__init__">
 <a class="viewcode-back" href="../../documentation.html#datasketch.MinHashLSH.__init__">[docs]</a>
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">threshold</span><span class="o">=</span><span class="mf">0.9</span><span class="p">,</span> <span class="n">num_perm</span><span class="o">=</span><span class="mi">128</span><span class="p">,</span> <span class="n">weights</span><span class="o">=</span><span class="p">(</span><span class="mf">0.5</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">),</span>
-                 <span class="n">params</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">storage_config</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">prepickle</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">hashfunc</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
-        <span class="n">storage_config</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;type&#39;</span><span class="p">:</span> <span class="s1">&#39;dict&#39;</span><span class="p">}</span> <span class="k">if</span> <span class="ow">not</span> <span class="n">storage_config</span> <span class="k">else</span> <span class="n">storage_config</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">threshold</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.9</span><span class="p">,</span>
+        <span class="n">num_perm</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">128</span><span class="p">,</span>
+        <span class="n">weights</span><span class="p">:</span> <span class="n">Tuple</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="mf">0.5</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">),</span>
+        <span class="n">params</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">storage_config</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Dict</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">prepickle</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">bool</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">hashfunc</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Callable</span><span class="p">[[</span><span class="nb">bytes</span><span class="p">],</span> <span class="nb">bytes</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">storage_config</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;dict&quot;</span><span class="p">}</span> <span class="k">if</span> <span class="ow">not</span> <span class="n">storage_config</span> <span class="k">else</span> <span class="n">storage_config</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_buffer_size</span> <span class="o">=</span> <span class="mi">50000</span>
         <span class="k">if</span> <span class="n">threshold</span> <span class="o">&gt;</span> <span class="mf">1.0</span> <span class="ow">or</span> <span class="n">threshold</span> <span class="o">&lt;</span> <span class="mf">0.0</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;threshold must be in [0.0, 1.0]&quot;</span><span class="p">)</span>
@@ -181,18 +242,24 @@
         <span class="k">if</span> <span class="n">params</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">b</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">r</span> <span class="o">=</span> <span class="n">params</span>
             <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">b</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">r</span> <span class="o">&gt;</span> <span class="n">num_perm</span><span class="p">:</span>
-                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;The product of b and r in params is &quot;</span>
-                        <span class="s2">&quot;</span><span class="si">{}</span><span class="s2"> * </span><span class="si">{}</span><span class="s2"> = </span><span class="si">{}</span><span class="s2"> -- it must be less than num_perm </span><span class="si">{}</span><span class="s2">. &quot;</span>
-                        <span class="s2">&quot;Did you forget to specify num_perm?&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
-                            <span class="bp">self</span><span class="o">.</span><span class="n">b</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">r</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">b</span><span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">r</span><span class="p">,</span> <span class="n">num_perm</span><span class="p">))</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                    <span class="s2">&quot;The product of b and r in params is &quot;</span>
+                    <span class="s2">&quot;</span><span class="si">{}</span><span class="s2"> * </span><span class="si">{}</span><span class="s2"> = </span><span class="si">{}</span><span class="s2"> -- it must be less than num_perm </span><span class="si">{}</span><span class="s2">. &quot;</span>
+                    <span class="s2">&quot;Did you forget to specify num_perm?&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">b</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">r</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">b</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">r</span><span class="p">,</span> <span class="n">num_perm</span>
+                    <span class="p">)</span>
+                <span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="n">false_positive_weight</span><span class="p">,</span> <span class="n">false_negative_weight</span> <span class="o">=</span> <span class="n">weights</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">b</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">r</span> <span class="o">=</span> <span class="n">_optimal_param</span><span class="p">(</span><span class="n">threshold</span><span class="p">,</span> <span class="n">num_perm</span><span class="p">,</span>
-                    <span class="n">false_positive_weight</span><span class="p">,</span> <span class="n">false_negative_weight</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">b</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">r</span> <span class="o">=</span> <span class="n">_optimal_param</span><span class="p">(</span>
+                <span class="n">threshold</span><span class="p">,</span> <span class="n">num_perm</span><span class="p">,</span> <span class="n">false_positive_weight</span><span class="p">,</span> <span class="n">false_negative_weight</span>
+            <span class="p">)</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">b</span> <span class="o">&lt;</span> <span class="mi">2</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;The number of bands are too small (b &lt; 2)&quot;</span><span class="p">)</span>
 
-        <span class="bp">self</span><span class="o">.</span><span class="n">prepickle</span> <span class="o">=</span> <span class="n">storage_config</span><span class="p">[</span><span class="s1">&#39;type&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="s1">&#39;redis&#39;</span> <span class="k">if</span> <span class="n">prepickle</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">prepickle</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">prepickle</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="n">storage_config</span><span class="p">[</span><span class="s2">&quot;type&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;redis&quot;</span> <span class="k">if</span> <span class="ow">not</span> <span class="n">prepickle</span> <span class="k">else</span> <span class="n">prepickle</span>
+        <span class="p">)</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">hashfunc</span> <span class="o">=</span> <span class="n">hashfunc</span>
         <span class="k">if</span> <span class="n">hashfunc</span><span class="p">:</span>
@@ -200,20 +267,24 @@
         <span class="k">else</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_H</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_byteswap</span>
 
-        <span class="n">basename</span> <span class="o">=</span> <span class="n">storage_config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;basename&#39;</span><span class="p">,</span> <span class="n">_random_name</span><span class="p">(</span><span class="mi">11</span><span class="p">))</span>
+        <span class="n">basename</span> <span class="o">=</span> <span class="n">storage_config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;basename&quot;</span><span class="p">,</span> <span class="n">_random_name</span><span class="p">(</span><span class="mi">11</span><span class="p">))</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">hashtables</span> <span class="o">=</span> <span class="p">[</span>
-            <span class="n">unordered_storage</span><span class="p">(</span><span class="n">storage_config</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="sa">b</span><span class="s1">&#39;&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="n">basename</span><span class="p">,</span> <span class="sa">b</span><span class="s1">&#39;_bucket_&#39;</span><span class="p">,</span> <span class="n">struct</span><span class="o">.</span><span class="n">pack</span><span class="p">(</span><span class="s1">&#39;&gt;H&#39;</span><span class="p">,</span> <span class="n">i</span><span class="p">)]))</span>
-            <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">b</span><span class="p">)]</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">hashranges</span> <span class="o">=</span> <span class="p">[(</span><span class="n">i</span><span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">r</span><span class="p">,</span> <span class="p">(</span><span class="n">i</span><span class="o">+</span><span class="mi">1</span><span class="p">)</span><span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">r</span><span class="p">)</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">b</span><span class="p">)]</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">keys</span> <span class="o">=</span> <span class="n">ordered_storage</span><span class="p">(</span><span class="n">storage_config</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="sa">b</span><span class="s1">&#39;&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="n">basename</span><span class="p">,</span> <span class="sa">b</span><span class="s1">&#39;_keys&#39;</span><span class="p">]))</span></div>
+            <span class="n">unordered_storage</span><span class="p">(</span>
+                <span class="n">storage_config</span><span class="p">,</span>
+                <span class="n">name</span><span class="o">=</span><span class="sa">b</span><span class="s2">&quot;&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="n">basename</span><span class="p">,</span> <span class="sa">b</span><span class="s2">&quot;_bucket_&quot;</span><span class="p">,</span> <span class="n">struct</span><span class="o">.</span><span class="n">pack</span><span class="p">(</span><span class="s2">&quot;&gt;H&quot;</span><span class="p">,</span> <span class="n">i</span><span class="p">)]),</span>
+            <span class="p">)</span>
+            <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">b</span><span class="p">)</span>
+        <span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">hashranges</span> <span class="o">=</span> <span class="p">[(</span><span class="n">i</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">r</span><span class="p">,</span> <span class="p">(</span><span class="n">i</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">r</span><span class="p">)</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">b</span><span class="p">)]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">keys</span> <span class="o">=</span> <span class="n">ordered_storage</span><span class="p">(</span><span class="n">storage_config</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="sa">b</span><span class="s2">&quot;&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="n">basename</span><span class="p">,</span> <span class="sa">b</span><span class="s2">&quot;_keys&quot;</span><span class="p">]))</span></div>
 
 
     <span class="nd">@property</span>
-    <span class="k">def</span> <span class="nf">buffer_size</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">buffer_size</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_buffer_size</span>
 
     <span class="nd">@buffer_size</span><span class="o">.</span><span class="n">setter</span>
-    <span class="k">def</span> <span class="nf">buffer_size</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">buffer_size</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">keys</span><span class="o">.</span><span class="n">buffer_size</span> <span class="o">=</span> <span class="n">value</span>
         <span class="k">for</span> <span class="n">t</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">hashtables</span><span class="p">:</span>
             <span class="n">t</span><span class="o">.</span><span class="n">buffer_size</span> <span class="o">=</span> <span class="n">value</span>
@@ -221,72 +292,150 @@
 
 <div class="viewcode-block" id="MinHashLSH.insert">
 <a class="viewcode-back" href="../../documentation.html#datasketch.MinHashLSH.insert">[docs]</a>
-    <span class="k">def</span> <span class="nf">insert</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">,</span> <span class="n">minhash</span><span class="p">,</span> <span class="n">check_duplication</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&#39;&#39;&#39;</span>
-<span class="sd">        Insert a key to the index, together</span>
-<span class="sd">        with a MinHash (or weighted MinHash) of the set referenced by</span>
-<span class="sd">        the key.</span>
+    <span class="k">def</span> <span class="nf">insert</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">key</span><span class="p">:</span> <span class="n">Hashable</span><span class="p">,</span>
+        <span class="n">minhash</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">MinHash</span><span class="p">,</span> <span class="n">WeightedMinHash</span><span class="p">],</span>
+        <span class="n">check_duplication</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
+    <span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Insert a key to the index, together with a MinHash or Weighted MinHash</span>
+<span class="sd">        of the set referenced by the key.</span>
 
-<span class="sd">        :param str key: The identifier of the set.</span>
-<span class="sd">        :param datasketch.MinHash minhash: The MinHash of the set.</span>
-<span class="sd">        :param bool check_duplication: To avoid duplicate keys in the storage (`default=True`).</span>
-<span class="sd">                                       It&#39;s recommended to not change the default, but</span>
-<span class="sd">                                       if you want to avoid the overhead during insert</span>
-<span class="sd">                                       you can set `check_duplication = False`.</span>
-<span class="sd">        &#39;&#39;&#39;</span>
+<span class="sd">        Args:</span>
+<span class="sd">            key (Hashable): The unique identifier of the set.</span>
+<span class="sd">            minhash (Union[MinHash, WeightedMinHash]): The MinHash of the set.</span>
+<span class="sd">            check_duplication (bool): To avoid duplicate keys in the storage</span>
+<span class="sd">                (`default=True`). It&#39;s recommended to not change the default, but</span>
+<span class="sd">                if you want to avoid the overhead during insert you can set</span>
+<span class="sd">                `check_duplication = False`.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_insert</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="n">minhash</span><span class="p">,</span> <span class="n">check_duplication</span><span class="o">=</span><span class="n">check_duplication</span><span class="p">,</span> <span class="n">buffer</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span></div>
 
 
 <div class="viewcode-block" id="MinHashLSH.insertion_session">
 <a class="viewcode-back" href="../../documentation.html#datasketch.MinHashLSH.insertion_session">[docs]</a>
-    <span class="k">def</span> <span class="nf">insertion_session</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">buffer_size</span><span class="o">=</span><span class="mi">50000</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&#39;&#39;&#39;</span>
+    <span class="k">def</span> <span class="nf">insertion_session</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">buffer_size</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">50000</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">MinHashLSHInsertionSession</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Create a context manager for fast insertion into this index.</span>
 
-<span class="sd">        :param int buffer_size: The buffer size for insert_session mode (default=50000).</span>
+<span class="sd">        Args:</span>
+<span class="sd">            buffer_size (int): The buffer size for insert_session mode (default=50000).</span>
 
 <span class="sd">        Returns:</span>
-<span class="sd">            datasketch.lsh.MinHashLSHInsertionSession</span>
-<span class="sd">        &#39;&#39;&#39;</span>
+<span class="sd">            MinHashLSHInsertionSession: The context manager.</span>
+
+<span class="sd">        Example:</span>
+
+<span class="sd">            Insert 100 MinHashes into an Redis-backed index using a session:</span>
+
+<span class="sd">            .. code-block:: python</span>
+
+<span class="sd">                from datasketch import MinHash, MinHashLSH</span>
+<span class="sd">                import numpy as np</span>
+
+<span class="sd">                minhashes = []</span>
+<span class="sd">                for i in range(100):</span>
+<span class="sd">                    m = MinHash(num_perm=128)</span>
+<span class="sd">                    m.update_batch(np.random.randint(low=0, high=30, size=10))</span>
+<span class="sd">                    minhashes.append(m)</span>
+
+<span class="sd">                lsh = MinHashLSH(threshold=0.5, num_perm=128, storage_config={</span>
+<span class="sd">                    &#39;type&#39;: &#39;redis&#39;,</span>
+<span class="sd">                    &#39;redis&#39;: {&#39;host&#39;: &#39;localhost&#39;, &#39;port&#39;: 6379},</span>
+<span class="sd">                })</span>
+<span class="sd">                with lsh.insertion_session() as session:</span>
+<span class="sd">                    for i, m in enumerate(minhashes):</span>
+<span class="sd">                        session.insert(i, m)</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="n">MinHashLSHInsertionSession</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">buffer_size</span><span class="o">=</span><span class="n">buffer_size</span><span class="p">)</span></div>
 
 
-    <span class="k">def</span> <span class="nf">_insert</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">,</span> <span class="n">minhash</span><span class="p">,</span> <span class="n">check_duplication</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">buffer</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">_insert</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">key</span><span class="p">:</span> <span class="n">Hashable</span><span class="p">,</span>
+        <span class="n">minhash</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">MinHash</span><span class="p">,</span> <span class="n">WeightedMinHash</span><span class="p">],</span>
+        <span class="n">check_duplication</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
+        <span class="n">buffer</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+    <span class="p">):</span>
         <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">minhash</span><span class="p">)</span> <span class="o">!=</span> <span class="bp">self</span><span class="o">.</span><span class="n">h</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Expecting minhash with length </span><span class="si">%d</span><span class="s2">, got </span><span class="si">%d</span><span class="s2">&quot;</span>
-                    <span class="o">%</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">h</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">minhash</span><span class="p">)))</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="s2">&quot;Expecting minhash with length </span><span class="si">%d</span><span class="s2">, got </span><span class="si">%d</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">h</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">minhash</span><span class="p">))</span>
+            <span class="p">)</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">prepickle</span><span class="p">:</span>
             <span class="n">key</span> <span class="o">=</span> <span class="n">pickle</span><span class="o">.</span><span class="n">dumps</span><span class="p">(</span><span class="n">key</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">check_duplication</span> <span class="ow">and</span> <span class="n">key</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">keys</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;The given key already exists&quot;</span><span class="p">)</span>
-        <span class="n">Hs</span> <span class="o">=</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">_H</span><span class="p">(</span><span class="n">minhash</span><span class="o">.</span><span class="n">hashvalues</span><span class="p">[</span><span class="n">start</span><span class="p">:</span><span class="n">end</span><span class="p">])</span>
-                <span class="k">for</span> <span class="n">start</span><span class="p">,</span> <span class="n">end</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">hashranges</span><span class="p">]</span>
+        <span class="n">Hs</span> <span class="o">=</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">_H</span><span class="p">(</span><span class="n">minhash</span><span class="o">.</span><span class="n">hashvalues</span><span class="p">[</span><span class="n">start</span><span class="p">:</span><span class="n">end</span><span class="p">])</span> <span class="k">for</span> <span class="n">start</span><span class="p">,</span> <span class="n">end</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">hashranges</span><span class="p">]</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">keys</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="o">*</span><span class="n">Hs</span><span class="p">,</span> <span class="n">buffer</span><span class="o">=</span><span class="n">buffer</span><span class="p">)</span>
         <span class="k">for</span> <span class="n">H</span><span class="p">,</span> <span class="n">hashtable</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">Hs</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">hashtables</span><span class="p">):</span>
             <span class="n">hashtable</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="n">H</span><span class="p">,</span> <span class="n">key</span><span class="p">,</span> <span class="n">buffer</span><span class="o">=</span><span class="n">buffer</span><span class="p">)</span>
 
 <div class="viewcode-block" id="MinHashLSH.query">
 <a class="viewcode-back" href="../../documentation.html#datasketch.MinHashLSH.query">[docs]</a>
-    <span class="k">def</span> <span class="nf">query</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">minhash</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&#39;&#39;&#39;</span>
+    <span class="k">def</span> <span class="nf">query</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">minhash</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">Hashable</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Giving the MinHash of the query set, retrieve</span>
 <span class="sd">        the keys that reference sets with Jaccard</span>
 <span class="sd">        similarities likely greater than the threshold.</span>
 
 <span class="sd">        Results are based on minhash segment collision</span>
 <span class="sd">        and are thus approximate. For more accurate results,</span>
-<span class="sd">        filter again with `minhash.jaccard`. For exact results,</span>
+<span class="sd">        filter again with :meth:`MinHash.jaccard`. For exact results,</span>
 <span class="sd">        filter by computing Jaccard similarity using original sets.</span>
 
 <span class="sd">        Args:</span>
-<span class="sd">            minhash (datasketch.MinHash): The MinHash of the query set.</span>
+<span class="sd">            minhash (MinHash): The MinHash of the query set.</span>
 
 <span class="sd">        Returns:</span>
-<span class="sd">            `list` of unique keys.</span>
-<span class="sd">        &#39;&#39;&#39;</span>
+<span class="sd">            list: a list of unique keys.</span>
+
+<span class="sd">        Example:</span>
+
+<span class="sd">            Query and rank results using :meth:`MinHash.jaccard`.</span>
+
+<span class="sd">            .. code-block:: python</span>
+
+<span class="sd">                from datasketch import MinHash, MinHashLSH</span>
+<span class="sd">                import numpy as np</span>
+
+<span class="sd">                # Generate 100 random MinHashes.</span>
+<span class="sd">                minhashes = MinHash.bulk(</span>
+<span class="sd">                    np.random.randint(low=0, high=30, size=(100, 10)),</span>
+<span class="sd">                    num_perm=128</span>
+<span class="sd">                )</span>
+
+<span class="sd">                # Create LSH index.</span>
+<span class="sd">                lsh = MinHashLSH(threshold=0.5, num_perm=128)</span>
+<span class="sd">                for i, m in enumerate(minhashes):</span>
+<span class="sd">                    lsh.insert(i, m)</span>
+
+<span class="sd">                # Get the initial results from LSH.</span>
+<span class="sd">                query = minhashes[0]</span>
+<span class="sd">                results = lsh.query(query)</span>
+
+<span class="sd">                # Rank results using Jaccard similarity estimated by MinHash.</span>
+<span class="sd">                results = [(query.jaccard(minhashes[key]), key) for key in results]</span>
+<span class="sd">                results.sort(reverse=True)</span>
+<span class="sd">                print(results)</span>
+
+<span class="sd">            Output:</span>
+
+<span class="sd">            .. code-block::</span>
+
+<span class="sd">                [(1.0, 0), (0.421875, 4), (0.4140625, 19), (0.359375, 58), (0.3359375, 78), (0.265625, 62), (0.2578125, 11), (0.25, 98), (0.171875, 21)]</span>
+
+<span class="sd">            Note that although the threshold is set to 0.5, the results are not</span>
+<span class="sd">            guaranteed to be above 0.5 because the LSH index is approximate and</span>
+<span class="sd">            the Jaccard similarity is estimated by MinHash.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">minhash</span><span class="p">)</span> <span class="o">!=</span> <span class="bp">self</span><span class="o">.</span><span class="n">h</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Expecting minhash with length </span><span class="si">%d</span><span class="s2">, got </span><span class="si">%d</span><span class="s2">&quot;</span>
-                    <span class="o">%</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">h</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">minhash</span><span class="p">)))</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="s2">&quot;Expecting minhash with length </span><span class="si">%d</span><span class="s2">, got </span><span class="si">%d</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">h</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">minhash</span><span class="p">))</span>
+            <span class="p">)</span>
         <span class="n">candidates</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
         <span class="k">for</span> <span class="p">(</span><span class="n">start</span><span class="p">,</span> <span class="n">end</span><span class="p">),</span> <span class="n">hashtable</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">hashranges</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">hashtables</span><span class="p">):</span>
             <span class="n">H</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_H</span><span class="p">(</span><span class="n">minhash</span><span class="o">.</span><span class="n">hashvalues</span><span class="p">[</span><span class="n">start</span><span class="p">:</span><span class="n">end</span><span class="p">])</span>
@@ -300,24 +449,25 @@
 
 <div class="viewcode-block" id="MinHashLSH.add_to_query_buffer">
 <a class="viewcode-back" href="../../documentation.html#datasketch.MinHashLSH.add_to_query_buffer">[docs]</a>
-    <span class="k">def</span> <span class="nf">add_to_query_buffer</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">minhash</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&#39;&#39;&#39;</span>
+    <span class="k">def</span> <span class="nf">add_to_query_buffer</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">minhash</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">MinHash</span><span class="p">,</span> <span class="n">WeightedMinHash</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Giving the MinHash of the query set, buffer</span>
 <span class="sd">        queries to retrieve the keys that references</span>
 <span class="sd">        sets with Jaccard similarities greater than</span>
 <span class="sd">        the threshold.</span>
 
 <span class="sd">        Buffered queries can be executed using</span>
-<span class="sd">        `collect_query_buffer`. The combination of these</span>
+<span class="sd">        :meth:`collect_query_buffer`. The combination of these</span>
 <span class="sd">        functions is way faster if cassandra backend</span>
 <span class="sd">        is used with `shared_buffer`.</span>
 
 <span class="sd">        Args:</span>
-<span class="sd">            minhash (datasketch.MinHash): The MinHash of the query set.</span>
-<span class="sd">        &#39;&#39;&#39;</span>
+<span class="sd">            minhash (MinHash): The MinHash of the query set.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">minhash</span><span class="p">)</span> <span class="o">!=</span> <span class="bp">self</span><span class="o">.</span><span class="n">h</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Expecting minhash with length </span><span class="si">%d</span><span class="s2">, got </span><span class="si">%d</span><span class="s2">&quot;</span>
-                             <span class="o">%</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">h</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">minhash</span><span class="p">)))</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="s2">&quot;Expecting minhash with length </span><span class="si">%d</span><span class="s2">, got </span><span class="si">%d</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">h</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">minhash</span><span class="p">))</span>
+            <span class="p">)</span>
         <span class="k">for</span> <span class="p">(</span><span class="n">start</span><span class="p">,</span> <span class="n">end</span><span class="p">),</span> <span class="n">hashtable</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">hashranges</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">hashtables</span><span class="p">):</span>
             <span class="n">H</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_H</span><span class="p">(</span><span class="n">minhash</span><span class="o">.</span><span class="n">hashvalues</span><span class="p">[</span><span class="n">start</span><span class="p">:</span><span class="n">end</span><span class="p">])</span>
             <span class="n">hashtable</span><span class="o">.</span><span class="n">add_to_select_buffer</span><span class="p">([</span><span class="n">H</span><span class="p">])</span></div>
@@ -325,17 +475,17 @@
 
 <div class="viewcode-block" id="MinHashLSH.collect_query_buffer">
 <a class="viewcode-back" href="../../documentation.html#datasketch.MinHashLSH.collect_query_buffer">[docs]</a>
-    <span class="k">def</span> <span class="nf">collect_query_buffer</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&#39;&#39;&#39;</span>
+    <span class="k">def</span> <span class="nf">collect_query_buffer</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">Hashable</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Execute and return buffered queries given</span>
-<span class="sd">        by `add_to_query_buffer`.</span>
+<span class="sd">        by :meth:`add_to_query_buffer`.</span>
 
 <span class="sd">        If multiple query MinHash were added to the query buffer,</span>
 <span class="sd">        the intersection of the results of all query MinHash will be returned.</span>
 
 <span class="sd">        Returns:</span>
-<span class="sd">            `list` of unique keys.</span>
-<span class="sd">        &#39;&#39;&#39;</span>
+<span class="sd">            list: a list of unique keys.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">collected_result_sets</span> <span class="o">=</span> <span class="p">[</span>
             <span class="nb">set</span><span class="p">(</span><span class="n">collected_result_lists</span><span class="p">)</span>
             <span class="k">for</span> <span class="n">hashtable</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">hashtables</span>
@@ -344,20 +494,22 @@
         <span class="k">if</span> <span class="ow">not</span> <span class="n">collected_result_sets</span><span class="p">:</span>
             <span class="k">return</span> <span class="p">[]</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">prepickle</span><span class="p">:</span>
-            <span class="k">return</span> <span class="p">[</span><span class="n">pickle</span><span class="o">.</span><span class="n">loads</span><span class="p">(</span><span class="n">key</span><span class="p">)</span> <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="nb">set</span><span class="o">.</span><span class="n">intersection</span><span class="p">(</span><span class="o">*</span><span class="n">collected_result_sets</span><span class="p">)]</span>
+            <span class="k">return</span> <span class="p">[</span>
+                <span class="n">pickle</span><span class="o">.</span><span class="n">loads</span><span class="p">(</span><span class="n">key</span><span class="p">)</span> <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="nb">set</span><span class="o">.</span><span class="n">intersection</span><span class="p">(</span><span class="o">*</span><span class="n">collected_result_sets</span><span class="p">)</span>
+            <span class="p">]</span>
         <span class="k">return</span> <span class="nb">list</span><span class="p">(</span><span class="nb">set</span><span class="o">.</span><span class="n">intersection</span><span class="p">(</span><span class="o">*</span><span class="n">collected_result_sets</span><span class="p">))</span></div>
 
 
 <div class="viewcode-block" id="MinHashLSH.__contains__">
 <a class="viewcode-back" href="../../documentation.html#datasketch.MinHashLSH.__contains__">[docs]</a>
-    <span class="k">def</span> <span class="fm">__contains__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&#39;&#39;&#39;</span>
+    <span class="k">def</span> <span class="fm">__contains__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">:</span> <span class="n">Hashable</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Args:</span>
-<span class="sd">            key (hashable): The unique identifier of a set.</span>
+<span class="sd">            key (Hashable): The unique identifier of a set.</span>
 
 <span class="sd">        Returns:</span>
 <span class="sd">            bool: True only if the key exists in the index.</span>
-<span class="sd">        &#39;&#39;&#39;</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">prepickle</span><span class="p">:</span>
             <span class="n">key</span> <span class="o">=</span> <span class="n">pickle</span><span class="o">.</span><span class="n">dumps</span><span class="p">(</span><span class="n">key</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">key</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">keys</span></div>
@@ -365,14 +517,17 @@
 
 <div class="viewcode-block" id="MinHashLSH.remove">
 <a class="viewcode-back" href="../../documentation.html#datasketch.MinHashLSH.remove">[docs]</a>
-    <span class="k">def</span> <span class="nf">remove</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&#39;&#39;&#39;</span>
+    <span class="k">def</span> <span class="nf">remove</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">:</span> <span class="n">Hashable</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Remove the key from the index.</span>
 
 <span class="sd">        Args:</span>
-<span class="sd">            key (hashable): The unique identifier of a set.</span>
+<span class="sd">            key (Hashable): The unique identifier of a set.</span>
 
-<span class="sd">        &#39;&#39;&#39;</span>
+<span class="sd">        Raises:</span>
+<span class="sd">            ValueError: If the key does not exist.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">prepickle</span><span class="p">:</span>
             <span class="n">key</span> <span class="o">=</span> <span class="n">pickle</span><span class="o">.</span><span class="n">dumps</span><span class="p">(</span><span class="n">key</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">key</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">keys</span><span class="p">:</span>
@@ -386,11 +541,11 @@
 
 <div class="viewcode-block" id="MinHashLSH.is_empty">
 <a class="viewcode-back" href="../../documentation.html#datasketch.MinHashLSH.is_empty">[docs]</a>
-    <span class="k">def</span> <span class="nf">is_empty</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&#39;&#39;&#39;</span>
+    <span class="k">def</span> <span class="nf">is_empty</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Returns:</span>
-<span class="sd">            bool: Check if the index is empty.</span>
-<span class="sd">        &#39;&#39;&#39;</span>
+<span class="sd">            bool: `True` only if the index is empty.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="nb">any</span><span class="p">(</span><span class="n">t</span><span class="o">.</span><span class="n">size</span><span class="p">()</span> <span class="o">==</span> <span class="mi">0</span> <span class="k">for</span> <span class="n">t</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">hashtables</span><span class="p">)</span></div>
 
 
@@ -402,8 +557,9 @@
 
     <span class="k">def</span> <span class="nf">_query_b</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">minhash</span><span class="p">,</span> <span class="n">b</span><span class="p">):</span>
         <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">minhash</span><span class="p">)</span> <span class="o">!=</span> <span class="bp">self</span><span class="o">.</span><span class="n">h</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Expecting minhash with length </span><span class="si">%d</span><span class="s2">, got </span><span class="si">%d</span><span class="s2">&quot;</span>
-                    <span class="o">%</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">h</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">minhash</span><span class="p">)))</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="s2">&quot;Expecting minhash with length </span><span class="si">%d</span><span class="s2">, got </span><span class="si">%d</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">h</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">minhash</span><span class="p">))</span>
+            <span class="p">)</span>
         <span class="k">if</span> <span class="n">b</span> <span class="o">&gt;</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">hashtables</span><span class="p">):</span>
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;b must be less or equal to the number of hash tables&quot;</span><span class="p">)</span>
         <span class="n">candidates</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
@@ -419,33 +575,37 @@
 
 <div class="viewcode-block" id="MinHashLSH.get_counts">
 <a class="viewcode-back" href="../../documentation.html#datasketch.MinHashLSH.get_counts">[docs]</a>
-    <span class="k">def</span> <span class="nf">get_counts</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&#39;&#39;&#39;</span>
-<span class="sd">        Returns a list of length ``self.b`` with elements representing the</span>
-<span class="sd">        number of keys stored under each bucket for the given permutation.</span>
-<span class="sd">        &#39;&#39;&#39;</span>
-        <span class="n">counts</span> <span class="o">=</span> <span class="p">[</span>
-            <span class="n">hashtable</span><span class="o">.</span><span class="n">itemcounts</span><span class="p">()</span> <span class="k">for</span> <span class="n">hashtable</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">hashtables</span><span class="p">]</span>
-        <span class="k">return</span> <span class="n">counts</span></div>
+    <span class="k">def</span> <span class="nf">get_counts</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">Dict</span><span class="p">[</span><span class="n">Hashable</span><span class="p">,</span> <span class="nb">int</span><span class="p">]]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Returns a list of length :attr:`b` (i.e., number of hash tables) with</span>
+<span class="sd">        each element a dictionary mapping hash table bucket key to the number</span>
+<span class="sd">        of indexed keys stored under each bucket.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            list: a list of dictionaries.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="p">[</span><span class="n">hashtable</span><span class="o">.</span><span class="n">itemcounts</span><span class="p">()</span> <span class="k">for</span> <span class="n">hashtable</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">hashtables</span><span class="p">]</span></div>
 
 
 <div class="viewcode-block" id="MinHashLSH.get_subset_counts">
 <a class="viewcode-back" href="../../documentation.html#datasketch.MinHashLSH.get_subset_counts">[docs]</a>
-    <span class="k">def</span> <span class="nf">get_subset_counts</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">keys</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&#39;&#39;&#39;</span>
-<span class="sd">        Returns the bucket allocation counts (see :func:`~datasketch.MinHashLSH.get_counts` above)</span>
+    <span class="k">def</span> <span class="nf">get_subset_counts</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">keys</span><span class="p">:</span> <span class="n">Hashable</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">Dict</span><span class="p">[</span><span class="n">Hashable</span><span class="p">,</span> <span class="nb">int</span><span class="p">]]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Returns the bucket allocation counts (see :meth:`get_counts` above)</span>
 <span class="sd">        restricted to the list of keys given.</span>
 
 <span class="sd">        Args:</span>
-<span class="sd">            keys (hashable) : the keys for which to get the bucket allocation</span>
-<span class="sd">                counts</span>
-<span class="sd">        &#39;&#39;&#39;</span>
+<span class="sd">            keys (Hashable) : the keys for which to get the bucket allocation</span>
+<span class="sd">                counts.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            list: a list of dictionaries.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">prepickle</span><span class="p">:</span>
             <span class="n">key_set</span> <span class="o">=</span> <span class="p">[</span><span class="n">pickle</span><span class="o">.</span><span class="n">dumps</span><span class="p">(</span><span class="n">key</span><span class="p">)</span> <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="nb">set</span><span class="p">(</span><span class="n">keys</span><span class="p">)]</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="n">key_set</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">set</span><span class="p">(</span><span class="n">keys</span><span class="p">))</span>
-        <span class="n">hashtables</span> <span class="o">=</span> <span class="p">[</span><span class="n">unordered_storage</span><span class="p">({</span><span class="s1">&#39;type&#39;</span><span class="p">:</span> <span class="s1">&#39;dict&#39;</span><span class="p">})</span> <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span>
-                      <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">b</span><span class="p">)]</span>
+        <span class="n">hashtables</span> <span class="o">=</span> <span class="p">[</span><span class="n">unordered_storage</span><span class="p">({</span><span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;dict&quot;</span><span class="p">})</span> <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">b</span><span class="p">)]</span>
         <span class="n">Hss</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">keys</span><span class="o">.</span><span class="n">getmany</span><span class="p">(</span><span class="o">*</span><span class="n">key_set</span><span class="p">)</span>
         <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">Hs</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">key_set</span><span class="p">,</span> <span class="n">Hss</span><span class="p">):</span>
             <span class="k">for</span> <span class="n">H</span><span class="p">,</span> <span class="n">hashtable</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">Hs</span><span class="p">,</span> <span class="n">hashtables</span><span class="p">):</span>
@@ -456,36 +616,44 @@
 
 
 <span class="k">class</span> <span class="nc">MinHashLSHInsertionSession</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">&#39;&#39;&#39;Context manager for batch insertion of documents into a MinHashLSH.</span>
-<span class="sd">    &#39;&#39;&#39;</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Context manager for batch insertion of documents into a MinHashLSH.</span>
 
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">lsh</span><span class="p">,</span> <span class="n">buffer_size</span><span class="p">):</span>
+<span class="sd">    Args:</span>
+<span class="sd">        lsh (MinHashLSH): The MinHashLSH to insert into.</span>
+<span class="sd">        buffer_size (int): The buffer size for insert_session mode.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">lsh</span><span class="p">:</span> <span class="n">MinHashLSH</span><span class="p">,</span> <span class="n">buffer_size</span><span class="p">:</span> <span class="nb">int</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">lsh</span> <span class="o">=</span> <span class="n">lsh</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">lsh</span><span class="o">.</span><span class="n">buffer_size</span> <span class="o">=</span> <span class="n">buffer_size</span>
 
-    <span class="k">def</span> <span class="fm">__enter__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__enter__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">MinHashLSHInsertionSession</span><span class="p">:</span>
         <span class="k">return</span> <span class="bp">self</span>
 
-    <span class="k">def</span> <span class="fm">__exit__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">exc_type</span><span class="p">,</span> <span class="n">exc_val</span><span class="p">,</span> <span class="n">exc_tb</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__exit__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">exc_type</span><span class="p">,</span> <span class="n">exc_val</span><span class="p">,</span> <span class="n">exc_tb</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
 
-    <span class="k">def</span> <span class="nf">close</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">close</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">lsh</span><span class="o">.</span><span class="n">keys</span><span class="o">.</span><span class="n">empty_buffer</span><span class="p">()</span>
         <span class="k">for</span> <span class="n">hashtable</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">lsh</span><span class="o">.</span><span class="n">hashtables</span><span class="p">:</span>
             <span class="n">hashtable</span><span class="o">.</span><span class="n">empty_buffer</span><span class="p">()</span>
 
-    <span class="k">def</span> <span class="nf">insert</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">,</span> <span class="n">minhash</span><span class="p">,</span> <span class="n">check_duplication</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&#39;&#39;&#39;</span>
+    <span class="k">def</span> <span class="nf">insert</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">key</span><span class="p">:</span> <span class="n">Hashable</span><span class="p">,</span>
+        <span class="n">minhash</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">MinHash</span><span class="p">,</span> <span class="n">WeightedMinHash</span><span class="p">],</span>
+        <span class="n">check_duplication</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Insert a unique key to the index, together</span>
 <span class="sd">        with a MinHash (or weighted MinHash) of the set referenced by</span>
 <span class="sd">        the key.</span>
 
 <span class="sd">        Args:</span>
-<span class="sd">            key (hashable): The unique identifier of the set.</span>
-<span class="sd">            minhash (datasketch.MinHash): The MinHash of the set.</span>
-<span class="sd">        &#39;&#39;&#39;</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">lsh</span><span class="o">.</span><span class="n">_insert</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="n">minhash</span><span class="p">,</span> <span class="n">check_duplication</span><span class="o">=</span><span class="n">check_duplication</span><span class="p">,</span>
-                         <span class="n">buffer</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="sd">            key (Hashable): The unique identifier of the set.</span>
+<span class="sd">            minhash (Union[MinHash, WeightedMinhash]): The MinHash of the set.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">lsh</span><span class="o">.</span><span class="n">_insert</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="n">minhash</span><span class="p">,</span> <span class="n">check_duplication</span><span class="o">=</span><span class="n">check_duplication</span><span class="p">,</span> <span class="n">buffer</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 </pre></div>
 
            </div>
