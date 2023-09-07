@@ -1,10 +1,13 @@
+from __future__ import annotations
 import struct
+from typing import Iterable
 import numpy as np
 
 from datasketch import MinHash
 
+
 class LeanMinHash(MinHash):
-    '''Lean MinHash is MinHash with a smaller memory footprint
+    """Lean MinHash is MinHash with a smaller memory footprint
     and faster deserialization, but with its internal state frozen
     -- no `update()`.
 
@@ -25,7 +28,7 @@ class LeanMinHash(MinHash):
 
             # Or between a lean MinHash and a MinHash
             lean_minhash.jaccard(minhash2)
-        
+
         To create a lean MinHash from the hash values and seed of an existing
         MinHash:
 
@@ -51,52 +54,56 @@ class LeanMinHash(MinHash):
         :class:`datasketch.MinHashLSHForest`, and :class:`datasketch.MinHashLSHEnsemble`.
 
     Args:
-        minhash (optional): The :class:`datasketch.MinHash` object used to 
+        minhash (optional): The :class:`datasketch.MinHash` object used to
             initialize the LeanMinHash. If this is not set, then `seed`
-            and `hashvalues` must be set. 
-        seed (optional): The random seed that controls the set of random 
+            and `hashvalues` must be set.
+        seed (optional): The random seed that controls the set of random
             permutation functions generated for this LeanMinHash. This parameter
             must be used together with `hashvalues`.
         hashvalues (optional): The hash values used to inititialize the state
             of the LeanMinHash. This parameter must be used together with
             `seed`.
-    '''
+    """
 
-    __slots__ = ('seed', 'hashvalues')
+    __slots__ = ("seed", "hashvalues")
 
     def _initialize_slots(self, seed, hashvalues):
-        '''Initialize the slots of the LeanMinHash.
+        """Initialize the slots of the LeanMinHash.
 
         Args:
             seed (int): The random seed controls the set of random
                 permutation functions generated for this LeanMinHash.
-            hashvalues: The hash values is the internal state of the LeanMinHash.
-        '''
+            hashvalues (Iterable): The hash values is the internal state of the LeanMinHash.
+        """
         self.seed = seed
         self.hashvalues = self._parse_hashvalues(hashvalues)
 
-    def __init__(self, minhash=None, seed=None, hashvalues=None):
+    def __init__(
+        self, minhash: MinHash = None, seed: int = None, hashvalues: Iterable = None
+    ):
         if minhash is not None:
             self._initialize_slots(minhash.seed, minhash.hashvalues)
         elif hashvalues is not None and seed is not None:
             self._initialize_slots(seed, hashvalues)
         else:
-            raise ValueError("Init parameters cannot be None: make sure "
-                    "to set either minhash or both of hash values and seed")
+            raise ValueError(
+                "Init parameters cannot be None: make sure "
+                "to set either minhash or both of hash values and seed"
+            )
 
-    def update(self, b):
-        '''This method is not available on a LeanMinHash.
+    def update(self, b) -> None:
+        """This method is not available on a LeanMinHash.
         Calling it raises a TypeError.
-        '''
+        """
         raise TypeError("Cannot update a LeanMinHash")
 
-    def copy(self):
+    def copy(self) -> LeanMinHash:
         lmh = object.__new__(LeanMinHash)
         lmh._initialize_slots(*self.__slots__)
         return lmh
 
-    def bytesize(self, byteorder='@'):
-        '''Compute the byte size after serialization.
+    def bytesize(self, byteorder="@") -> int:
+        """Compute the byte size after serialization.
 
         Args:
             byteorder (str, optional): This is byte order of the serialized data. Use one
@@ -107,17 +114,17 @@ class LeanMinHash(MinHash):
 
         Returns:
             int: Size in number of bytes after serialization.
-        '''
+        """
         # Use 8 bytes to store the seed integer
-        seed_size = struct.calcsize(byteorder+'q')
+        seed_size = struct.calcsize(byteorder + "q")
         # Use 4 bytes to store the number of hash values
-        length_size = struct.calcsize(byteorder+'i')
+        length_size = struct.calcsize(byteorder + "i")
         # Use 4 bytes to store each hash value as we are using the lower 32 bit
-        hashvalue_size = struct.calcsize(byteorder+'I')
+        hashvalue_size = struct.calcsize(byteorder + "I")
         return seed_size + length_size + len(self) * hashvalue_size
 
-    def serialize(self, buf, byteorder='@'):
-        '''
+    def serialize(self, buf, byteorder="@") -> None:
+        """
         Serialize this lean MinHash and store the result in an allocated buffer.
 
         Args:
@@ -158,17 +165,18 @@ class LeanMinHash(MinHash):
         .. _`buffer`: https://docs.python.org/3/c-api/buffer.html
         .. _`bytearray`: https://docs.python.org/3.6/library/functions.html#bytearray
         .. _`byteorder`: https://docs.python.org/3/library/struct.html
-        '''
+        """
         if len(buf) < self.bytesize():
-            raise ValueError("The buffer does not have enough space\
-                    for holding this MinHash.")
+            raise ValueError(
+                "The buffer does not have enough space\
+                    for holding this MinHash."
+            )
         fmt = "%sqi%dI" % (byteorder, len(self))
-        struct.pack_into(fmt, buf, 0,
-                self.seed, len(self), *self.hashvalues)
+        struct.pack_into(fmt, buf, 0, self.seed, len(self), *self.hashvalues)
 
     @classmethod
-    def deserialize(cls, buf, byteorder='@'):
-        '''
+    def deserialize(cls, buf, byteorder="@") -> LeanMinHash:
+        """
         Deserialize a lean MinHash from a buffer.
 
         Args:
@@ -189,7 +197,7 @@ class LeanMinHash(MinHash):
             .. code-block:: python
 
                 lean_minhash = LeanMinHash.deserialize(buf)
-        '''
+        """
         fmt_seed_size = "%sqi" % byteorder
         fmt_hash = byteorder + "%dI"
         try:
@@ -208,34 +216,36 @@ class LeanMinHash(MinHash):
     def __getstate__(self):
         buf = bytearray(self.bytesize())
         fmt = "qi%dI" % len(self)
-        struct.pack_into(fmt, buf, 0,
-                self.seed, len(self), *self.hashvalues)
+        struct.pack_into(fmt, buf, 0, self.seed, len(self), *self.hashvalues)
         return buf
 
     def __setstate__(self, buf):
         try:
-            seed, num_perm = struct.unpack_from('qi', buf, 0)
+            seed, num_perm = struct.unpack_from("qi", buf, 0)
         except TypeError:
-            seed, num_perm = struct.unpack_from('qi', buffer(buf), 0)
-        offset = struct.calcsize('qi')
+            seed, num_perm = struct.unpack_from("qi", buffer(buf), 0)
+        offset = struct.calcsize("qi")
         try:
-            hashvalues = struct.unpack_from('%dI' % num_perm, buf, offset)
+            hashvalues = struct.unpack_from("%dI" % num_perm, buf, offset)
         except TypeError:
-            hashvalues = struct.unpack_from('%dI' % num_perm, buffer(buf), offset)
+            hashvalues = struct.unpack_from("%dI" % num_perm, buffer(buf), offset)
         self._initialize_slots(seed, hashvalues)
 
-    def __hash__(self):
+    def __hash__(self) -> int:
         return hash((self.seed, tuple(self.hashvalues)))
 
     @classmethod
-    def union(cls, *lmhs):
+    def union(cls, *lmhs: LeanMinHash) -> LeanMinHash:
+        """Create a new lean MinHash by unioning multiple lean MinHash."""
         if len(lmhs) < 2:
             raise ValueError("Cannot union less than 2 MinHash")
         num_perm = len(lmhs[0])
         seed = lmhs[0].seed
         if any((seed != m.seed or num_perm != len(m)) for m in lmhs):
-            raise ValueError("The unioning MinHash must have the\
-                    same seed, number of permutation functions.")
+            raise ValueError(
+                "The unioning MinHash must have the\
+                    same seed, number of permutation functions."
+            )
         hashvalues = np.minimum.reduce([m.hashvalues for m in lmhs])
 
         lmh = object.__new__(LeanMinHash)

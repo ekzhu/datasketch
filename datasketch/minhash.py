@@ -20,11 +20,11 @@ class MinHash(object):
     `Jaccard similarity`_ between sets.
 
     Args:
-        num_perm (Optional[int]): Number of random permutation functions.
+        num_perm (int): Number of random permutation functions.
             It will be ignored if `hashvalues` is not None.
-        seed (Optional[int]): The random seed controls the set of random
+        seed (int): The random seed controls the set of random
             permutation functions generated for this MinHash.
-        hashfunc (Optional[Callable]): The hash function used by
+        hashfunc (Callable): The hash function used by
             this MinHash.
             It takes the input passed to the :meth:`update` method and
             returns an integer that can be encoded with 32 bits.
@@ -69,10 +69,10 @@ class MinHash(object):
         num_perm: int = 128,
         seed: int = 1,
         hashfunc: Callable = sha1_hash32,
-        hashobj=None,  # Deprecated.
+        hashobj: Optional[object] = None,  # Deprecated.
         hashvalues: Optional[Iterable] = None,
         permutations: Optional[Tuple[Iterable, Iterable]] = None,
-    ):
+    ) -> None:
         if hashvalues is not None:
             num_perm = len(hashvalues)
         if num_perm > _hash_range:
@@ -378,7 +378,7 @@ class MinHash(object):
         return list(cls.generator(b, **minhash_kwargs))
 
     @classmethod
-    def generator(cls, b: Iterable, **minhash_kwargs) -> Generator[MinHash]:
+    def generator(cls, b: Iterable, **minhash_kwargs) -> Generator[MinHash, None, None]:
         """Compute MinHashes in a generator. This method avoids unnecessary
         overhead when initializing many minhashes by reusing the initialized
         state.
@@ -390,7 +390,7 @@ class MinHash(object):
                 will be used for all minhashes.
 
         Returns:
-            Generator[MinHash]: a generator of computed MinHashes.
+            Generator[MinHash, None, None]: a generator of computed MinHashes.
 
         Example:
 

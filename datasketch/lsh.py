@@ -51,15 +51,15 @@ class MinHashLSH(object):
         threshold (float): The Jaccard similarity threshold between 0.0 and
             1.0. The initialized MinHash LSH will be optimized for the threshold by
             minizing the false positive and false negative.
-        num_perm (Optional[int]): The number of permutation functions used
+        num_perm (int): The number of permutation functions used
             by the MinHash to be indexed. For weighted MinHash, this
             is the sample size (`sample_size`).
-        weights (Optional[Tuple[float, float]]): Used to adjust the relative importance of
+        weights (Tuple[float, float]): Used to adjust the relative importance of
             minimizing false positive and false negative when optimizing
             for the Jaccard similarity threshold.
             `weights` is a tuple in the format of
             :code:`(false_positive_weight, false_negative_weight)`.
-        params (Tuple[int, int]): The LSH parameters (i.e., number of bands and size
+        params (Optiona[Tuple[int, int]]): The LSH parameters (i.e., number of bands and size
             of each bands). This is used to bypass the parameter optimization
             step in the constructor. `threshold` and `weights` will be ignored
             if this is given.
