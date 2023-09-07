@@ -308,12 +308,11 @@ class MinHashLSH(object):
                 from datasketch import MinHash, MinHashLSH
                 import numpy as np
 
-                # Generate 100 MinHashes.
-                minhashes = []
-                for i in range(100):
-                    m = MinHash(num_perm=128)
-                    m.update_batch(np.random.randint(low=0, high=30, size=10))
-                    minhashes.append(m)
+                # Generate 100 random MinHashes.
+                minhashes = MinHash.bulk(
+                    np.random.randint(low=0, high=30, size=(100, 10)),
+                    num_perm=128
+                )
 
                 # Create LSH index.
                 lsh = MinHashLSH(threshold=0.5, num_perm=128)
