@@ -68,8 +68,8 @@ class MinHashLSH(object):
             `basename` is an optional property whose value will be used as the prefix to
             stored keys. If this is not set, a random string will be generated instead. If you
             set this, you will be responsible for ensuring there are no key collisions.
-        prepickle (bool): If True, all keys are pickled to bytes before
-            insertion. If False, a default value is chosen based on the
+        prepickle (Optional[bool]): If True, all keys are pickled to bytes before
+            insertion. If not specified, a default value is chosen based on the
             `storage_config`.
         hashfunc (Optional[Callable[[bytes], bytes]]): If a hash function is provided it will be used to
             compress the index keys to reduce the memory footprint. This could cause a higher
@@ -141,7 +141,7 @@ class MinHashLSH(object):
         weights: Tuple[float, float] = (0.5, 0.5),
         params: Optional[Tuple[int, int]] = None,
         storage_config: Optional[Dict] = None,
-        prepickle: bool = False,
+        prepickle: Optional[bool] = None,
         hashfunc: Optional[Callable[[bytes], bytes]] = None,
     ) -> None:
         storage_config = {"type": "dict"} if not storage_config else storage_config
