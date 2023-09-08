@@ -14,8 +14,8 @@ def _annotate_points(plt, name, xs, ys, runs):
             text = f"({run['index']['b']}, {run['index']['r']})"
         # elif name == "hnsw":
         #     text = f"({run['index']['M']}, {run['index']['efConstruction']})"
-        elif name == "ground_truth":
-            text = "Exact"
+        elif name == "exact":
+            text = "Inverted Index"
         else:
             break
         plt.annotate(
@@ -53,7 +53,7 @@ if __name__ == "__main__":
     parser.add_argument("--names", nargs="+", type=str)
     args = parser.parse_args(sys.argv[1:])
     runs = evaluate_runs(args.benchmark_result, ignore_query=True)
-    ks = np.sort(np.unique([run["k"] for run in runs]))
+    ks = np.sort(np.unique([run["query"]["k"] for run in runs]))
     # Replaces floats with more than 2 decimals, deduplicate and sort.
     max_distances_at_k = np.sort(
         np.unique([np.round(x, 2) for x in args.max_distance_at_k])
@@ -65,12 +65,14 @@ if __name__ == "__main__":
             os.makedirs(output_dir)
         # Get algorithms.
         if args.names is None or len(args.names) == 0:
-            names = np.sort(np.unique([run["name"] for run in runs if run["k"] == k]))
+            names = np.sort(
+                np.unique([run["name"] for run in runs if run["query"]["k"] == k])
+            )
         else:
             names = np.sort(args.names)
         plot_settings = {}
         for max_distance in max_distances_at_k:
-            for run in [run for run in runs if run["k"] == k]:
+            for run in [run for run in runs if run["query"]["k"] == k]:
                 query_keys = set(
                     [
                         query_key
@@ -120,7 +122,9 @@ if __name__ == "__main__":
             plt.figure()
             for name in names:
                 selected = [
-                    run for run in runs if run["k"] == k and run["name"] == name
+                    run
+                    for run in runs
+                    if run["query"]["k"] == k and run["name"] == name
                 ]
                 mean_recalls, mean_qps, selected = _frontier_points(
                     [run["mean_recall"] for run in selected],
@@ -168,7 +172,9 @@ if __name__ == "__main__":
             plt.figure()
             for name in names:
                 selected = [
-                    run for run in runs if run["k"] == k and run["name"] == name
+                    run
+                    for run in runs
+                    if run["query"]["k"] == k and run["name"] == name
                 ]
                 plt.plot(
                     [run["mean_distance"] for run in selected],
@@ -198,7 +204,9 @@ if __name__ == "__main__":
             for name in names:
                 # Get recalls and indexing times of this algorithm.
                 selected = [
-                    run for run in runs if run["k"] == k and run["name"] == name
+                    run
+                    for run in runs
+                    if run["query"]["k"] == k and run["name"] == name
                 ]
                 mean_recalls, indexing_times, selected = _frontier_points(
                     [run["mean_recall"] for run in selected],
@@ -232,7 +240,9 @@ if __name__ == "__main__":
             for name in names:
                 # Get recalls, qps, and distances of this algorithm.
                 selected = [
-                    run for run in runs if run["k"] == k and run["name"] == name
+                    run
+                    for run in runs
+                    if run["query"]["k"] == k and run["name"] == name
                 ]
                 mean_recalls = np.array([run["mean_recall"] for run in selected])
                 mean_qps = np.array([run["mean_qps"] for run in selected])
@@ -266,7 +276,9 @@ if __name__ == "__main__":
             for name in names:
                 # Get recalls, indexing time, and distances of this algorithm.
                 selected = [
-                    run for run in runs if run["k"] == k and run["name"] == name
+                    run
+                    for run in runs
+                    if run["query"]["k"] == k and run["name"] == name
                 ]
                 mean_recalls = np.array([run["mean_recall"] for run in selected])
                 indexing_times = np.array([run["indexing_time"] for run in selected])
@@ -297,7 +309,9 @@ if __name__ == "__main__":
             plt.figure()
             for name in names:
                 selected = [
-                    run for run in runs if run["k"] == k and run["name"] == name
+                    run
+                    for run in runs
+                    if run["query"]["k"] == k and run["name"] == name
                 ]
                 mean_recalls = [run["mean_recall"] for run in selected]
                 mean_counts = [run["mean_count"] for run in selected]
@@ -323,7 +337,9 @@ if __name__ == "__main__":
             plt.figure()
             for name in names:
                 selected = [
-                    run for run in runs if run["k"] == k and run["name"] == name
+                    run
+                    for run in runs
+                    if run["query"]["k"] == k and run["name"] == name
                 ]
                 mean_distances = [run["mean_distance"] for run in selected]
                 mean_counts = [run["mean_count"] for run in selected]
@@ -349,7 +365,9 @@ if __name__ == "__main__":
             plt.figure()
             for name in names:
                 selected = [
-                    run for run in runs if run["k"] == k and run["name"] == name
+                    run
+                    for run in runs
+                    if run["query"]["k"] == k and run["name"] == name
                 ]
                 mean_qps = [run["mean_qps"] for run in selected]
                 mean_counts = [run["mean_count"] for run in selected]
@@ -375,7 +393,9 @@ if __name__ == "__main__":
             plt.figure()
             for name in names:
                 selected = [
-                    run for run in runs if run["k"] == k and run["name"] == name
+                    run
+                    for run in runs
+                    if run["query"]["k"] == k and run["name"] == name
                 ]
                 indexing_times = [run["indexing_time"] for run in selected]
                 mean_counts = [run["mean_count"] for run in selected]
