@@ -1,11 +1,14 @@
+import pprint
 import sys
 import gzip
 import random
 import collections
 import sqlite3
 import json
+import time
 
 import numpy as np
+import farmhash
 
 from datasketch import MinHash
 
@@ -71,6 +74,44 @@ def create_minhashes_from_sets(sets, num_perms, hashfunc):
     return minhashes
 
 
+def lazy_create_minhashes_from_sets(
+    index_minhashes,
+    index_sets,
+    query_minhashes,
+    query_sets,
+    num_perm,
+):
+    index_minhashes_time = 0
+    query_minhashes_time = 0
+    if num_perm not in index_minhashes:
+        start = time.perf_counter()
+        index_minhashes.update(
+            create_minhashes_from_sets(
+                index_sets,
+                [
+                    num_perm,
+                ],
+                hashfunc=farmhash.hash32,
+            )
+        )
+        index_minhashes_time = time.perf_counter() - start
+        print(f"Index MinHashes took {index_minhashes_time} seconds.")
+    if num_perm not in query_minhashes:
+        start = time.perf_counter()
+        query_minhashes.update(
+            create_minhashes_from_sets(
+                query_sets,
+                [
+                    num_perm,
+                ],
+                hashfunc=farmhash.hash32,
+            )
+        )
+        query_minhashes_time = time.perf_counter() - start
+        print(f"Query MinHashes took {query_minhashes_time} seconds.")
+    return (index_minhashes_time, query_minhashes_time)
+
+
 def compute_containment(x, y):
     if len(x) == 0 or len(y) == 0:
         return 0.0
@@ -85,6 +126,14 @@ def compute_jaccard(x, y):
     return float(intersection) / float(len(x) + len(y) - intersection)
 
 
+def compute_jaccard_distance(x, y):
+    return 1.0 - compute_jaccard(x, y)
+
+
+def compute_minhash_jaccard_distance(x, y):
+    return 1.0 - x.jaccard(y)
+
+
 def init_results_db(output_sqlite):
     conn = sqlite3.connect(output_sqlite)
     cursor = conn.cursor()
@@ -93,10 +142,8 @@ def init_results_db(output_sqlite):
         key integer primary key,
         name text not null,
         time datetime not null,
-        k integer,
-        threshold real,
-        params text not null,
-        indexing_time real
+        config text not null,
+        indexing text not null
     )"""
     )
     cursor.execute(
@@ -116,16 +163,14 @@ def init_results_db(output_sqlite):
     conn.close()
 
 
-def save_results(
-    run_name, k, threshold, params, indexing_time, results, times, output_sqlite
-):
+def save_results(run_name, config, indexing, results, times, output_sqlite):
     conn = sqlite3.connect(output_sqlite)
     cursor = conn.cursor()
     cursor.execute(
         """INSERT INTO runs 
-            (name, time, k, threshold, params, indexing_time)
-            VALUES (?, datetime('now'), ?, ?, ?, ?)""",
-        (run_name, k, threshold, json.dumps(params), indexing_time),
+            (name, time, config, indexing)
+            VALUES (?, datetime('now'), ?, ?)""",
+        (run_name, json.dumps(config), json.dumps(indexing)),
     )
     cursor.execute("SELECT last_insert_rowid()")
     run_key = cursor.fetchone()[0]
@@ -216,49 +261,33 @@ def compute_mean_distances(results, ignore_query=False):
     return distances
 
 
-def get_run(name, k, threshold, params, result_sqlite):
+def get_run(name, config, result_sqlite):
     conn = sqlite3.connect(result_sqlite)
     cursor = conn.cursor()
     cursor.execute(
-        """SELECT key, k, threshold, params, indexing_time 
+        """SELECT key, config
             FROM runs WHERE name = ?""",
         (name,),
     )
-    runs = [
-        row[0]
-        for row in cursor
-        if row[1] == k and row[2] == threshold and json.loads(row[3]) == params
-    ]
+    runs = [row[0] for row in cursor if config == json.loads(row[1])]
     conn.close()
     if len(runs) > 0:
         return runs[0]
     return None
 
 
-def evaluate_runs(result_sqlite, names=None, ignore_query=False):
+def evaluate_runs(result_sqlite, ignore_query=False):
     conn = sqlite3.connect(result_sqlite)
     cursor = conn.cursor()
-    if not names:
-        cursor.execute(
-            """SELECT key, name, k, threshold, params, indexing_time FROM runs"""
-        )
-    else:
-        cursor.execute(
-            """SELECT key, name, k, threshold, params, indexing_time
-                FROM runs 
-                WHERE name IN ? OR name == 'ground_truth""",
-            (names,),
-        )
+    cursor.execute("""SELECT key, name, config, indexing FROM runs""")
     runs = [
         {
             "key": key,
             "name": name,
-            "k": k,
-            "threshold": threshold,
-            **json.loads(params),
-            "indexing_time": indexing_time,
+            **json.loads(config),
+            **json.loads(indexing),
         }
-        for (key, name, k, threshold, params, indexing_time) in cursor
+        for (key, name, config, indexing) in cursor
     ]
     cursor.close()
 
@@ -270,7 +299,7 @@ def evaluate_runs(result_sqlite, names=None, ignore_query=False):
     ]
 
     # Get ground truth results first.
-    for run in [run for run in runs if run["name"] == "ground_truth"]:
+    for run in [run for run in runs if run["name"] == "exact"]:
         results, times = load_results(run["key"], conn)
         run.update({"results": results, "times": times})
 
@@ -279,24 +308,24 @@ def evaluate_runs(result_sqlite, names=None, ignore_query=False):
         # Load results of this run.
         results, times = load_results(run["key"], conn)
         # Find the corresponding ground truth run with the same
-        # benchmark settings.
-        if run["name"] == "ground_truth":
-            ground_truth = run
+        # query and benchmark settings.
+        if run["name"] == "exact":
+            exact = run
         else:
-            ground_truth = [
+            exact = [
                 x
                 for x in runs
-                if x["name"] == "ground_truth" and x["benchmark"] == run["benchmark"]
+                if x["name"] == "exact"
+                and x["benchmark"] == run["benchmark"]
+                and x["query"] == run["query"]
             ][0]
         # Compute metrics.
         counts = [(query_key, len(result)) for query_key, result in results]
-        similarities_at_k = get_similarities_at_k(ground_truth["results"])
+        similarities_at_k = get_similarities_at_k(exact["results"])
         distances_at_k = [
             (query_key, 1.0 - sim) for query_key, sim in similarities_at_k
         ]
-        recalls = compute_recalls(
-            results, ground_truth["results"], ignore_query=ignore_query
-        )
+        recalls = compute_recalls(results, exact["results"], ignore_query=ignore_query)
         mean_similarities = compute_mean_similarities(
             results, ignore_query=ignore_query
         )

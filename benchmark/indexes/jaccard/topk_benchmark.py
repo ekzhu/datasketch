@@ -1,17 +1,19 @@
+import itertools
 import sys
 import argparse
-import time
 
-import farmhash
 
 from exact import search_jaccard_topk
-from hnsw import search_hnsw_jaccard_topk
+from hnsw import (
+    search_hnsw_jaccard_topk,
+    search_hnsw_minhash_jaccard_topk,
+    search_nswlib_jaccard_topk,
+)
 from lsh import search_lsh_jaccard_topk
 from lshforest import search_lshforest_jaccard_topk
 from utils import (
     read_sets_from_file,
     save_results,
-    create_minhashes_from_sets,
     get_run,
     init_results_db,
 )
@@ -48,7 +50,7 @@ if __name__ == "__main__":
     parser.add_argument(
         "--run-specific",
         type=str,
-        choices=["ground_truth", "hnsw", "lsh", "lshforest"],
+        choices=["exact", "nswlib", "lsh", "lshforest", "hnsw", "hnsw_minhash"],
         default=None,
         help="Run a specific algorithm.",
     )
@@ -64,21 +66,69 @@ if __name__ == "__main__":
     )
     args = parser.parse_args(sys.argv[1:])
 
-    # Global parameters.
-    k = 100
-
     # LSH parameters, num_perm = b * r
-    bs = [4, 8, 16, 32, 64, 128, 256, 512]
-    rs = [2, 4, 8]
+    bs = [2, 4, 8, 16, 32, 64]
+    rs = [2, 4, 8, 16, 32, 64]
+    lsh_params = list({"b": b, "r": r} for b, r in itertools.product(bs, rs))
 
     # HNSW Index parameters.
-    Ms = [4, 8, 12, 16, 24, 36]
-    efCs = [100, 500, 1000, 1500]
-    num_threads = 1
+    Ms = [8, 16, 24, 32, 40]
+    efCs = [
+        100,
+        200,
+        300,
+        400,
+        500,
+    ]
+    hnsw_params = list(
+        {
+            "m": M,
+            "ef_construction": efC,
+        }
+        for M, efC in itertools.product(Ms, efCs)
+    )
+
+    # NSWLib parameters.
+    nswlib_params = list(
+        {
+            "M": M,
+            "indexThreadQty": 1,
+            "efConstruction": efC,
+            "post": 0,
+        }
+        for M, efC in itertools.product(Ms, efCs)
+    )
+
+    # HNSW MinHash parameters.
+    hnsw_minhash_num_perms = [128]
+    hnsw_minhash_params = list(
+        {"num_perm": num_perm, "m": M, "ef_construction": efC}
+        for num_perm, M, efC in itertools.product(hnsw_minhash_num_perms, Ms, efCs)
+    )
+
+    index_configs = {
+        "exact": [{}],
+        "lsh": lsh_params,
+        "lshforest": lsh_params,
+        "hnsw": hnsw_params,
+        "hnsw_minhash": hnsw_minhash_params,
+        "nswlib": nswlib_params,
+    }
+
+    index_runners = {
+        "exact": search_jaccard_topk,
+        "lsh": search_lsh_jaccard_topk,
+        "lshforest": search_lshforest_jaccard_topk,
+        "hnsw": search_hnsw_jaccard_topk,
+        "hnsw_minhash": search_hnsw_minhash_jaccard_topk,
+        "nswlib": search_nswlib_jaccard_topk,
+    }
+
+    # Query settings.
+    query_configs = [{"k": k} for k in [1, 5, 10, 50, 100]]
 
     # Benchmark settings.
-    benchmark_settings = {
-        "k": k,
+    benchmark_config = {
         "index_set_file": args.index_set_file,
         "query_set_file": args.query_set_file,
         "index_sample_ratio": args.index_sample_ratio,
@@ -97,193 +147,33 @@ if __name__ == "__main__":
     # Initialize output SQLite database.
     init_results_db(args.output)
 
-    # Run ground truth.
-    if args.run_specific is None or args.run_specific == "ground_truth":
-        params = {"benchmark": benchmark_settings}
-        if get_run("ground_truth", k, None, params, args.output) is None:
-            print("Running Ground Truth.")
-            (
-                groupd_truth_indexing_time,
-                ground_truth_results,
-                ground_truth_times,
-            ) = search_jaccard_topk(
-                (index_sets, index_keys), (query_sets, query_keys), k
-            )
-            save_results(
-                "ground_truth",
-                k,
-                None,
-                params,
-                groupd_truth_indexing_time,
-                ground_truth_results,
-                ground_truth_times,
-                args.output,
-            )
-
-    # Run HNSW
-    if args.run_specific is None or args.run_specific == "hnsw":
-        for M in Ms:
-            for efC in efCs:
-                index_params = {
-                    "M": M,
-                    "indexThreadQty": num_threads,
-                    "efConstruction": efC,
-                    "post": 0,
-                }
-                params = {"index": index_params, "benchmark": benchmark_settings}
-                if get_run("hnsw", k, None, params, args.output) is not None:
-                    continue
-                print(f"Running HNSW using M = {M}, efC = {efC}")
-                hnsw_indexing_time, hnsw_results, hnsw_times = search_hnsw_jaccard_topk(
-                    (index_sets, index_keys), (query_sets, query_keys), index_params, k
-                )
-                # Save results
-                save_results(
-                    "hnsw",
-                    k,
-                    None,
-                    params,
-                    hnsw_indexing_time,
-                    hnsw_results,
-                    hnsw_times,
-                    args.output,
-                )
-
     # Initialize storage for Minhashes.
     index_minhashes = {}
     query_minhashes = {}
 
-    # Run LSH.
-    if args.run_specific is None or args.run_specific == "lsh":
-        for b in sorted(bs):
-            # Clean up cached MinHashes as bs is in ascending order.
-            for num_perm in list(index_minhashes.keys()):
-                if num_perm < b * min(rs):
-                    del index_minhashes[num_perm]
-            for r in rs:
-                params = {
-                    "index": {"b": b, "r": r},
-                    "benchmark": benchmark_settings,
+    # Run algorithms.
+    for name, configs in index_configs.items():
+        if args.run_specific is not None and args.run_specific != name:
+            continue
+        for index_config in configs:
+            index_cache = {}
+            for query_config in query_configs:
+                config = {
+                    "index": index_config,
+                    "query": query_config,
+                    "benchmark": benchmark_config,
                 }
-                if get_run("lsh", k, None, params, args.output) is not None:
+                if get_run(name, config, args.output) is not None:
                     continue
-                print(f"Running LSH using b = {b}, r = {r}.")
-                # Lazily create MinHashes.
-                if b * r not in index_minhashes:
-                    start = time.perf_counter()
-                    index_minhashes.update(
-                        create_minhashes_from_sets(
-                            index_sets,
-                            [
-                                b * r,
-                            ],
-                            hashfunc=farmhash.hash32,
-                        )
-                    )
-                    index_minhashes_time = time.perf_counter() - start
-                    params["index_minhashes_time"] = index_minhashes_time
-                    print(f"Index MinHashes took {index_minhashes_time} seconds.")
-                else:
-                    params["index_minhashes_time"] = 0
-                if b * r not in query_minhashes:
-                    start = time.perf_counter()
-                    query_minhashes.update(
-                        create_minhashes_from_sets(
-                            query_sets,
-                            [
-                                b * r,
-                            ],
-                            hashfunc=farmhash.hash32,
-                        )
-                    )
-                    query_minhashes_time = time.perf_counter() - start
-                    params["query_minhashes_time"] = query_minhashes_time
-                    print(f"Query MinHashes took {query_minhashes_time} seconds.")
-                else:
-                    params["query_minhashes_time"] = 0
-                # Run benchmark.
-                indexing_time, results, times = search_lsh_jaccard_topk(
-                    (index_sets, index_keys, index_minhashes),
+                print(f"Running {name} using {index_config}.")
+                index_runner = index_runners[name]
+                indexing, results, times = index_runner(
+                    (index_sets, index_keys, index_minhashes, index_cache),
                     (query_sets, query_keys, query_minhashes),
-                    b,
-                    r,
-                    k,
+                    index_config,
+                    query_config["k"],
                 )
-                # Save result to SQLite database.
-                save_results(
-                    "lsh", k, None, params, indexing_time, results, times, args.output
-                )
-                if not args.cache_minhash:
-                    index_minhashes.clear()
-                    query_minhashes.clear()
-
-    # Run LSH Forest.
-    if args.run_specific is None or args.run_specific == "lshforest":
-        for b in sorted(bs):
-            # Clean up cached MinHashes as bs is in ascending order.
-            for num_perm in list(index_minhashes.keys()):
-                if num_perm < b * min(rs):
-                    del index_minhashes[num_perm]
-            for r in rs:
-                params = {
-                    "index": {"b": b, "r": r},
-                    "benchmark": benchmark_settings,
-                }
-                if get_run("lshforest", k, None, params, args.output) is not None:
-                    continue
-                print(f"Running LSH Forest using b = {b}, r = {r}.")
-                # Lazily create MinHashes.
-                if b * r not in index_minhashes:
-                    start = time.perf_counter()
-                    index_minhashes.update(
-                        create_minhashes_from_sets(
-                            index_sets,
-                            [
-                                b * r,
-                            ],
-                            hashfunc=farmhash.hash32,
-                        )
-                    )
-                    index_minhashes_time = time.perf_counter() - start
-                    print(f"Index MinHashes took {index_minhashes_time} seconds.")
-                    params["index_minhashes_time"] = index_minhashes_time
-                else:
-                    params["index_minhashes_time"] = 0
-                if b * r not in query_minhashes:
-                    start = time.perf_counter()
-                    query_minhashes.update(
-                        create_minhashes_from_sets(
-                            query_sets,
-                            [
-                                b * r,
-                            ],
-                            hashfunc=farmhash.hash32,
-                        )
-                    )
-                    query_minhashes_time = time.perf_counter() - start
-                    print(f"Query MinHashes took {query_minhashes_time} seconds.")
-                    params["query_minhashes_time"] = query_minhashes_time
-                else:
-                    params["query_minhashes_time"] = 0
-                # Run benchmark.
-                indexing_time, results, times = search_lshforest_jaccard_topk(
-                    (index_sets, index_keys, index_minhashes),
-                    (query_sets, query_keys, query_minhashes),
-                    b,
-                    r,
-                    k,
-                )
-                # Save result to SQLite database.
-                save_results(
-                    "lshforest",
-                    k,
-                    None,
-                    params,
-                    indexing_time,
-                    results,
-                    times,
-                    args.output,
-                )
-                if not args.cache_minhash:
-                    index_minhashes.clear()
-                    query_minhashes.clear()
+                save_results(name, config, indexing, results, times, args.output)
+            if not args.cache_minhash:
+                index_minhashes.clear()
+                query_minhashes.clear()

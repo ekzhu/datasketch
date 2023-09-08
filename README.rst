@@ -37,7 +37,7 @@ sub-linear query time:
 +---------------------------+-----------------------------+------------------------+
 | `MinHash LSH Ensemble`_   | MinHash                     | Containment Threshold  |
 +---------------------------+-----------------------------+------------------------+
-| `HNSW`_                   | Customizable                | Metric Distances       |
+| `HNSW`_                   | Any                         | Custom Metric Top-K    |
 +---------------------------+-----------------------------+------------------------+
 
 datasketch must be used with Python 3.7 or above, NumPy 1.11 or above, and Scipy. 
