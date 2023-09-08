@@ -7,26 +7,43 @@ from datasketch import WeightedMinHashGenerator
 
 
 class TestMinHashLSHForest(unittest.TestCase):
-
     def _setup(self):
         d = "abcdefghijklmnopqrstuvwxyz"
+        data = {}
         forest = MinHashLSHForest()
-        for i in range(len(d)-2):
+        for i in range(len(d) - 2):
             key = d[i]
             m = MinHash()
             j = i + 3
             for s in d[i:j]:
                 m.update(s.encode("utf8"))
+            data[key] = m
             forest.add(key, m)
+        self.assertTrue(forest.is_empty())
+        for t in forest.hashtables:
+            self.assertTrue(len(t) >= 1)
+            items = []
+            for H in t:
+                items.extend(t[H])
+            for key in data:
+                self.assertTrue(key in items)
+        for key in data:
+            self.assertTrue(key in forest)
+        for key in forest.keys:
+            for i, H in enumerate(forest.keys[key]):
+                self.assertTrue(key in forest.hashtables[i][H])
+        self.assertRaises(ValueError, forest.add, "a", data["a"])
         forest.index()
-        return forest
+        self.assertFalse(forest.is_empty())
+        self.assertRaises(ValueError, forest.add, "a", data["a"])
+        return forest, data
 
     def test__H(self):
-        '''
+        """
         Check _H output consistent bytes length given
         the same concatenated hash value size
-        '''
-        for l in range(2, 128+1, 16):
+        """
+        for l in range(2, 128 + 1, 16):
             forest = MinHashLSHForest(num_perm=128, l=l)
             m = MinHash()
             m.update("abcdefg".encode("utf8"))
@@ -39,132 +56,82 @@ class TestMinHashLSHForest(unittest.TestCase):
         forest = MinHashLSHForest()
         self.assertTrue(forest.is_empty())
 
-    def test_add_index(self):
+    def test_query(self):
+        forest, data = self._setup()
+        for key in data:
+            results = forest.query(data[key], 10)
+            self.assertIn(key, results)
+
+    def test_pickle(self):
+        forest, _ = self._setup()
+        forest2 = pickle.loads(pickle.dumps(forest))
+        self.assertEqual(forest.hashtables, forest2.hashtables)
+        self.assertEqual(forest.keys, forest2.keys)
+        self.assertEqual(forest.l, forest2.l)
+        self.assertEqual(forest.k, forest2.k)
+        self.assertEqual(forest.hashranges, forest2.hashranges)
+
+
+class TestWeightedMinHashLSHForest(unittest.TestCase):
+    def _setup(self):
+        freqs = np.random.randint(1, 100, (100, 100))
+        data = {}
         forest = MinHashLSHForest()
-        m1 = MinHash()
-        m1.update("a".encode("utf8"))
-        m2 = MinHash()
-        m2.update("b".encode("utf8"))
-        forest.add("a", m1)
-        forest.add("b", m2)
+        mg = WeightedMinHashGenerator(100, sample_size=128)
+        for i in range(len(freqs)):
+            m = mg.minhash(freqs[i])
+            forest.add(i, m)
+            data[i] = m
         self.assertTrue(forest.is_empty())
         for t in forest.hashtables:
             self.assertTrue(len(t) >= 1)
             items = []
             for H in t:
                 items.extend(t[H])
-            self.assertTrue("a" in items)
-            self.assertTrue("b" in items)
-        self.assertTrue("a" in forest)
-        self.assertTrue("b" in forest)
-        for i, H in enumerate(forest.keys["a"]):
-            self.assertTrue("a" in forest.hashtables[i][H])
-        m3 = MinHash(18)
-        self.assertRaises(ValueError, forest.add, "c", m3)
+            for key in data:
+                self.assertTrue(key in items)
+        for key in data:
+            self.assertTrue(key in forest)
+        for key in forest.keys:
+            for i, H in enumerate(forest.keys[key]):
+                self.assertTrue(key in forest.hashtables[i][H])
+
+        self.assertRaises(ValueError, forest.add, 5, data[5])
+
         forest.index()
         self.assertFalse(forest.is_empty())
 
-    def test_query(self):
-        m1 = MinHash()
-        m1.update("a".encode("utf8"))
-        m1.update("b".encode("utf8"))
-        m1.update("c".encode("utf8"))
-        forest = self._setup()
-        result = forest.query(m1, 3)
-        self.assertTrue("a" in result)
-        self.assertTrue("b" in result)
-        self.assertTrue("c" in result)
-
-        m3 = MinHash(18)
-        self.assertRaises(ValueError, forest.query, m3, 1)
-
-    def test_pickle(self):
-        forest = MinHashLSHForest()
-        m1 = MinHash()
-        m1.update("a".encode("utf8"))
-        m2 = MinHash()
-        m2.update("b".encode("utf8"))
-        forest.add("a", m1)
-        forest.add("b", m2)
-        forest.index()
-        forest2 = pickle.loads(pickle.dumps(forest))
-        result = forest2.query(m1, 1)
-        self.assertTrue("a" in result)
-        result = forest2.query(m2, 1)
-        self.assertTrue("b" in result)
-
-
-class TestWeightedMinHashLSHForest(unittest.TestCase):
+        self.assertRaises(ValueError, forest.add, 5, data[5])
+        return forest, data
 
     def test__H(self):
-        '''
+        """
         Check _H output consistent bytes length given
         the same concatenated hash value size
-        '''
+        """
         mg = WeightedMinHashGenerator(100, sample_size=128)
-        for l in range(2, mg.sample_size+1, 16):
+        for l in range(2, mg.sample_size + 1, 16):
             m = mg.minhash(np.random.randint(1, 99999999, 100))
             forest = MinHashLSHForest(num_perm=128, l=l)
             forest.add("m", m)
             sizes = [len(H) for ht in forest.hashtables for H in ht]
             self.assertTrue(all(sizes[0] == s for s in sizes))
 
-    def test_insert(self):
-        forest = MinHashLSHForest()
-        mg = WeightedMinHashGenerator(10)
-        m1 = mg.minhash(np.random.uniform(1, 10, 10))
-        m2 = mg.minhash(np.random.uniform(1, 10, 10))
-        forest.add("a", m1)
-        forest.add("b", m2)
-
-        self.assertTrue(forest.is_empty())
-        for t in forest.hashtables:
-            self.assertTrue(len(t) >= 1)
-            items = []
-            for H in t:
-                items.extend(t[H])
-            self.assertTrue("a" in items)
-            self.assertTrue("b" in items)
-        self.assertTrue("a" in forest)
-        self.assertTrue("b" in forest)
-        for i, H in enumerate(forest.keys["a"]):
-            self.assertTrue("a" in forest.hashtables[i][H])
-
-        forest.index()
-        self.assertFalse(forest.is_empty())
-
-        mg = WeightedMinHashGenerator(10, 5)
-        m3 = mg.minhash(np.random.uniform(1, 10, 10))
-        self.assertRaises(ValueError, forest.add, "c", m3)
-
     def test_query(self):
-        forest = MinHashLSHForest()
-        mg = WeightedMinHashGenerator(10)
-        m1 = mg.minhash(np.random.uniform(1, 10, 10))
-        m2 = mg.minhash(np.random.uniform(1, 10, 10))
-        forest.add("a", m1)
-        forest.add("b", m2)
-        forest.index()
-        result = forest.query(m1, 2)
-        self.assertTrue("a" in result)
-        self.assertTrue("b" in result)
-
-        mg = WeightedMinHashGenerator(10, 5)
-        m3 = mg.minhash(np.random.uniform(1, 10, 10))
-        self.assertRaises(ValueError, forest.query, m3, 1)
+        forest, data = self._setup()
+        for key in data:
+            results = forest.query(data[key], 10)
+            self.assertIn(key, results)
 
     def test_pickle(self):
-        forest = MinHashLSHForest()
-        mg = WeightedMinHashGenerator(10)
-        m1 = mg.minhash(np.random.uniform(1, 10, 10))
-        m2 = mg.minhash(np.random.uniform(1, 10, 10))
-        forest.add("a", m1)
-        forest.add("b", m2)
-        forest.index()
+        forest, _ = self._setup()
         forest2 = pickle.loads(pickle.dumps(forest))
-        result = forest2.query(m1, 2)
-        self.assertTrue("a" in result)
-        self.assertTrue("b" in result)
+        self.assertEqual(forest.hashtables, forest2.hashtables)
+        self.assertEqual(forest.keys, forest2.keys)
+        self.assertEqual(forest.l, forest2.l)
+        self.assertEqual(forest.k, forest2.k)
+        self.assertEqual(forest.hashranges, forest2.hashranges)
+
 
 if __name__ == "__main__":
     unittest.main()
