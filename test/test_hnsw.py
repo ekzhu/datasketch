@@ -3,6 +3,7 @@ import unittest
 import numpy as np
 
 from datasketch.hnsw import HNSW
+from datasketch.minhash import MinHash
 
 
 def l2_distance(x, y):
@@ -205,3 +206,25 @@ class TestHNSWJaccard(TestHNSW):
 
     def _search_index(self, index, queries, k=10):
         return super()._search_index_dist(index, queries, jaccard_distance, k)
+
+
+def minhash_jaccard_distance(x, y) -> float:
+    return 1.0 - x.jaccard(y)
+
+
+class TestHNSWMinHashJaccard(TestHNSW):
+    def _create_random_points(self, high=50, n=100, dim=10):
+        sets = np.random.randint(0, high, (n, dim))
+        return MinHash.bulk(sets, num_perm=128)
+
+    def _create_index(self, minhashes, keys=None):
+        hnsw = HNSW(
+            distance_func=minhash_jaccard_distance,
+            m=16,
+            ef_construction=100,
+        )
+        self._insert_points(hnsw, minhashes, keys)
+        return hnsw
+
+    def _search_index(self, index, queries, k=10):
+        return super()._search_index_dist(index, queries, minhash_jaccard_distance, k)

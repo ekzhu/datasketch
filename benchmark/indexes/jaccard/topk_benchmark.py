@@ -1,8 +1,10 @@
+import itertools
 import sys
 import argparse
 import time
 
 import farmhash
+from benchmark.indexes.jaccard.hnsw import search_hnsw_minhash_jaccard_topk
 
 from exact import search_jaccard_topk
 from hnsw import search_hnsw_jaccard_topk
@@ -75,6 +77,17 @@ if __name__ == "__main__":
     Ms = [4, 8, 12, 16, 24, 36]
     efCs = [100, 500, 1000, 1500]
     num_threads = 1
+
+    # HNSW MinHash parameters.
+    hnsw_minhash_num_perms = [64, 128]
+    hnsw_minhash_ms = [12, 16, 24]
+    hnsw_minhash_efCs = [100, 500, 1000]
+    hnsw_minhash_params = list(
+        {"num_perm": num_perm, "m": M, "ef_construction": efC}
+        for num_perm, M, efC in itertools.product(
+            hnsw_minhash_num_perms, hnsw_minhash_ms, hnsw_minhash_efCs
+        )
+    )
 
     # Benchmark settings.
     benchmark_settings = {
@@ -287,3 +300,72 @@ if __name__ == "__main__":
                 if not args.cache_minhash:
                     index_minhashes.clear()
                     query_minhashes.clear()
+
+    # Run HNSW MinHash.
+    if args.run_specific is None or args.run_specific == "hnsw_minhash":
+        for index_params in hnsw_minhash_params:
+            # Clean up cached MinHashes as num_perm is in ascending order.
+            for num_perm in list(index_minhashes.keys()):
+                if num_perm < index_params["num_perm"]:
+                    del index_minhashes[num_perm]
+            params = {
+                "index": index_params,
+                "benchmark": benchmark_settings,
+            }
+            if get_run("hnsw_minhash", k, None, params, args.output) is not None:
+                continue
+            print(f"Running HNSW MinHash using {index_params}.")
+            # Lazily create MinHashes.
+            if index_params["num_perm"] not in index_minhashes:
+                start = time.perf_counter()
+                index_minhashes.update(
+                    create_minhashes_from_sets(
+                        index_sets,
+                        [
+                            index_params["num_perm"],
+                        ],
+                        hashfunc=farmhash.hash32,
+                    )
+                )
+                index_minhashes_time = time.perf_counter() - start
+                print(f"Index MinHashes took {index_minhashes_time} seconds.")
+                params["index_minhashes_time"] = index_minhashes_time
+            else:
+                params["index_minhashes_time"] = 0
+            if index_params["num_perm"] not in query_minhashes:
+                start = time.perf_counter()
+                query_minhashes.update(
+                    create_minhashes_from_sets(
+                        query_sets,
+                        [
+                            index_params["num_perm"],
+                        ],
+                        hashfunc=farmhash.hash32,
+                    )
+                )
+                query_minhashes_time = time.perf_counter() - start
+                print(f"Query MinHashes took {query_minhashes_time} seconds.")
+                params["query_minhashes_time"] = query_minhashes_time
+            else:
+                params["query_minhashes_time"] = 0
+            # Run benchmark.
+            indexing_time, results, times = search_hnsw_minhash_jaccard_topk(
+                (index_sets, index_keys, index_minhashes),
+                (query_sets, query_keys, query_minhashes),
+                index_params,
+                k,
+            )
+            # Save result to SQLite database.
+            save_results(
+                "hnsw_minhash",
+                k,
+                None,
+                params,
+                indexing_time,
+                results,
+                times,
+                args.output,
+            )
+            if not args.cache_minhash:
+                index_minhashes.clear()
+                query_minhashes.clear()
