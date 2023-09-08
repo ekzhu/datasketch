@@ -1,4 +1,5 @@
 from __future__ import annotations
+from collections import OrderedDict
 import heapq
 from itertools import dropwhile
 from typing import (
@@ -147,7 +148,7 @@ class HNSW(MutableMapping):
         m0: Optional[int] = None,
         seed: Optional[int] = None,
     ) -> None:
-        self._data: Dict[Hashable, np.ndarray] = {}
+        self._data: OrderedDict[Hashable, np.ndarray] = OrderedDict()
         self._distance_func = distance_func
         self._m = m
         self._ef_construction = ef_construction
