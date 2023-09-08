@@ -37,9 +37,9 @@ class TestHNSW(unittest.TestCase):
         if keys is None:
             keys = list(range(len(points)))
 
-        for key, point in zip(keys, points):
+        for i, (key, point) in enumerate(zip(keys, points)):
             # Test insert.
-            if np.random.random_sample() < 0.5:
+            if i % 2 == 0:
                 index.insert(key, point)
             else:
                 index[key] = point
@@ -129,6 +129,65 @@ class TestHNSW(unittest.TestCase):
         hnsw = self._create_index(data)
         hnsw2 = hnsw.copy()
         self.assertEqual(hnsw, hnsw2)
+
+    def test_remove_and_pop(self):
+        data = self._create_random_points()
+        hnsw = self._create_index(data)
+        # Remove all points except the last one.
+        for i in range(len(data) - 1):
+            if i % 2 == 0:
+                hnsw.remove(i)
+            else:
+                point = hnsw.pop(i)
+                self.assertTrue(np.array_equal(point, data[i]))
+            self.assertNotIn(i, hnsw)
+            self.assertEqual(len(hnsw), len(data) - i - 1)
+            self.assertRaises(KeyError, hnsw.remove, i)
+            results = hnsw.query(data[i], 10)
+            self.assertEqual(len(results), min(10, len(data) - i - 1))
+        # Remove last point.
+        hnsw.remove(len(data) - 1)
+        self.assertNotIn(len(data) - 1, hnsw)
+        self.assertEqual(len(hnsw), 0)
+        self.assertRaises(KeyError, hnsw.remove, len(data))
+        self.assertRaises(ValueError, hnsw.query, data[0])
+
+    def test_popitem_last(self):
+        data = self._create_random_points()
+        hnsw = self._create_index(data)
+        for i in range(len(data)):
+            key, point = hnsw.popitem()
+            self.assertTrue(np.array_equal(point, data[key]))
+            self.assertEqual(key, len(data) - i - 1)
+            self.assertTrue(np.array_equal(point, data[len(data) - i - 1]))
+            self.assertNotIn(key, hnsw)
+            self.assertEqual(len(hnsw), len(data) - i - 1)
+        self.assertRaises(KeyError, hnsw.popitem)
+
+    def test_popitem_first(self):
+        data = self._create_random_points()
+        hnsw = self._create_index(data)
+        for i in range(len(data)):
+            key, point = hnsw.popitem(last=False)
+            self.assertTrue(np.array_equal(point, data[key]))
+            self.assertEqual(key, i)
+            self.assertTrue(np.array_equal(point, data[i]))
+            self.assertNotIn(key, hnsw)
+            self.assertEqual(len(hnsw), len(data) - i - 1)
+        self.assertRaises(KeyError, hnsw.popitem)
+
+    def test_clear(self):
+        data = self._create_random_points()
+        hnsw = self._create_index(data)
+        hnsw.clear()
+        self.assertEqual(len(hnsw), 0)
+        self.assertRaises(StopIteration, next, iter(hnsw))
+        self.assertRaises(StopIteration, next, iter(hnsw.keys()))
+        self.assertRaises(StopIteration, next, iter(hnsw.values()))
+        self.assertRaises(KeyError, hnsw.pop, 0)
+        self.assertRaises(KeyError, hnsw.__getitem__, 0)
+        self.assertRaises(KeyError, hnsw.popitem)
+        self.assertRaises(ValueError, hnsw.query, data[0])
 
 
 class TestHNSWJaccard(TestHNSW):
