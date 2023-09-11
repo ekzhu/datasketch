@@ -984,9 +984,9 @@ class HNSW(MutableMapping):
             ef (Optional[int]): The number of neighbors to consider during
                 re-assignment. If None, use the construction ef.
         """
-        for key in self._nodes:
-            if self._nodes[key].is_deleted:
-                self.remove(key, ef=ef, hard=True)
+        keys_to_remove = list(key for key in self._nodes if self._nodes[key].is_deleted)
+        for key in keys_to_remove:
+            self.remove(key, ef=ef, hard=True)
 
     def merge(self, other: HNSW) -> HNSW:
         """Create a new index by merging the current index with another index.

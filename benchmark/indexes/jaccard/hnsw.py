@@ -127,7 +127,7 @@ def search_hnsw_minhash_jaccard_topk(index_data, query_data, index_params, k):
         for i in tqdm.tqdm(
             range(len(index_keys)),
             desc="Indexing",
-            unit=" query",
+            unit=" minhash",
             total=len(index_keys),
         ):
             index.insert(i, index_minhashes[num_perm][i])
@@ -156,7 +156,8 @@ def search_hnsw_minhash_jaccard_topk(index_data, query_data, index_params, k):
         # Recover the retrieved indexed sets and
         # compute the exact Jaccard similarities.
         result = [
-            [index_keys[i], compute_jaccard(query_set, index_sets[i])] for i in result
+            [index_keys[i], compute_jaccard(query_set, index_sets[i])]
+            for i, _ in result
         ]
         # Sort by similarity.
         result.sort(key=lambda x: x[1], reverse=True)
