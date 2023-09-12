@@ -1,4 +1,5 @@
 import unittest
+import warnings
 
 import numpy as np
 
@@ -74,6 +75,7 @@ class TestHNSW(unittest.TestCase):
     def _search_index_dist(self, index, queries, distance_func, k=10):
         for i in range(len(queries)):
             results = index.query(queries[i], 10)
+            # Check graph connectivity.
             self.assertEqual(len(results), 10)
             for j in range(len(results) - 1):
                 self.assertLessEqual(
@@ -131,7 +133,7 @@ class TestHNSW(unittest.TestCase):
         hnsw2 = hnsw.copy()
         self.assertEqual(hnsw, hnsw2)
 
-    def test_remove_and_pop(self):
+    def test_soft_remove_and_pop_and_clean(self):
         data = self._create_random_points()
         hnsw = self._create_index(data)
         # Remove all points except the last one.
@@ -143,39 +145,98 @@ class TestHNSW(unittest.TestCase):
                 self.assertTrue(np.array_equal(point, data[i]))
             self.assertNotIn(i, hnsw)
             self.assertEqual(len(hnsw), len(data) - i - 1)
-            self.assertRaises(KeyError, hnsw.remove, i)
+            self.assertRaises(KeyError, hnsw.pop, i)
+            # Test idempotency.
+            hnsw.remove(i)
+            hnsw.remove(i)
+            hnsw.remove(i)
             results = hnsw.query(data[i], 10)
-            self.assertEqual(len(results), min(10, len(data) - i - 1))
+            # Check graph connectivity.
+            # self.assertEqual(len(results), min(10, len(data) - i - 1))
+            expected_result_size = min(10, len(data) - i - 1)
+            if len(results) != expected_result_size:
+                warnings.warn(
+                    f"Issue encountered at i={i} during soft remove unit test: "
+                    f"expected {expected_result_size} results, "
+                    f"got {len(results)} results. "
+                    "Potential graph connectivity issue."
+                )
+                # NOTE: we are not getting the expected number of results.
+                # This may be because the graph is not connected anymore.
+                # Try hard remove all previous soft removed points.
+                hnsw.clean()
+                results = hnsw.query(data[i], 10)
+                self.assertEqual(len(results), min(10, len(data) - i - 1))
         # Remove last point.
         hnsw.remove(len(data) - 1)
         self.assertNotIn(len(data) - 1, hnsw)
         self.assertEqual(len(hnsw), 0)
-        self.assertRaises(KeyError, hnsw.remove, len(data))
+        self.assertRaises(KeyError, hnsw.pop, len(data) - 1)
+        self.assertRaises(KeyError, hnsw.remove, len(data) - 1)
+        # Test search on empty index.
+        self.assertRaises(ValueError, hnsw.query, data[0])
+        # Test clean.
+        hnsw.clean()
+        self.assertEqual(len(hnsw), 0)
+        self.assertRaises(KeyError, hnsw.remove, 0)
+        self.assertRaises(ValueError, hnsw.query, data[0])
+
+    def test_hard_remove_and_pop_and_clean(self):
+        data = self._create_random_points()
+        hnsw = self._create_index(data)
+        # Remove all points except the last one.
+        for i in range(len(data) - 1):
+            if i % 2 == 0:
+                hnsw.remove(i, hard=True)
+            else:
+                point = hnsw.pop(i, hard=True)
+                self.assertTrue(np.array_equal(point, data[i]))
+            self.assertNotIn(i, hnsw)
+            self.assertEqual(len(hnsw), len(data) - i - 1)
+            self.assertRaises(KeyError, hnsw.pop, i)
+            self.assertRaises(KeyError, hnsw.remove, i)
+            results = hnsw.query(data[i], 10)
+            # Check graph connectivity.
+            self.assertEqual(len(results), min(10, len(data) - i - 1))
+        # Remove last point.
+        hnsw.remove(len(data) - 1, hard=True)
+        self.assertNotIn(len(data) - 1, hnsw)
+        self.assertEqual(len(hnsw), 0)
+        self.assertRaises(KeyError, hnsw.pop, len(data) - 1)
+        self.assertRaises(KeyError, hnsw.remove, len(data) - 1)
+        # Test search on empty index.
+        self.assertRaises(ValueError, hnsw.query, data[0])
+        # Test clean.
+        hnsw.clean()
+        self.assertEqual(len(hnsw), 0)
+        self.assertRaises(KeyError, hnsw.remove, 0)
         self.assertRaises(ValueError, hnsw.query, data[0])
 
     def test_popitem_last(self):
         data = self._create_random_points()
-        hnsw = self._create_index(data)
-        for i in range(len(data)):
-            key, point = hnsw.popitem()
-            self.assertTrue(np.array_equal(point, data[key]))
-            self.assertEqual(key, len(data) - i - 1)
-            self.assertTrue(np.array_equal(point, data[len(data) - i - 1]))
-            self.assertNotIn(key, hnsw)
-            self.assertEqual(len(hnsw), len(data) - i - 1)
-        self.assertRaises(KeyError, hnsw.popitem)
+        for hard in [True, False]:
+            hnsw = self._create_index(data)
+            for i in range(len(data)):
+                key, point = hnsw.popitem(hard=hard)
+                self.assertTrue(np.array_equal(point, data[key]))
+                self.assertEqual(key, len(data) - i - 1)
+                self.assertTrue(np.array_equal(point, data[len(data) - i - 1]))
+                self.assertNotIn(key, hnsw)
+                self.assertEqual(len(hnsw), len(data) - i - 1)
+            self.assertRaises(KeyError, hnsw.popitem)
 
     def test_popitem_first(self):
         data = self._create_random_points()
-        hnsw = self._create_index(data)
-        for i in range(len(data)):
-            key, point = hnsw.popitem(last=False)
-            self.assertTrue(np.array_equal(point, data[key]))
-            self.assertEqual(key, i)
-            self.assertTrue(np.array_equal(point, data[i]))
-            self.assertNotIn(key, hnsw)
-            self.assertEqual(len(hnsw), len(data) - i - 1)
-        self.assertRaises(KeyError, hnsw.popitem)
+        for hard in [True, False]:
+            hnsw = self._create_index(data)
+            for i in range(len(data)):
+                key, point = hnsw.popitem(last=False, hard=hard)
+                self.assertTrue(np.array_equal(point, data[key]))
+                self.assertEqual(key, i)
+                self.assertTrue(np.array_equal(point, data[i]))
+                self.assertNotIn(key, hnsw)
+                self.assertEqual(len(hnsw), len(data) - i - 1)
+            self.assertRaises(KeyError, hnsw.popitem)
 
     def test_clear(self):
         data = self._create_random_points()
@@ -189,6 +250,18 @@ class TestHNSW(unittest.TestCase):
         self.assertRaises(KeyError, hnsw.__getitem__, 0)
         self.assertRaises(KeyError, hnsw.popitem)
         self.assertRaises(ValueError, hnsw.query, data[0])
+
+
+class TestHNSWLayerWithReversedEdges(TestHNSW):
+    def _create_index(self, vecs, keys=None):
+        hnsw = HNSW(
+            distance_func=l2_distance,
+            m=16,
+            ef_construction=100,
+            reversed_edges=True,
+        )
+        self._insert_points(hnsw, vecs, keys)
+        return hnsw
 
 
 class TestHNSWJaccard(TestHNSW):

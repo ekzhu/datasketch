@@ -7,6 +7,7 @@ from typing import (
     Callable,
     Dict,
     Iterable,
+    Iterator,
     List,
     Mapping,
     MutableMapping,
@@ -31,14 +32,57 @@ class _Layer(object):
         # self._graph[key] contains a {j: dist} dictionary,
         # where j is a neighbor of key and dist is distance.
         self._graph: Dict[Hashable, Dict[Hashable, float]] = {key: {}}
-        # self._reverse_edges[key] contains a set of neighbors of key.
-        self._reverse_edges: Dict[Hashable, Set] = {}
 
     def __contains__(self, key: Hashable) -> bool:
         return key in self._graph
 
     def __getitem__(self, key: Hashable) -> Dict[Hashable, float]:
         return self._graph[key]
+
+    def __setitem__(self, key: Hashable, value: Dict[Hashable, float]) -> None:
+        self._graph[key] = value
+
+    def __delitem__(self, key: Hashable) -> None:
+        del self._graph[key]
+
+    def __eq__(self, __value: object) -> bool:
+        if not isinstance(__value, _Layer):
+            return False
+        return self._graph == __value._graph
+
+    def __len__(self) -> int:
+        return len(self._graph)
+
+    def __iter__(self) -> Iterable[Hashable]:
+        return iter(self._graph)
+
+    def copy(self) -> _Layer:
+        """Create a copy of the layer."""
+        new_layer = _Layer(None)
+        new_layer._graph = {k: v.copy() for k, v in self._graph.items()}
+        return new_layer
+
+    def get_reverse_edges(self, key: Hashable) -> Set[Hashable]:
+        reverse_edges = set()
+        for neighbor, neighbors in self._graph.items():
+            if key in neighbors:
+                reverse_edges.add(neighbor)
+        return reverse_edges
+
+
+class _LayerWithReversedEdges(_Layer):
+    """A graph layer in the HNSW index that also maintains reverse edges.
+
+    Args:
+        key (Hashable): The first key to insert into the graph.
+    """
+
+    def __init__(self, key: Hashable) -> None:
+        # self._graph[key] contains a {j: dist} dictionary,
+        # where j is a neighbor of key and dist is distance.
+        self._graph: Dict[Hashable, Dict[Hashable, float]] = {key: {}}
+        # self._reverse_edges[key] contains a set of neighbors of key.
+        self._reverse_edges: Dict[Hashable, Set] = {}
 
     def __setitem__(self, key: Hashable, value: Dict[Hashable, float]) -> None:
         old_neighbors = self._graph.get(key, {})
@@ -55,7 +99,7 @@ class _Layer(object):
             self._reverse_edges[neighbor].discard(key)
 
     def __eq__(self, __value: object) -> bool:
-        if not isinstance(__value, _Layer):
+        if not isinstance(__value, _LayerWithReversedEdges):
             return False
         return (
             self._graph == __value._graph
@@ -68,15 +112,44 @@ class _Layer(object):
     def __iter__(self) -> Iterable[Hashable]:
         return iter(self._graph)
 
-    def copy(self) -> _Layer:
+    def copy(self) -> _LayerWithReversedEdges:
         """Create a copy of the layer."""
-        new_layer = _Layer(None)
+        new_layer = _LayerWithReversedEdges(None)
         new_layer._graph = {k: v.copy() for k, v in self._graph.items()}
         new_layer._reverse_edges = self._reverse_edges.copy()
         return new_layer
 
     def get_reverse_edges(self, key: Hashable) -> Set[Hashable]:
         return self._reverse_edges[key]
+
+
+class _Node(object):
+    """A node in the HNSW graph."""
+
+    def __init__(self, key: Hashable, point: np.ndarray, is_deleted=False) -> None:
+        self.key = key
+        self.point = point
+        self.is_deleted = is_deleted
+
+    def __eq__(self, __value: object) -> bool:
+        if not isinstance(__value, _Node):
+            return False
+        return (
+            self.key == __value.key
+            and np.array_equal(self.point, __value.point)
+            and self.is_deleted == __value.is_deleted
+        )
+
+    def __hash__(self) -> int:
+        return hash(self.key)
+
+    def __repr__(self) -> str:
+        return (
+            f"_Node(key={self.key}, point={self.point}, is_deleted={self.is_deleted})"
+        )
+
+    def copy(self) -> _Node:
+        return _Node(self.key, self.point, self.is_deleted)
 
 
 class HNSW(MutableMapping):
@@ -147,8 +220,9 @@ class HNSW(MutableMapping):
         ef_construction: int = 200,
         m0: Optional[int] = None,
         seed: Optional[int] = None,
+        reversed_edges: bool = False,
     ) -> None:
-        self._data: OrderedDict[Hashable, np.ndarray] = OrderedDict()
+        self._nodes: OrderedDict[Hashable, _Node] = OrderedDict()
         self._distance_func = distance_func
         self._m = m
         self._ef_construction = ef_construction
@@ -157,19 +231,24 @@ class HNSW(MutableMapping):
         self._graphs: List[_Layer] = []
         self._entry_point = None
         self._random = np.random.RandomState(seed)
+        self._layer_class = _LayerWithReversedEdges if reversed_edges else _Layer
 
     def __len__(self) -> int:
-        """Return the number of points in the index."""
-        return len(self._data)
+        """Return the number of points in the index excluding those
+        that were soft-removed."""
+        return sum(not node.is_deleted for node in self._nodes.values())
 
     def __contains__(self, key: Hashable) -> bool:
-        """Return ``True`` if the index contains the key, else ``False``."""
-        return key in self._data
+        """Return ``True`` if the index contains the key and it was
+        not soft-removed, else ``False``."""
+        return key in self._nodes and not self._nodes[key].is_deleted
 
     def __getitem__(self, key: Hashable) -> np.ndarray:
         """Get the point associated with the key. Raises KeyError if the key
-        does not exist in the index."""
-        return self._data[key]
+        does not exist in the index or it was soft-removed."""
+        if key not in self:
+            raise KeyError(key)
+        return self._nodes[key].point
 
     def __setitem__(self, key: Hashable, value: np.ndarray) -> None:
         """Set the point associated with the key and update the index.
@@ -177,17 +256,25 @@ class HNSW(MutableMapping):
         self.insert(key, value)
 
     def __delitem__(self, key: Hashable) -> None:
-        """Delete the point associated with the key. Raises a KeyError if the
+        """Soft remove the point associated with the key. Raises a KeyError if the
         key does not exist in the index. This is equivalent to calling
         :meth:`remove` with the key.
         """
         self.remove(key)
 
-    def __iter__(self) -> Iterable[Hashable]:
-        """Return an iterator over the keys of the index."""
-        return iter(self._data.keys())
+    def __iter__(self) -> Iterator[Hashable]:
+        """Return an iterator over the keys of the index that were not
+        soft-removed."""
+        return (key for key in self._nodes if not self._nodes[key].is_deleted)
+
+    def reversed(self) -> Iterator[Hashable]:
+        """Return a reverse iterator over the keys of the index that were not
+        soft-removed."""
+        return (key for key in reversed(self._nodes) if not self._nodes[key].is_deleted)
 
     def __eq__(self, __value: object) -> bool:
+        """Return True only if the index parameters, random states, keys, points
+        points, and index structures are equal, including deleted points."""
         if not isinstance(__value, HNSW):
             return False
         # Check if the index parameters are equal.
@@ -211,70 +298,93 @@ class HNSW(MutableMapping):
                 if rand_state_1[i] != rand_state_2[i]:
                     return False
         # Check if keys and points are equal.
+        # Note that deleted points are compared too.
         return (
-            all(key in self._data for key in __value._data)
-            and all(key in __value._data for key in self._data)
-            and all(
-                np.array_equal(self._data[key], __value._data[key])
-                for key in self._data
-            )
+            all(key in self._nodes for key in __value._nodes)
+            and all(key in __value._nodes for key in self._nodes)
+            and all(self._nodes[key] == __value._nodes[key] for key in self._nodes)
             and self._graphs == __value._graphs
         )
 
-    def get(self, key: Hashable, default: Optional[np.ndarray] = None) -> np.ndarray:
+    def get(
+        self, key: Hashable, default: Optional[np.ndarray] = None
+    ) -> Union[np.ndarray, None]:
         """Return the point for key in the index, else default. If default is not
-        given and key is not in the index, return None."""
-        return self._data.get(key, default)
+        given and key is not in the index or it was soft-removed, return None."""
+        if key not in self:
+            return default
+        return self._nodes[key].point
 
-    def items(self) -> Iterable[Tuple[Hashable, np.ndarray]]:
-        """Return a new view of the indexed points as (key, point) pairs."""
-        return self._data.items()
+    def items(self) -> Iterator[Tuple[Hashable, np.ndarray]]:
+        """Return an iterator of the indexed points that were not soft-removed
+        as (key, point) pairs."""
+        return (
+            (key, node.point)
+            for key, node in self._nodes.items()
+            if not node.is_deleted
+        )
 
-    def keys(self) -> Iterable[Hashable]:
-        """Return a new view of the keys of the index points."""
-        return self._data.keys()
+    def keys(self) -> Iterator[Hashable]:
+        """Return an iterator of the keys of the index points that were not
+        soft-removed."""
+        return (key for key in self._nodes if not self._nodes[key].is_deleted)
 
-    def values(self) -> Iterable[np.ndarray]:
-        """Return a new view of the index points."""
-        return self._data.values()
+    def values(self) -> Iterator[np.ndarray]:
+        """Return an iterator of the index points that were not soft-removed."""
+        return (node.point for node in self._nodes.values() if not node.is_deleted)
 
-    def pop(self, key: Hashable, default: Optional[np.ndarray] = None) -> np.ndarray:
+    def pop(
+        self, key: Hashable, default: Optional[np.ndarray] = None, hard: bool = False
+    ) -> np.ndarray:
         """If key is in the index, remove it and return its associated point,
-        else return default. If default is not given and key is not in the index,
-        raise KeyError.
+        else return default. If default is not given and key is not in the index
+        or it was soft-removed, raise KeyError.
         """
-        if key not in self._data:
+        if key not in self:
             if default is None:
                 raise KeyError(key)
             return default
-        point = self._data[key]
-        self.remove(key)
+        point = self._nodes[key].point
+        self.remove(key, hard=hard)
         return point
 
-    def popitem(self, last=True) -> Tuple[Hashable, np.ndarray]:
+    def popitem(
+        self, last: bool = True, hard: bool = False
+    ) -> Tuple[Hashable, np.ndarray]:
         """Remove and return a (key, point) pair from the index. Pairs are
         returned in LIFO order if `last` is true or FIFO order if false.
-        If the index is empty, raise KeyError.
+        If the index is empty or all points are soft-removed, raise KeyError.
 
         Note:
             In versions of Python before 3.7, the order of items in the index
             is not guaranteed. This method will remove and return an arbitrary
             (key, point) pair.
         """
-        if not self._data:
+        if not self._nodes:
             raise KeyError("popitem(): index is empty")
         if last:
-            key = next(reversed(self._data))
+            key = next(
+                (
+                    key
+                    for key in reversed(self._nodes)
+                    if not self._nodes[key].is_deleted
+                ),
+                None,
+            )
         else:
-            key = next(iter(self._data))
-        point = self._data[key]
-        self.remove(key)
+            key = next(
+                (key for key in self._nodes if not self._nodes[key].is_deleted), None
+            )
+        if key is None:
+            raise KeyError("popitem(): index is empty")
+        point = self._nodes[key].point
+        self.remove(key, hard=hard)
         return key, point
 
     def clear(self) -> None:
         """Clear the index of all data points. This will not reset the random
         number generator."""
-        self._data = {}
+        self._nodes = {}
         self._graphs = []
         self._entry_point = None
 
@@ -290,7 +400,7 @@ class HNSW(MutableMapping):
             ef_construction=self._ef_construction,
             m0=self._m0,
         )
-        new_index._data = self._data.copy()
+        new_index._nodes = self._nodes.copy()
         new_index._graphs = [layer.copy() for layer in self._graphs]
         new_index._entry_point = self._entry_point
         new_index._random.set_state(self._random.get_state())
@@ -340,13 +450,14 @@ class HNSW(MutableMapping):
             self.insert(key, point)
 
     def setdefault(self, key: Hashable, default: np.ndarray) -> np.ndarray:
-        """If key is in the index, return its associated point. If not, insert
+        """If key is in the index and it was not soft-removed, return
+        its associated point. If not, insert
         key with a value of default and return default. default cannot be None."""
         if default is None:
             raise ValueError("Default value cannot be None.")
-        if key not in self._data:
+        if key not in self._nodes or self._nodes[key].is_deleted:
             self.insert(key, default)
-        return self._data[key]
+        return self._nodes[key]
 
     def insert(
         self,
@@ -369,22 +480,26 @@ class HNSW(MutableMapping):
         """
         if ef is None:
             ef = self._ef_construction
-        if key in self._data:
+        if key in self._nodes:
+            if self._nodes[key].is_deleted:
+                self._nodes[key].is_deleted = False
             self._update(key, new_point, ef)
             return
         # level is the level at which we insert the element.
         if level is None:
             level = int(-np.log(self._random.random_sample()) * self._level_mult)
-        self._data[key] = new_point
+        self._nodes[key] = _Node(key, new_point)
         if (
             self._entry_point is not None
         ):  # The HNSW is not empty, we have an entry point
-            dist = self._distance_func(new_point, self._data[self._entry_point])
+            dist = self._distance_func(new_point, self._nodes[self._entry_point].point)
             point = self._entry_point
             # For all levels in which we dont have to insert elem,
             # we search for the closest neighbor using greedy search.
             for layer in reversed(self._graphs[level + 1 :]):
-                point, dist = self._search_ef1(new_point, point, dist, layer)
+                point, dist = self._search_ef1(
+                    new_point, point, dist, layer, allow_soft_deleted=True
+                )
             # Entry points for search at each level to insert.
             entry_points = [(-dist, point)]
             for layer in reversed(self._graphs[: level + 1]):
@@ -393,7 +508,7 @@ class HNSW(MutableMapping):
                 # Search this layer for neighbors to insert, and update entry points
                 # for the next level.
                 entry_points = self._search_base_layer(
-                    new_point, entry_points, layer, ef
+                    new_point, entry_points, layer, ef, allow_soft_deleted=True
                 )
                 # Insert the new node into the graph with out-going edges.
                 # We prune the out-going edges to keep only the top level_m neighbors.
@@ -417,7 +532,7 @@ class HNSW(MutableMapping):
                     }
         # For all levels above the current level, we create an empty graph.
         for _ in range(len(self._graphs), level + 1):
-            self._graphs.append(_Layer(key))
+            self._graphs.append(self._layer_class(key))
             # We set the entry point for each new level to be the new node.
             self._entry_point = key
 
@@ -432,13 +547,13 @@ class HNSW(MutableMapping):
         Raises:
             KeyError: If the key does not exist in the index.
         """
-        if key not in self._data:
+        if key not in self._nodes:
             raise KeyError(key)
         # Update the point.
-        self._data[key] = new_point
+        self._nodes[key].point = new_point
         # If the entry point is the only point in the index, we do not need to
         # update the index.
-        if self._entry_point == key and len(self._data) == 1:
+        if self._entry_point == key and len(self._nodes) == 1:
             return
         for layer in self._graphs:
             if key not in layer:
@@ -458,7 +573,9 @@ class HNSW(MutableMapping):
                 for candidate_key in neighborhood_keys:
                     if candidate_key == p:
                         continue
-                    dist = self._distance_func(self._data[candidate_key], self._data[p])
+                    dist = self._distance_func(
+                        self._nodes[candidate_key].point, self._nodes[p].point
+                    )
                     if len(cands) < elem_to_keep:
                         heapq.heappush(cands, (-dist, candidate_key))
                     elif dist < -cands[0][0]:
@@ -476,15 +593,12 @@ class HNSW(MutableMapping):
         key: Hashable,
         new_point: np.ndarray,
         ef: int,
-        deleted_keys: Optional[Set[Hashable]] = None,
+        key_to_delete: Optional[Hashable] = None,
     ) -> None:
-        assert (
-            not deleted_keys
-            or key not in deleted_keys
-            and self._entry_point not in deleted_keys
-        )
         entry_point = self._entry_point
-        entry_point_dist = self._distance_func(new_point, self._data[entry_point])
+        entry_point_dist = self._distance_func(
+            new_point, self._nodes[entry_point].point
+        )
         entry_points = [(-entry_point_dist, entry_point)]
         for layer in reversed(self._graphs):
             if key not in layer:
@@ -494,7 +608,8 @@ class HNSW(MutableMapping):
                     entry_point,
                     entry_point_dist,
                     layer,
-                    deleted_keys=deleted_keys,
+                    allow_soft_deleted=True,
+                    key_to_hard_delete=key_to_delete,
                 )
                 entry_points = [(-entry_point_dist, entry_point)]
             else:
@@ -505,13 +620,11 @@ class HNSW(MutableMapping):
                     entry_points,
                     layer,
                     ef + 1,  # We add 1 to ef to account for the point itself.
-                    deleted_keys=deleted_keys,
+                    allow_soft_deleted=True,
+                    key_to_hard_delete=key_to_delete,
                 )
                 # Filter out the updated node itself.
                 filtered_candidates = [(-md, p) for md, p in entry_points if p != key]
-                assert not deleted_keys or all(
-                    p not in deleted_keys for _, p in entry_points
-                )
                 # Update the out-going edges of the updated node at this level.
                 layer[key] = {
                     p: d for d, p in self._heuristic_prune(filtered_candidates, level_m)
@@ -544,7 +657,7 @@ class HNSW(MutableMapping):
         if self._entry_point is None:
             raise ValueError("Entry point not found.")
         entry_point_dist = self._distance_func(
-            query_point, self._data[self._entry_point]
+            query_point, self._nodes[self._entry_point].point
         )
         entry_point = self._entry_point
         # Search for the closest neighbor from the highest level to the 2nd
@@ -572,7 +685,8 @@ class HNSW(MutableMapping):
         entry_point: Hashable,
         entry_point_dist: float,
         layer: _Layer,
-        deleted_keys: Optional[Set[Hashable]] = None,
+        allow_soft_deleted: bool = False,
+        key_to_hard_delete: Optional[Hashable] = None,
     ) -> Tuple[Hashable, float]:
         """The greedy search algorithm for finding the closest neighbor only.
 
@@ -582,15 +696,15 @@ class HNSW(MutableMapping):
             entry_point_dist (float): The distance from the query point to the
                 entry point.
             layer (_Layer): The graph for the layer.
-            deleted_keys (Optional[Set[Hashable]]): A set of keys that have been deleted from the
-                index. Deleted keys will be explored for their neighbors, but will
-                not be returned as neighbors.
+            allow_soft_deleted (bool): Whether to allow soft-deleted points to
+                be returned.
+            key_to_hard_delete (Optional[Hashable]): The key of the point to be
+                hard-deleted, if any. This point should never be returned.
 
         Returns:
             Tuple[Hashable, float]: A tuple of (key, distance) representing the closest
                 neighbor found.
         """
-        assert not deleted_keys or entry_point not in deleted_keys
         candidates = [(entry_point_dist, entry_point)]
         visited = set([entry_point])
         best = entry_point
@@ -605,20 +719,24 @@ class HNSW(MutableMapping):
             # Find the neighbors of the current node
             neighbors = [p for p in layer[curr] if p not in visited]
             visited.update(neighbors)
-            dists = [self._distance_func(query_point, self._data[p]) for p in neighbors]
+            dists = [
+                self._distance_func(query_point, self._nodes[p].point)
+                for p in neighbors
+            ]
             for p, d in zip(neighbors, dists):
                 # Update the best node if we find a closer node.
                 if d < best_dist:
-                    if deleted_keys and p in deleted_keys:
-                        # If the neighbor has been deleted, we don't update the
-                        # best node but we continue to explore the neighbor's
-                        # neighbors.
+                    if (not allow_soft_deleted and self._nodes[p].is_deleted) or (
+                        p == key_to_hard_delete
+                    ):
+                        # If the neighbor has been deleted or to be hard-deleted,
+                        # we don't update the best node but we continue to
+                        # explore the neighbor's neighbors.
                         pass
                     else:
                         best, best_dist = p, d
                     # Add the neighbor to the heap.
                     heapq.heappush(candidates, (d, p))
-        assert not deleted_keys or best not in deleted_keys
         return best, best_dist
 
     def _search_base_layer(
@@ -627,7 +745,8 @@ class HNSW(MutableMapping):
         entry_points: List[Tuple[float, Hashable]],
         layer: _Layer,
         ef: int,
-        deleted_keys: Optional[Set[Hashable]] = None,
+        allow_soft_deleted: bool = False,
+        key_to_hard_delete: Optional[Hashable] = None,
     ) -> List[Tuple[float, Hashable]]:
         """The ef search algorithm for finding neighbors in a given layer.
 
@@ -637,22 +756,34 @@ class HNSW(MutableMapping):
                 representing the entry points for the search.
             layer (_Layer): The graph for the layer.
             ef (int): The number of neighbors to consider during search.
-            deleted_keys (Optional[Set[Hashable]]): A set of keys that have been deleted from the
-                index. Deleted keys will be explored for their neighbors, but will
-                not be returned as neighbors.
+            allow_soft_deleted (bool): Whether to allow soft-deleted points to
+                be returned.
+            key_to_hard_delete (Optional[Hashable]): The key of the point to be
+                hard-deleted, if any. This point should never be returned.
 
         Returns:
             List[Tuple[float, Hashable]]: A heap of (-distance, key) pairs representing
                 the neighbors found.
+
+        Note:
+            When used together with :meth:`_search_ef1`, the input entry_points
+            may contain soft-deleted points depending on the flag used in
+            :meth:`_search_ef1`. Therefore, the output entry_points may contain
+            soft-deleted points even if allow_soft_deleted is False. Therefore,
+            the caller should check input entry_points for soft-deleted
+            points if necessary.
         """
-        assert not deleted_keys or all(p not in deleted_keys for _, p in entry_points)
         # candidates is a heap of (distance, key) pairs.
         candidates = [(-mdist, p) for mdist, p in entry_points]
         heapq.heapify(candidates)
+
         visited = set(p for _, p in entry_points)
         while candidates:
             # Pop the closest node from the heap.
             dist, curr_key = heapq.heappop(candidates)
+
+            # If the neighbor has been marked as deleted, we ,
+
             # Terminate the search if the distance to the current closest node
             # is larger than the distance to the best node.
             closet_dist = -entry_points[0][0]
@@ -661,13 +792,18 @@ class HNSW(MutableMapping):
             # Find the neighbors of the current node
             neighbors = [p for p in layer[curr_key] if p not in visited]
             visited.update(neighbors)
-            dists = [self._distance_func(query_point, self._data[p]) for p in neighbors]
+            dists = [
+                self._distance_func(query_point, self._nodes[p].point)
+                for p in neighbors
+            ]
             for p, dist in zip(neighbors, dists):
-                if deleted_keys and p in deleted_keys:
+                if (not allow_soft_deleted and self._nodes[p].is_deleted) or (
+                    p == key_to_hard_delete
+                ):
                     if dist <= closet_dist:
-                        # If the neighbor has been deleted, we add it to the heap
-                        # to explore its neighbors but do not add it to the
-                        # entry points.
+                        # If the neighbor has been deleted or to be deleted,
+                        # we add it to the heap to explore its neighbors but
+                        # do not add it to the entry points.
                         heapq.heappush(candidates, (dist, p))
                 elif len(entry_points) < ef:
                     heapq.heappush(candidates, (dist, p))
@@ -681,7 +817,7 @@ class HNSW(MutableMapping):
                     # neighbor with the neighbor if the neighbor is closer.
                     heapq.heapreplace(entry_points, (-dist, p))
                     closet_dist = -entry_points[0][0]
-        assert not deleted_keys or all(p not in deleted_keys for _, p in entry_points)
+
         return entry_points
 
     def _heuristic_prune(
@@ -715,7 +851,7 @@ class HNSW(MutableMapping):
             good = True
             for _, selected_key in pruned:
                 dist_to_selected_neighbor = self._distance_func(
-                    self._data[selected_key], self._data[candidate_key]
+                    self._nodes[selected_key].point, self._nodes[candidate_key].point
                 )
                 if dist_to_selected_neighbor < candidate_dist:
                     good = False
@@ -724,48 +860,122 @@ class HNSW(MutableMapping):
                 pruned.append((candidate_dist, candidate_key))
         return pruned
 
-    def remove(self, key: Hashable, ef: Optional[int] = None) -> None:
+    def remove(
+        self,
+        key: Hashable,
+        hard: bool = False,
+        ef: Optional[int] = None,
+    ) -> None:
         """Remove a point from the index. This removal algorithm is based on
-        the discussion on `hnswlib issue #4`_: indexed points with out-going
-        edges pointing to the deleted point will have their out-going edges
-        re-assigned using the same pruning algorithm as :meth:`insert` during
-        point update. If the deleted point is the current entry point,
+        the discussion on `hnswlib issue #4`_. There are two versions:
+
+        * *soft remove*: the point is marked as removed from the index, but its
+          data and out-going edges are kept. Future queries will not return
+          the point and no new edge will direct to this point,
+          but the point will still be used for graph traversal.
+          This is the default behavior.
+        * *hard remove*: the point is removed from the index and its data and
+          out-going edges are also removed. Points with out-going edges pointing
+          to the deleted point will have their out-going edges
+          re-assigned using the same pruning algorithm as :meth:`insert` during
+          point update.
+
+        In both versions, if the deleted point is the current entry point,
         the entry point will be re-assigned to the next point in the highest
         layer that has other points beside the current entry point.
 
+        Subsequent soft removes without a hard remove of the same point will
+        not affect the index, **unless the point was the only point in the index
+        as removing it clears the index**. This is different from :meth:`pop`
+        which will always raise a KeyError if the key was removed.
+
+        Subsequent hard removes of the same point will
+        raise a KeyError. If the point is soft removed and then hard removed,
+        the point will be removed from the index.
+        Use :meth:`clean` for removing all soft removed points from the index.
+
         Args:
             key (Hashable): The key of the point to remove.
+            hard (bool): If True, perform a hard remove. Otherwise, perform a
+                soft remove.
             ef (Optional[int]): The number of neighbors to consider during
-                re-assignment. If None, use the construction ef.
+                re-assignment. If None, use the construction ef. This argument
+                is only used when hard is True.
 
         Raises:
-            KeyError: If the key does not exist in the index.
+            KeyError: If the index is empty or the key does not exist in the
+                index and was not soft removed.
+
+        Example:
+
+            .. code-block:: python
+
+                from datasketch.hnsw import HNSW
+                import numpy as np
+
+                data = np.random.random_sample((1000, 10))
+                index = HNSW(distance_func=lambda x, y: np.linalg.norm(x - y))
+                index.update({i: d for i, d in enumerate(data)})
+
+                # Soft remove a point with key = 0.
+                index.remove(0)
+
+                # Soft remove the same point again will not change the index
+                # because the index is not empty.
+                index.remove(0)
+
+                print(0 in index)  # False
+
+                # Hard remove the point.
+                index.remove(0, hard=True)
+
+                # Hard remove the same point again will raise a KeyError.
+                # index.remove(0, hard=True)
+
+                # Soft remove rest of the points from the index.
+                for i in range(1, 1000):
+                    index.remove(i)
+
+                print(len(index))  # 0
+
+                # Clean the index to hard remove all soft removed points.
+                index.clean()
 
         .. _hnswlib issue #4: https://github.com/nmslib/hnswlib/issues/4
         """
-        if key not in self._data:
+        if not self._nodes or key not in self._nodes:
             raise KeyError(key)
-        if len(self._data) == 1 and self._entry_point == key:
-            # If the index contains only a single point just reset the index.
-            self.clear()
-            return
         if self._entry_point == key:
             # If the point is the entry point, we re-assign the entry point
             # to the next point in the highest layer besides the point to be
             # deleted.
             new_entry_point = None
             for layer in reversed(list(self._graphs)):
-                if len(layer) > 1:
-                    new_entry_point = next(dropwhile(lambda k: k == key, layer))
+                new_entry_point = next(
+                    (p for p in layer if p != key and not self._nodes[p].is_deleted),
+                    None,
+                )
+                if new_entry_point is not None:
                     break
                 else:
                     # As the layer is going to be empty after deletion, we remove it.
-                    assert len(layer) == 1 and key in layer
                     self._graphs.pop()
+            if new_entry_point is None:
+                # If the point to be deleted is the only point in the index,
+                # we clear the index.
+                self.clear()
+                return
             # Update the entry point.
             self._entry_point = new_entry_point
         if ef is None:
             ef = self._ef_construction
+
+        # Soft remove.
+        self._nodes[key].is_deleted = True
+        if not hard:
+            return
+
+        # Hard remove.
         # Find all points that have out-going edges pointing to the deleted point.
         keys_to_update = set()
         for layer in self._graphs:
@@ -773,13 +983,12 @@ class HNSW(MutableMapping):
                 break
             keys_to_update.update(layer.get_reverse_edges(key))
         # Re-assign edges for these points.
-        deleted_keys = {key}
         for key_to_update in keys_to_update:
             self._repair_connections(
                 key_to_update,
-                self._data[key_to_update],
+                self._nodes[key_to_update].point,
                 ef,
-                deleted_keys=deleted_keys,
+                key_to_delete=key,
             )
         # Remove the point to be deleted from the grpah.
         for layer in self._graphs:
@@ -787,14 +996,18 @@ class HNSW(MutableMapping):
                 break
             del layer[key]
         # Remove the point from the index.
-        del self._data[key]
+        del self._nodes[key]
 
-        # Check if the removal was successful.
-        # assert key not in self._data
-        # for layer in self._graphs:
-        #     assert key not in layer
-        #     for p in layer:
-        #         assert key not in layer[p]
+    def clean(self, ef: Optional[int] = None) -> None:
+        """Remove all soft removed points from the index.
+
+        Args:
+            ef (Optional[int]): The number of neighbors to consider during
+                re-assignment. If None, use the construction ef.
+        """
+        keys_to_remove = list(key for key in self._nodes if self._nodes[key].is_deleted)
+        for key in keys_to_remove:
+            self.remove(key, ef=ef, hard=True)
 
     def merge(self, other: HNSW) -> HNSW:
         """Create a new index by merging the current index with another index.
@@ -832,3 +1045,27 @@ class HNSW(MutableMapping):
         new_index = self.copy()
         new_index.update(other)
         return new_index
+
+    def get_non_reachable_keys(self, ef: Optional[int] = None) -> List[Hashable]:
+        """Return a list of keys of points that are not reachable from the entry
+        point using the given ``ef`` value.
+
+        Args:
+            ef (Optional[int]): The number of neighbors to consider during
+                search. If None, use the construction ef.
+
+        Returns:
+            List[Hashable]: A list of keys of points that are not reachable.
+        """
+        if ef is None:
+            ef = self._ef_construction
+        non_reachable = []
+        if self._entry_point is None:
+            return non_reachable
+        for key, node in self._nodes.items():
+            if node.is_deleted:
+                continue
+            neighbors = self.query(node.point, ef=ef)
+            if key not in [k for k, _ in neighbors]:
+                non_reachable.append(key)
+        return non_reachable
