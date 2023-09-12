@@ -498,7 +498,7 @@ class HNSW(MutableMapping):
             # we search for the closest neighbor using greedy search.
             for layer in reversed(self._graphs[level + 1 :]):
                 point, dist = self._search_ef1(
-                    new_point, point, dist, layer, allow_deleted=True
+                    new_point, point, dist, layer, allow_soft_deleted=True
                 )
             # Entry points for search at each level to insert.
             entry_points = [(-dist, point)]
@@ -508,7 +508,7 @@ class HNSW(MutableMapping):
                 # Search this layer for neighbors to insert, and update entry points
                 # for the next level.
                 entry_points = self._search_base_layer(
-                    new_point, entry_points, layer, ef, allow_deleted=True
+                    new_point, entry_points, layer, ef, allow_soft_deleted=True
                 )
                 # Insert the new node into the graph with out-going edges.
                 # We prune the out-going edges to keep only the top level_m neighbors.
@@ -608,8 +608,8 @@ class HNSW(MutableMapping):
                     entry_point,
                     entry_point_dist,
                     layer,
-                    allow_deleted=True,
-                    key_to_delete=key_to_delete,
+                    allow_soft_deleted=True,
+                    key_to_hard_delete=key_to_delete,
                 )
                 entry_points = [(-entry_point_dist, entry_point)]
             else:
@@ -620,8 +620,8 @@ class HNSW(MutableMapping):
                     entry_points,
                     layer,
                     ef + 1,  # We add 1 to ef to account for the point itself.
-                    allow_deleted=True,
-                    key_to_delete=key_to_delete,
+                    allow_soft_deleted=True,
+                    key_to_hard_delete=key_to_delete,
                 )
                 # Filter out the updated node itself.
                 filtered_candidates = [(-md, p) for md, p in entry_points if p != key]
@@ -685,8 +685,8 @@ class HNSW(MutableMapping):
         entry_point: Hashable,
         entry_point_dist: float,
         layer: _Layer,
-        allow_deleted: bool = False,
-        key_to_delete: Optional[Hashable] = None,
+        allow_soft_deleted: bool = False,
+        key_to_hard_delete: Optional[Hashable] = None,
     ) -> Tuple[Hashable, float]:
         """The greedy search algorithm for finding the closest neighbor only.
 
@@ -696,6 +696,10 @@ class HNSW(MutableMapping):
             entry_point_dist (float): The distance from the query point to the
                 entry point.
             layer (_Layer): The graph for the layer.
+            allow_soft_deleted (bool): Whether to allow soft-deleted points to
+                be returned.
+            key_to_hard_delete (Optional[Hashable]): The key of the point to be
+                hard-deleted, if any. This point should never be returned.
 
         Returns:
             Tuple[Hashable, float]: A tuple of (key, distance) representing the closest
@@ -722,10 +726,10 @@ class HNSW(MutableMapping):
             for p, d in zip(neighbors, dists):
                 # Update the best node if we find a closer node.
                 if d < best_dist:
-                    if (not allow_deleted and self._nodes[p].is_deleted) or (
-                        p == key_to_delete
+                    if (not allow_soft_deleted and self._nodes[p].is_deleted) or (
+                        p == key_to_hard_delete
                     ):
-                        # If the neighbor has been deleted or to be deleted,
+                        # If the neighbor has been deleted or to be hard-deleted,
                         # we don't update the best node but we continue to
                         # explore the neighbor's neighbors.
                         pass
@@ -741,8 +745,8 @@ class HNSW(MutableMapping):
         entry_points: List[Tuple[float, Hashable]],
         layer: _Layer,
         ef: int,
-        allow_deleted: bool = False,
-        key_to_delete: Optional[Hashable] = None,
+        allow_soft_deleted: bool = False,
+        key_to_hard_delete: Optional[Hashable] = None,
     ) -> List[Tuple[float, Hashable]]:
         """The ef search algorithm for finding neighbors in a given layer.
 
@@ -752,18 +756,34 @@ class HNSW(MutableMapping):
                 representing the entry points for the search.
             layer (_Layer): The graph for the layer.
             ef (int): The number of neighbors to consider during search.
+            allow_soft_deleted (bool): Whether to allow soft-deleted points to
+                be returned.
+            key_to_hard_delete (Optional[Hashable]): The key of the point to be
+                hard-deleted, if any. This point should never be returned.
 
         Returns:
             List[Tuple[float, Hashable]]: A heap of (-distance, key) pairs representing
                 the neighbors found.
+
+        Note:
+            When used together with :meth:`_search_ef1`, the input entry_points
+            may contain soft-deleted points depending on the flag used in
+            :meth:`_search_ef1`. Therefore, the output entry_points may contain
+            soft-deleted points even if allow_soft_deleted is False. Therefore,
+            the caller should check input entry_points for soft-deleted
+            points if necessary.
         """
         # candidates is a heap of (distance, key) pairs.
         candidates = [(-mdist, p) for mdist, p in entry_points]
         heapq.heapify(candidates)
+
         visited = set(p for _, p in entry_points)
         while candidates:
             # Pop the closest node from the heap.
             dist, curr_key = heapq.heappop(candidates)
+
+            # If the neighbor has been marked as deleted, we ,
+
             # Terminate the search if the distance to the current closest node
             # is larger than the distance to the best node.
             closet_dist = -entry_points[0][0]
@@ -777,8 +797,8 @@ class HNSW(MutableMapping):
                 for p in neighbors
             ]
             for p, dist in zip(neighbors, dists):
-                if (not allow_deleted and self._nodes[p].is_deleted) or (
-                    p == key_to_delete
+                if (not allow_soft_deleted and self._nodes[p].is_deleted) or (
+                    p == key_to_hard_delete
                 ):
                     if dist <= closet_dist:
                         # If the neighbor has been deleted or to be deleted,
@@ -797,6 +817,7 @@ class HNSW(MutableMapping):
                     # neighbor with the neighbor if the neighbor is closer.
                     heapq.heapreplace(entry_points, (-dist, p))
                     closet_dist = -entry_points[0][0]
+
         return entry_points
 
     def _heuristic_prune(
