@@ -187,6 +187,7 @@
 <li class="toctree-l4"><a class="reference internal" href="#datasketch.HNSW.__setitem__"><code class="docutils literal notranslate"><span class="pre">HNSW.__setitem__()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="#datasketch.HNSW.__delitem__"><code class="docutils literal notranslate"><span class="pre">HNSW.__delitem__()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="#datasketch.HNSW.__iter__"><code class="docutils literal notranslate"><span class="pre">HNSW.__iter__()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#datasketch.HNSW.reversed"><code class="docutils literal notranslate"><span class="pre">HNSW.reversed()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="#datasketch.HNSW.__eq__"><code class="docutils literal notranslate"><span class="pre">HNSW.__eq__()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="#datasketch.HNSW.get"><code class="docutils literal notranslate"><span class="pre">HNSW.get()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="#datasketch.HNSW.items"><code class="docutils literal notranslate"><span class="pre">HNSW.items()</span></code></a></li>
@@ -201,7 +202,9 @@
 <li class="toctree-l4"><a class="reference internal" href="#datasketch.HNSW.insert"><code class="docutils literal notranslate"><span class="pre">HNSW.insert()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="#datasketch.HNSW.query"><code class="docutils literal notranslate"><span class="pre">HNSW.query()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="#datasketch.HNSW.remove"><code class="docutils literal notranslate"><span class="pre">HNSW.remove()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#datasketch.HNSW.clean"><code class="docutils literal notranslate"><span class="pre">HNSW.clean()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="#datasketch.HNSW.merge"><code class="docutils literal notranslate"><span class="pre">HNSW.merge()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#datasketch.HNSW.get_non_reachable_keys"><code class="docutils literal notranslate"><span class="pre">HNSW.get_non_reachable_keys()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="#datasketch.HNSW.__hash__"><code class="docutils literal notranslate"><span class="pre">HNSW.__hash__</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="#datasketch.HNSW.__weakref__"><code class="docutils literal notranslate"><span class="pre">HNSW.__weakref__</span></code></a></li>
 </ul>
@@ -1819,7 +1822,7 @@ The default hash function is based on SHA1 from <a class="reference external" hr
 <h2>HNSW<a class="headerlink" href="#hnsw" title="Link to this heading"></a></h2>
 <dl class="py class">
 <dt class="sig sig-object py" id="datasketch.HNSW">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">datasketch.</span></span><span class="sig-name descname"><span class="pre">HNSW</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">distance_func</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Callable</span><span class="p"><span class="pre">[</span></span><span class="p"><span class="pre">[</span></span><span class="pre">ndarray</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">ndarray</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">float</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">m</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">16</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ef_construction</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">200</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">m0</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">seed</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/datasketch/hnsw.html#HNSW"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#datasketch.HNSW" title="Link to this definition"></a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">datasketch.</span></span><span class="sig-name descname"><span class="pre">HNSW</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">distance_func</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Callable</span><span class="p"><span class="pre">[</span></span><span class="p"><span class="pre">[</span></span><span class="pre">ndarray</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">ndarray</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">float</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">m</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">16</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ef_construction</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">200</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">m0</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">seed</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">reversed_edges</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/datasketch/hnsw.html#HNSW"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#datasketch.HNSW" title="Link to this definition"></a></dt>
 <dd><p>Hierarchical Navigable Small World (HNSW) graph index for approximate
 nearest neighbor search. This implementation is based on the paper
 “Efficient and robust approximate nearest neighbor search using Hierarchical
@@ -1878,26 +1881,28 @@ sets of 10 elements each.</p>
 </div>
 <dl class="py method">
 <dt class="sig sig-object py" id="datasketch.HNSW.__init__">
-<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">distance_func</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Callable</span><span class="p"><span class="pre">[</span></span><span class="p"><span class="pre">[</span></span><span class="pre">ndarray</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">ndarray</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">float</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">m</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">16</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ef_construction</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">200</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">m0</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">seed</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="reference internal" href="_modules/datasketch/hnsw.html#HNSW.__init__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#datasketch.HNSW.__init__" title="Link to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">distance_func</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Callable</span><span class="p"><span class="pre">[</span></span><span class="p"><span class="pre">[</span></span><span class="pre">ndarray</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">ndarray</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">float</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">m</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">16</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ef_construction</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">200</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">m0</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">seed</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">reversed_edges</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="reference internal" href="_modules/datasketch/hnsw.html#HNSW.__init__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#datasketch.HNSW.__init__" title="Link to this definition"></a></dt>
 <dd></dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="datasketch.HNSW.__len__">
 <span class="sig-name descname"><span class="pre">__len__</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">int</span></span></span><a class="reference internal" href="_modules/datasketch/hnsw.html#HNSW.__len__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#datasketch.HNSW.__len__" title="Link to this definition"></a></dt>
-<dd><p>Return the number of points in the index.</p>
+<dd><p>Return the number of points in the index excluding those
+that were soft-removed.</p>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="datasketch.HNSW.__contains__">
 <span class="sig-name descname"><span class="pre">__contains__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">key</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Hashable</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">bool</span></span></span><a class="reference internal" href="_modules/datasketch/hnsw.html#HNSW.__contains__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#datasketch.HNSW.__contains__" title="Link to this definition"></a></dt>
-<dd><p>Return <code class="docutils literal notranslate"><span class="pre">True</span></code> if the index contains the key, else <code class="docutils literal notranslate"><span class="pre">False</span></code>.</p>
+<dd><p>Return <code class="docutils literal notranslate"><span class="pre">True</span></code> if the index contains the key and it was
+not soft-removed, else <code class="docutils literal notranslate"><span class="pre">False</span></code>.</p>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="datasketch.HNSW.__getitem__">
 <span class="sig-name descname"><span class="pre">__getitem__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">key</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Hashable</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">ndarray</span></span></span><a class="reference internal" href="_modules/datasketch/hnsw.html#HNSW.__getitem__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#datasketch.HNSW.__getitem__" title="Link to this definition"></a></dt>
 <dd><p>Get the point associated with the key. Raises KeyError if the key
-does not exist in the index.</p>
+does not exist in the index or it was soft-removed.</p>
 </dd></dl>
 
 <dl class="py method">
@@ -1910,62 +1915,73 @@ This is equivalent to calling <a class="reference internal" href="#datasketch.HN
 <dl class="py method">
 <dt class="sig sig-object py" id="datasketch.HNSW.__delitem__">
 <span class="sig-name descname"><span class="pre">__delitem__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">key</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Hashable</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="reference internal" href="_modules/datasketch/hnsw.html#HNSW.__delitem__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#datasketch.HNSW.__delitem__" title="Link to this definition"></a></dt>
-<dd><p>Delete the point associated with the key. Raises a KeyError if the
+<dd><p>Soft remove the point associated with the key. Raises a KeyError if the
 key does not exist in the index. This is equivalent to calling
 <a class="reference internal" href="#datasketch.HNSW.remove" title="datasketch.HNSW.remove"><code class="xref py py-meth docutils literal notranslate"><span class="pre">remove()</span></code></a> with the key.</p>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="datasketch.HNSW.__iter__">
-<span class="sig-name descname"><span class="pre">__iter__</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Iterable</span><span class="p"><span class="pre">[</span></span><span class="pre">Hashable</span><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="_modules/datasketch/hnsw.html#HNSW.__iter__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#datasketch.HNSW.__iter__" title="Link to this definition"></a></dt>
-<dd><p>Return an iterator over the keys of the index.</p>
+<span class="sig-name descname"><span class="pre">__iter__</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Iterator</span><span class="p"><span class="pre">[</span></span><span class="pre">Hashable</span><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="_modules/datasketch/hnsw.html#HNSW.__iter__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#datasketch.HNSW.__iter__" title="Link to this definition"></a></dt>
+<dd><p>Return an iterator over the keys of the index that were not
+soft-removed.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="datasketch.HNSW.reversed">
+<span class="sig-name descname"><span class="pre">reversed</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Iterator</span><span class="p"><span class="pre">[</span></span><span class="pre">Hashable</span><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="_modules/datasketch/hnsw.html#HNSW.reversed"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#datasketch.HNSW.reversed" title="Link to this definition"></a></dt>
+<dd><p>Return a reverse iterator over the keys of the index that were not
+soft-removed.</p>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="datasketch.HNSW.__eq__">
 <span class="sig-name descname"><span class="pre">__eq__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">_HNSW__value</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">object</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">bool</span></span></span><a class="reference internal" href="_modules/datasketch/hnsw.html#HNSW.__eq__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#datasketch.HNSW.__eq__" title="Link to this definition"></a></dt>
-<dd><p>Return self==value.</p>
+<dd><p>Return True only if the index parameters, random states, keys, points
+points, and index structures are equal, including deleted points.</p>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="datasketch.HNSW.get">
-<span class="sig-name descname"><span class="pre">get</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">key</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Hashable</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">default</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">ndarray</span></span></span><a class="reference internal" href="_modules/datasketch/hnsw.html#HNSW.get"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#datasketch.HNSW.get" title="Link to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">get</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">key</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Hashable</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">default</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">ndarray</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span></span><a class="reference internal" href="_modules/datasketch/hnsw.html#HNSW.get"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#datasketch.HNSW.get" title="Link to this definition"></a></dt>
 <dd><p>Return the point for key in the index, else default. If default is not
-given and key is not in the index, return None.</p>
+given and key is not in the index or it was soft-removed, return None.</p>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="datasketch.HNSW.items">
-<span class="sig-name descname"><span class="pre">items</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Iterable</span><span class="p"><span class="pre">[</span></span><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">Hashable</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">ndarray</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="_modules/datasketch/hnsw.html#HNSW.items"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#datasketch.HNSW.items" title="Link to this definition"></a></dt>
-<dd><p>Return a new view of the indexed points as (key, point) pairs.</p>
+<span class="sig-name descname"><span class="pre">items</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Iterator</span><span class="p"><span class="pre">[</span></span><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">Hashable</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">ndarray</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="_modules/datasketch/hnsw.html#HNSW.items"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#datasketch.HNSW.items" title="Link to this definition"></a></dt>
+<dd><p>Return an iterator of the indexed points that were not soft-removed
+as (key, point) pairs.</p>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="datasketch.HNSW.keys">
-<span class="sig-name descname"><span class="pre">keys</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Iterable</span><span class="p"><span class="pre">[</span></span><span class="pre">Hashable</span><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="_modules/datasketch/hnsw.html#HNSW.keys"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#datasketch.HNSW.keys" title="Link to this definition"></a></dt>
-<dd><p>Return a new view of the keys of the index points.</p>
+<span class="sig-name descname"><span class="pre">keys</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Iterator</span><span class="p"><span class="pre">[</span></span><span class="pre">Hashable</span><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="_modules/datasketch/hnsw.html#HNSW.keys"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#datasketch.HNSW.keys" title="Link to this definition"></a></dt>
+<dd><p>Return an iterator of the keys of the index points that were not
+soft-removed.</p>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="datasketch.HNSW.values">
-<span class="sig-name descname"><span class="pre">values</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Iterable</span><span class="p"><span class="pre">[</span></span><span class="pre">ndarray</span><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="_modules/datasketch/hnsw.html#HNSW.values"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#datasketch.HNSW.values" title="Link to this definition"></a></dt>
-<dd><p>Return a new view of the index points.</p>
+<span class="sig-name descname"><span class="pre">values</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Iterator</span><span class="p"><span class="pre">[</span></span><span class="pre">ndarray</span><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="_modules/datasketch/hnsw.html#HNSW.values"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#datasketch.HNSW.values" title="Link to this definition"></a></dt>
+<dd><p>Return an iterator of the index points that were not soft-removed.</p>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="datasketch.HNSW.pop">
-<span class="sig-name descname"><span class="pre">pop</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">key</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Hashable</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">default</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">ndarray</span></span></span><a class="reference internal" href="_modules/datasketch/hnsw.html#HNSW.pop"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#datasketch.HNSW.pop" title="Link to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">pop</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">key</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Hashable</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">default</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">hard</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">ndarray</span></span></span><a class="reference internal" href="_modules/datasketch/hnsw.html#HNSW.pop"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#datasketch.HNSW.pop" title="Link to this definition"></a></dt>
 <dd><p>If key is in the index, remove it and return its associated point,
-else return default. If default is not given and key is not in the index,
-raise KeyError.</p>
+else return default. If default is not given and key is not in the index
+or it was soft-removed, raise KeyError.</p>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="datasketch.HNSW.popitem">
-<span class="sig-name descname"><span class="pre">popitem</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">last</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">Hashable</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">ndarray</span><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="_modules/datasketch/hnsw.html#HNSW.popitem"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#datasketch.HNSW.popitem" title="Link to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">popitem</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">last</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">hard</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">Hashable</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">ndarray</span><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="_modules/datasketch/hnsw.html#HNSW.popitem"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#datasketch.HNSW.popitem" title="Link to this definition"></a></dt>
 <dd><p>Remove and return a (key, point) pair from the index. Pairs are
 returned in LIFO order if <cite>last</cite> is true or FIFO order if false.
-If the index is empty, raise KeyError.</p>
+If the index is empty or all points are soft-removed, raise KeyError.</p>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
 <p>In versions of Python before 3.7, the order of items in the index
@@ -2033,7 +2049,8 @@ overwriting existing keys.</p>
 <dl class="py method">
 <dt class="sig sig-object py" id="datasketch.HNSW.setdefault">
 <span class="sig-name descname"><span class="pre">setdefault</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">key</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Hashable</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">default</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">ndarray</span></span></span><a class="reference internal" href="_modules/datasketch/hnsw.html#HNSW.setdefault"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#datasketch.HNSW.setdefault" title="Link to this definition"></a></dt>
-<dd><p>If key is in the index, return its associated point. If not, insert
+<dd><p>If key is in the index and it was not soft-removed, return
+its associated point. If not, insert
 key with a value of default and return default. default cannot be None.</p>
 </dd></dl>
 
@@ -2088,24 +2105,91 @@ If None, use the construction ef.</p></li>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="datasketch.HNSW.remove">
-<span class="sig-name descname"><span class="pre">remove</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">key</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Hashable</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ef</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="reference internal" href="_modules/datasketch/hnsw.html#HNSW.remove"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#datasketch.HNSW.remove" title="Link to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">remove</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">key</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Hashable</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">hard</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ef</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="reference internal" href="_modules/datasketch/hnsw.html#HNSW.remove"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#datasketch.HNSW.remove" title="Link to this definition"></a></dt>
 <dd><p>Remove a point from the index. This removal algorithm is based on
-the discussion on <a class="reference external" href="https://github.com/nmslib/hnswlib/issues/4">hnswlib issue #4</a>: indexed points with out-going
-edges pointing to the deleted point will have their out-going edges
+the discussion on <a class="reference external" href="https://github.com/nmslib/hnswlib/issues/4">hnswlib issue #4</a>. There are two versions:</p>
+<ul class="simple">
+<li><p><em>soft remove</em>: the point is marked as removed from the index, but its
+data and out-going edges are kept. Future queries will not return
+the point and no new edge will direct to this point,
+but the point will still be used for graph traversal.
+This is the default behavior.</p></li>
+<li><p><em>hard remove</em>: the point is removed from the index and its data and
+out-going edges are also removed. Points with out-going edges pointing
+to the deleted point will have their out-going edges
 re-assigned using the same pruning algorithm as <a class="reference internal" href="#datasketch.HNSW.insert" title="datasketch.HNSW.insert"><code class="xref py py-meth docutils literal notranslate"><span class="pre">insert()</span></code></a> during
-point update. If the deleted point is the current entry point,
+point update.</p></li>
+</ul>
+<p>In both versions, if the deleted point is the current entry point,
 the entry point will be re-assigned to the next point in the highest
 layer that has other points beside the current entry point.</p>
+<p>Subsequent soft removes without a hard remove of the same point will
+not affect the index, <strong>unless the point was the only point in the index
+as removing it clears the index</strong>. This is different from <a class="reference internal" href="#datasketch.HNSW.pop" title="datasketch.HNSW.pop"><code class="xref py py-meth docutils literal notranslate"><span class="pre">pop()</span></code></a>
+which will always raise a KeyError if the key was removed.</p>
+<p>Subsequent hard removes of the same point will
+raise a KeyError. If the point is soft removed and then hard removed,
+the point will be removed from the index.
+Use <a class="reference internal" href="#datasketch.HNSW.clean" title="datasketch.HNSW.clean"><code class="xref py py-meth docutils literal notranslate"><span class="pre">clean()</span></code></a> for removing all soft removed points from the index.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>key</strong> (<em>Hashable</em>) – The key of the point to remove.</p></li>
+<li><p><strong>hard</strong> (<em>bool</em>) – If True, perform a hard remove. Otherwise, perform a
+soft remove.</p></li>
 <li><p><strong>ef</strong> (<em>Optional</em><em>[</em><em>int</em><em>]</em>) – The number of neighbors to consider during
-re-assignment. If None, use the construction ef.</p></li>
+re-assignment. If None, use the construction ef. This argument
+is only used when hard is True.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Raises<span class="colon">:</span></dt>
-<dd class="field-even"><p><strong>KeyError</strong> – If the key does not exist in the index.</p>
+<dd class="field-even"><p><strong>KeyError</strong> – If the index is empty or the key does not exist in the
+    index and was not soft removed.</p>
+</dd>
+</dl>
+<p class="rubric">Example</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">datasketch.hnsw</span> <span class="kn">import</span> <span class="n">HNSW</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+
+<span class="n">data</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">random_sample</span><span class="p">((</span><span class="mi">1000</span><span class="p">,</span> <span class="mi">10</span><span class="p">))</span>
+<span class="n">index</span> <span class="o">=</span> <span class="n">HNSW</span><span class="p">(</span><span class="n">distance_func</span><span class="o">=</span><span class="k">lambda</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">x</span> <span class="o">-</span> <span class="n">y</span><span class="p">))</span>
+<span class="n">index</span><span class="o">.</span><span class="n">update</span><span class="p">({</span><span class="n">i</span><span class="p">:</span> <span class="n">d</span> <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">d</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">data</span><span class="p">)})</span>
+
+<span class="c1"># Soft remove a point with key = 0.</span>
+<span class="n">index</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+
+<span class="c1"># Soft remove the same point again will not change the index</span>
+<span class="c1"># because the index is not empty.</span>
+<span class="n">index</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+
+<span class="nb">print</span><span class="p">(</span><span class="mi">0</span> <span class="ow">in</span> <span class="n">index</span><span class="p">)</span>  <span class="c1"># False</span>
+
+<span class="c1"># Hard remove the point.</span>
+<span class="n">index</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">hard</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+<span class="c1"># Hard remove the same point again will raise a KeyError.</span>
+<span class="c1"># index.remove(0, hard=True)</span>
+
+<span class="c1"># Soft remove rest of the points from the index.</span>
+<span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1000</span><span class="p">):</span>
+    <span class="n">index</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="n">i</span><span class="p">)</span>
+
+<span class="nb">print</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">index</span><span class="p">))</span>  <span class="c1"># 0</span>
+
+<span class="c1"># Clean the index to hard remove all soft removed points.</span>
+<span class="n">index</span><span class="o">.</span><span class="n">clean</span><span class="p">()</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="datasketch.HNSW.clean">
+<span class="sig-name descname"><span class="pre">clean</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ef</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="reference internal" href="_modules/datasketch/hnsw.html#HNSW.clean"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#datasketch.HNSW.clean" title="Link to this definition"></a></dt>
+<dd><p>Remove all soft removed points from the index.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>ef</strong> (<em>Optional</em><em>[</em><em>int</em><em>]</em>) – The number of neighbors to consider during
+re-assignment. If None, use the construction ef.</p>
 </dd>
 </dl>
 </dd></dl>
@@ -2146,6 +2230,25 @@ a copy of the current index’s random state.</p>
 <span class="n">index</span> <span class="o">=</span> <span class="n">index1</span><span class="o">.</span><span class="n">merge</span><span class="p">(</span><span class="n">index2</span><span class="p">)</span>
 </pre></div>
 </div>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="datasketch.HNSW.get_non_reachable_keys">
+<span class="sig-name descname"><span class="pre">get_non_reachable_keys</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ef</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">Hashable</span><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="_modules/datasketch/hnsw.html#HNSW.get_non_reachable_keys"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#datasketch.HNSW.get_non_reachable_keys" title="Link to this definition"></a></dt>
+<dd><p>Return a list of keys of points that are not reachable from the entry
+point using the given <code class="docutils literal notranslate"><span class="pre">ef</span></code> value.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>ef</strong> (<em>Optional</em><em>[</em><em>int</em><em>]</em>) – The number of neighbors to consider during
+search. If None, use the construction ef.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>A list of keys of points that are not reachable.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>List[Hashable]</p>
+</dd>
+</dl>
 </dd></dl>
 
 <dl class="py attribute">
