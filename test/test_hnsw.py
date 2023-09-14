@@ -133,6 +133,10 @@ class TestHNSW(unittest.TestCase):
         hnsw2 = hnsw.copy()
         self.assertEqual(hnsw, hnsw2)
 
+        hnsw.remove(0)
+        self.assertTrue(0 not in hnsw)
+        self.assertTrue(0 in hnsw2)
+
     def test_soft_remove_and_pop_and_clean(self):
         data = self._create_random_points()
         hnsw = self._create_index(data)

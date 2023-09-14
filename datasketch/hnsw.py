@@ -1,7 +1,6 @@
 from __future__ import annotations
 from collections import OrderedDict
 import heapq
-from itertools import dropwhile
 from typing import (
     Hashable,
     Callable,
@@ -59,7 +58,7 @@ class _Layer(object):
     def copy(self) -> _Layer:
         """Create a copy of the layer."""
         new_layer = _Layer(None)
-        new_layer._graph = {k: v.copy() for k, v in self._graph.items()}
+        new_layer._graph = {k: dict(v) for k, v in self._graph.items()}
         return new_layer
 
     def get_reverse_edges(self, key: Hashable) -> Set[Hashable]:
@@ -91,6 +90,8 @@ class _LayerWithReversedEdges(_Layer):
             self._reverse_edges[neighbor].discard(key)
         for neighbor in value:
             self._reverse_edges.setdefault(neighbor, set()).add(key)
+        if key not in self._reverse_edges:
+            self._reverse_edges[key] = set()
 
     def __delitem__(self, key: Hashable) -> None:
         old_neighbors = self._graph.get(key, {})
@@ -115,8 +116,8 @@ class _LayerWithReversedEdges(_Layer):
     def copy(self) -> _LayerWithReversedEdges:
         """Create a copy of the layer."""
         new_layer = _LayerWithReversedEdges(None)
-        new_layer._graph = {k: v.copy() for k, v in self._graph.items()}
-        new_layer._reverse_edges = self._reverse_edges.copy()
+        new_layer._graph = {k: dict(v) for k, v in self._graph.items()}
+        new_layer._reverse_edges = {k: set(v) for k, v in self._reverse_edges.items()}
         return new_layer
 
     def get_reverse_edges(self, key: Hashable) -> Set[Hashable]:
@@ -400,7 +401,9 @@ class HNSW(MutableMapping):
             ef_construction=self._ef_construction,
             m0=self._m0,
         )
-        new_index._nodes = self._nodes.copy()
+        new_index._nodes = OrderedDict(
+            (key, node.copy()) for key, node in self._nodes.items()
+        )
         new_index._graphs = [layer.copy() for layer in self._graphs]
         new_index._entry_point = self._entry_point
         new_index._random.set_state(self._random.get_state())
@@ -608,7 +611,7 @@ class HNSW(MutableMapping):
                     entry_point,
                     entry_point_dist,
                     layer,
-                    allow_soft_deleted=True,
+                    allow_soft_deleted=False,
                     key_to_hard_delete=key_to_delete,
                 )
                 entry_points = [(-entry_point_dist, entry_point)]
@@ -620,7 +623,7 @@ class HNSW(MutableMapping):
                     entry_points,
                     layer,
                     ef + 1,  # We add 1 to ef to account for the point itself.
-                    allow_soft_deleted=True,
+                    allow_soft_deleted=False,
                     key_to_hard_delete=key_to_delete,
                 )
                 # Filter out the updated node itself.
