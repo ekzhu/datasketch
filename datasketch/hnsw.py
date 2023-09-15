@@ -170,6 +170,9 @@ class HNSW(MutableMapping):
             the 0th level. If None, defaults to 2 * m.
         seed (Optional[int]): The random seed to use for the random number
             generator.
+        reverse_edges (bool): Whether to maintain reverse edges in the graph.
+            This speeds up hard remove (:meth:`remove`) but increases memory
+            usage and slows down :meth:`insert`.
 
     Examples:
 
@@ -1048,27 +1051,3 @@ class HNSW(MutableMapping):
         new_index = self.copy()
         new_index.update(other)
         return new_index
-
-    def get_non_reachable_keys(self, ef: Optional[int] = None) -> List[Hashable]:
-        """Return a list of keys of points that are not reachable from the entry
-        point using the given ``ef`` value.
-
-        Args:
-            ef (Optional[int]): The number of neighbors to consider during
-                search. If None, use the construction ef.
-
-        Returns:
-            List[Hashable]: A list of keys of points that are not reachable.
-        """
-        if ef is None:
-            ef = self._ef_construction
-        non_reachable = []
-        if self._entry_point is None:
-            return non_reachable
-        for key, node in self._nodes.items():
-            if node.is_deleted:
-                continue
-            neighbors = self.query(node.point, ef=ef)
-            if key not in [k for k, _ in neighbors]:
-                non_reachable.append(key)
-        return non_reachable
