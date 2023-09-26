@@ -489,9 +489,13 @@ class HNSW(MutableMapping):
         if level is None:
             level = int(-np.log(self._random.random_sample()) * self._level_mult)
         self._nodes[key] = _Node(key, new_point)
-        if (
-            self._entry_point is not None
-        ):  # The HNSW is not empty, we have an entry point
+
+        for _ in range(len(self._graphs), level + 1):
+            self._graphs.append(self._layer_class(key))
+
+        if self._entry_point is None:
+            self._entry_point = key
+        else:
             dist = self._distance_func(new_point, self._nodes[self._entry_point].point)
             point = self._entry_point
             # For all levels in which we dont have to insert elem,
@@ -530,11 +534,6 @@ class HNSW(MutableMapping):
                             level_m,
                         )
                     }
-        # For all levels above the current level, we create an empty graph.
-        for _ in range(len(self._graphs), level + 1):
-            self._graphs.append(self._layer_class(key))
-            # We set the entry point for each new level to be the new node.
-            self._entry_point = key
 
     def _update(self, key: Hashable, new_point: np.ndarray, ef: int) -> None:
         """Update the point associated with the key in the index.
