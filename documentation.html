@@ -4,7 +4,7 @@
   <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>API Documentation &mdash; datasketch 1.6.3 documentation</title>
+  <title>API Documentation &mdash; datasketch 1.6.4 documentation</title>
       <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
   <!--[if lt IE 9]>
@@ -13,7 +13,7 @@
   
         <script src="_static/jquery.js?v=5d32c60e"></script>
         <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-        <script src="_static/documentation_options.js?v=452006c5"></script>
+        <script src="_static/documentation_options.js?v=8ea99608"></script>
         <script src="_static/doctools.js?v=888ff710"></script>
         <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="_static/js/theme.js"></script>
@@ -35,7 +35,7 @@
             datasketch
           </a>
               <div class="version">
-                1.6.3
+                1.6.4
               </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
@@ -204,7 +204,6 @@
 <li class="toctree-l4"><a class="reference internal" href="#datasketch.HNSW.remove"><code class="docutils literal notranslate"><span class="pre">HNSW.remove()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="#datasketch.HNSW.clean"><code class="docutils literal notranslate"><span class="pre">HNSW.clean()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="#datasketch.HNSW.merge"><code class="docutils literal notranslate"><span class="pre">HNSW.merge()</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="#datasketch.HNSW.get_non_reachable_keys"><code class="docutils literal notranslate"><span class="pre">HNSW.get_non_reachable_keys()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="#datasketch.HNSW.__hash__"><code class="docutils literal notranslate"><span class="pre">HNSW.__hash__</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="#datasketch.HNSW.__weakref__"><code class="docutils literal notranslate"><span class="pre">HNSW.__weakref__</span></code></a></li>
 </ul>
@@ -1840,6 +1839,9 @@ construction.</p></li>
 the 0th level. If None, defaults to 2 * m.</p></li>
 <li><p><strong>seed</strong> (<em>Optional</em><em>[</em><em>int</em><em>]</em>) – The random seed to use for the random number
 generator.</p></li>
+<li><p><strong>reverse_edges</strong> (<em>bool</em>) – Whether to maintain reverse edges in the graph.
+This speeds up hard remove (<a class="reference internal" href="#datasketch.HNSW.remove" title="datasketch.HNSW.remove"><code class="xref py py-meth docutils literal notranslate"><span class="pre">remove()</span></code></a>) but increases memory
+usage and slows down <a class="reference internal" href="#datasketch.HNSW.insert" title="datasketch.HNSW.insert"><code class="xref py py-meth docutils literal notranslate"><span class="pre">insert()</span></code></a>.</p></li>
 </ul>
 </dd>
 </dl>
@@ -2230,25 +2232,6 @@ a copy of the current index’s random state.</p>
 <span class="n">index</span> <span class="o">=</span> <span class="n">index1</span><span class="o">.</span><span class="n">merge</span><span class="p">(</span><span class="n">index2</span><span class="p">)</span>
 </pre></div>
 </div>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="datasketch.HNSW.get_non_reachable_keys">
-<span class="sig-name descname"><span class="pre">get_non_reachable_keys</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ef</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">Hashable</span><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="_modules/datasketch/hnsw.html#HNSW.get_non_reachable_keys"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#datasketch.HNSW.get_non_reachable_keys" title="Link to this definition"></a></dt>
-<dd><p>Return a list of keys of points that are not reachable from the entry
-point using the given <code class="docutils literal notranslate"><span class="pre">ef</span></code> value.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>ef</strong> (<em>Optional</em><em>[</em><em>int</em><em>]</em>) – The number of neighbors to consider during
-search. If None, use the construction ef.</p>
-</dd>
-<dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><p>A list of keys of points that are not reachable.</p>
-</dd>
-<dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p>List[Hashable]</p>
-</dd>
-</dl>
 </dd></dl>
 
 <dl class="py attribute">

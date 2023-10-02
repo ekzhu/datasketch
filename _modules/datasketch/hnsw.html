@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>datasketch.hnsw &mdash; datasketch 1.6.3 documentation</title>
+  <title>datasketch.hnsw &mdash; datasketch 1.6.4 documentation</title>
       <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
   <!--[if lt IE 9]>
@@ -12,7 +12,7 @@
   
         <script src="../../_static/jquery.js?v=5d32c60e"></script>
         <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-        <script src="../../_static/documentation_options.js?v=452006c5"></script>
+        <script src="../../_static/documentation_options.js?v=8ea99608"></script>
         <script src="../../_static/doctools.js?v=888ff710"></script>
         <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../_static/js/theme.js"></script>
@@ -32,7 +32,7 @@
             datasketch
           </a>
               <div class="version">
-                1.6.3
+                1.6.4
               </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
@@ -81,7 +81,6 @@
 <span></span><span class="kn">from</span> <span class="nn">__future__</span> <span class="kn">import</span> <span class="n">annotations</span>
 <span class="kn">from</span> <span class="nn">collections</span> <span class="kn">import</span> <span class="n">OrderedDict</span>
 <span class="kn">import</span> <span class="nn">heapq</span>
-<span class="kn">from</span> <span class="nn">itertools</span> <span class="kn">import</span> <span class="n">dropwhile</span>
 <span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="p">(</span>
     <span class="n">Hashable</span><span class="p">,</span>
     <span class="n">Callable</span><span class="p">,</span>
@@ -139,7 +138,7 @@
     <span class="k">def</span> <span class="nf">copy</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">_Layer</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Create a copy of the layer.&quot;&quot;&quot;</span>
         <span class="n">new_layer</span> <span class="o">=</span> <span class="n">_Layer</span><span class="p">(</span><span class="kc">None</span><span class="p">)</span>
-        <span class="n">new_layer</span><span class="o">.</span><span class="n">_graph</span> <span class="o">=</span> <span class="p">{</span><span class="n">k</span><span class="p">:</span> <span class="n">v</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_graph</span><span class="o">.</span><span class="n">items</span><span class="p">()}</span>
+        <span class="n">new_layer</span><span class="o">.</span><span class="n">_graph</span> <span class="o">=</span> <span class="p">{</span><span class="n">k</span><span class="p">:</span> <span class="nb">dict</span><span class="p">(</span><span class="n">v</span><span class="p">)</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_graph</span><span class="o">.</span><span class="n">items</span><span class="p">()}</span>
         <span class="k">return</span> <span class="n">new_layer</span>
 
     <span class="k">def</span> <span class="nf">get_reverse_edges</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">:</span> <span class="n">Hashable</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Set</span><span class="p">[</span><span class="n">Hashable</span><span class="p">]:</span>
@@ -171,6 +170,8 @@
             <span class="bp">self</span><span class="o">.</span><span class="n">_reverse_edges</span><span class="p">[</span><span class="n">neighbor</span><span class="p">]</span><span class="o">.</span><span class="n">discard</span><span class="p">(</span><span class="n">key</span><span class="p">)</span>
         <span class="k">for</span> <span class="n">neighbor</span> <span class="ow">in</span> <span class="n">value</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_reverse_edges</span><span class="o">.</span><span class="n">setdefault</span><span class="p">(</span><span class="n">neighbor</span><span class="p">,</span> <span class="nb">set</span><span class="p">())</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">key</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">key</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_reverse_edges</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_reverse_edges</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
 
     <span class="k">def</span> <span class="fm">__delitem__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">:</span> <span class="n">Hashable</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
         <span class="n">old_neighbors</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_graph</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="p">{})</span>
@@ -195,8 +196,8 @@
     <span class="k">def</span> <span class="nf">copy</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">_LayerWithReversedEdges</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Create a copy of the layer.&quot;&quot;&quot;</span>
         <span class="n">new_layer</span> <span class="o">=</span> <span class="n">_LayerWithReversedEdges</span><span class="p">(</span><span class="kc">None</span><span class="p">)</span>
-        <span class="n">new_layer</span><span class="o">.</span><span class="n">_graph</span> <span class="o">=</span> <span class="p">{</span><span class="n">k</span><span class="p">:</span> <span class="n">v</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_graph</span><span class="o">.</span><span class="n">items</span><span class="p">()}</span>
-        <span class="n">new_layer</span><span class="o">.</span><span class="n">_reverse_edges</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_reverse_edges</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+        <span class="n">new_layer</span><span class="o">.</span><span class="n">_graph</span> <span class="o">=</span> <span class="p">{</span><span class="n">k</span><span class="p">:</span> <span class="nb">dict</span><span class="p">(</span><span class="n">v</span><span class="p">)</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_graph</span><span class="o">.</span><span class="n">items</span><span class="p">()}</span>
+        <span class="n">new_layer</span><span class="o">.</span><span class="n">_reverse_edges</span> <span class="o">=</span> <span class="p">{</span><span class="n">k</span><span class="p">:</span> <span class="nb">set</span><span class="p">(</span><span class="n">v</span><span class="p">)</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_reverse_edges</span><span class="o">.</span><span class="n">items</span><span class="p">()}</span>
         <span class="k">return</span> <span class="n">new_layer</span>
 
     <span class="k">def</span> <span class="nf">get_reverse_edges</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">:</span> <span class="n">Hashable</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Set</span><span class="p">[</span><span class="n">Hashable</span><span class="p">]:</span>
@@ -251,6 +252,9 @@
 <span class="sd">            the 0th level. If None, defaults to 2 * m.</span>
 <span class="sd">        seed (Optional[int]): The random seed to use for the random number</span>
 <span class="sd">            generator.</span>
+<span class="sd">        reverse_edges (bool): Whether to maintain reverse edges in the graph.</span>
+<span class="sd">            This speeds up hard remove (:meth:`remove`) but increases memory</span>
+<span class="sd">            usage and slows down :meth:`insert`.</span>
 
 <span class="sd">    Examples:</span>
 
@@ -532,7 +536,9 @@
             <span class="n">ef_construction</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_ef_construction</span><span class="p">,</span>
             <span class="n">m0</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_m0</span><span class="p">,</span>
         <span class="p">)</span>
-        <span class="n">new_index</span><span class="o">.</span><span class="n">_nodes</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_nodes</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+        <span class="n">new_index</span><span class="o">.</span><span class="n">_nodes</span> <span class="o">=</span> <span class="n">OrderedDict</span><span class="p">(</span>
+            <span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="n">node</span><span class="o">.</span><span class="n">copy</span><span class="p">())</span> <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">node</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_nodes</span><span class="o">.</span><span class="n">items</span><span class="p">()</span>
+        <span class="p">)</span>
         <span class="n">new_index</span><span class="o">.</span><span class="n">_graphs</span> <span class="o">=</span> <span class="p">[</span><span class="n">layer</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span> <span class="k">for</span> <span class="n">layer</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_graphs</span><span class="p">]</span>
         <span class="n">new_index</span><span class="o">.</span><span class="n">_entry_point</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_entry_point</span>
         <span class="n">new_index</span><span class="o">.</span><span class="n">_random</span><span class="o">.</span><span class="n">set_state</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_random</span><span class="o">.</span><span class="n">get_state</span><span class="p">())</span>
@@ -750,6 +756,7 @@
                     <span class="n">entry_point</span><span class="p">,</span>
                     <span class="n">entry_point_dist</span><span class="p">,</span>
                     <span class="n">layer</span><span class="p">,</span>
+                    <span class="c1"># We allow soft-deleted points to be returned and used as entry point.</span>
                     <span class="n">allow_soft_deleted</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
                     <span class="n">key_to_hard_delete</span><span class="o">=</span><span class="n">key_to_delete</span><span class="p">,</span>
                 <span class="p">)</span>
@@ -762,6 +769,8 @@
                     <span class="n">entry_points</span><span class="p">,</span>
                     <span class="n">layer</span><span class="p">,</span>
                     <span class="n">ef</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span>  <span class="c1"># We add 1 to ef to account for the point itself.</span>
+                    <span class="c1"># We allow soft-deleted points to be returned and used as entry point</span>
+                    <span class="c1"># and neighbor candidates.</span>
                     <span class="n">allow_soft_deleted</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
                     <span class="n">key_to_hard_delete</span><span class="o">=</span><span class="n">key_to_delete</span><span class="p">,</span>
                 <span class="p">)</span>
@@ -1198,33 +1207,6 @@
         <span class="n">new_index</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
         <span class="n">new_index</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">other</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">new_index</span></div>
-
-
-<div class="viewcode-block" id="HNSW.get_non_reachable_keys">
-<a class="viewcode-back" href="../../documentation.html#datasketch.HNSW.get_non_reachable_keys">[docs]</a>
-    <span class="k">def</span> <span class="nf">get_non_reachable_keys</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ef</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">Hashable</span><span class="p">]:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return a list of keys of points that are not reachable from the entry</span>
-<span class="sd">        point using the given ``ef`` value.</span>
-
-<span class="sd">        Args:</span>
-<span class="sd">            ef (Optional[int]): The number of neighbors to consider during</span>
-<span class="sd">                search. If None, use the construction ef.</span>
-
-<span class="sd">        Returns:</span>
-<span class="sd">            List[Hashable]: A list of keys of points that are not reachable.</span>
-<span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">if</span> <span class="n">ef</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="n">ef</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_ef_construction</span>
-        <span class="n">non_reachable</span> <span class="o">=</span> <span class="p">[]</span>
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_entry_point</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="k">return</span> <span class="n">non_reachable</span>
-        <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">node</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_nodes</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
-            <span class="k">if</span> <span class="n">node</span><span class="o">.</span><span class="n">is_deleted</span><span class="p">:</span>
-                <span class="k">continue</span>
-            <span class="n">neighbors</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">point</span><span class="p">,</span> <span class="n">ef</span><span class="o">=</span><span class="n">ef</span><span class="p">)</span>
-            <span class="k">if</span> <span class="n">key</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">[</span><span class="n">k</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">_</span> <span class="ow">in</span> <span class="n">neighbors</span><span class="p">]:</span>
-                <span class="n">non_reachable</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">key</span><span class="p">)</span>
-        <span class="k">return</span> <span class="n">non_reachable</span></div>
 </div>
 
 </pre></div>
