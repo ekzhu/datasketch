@@ -79,3 +79,9 @@ benchmark/**/*.pdf
 
 # Virtual env
 .venv
+
+# IDE
+.vscode
+
+# MacOS
+.DS_Store

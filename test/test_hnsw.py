@@ -133,6 +133,10 @@ class TestHNSW(unittest.TestCase):
         hnsw2 = hnsw.copy()
         self.assertEqual(hnsw, hnsw2)
 
+        hnsw.remove(0)
+        self.assertTrue(0 not in hnsw)
+        self.assertTrue(0 in hnsw2)
+
     def test_soft_remove_and_pop_and_clean(self):
         data = self._create_random_points()
         hnsw = self._create_index(data)
@@ -162,7 +166,6 @@ class TestHNSW(unittest.TestCase):
                     "Potential graph connectivity issue."
                 )
                 # NOTE: we are not getting the expected number of results.
-                # This may be because the graph is not connected anymore.
                 # Try hard remove all previous soft removed points.
                 hnsw.clean()
                 results = hnsw.query(data[i], 10)
