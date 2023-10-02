@@ -166,7 +166,6 @@ class TestHNSW(unittest.TestCase):
                     "Potential graph connectivity issue."
                 )
                 # NOTE: we are not getting the expected number of results.
-                # This may be because the graph is not connected anymore.
                 # Try hard remove all previous soft removed points.
                 hnsw.clean()
                 results = hnsw.query(data[i], 10)

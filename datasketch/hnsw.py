@@ -614,7 +614,8 @@ class HNSW(MutableMapping):
                     entry_point,
                     entry_point_dist,
                     layer,
-                    allow_soft_deleted=False,
+                    # We allow soft-deleted points to be returned and used as entry point.
+                    allow_soft_deleted=True,
                     key_to_hard_delete=key_to_delete,
                 )
                 entry_points = [(-entry_point_dist, entry_point)]
@@ -626,7 +627,9 @@ class HNSW(MutableMapping):
                     entry_points,
                     layer,
                     ef + 1,  # We add 1 to ef to account for the point itself.
-                    allow_soft_deleted=False,
+                    # We allow soft-deleted points to be returned and used as entry point
+                    # and neighbor candidates.
+                    allow_soft_deleted=True,
                     key_to_hard_delete=key_to_delete,
                 )
                 # Filter out the updated node itself.
