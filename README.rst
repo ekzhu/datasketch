@@ -1,11 +1,11 @@
 datasketch: Big Data Looks Small
 ================================
 
-.. image:: https://github.com/ekzhu/datasketch/workflows/Python%20package/badge.svg
-    :target: https://github.com/ekzhu/datasketch/actions
+.. image:: https://static.pepy.tech/badge/datasketch/month
+    :target: https://pepy.tech/project/datasketch
 
-.. image:: https://zenodo.org/badge/DOI/10.5281/zenodo.290602.svg
-   :target: https://doi.org/10.5281/zenodo.290602
+.. image:: https://zenodo.org/badge/DOI/10.5281/zenodo.598238.svg
+   :target: https://zenodo.org/doi/10.5281/zenodo.598238
 
 datasketch gives you probabilistic data structures that can process and
 search very large amount of data super fast, with little loss of
