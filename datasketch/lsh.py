@@ -226,6 +226,25 @@ class MinHashLSH(object):
         """
         self._insert(key, minhash, check_duplication=check_duplication, buffer=False)
 
+    def merge(
+            self,
+            other: MinHashLSH,
+            check_disjointness: bool = False      
+    ):
+        """Merge the other MinHashLSH with this one, making this one the union
+        of both the MinHashLSH.
+
+        Args:
+            other (MinHashLSH): The other MinHashLSH.
+            check_duplication (bool): To avoid duplicate keys in the storage
+                (`default=True`)
+
+        Raises:
+            ValueError: If the two MinHashLSH have different initialization
+                parameters.
+        """
+        self._merge(other, check_disjointness=check_disjointness, buffer=False)
+
     def insertion_session(self, buffer_size: int = 50000) -> MinHashLSHInsertionSession:
         """
         Create a context manager for fast insertion into this index.
@@ -281,6 +300,36 @@ class MinHashLSH(object):
         self.keys.insert(key, *Hs, buffer=buffer)
         for H, hashtable in zip(Hs, self.hashtables):
             hashtable.insert(H, key, buffer=buffer)
+
+    def __eq__(self, other:MinHashLSH) -> bool:
+        """
+        Returns:
+            bool: If the two MinHashLSH has equal num_perm then two are equivalent.
+        """
+        return (
+            type(self) is type(other) and
+            self.h == other.h
+        )
+
+    def _merge(
+        self,
+        other: MinHashLSH,
+        check_disjointness: bool = False,
+        buffer: bool = False
+    ) -> MinHashLSH:
+        if self == other:
+            if check_disjointness and set(self.keys).intersection(set(other.keys)):
+                raise ValueError("The keys are not disjoint, duplicate key exists.")
+            for key in other.keys:
+                Hs = other.keys.get(key)
+                self.keys.insert(key, *Hs, buffer=buffer)
+                for H, hashtable in zip(Hs, self.hashtables):
+                    hashtable.insert(H, key, buffer=buffer)
+        else:
+            if type(self) is not type(other):
+                raise ValueError(f"Cannot merge type MinHashLSH and type {type(other).__name__}.")
+            raise ValueError(
+                "Cannot merge MinHashLSH with different initialization parameters.")
 
     def query(self, minhash) -> List[Hashable]:
         """

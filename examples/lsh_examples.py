@@ -37,6 +37,19 @@ def eg1():
     result = lsh.query(m1)
     print("Approximate neighbours with Jaccard similarity > 0.5", result)
 
+    # Merge two LSH index
+    lsh1 = MinHashLSH(threshold=0.5, num_perm=128)
+    lsh1.insert("m2", m2)
+    lsh1.insert("m3", m3)
+
+    lsh2 = MinHashLSH(threshold=0.5, num_perm=128)
+    lsh2.insert("m1", m1)
+
+    lsh1.merge(lsh2)
+    print("Does m1 exist in the lsh1...", "m1" in lsh1.keys)
+    # if check_disjointness flag is set to True then it will check the disjointness of the keys in the two MinHashLSH
+    lsh1.merge(lsh2,check_disjointness=True)
+
 def eg2():
     mg = WeightedMinHashGenerator(10, 5)
     m1 = mg.minhash(v1)

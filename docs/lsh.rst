@@ -77,6 +77,14 @@ plotting code.
 .. figure:: /_static/lsh_benchmark.png
    :alt: MinHashLSH Benchmark
 
+You can merge two MinHashLSH object using the ``merge`` function. This
+makes MinHashLSH useful in parallel processing.
+
+.. code:: python
+
+    # The merges the lsh1 with lsh2.
+    lsh1.merge(lsh2)
+
 There are other optional parameters that can be used to tune the index.
 See the documentation of :class:`datasketch.MinHashLSH` for details.
 

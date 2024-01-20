@@ -240,6 +240,45 @@ class TestMinHashLSH(unittest.TestCase):
         for table in counts:
             self.assertEqual(sum(table.values()), 2)
 
+    def test_merge(self):
+        lsh1 = MinHashLSH(threshold=0.5, num_perm=16)
+        m1 = MinHash(16)
+        m1.update("a".encode("utf-8"))
+        m2 = MinHash(16)
+        m2.update("b".encode("utf-8"))
+        lsh1.insert("a",m1)
+        lsh1.insert("b",m2)
+
+        lsh2 = MinHashLSH(threshold=0.5, num_perm=16)
+        m3 = MinHash(16)
+        m3.update("c".encode("utf-8"))
+        m4 = MinHash(16)
+        m4.update("d".encode("utf-8"))
+        lsh2.insert("c",m1)
+        lsh2.insert("d",m2)
+
+        lsh1.merge(lsh2)
+        for t in lsh1.hashtables:
+            self.assertTrue(len(t) >= 1)
+            items = []
+            for H in t:
+                items.extend(t[H])
+            self.assertTrue("c" in items)
+            self.assertTrue("d" in items)
+        self.assertTrue("a" in lsh1)
+        self.assertTrue("b" in lsh1)
+        for i, H in enumerate(lsh1.keys["c"]):
+            self.assertTrue("c" in lsh1.hashtables[i][H])
+
+        self.assertTrue(lsh1.merge, lsh2)
+        self.assertRaises(ValueError, lsh1.merge, lsh2, check_disjointness=True)
+
+        m5 = MinHash(32)
+        m5.update("e".encode("utf-8"))
+        lsh3 = MinHashLSH(threshold=0.5, num_perm=32)
+        lsh3.insert("a",m5)
+
+        self.assertRaises(ValueError, lsh1.merge, lsh3, check_disjointness=True)
 
 class TestWeightedMinHashLSH(unittest.TestCase):
 
