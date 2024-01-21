@@ -301,14 +301,16 @@ class MinHashLSH(object):
         for H, hashtable in zip(Hs, self.hashtables):
             hashtable.insert(H, key, buffer=buffer)
 
-    def __eq__(self, other:MinHashLSH) -> bool:
+    def __equivalent(self, other:MinHashLSH) -> bool:
         """
         Returns:
-            bool: If the two MinHashLSH has equal num_perm then two are equivalent.
+            bool: If the two MinHashLSH has equal num_perm, band size and size of each bands then two are equivalent.
         """
         return (
             type(self) is type(other) and
-            self.h == other.h
+            self.h == other.h and
+            self.b == other.b and
+            self.r == other.r
         )
 
     def _merge(
@@ -317,7 +319,7 @@ class MinHashLSH(object):
         check_disjointness: bool = False,
         buffer: bool = False
     ) -> MinHashLSH:
-        if self == other:
+        if self.__equivalent(other):
             if check_disjointness and set(self.keys).intersection(set(other.keys)):
                 raise ValueError("The keys are not disjoint, duplicate key exists.")
             for key in other.keys:
