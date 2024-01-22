@@ -304,13 +304,14 @@ class MinHashLSH(object):
     def __equivalent(self, other:MinHashLSH) -> bool:
         """
         Returns:
-            bool: If the two MinHashLSH has equal num_perm, band size and size of each bands then two are equivalent.
+            bool: If the two MinHashLSH have equal num_perm, number of bands, size of each band and hashfunc (if provided) then two are equivalent.
         """
         return (
             type(self) is type(other) and
             self.h == other.h and
             self.b == other.b and
-            self.r == other.r
+            self.r == other.r and
+            type(self.hashfunc) == type(other.hashfunc)
         )
 
     def _merge(
