@@ -131,8 +131,10 @@ class MinHashLSHForest(object):
 
     def get_minhash_from_key(self, key: Hashable) -> MinHash:
         """
-        Returns the MinHash value that corresponds to the given key in the LSHForest, if it exists. This is useful for when we want to manually check the Jaccard Similarity for the top-k results from a query.
-        
+        Returns the MinHash value that corresponds to the given key in the LSHForest,
+        if it exists. This is useful for when we want to manually check the 
+        Jaccard Similarity for the top-k results from a query.
+
         Args:
             key (Hashable): The key whose MinHash we want to retrieve.
 
