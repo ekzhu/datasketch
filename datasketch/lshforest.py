@@ -143,7 +143,7 @@ class MinHashLSHForest(object):
         """
         byteslist = self.keys.get(key, None)
         if byteslist is None:
-            raise KeyError("The provided key does not exist in the LSHForest: {key}")
+            raise KeyError(f"The provided key does not exist in the LSHForest: {key}")
         hashvalues = np.array([], dtype=np.uint64)
         for item in byteslist:
             # unswap the bytes, as their representation is flipped during storage
