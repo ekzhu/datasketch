@@ -129,17 +129,17 @@ class MinHashLSHForest(object):
             r -= 1
         return list(results)
 
-    def get_minhash_from_key(self, key: Hashable) -> MinHash:
+    def get_minhash_hashvalues(self, key: Hashable) -> np.ndarray:
         """
-        Returns the MinHash value that corresponds to the given key in the LSHForest,
-        if it exists. This is useful for when we want to manually check the 
-        Jaccard Similarity for the top-k results from a query.
+        Returns the hashvalues from the MinHash object that corresponds to the given key in the LSHForest,
+        if it exists. This is useful for when we want to reconstruct the original MinHash
+        object to manually check the Jaccard Similarity for the top-k results from a query.
 
         Args:
-            key (Hashable): The key whose MinHash we want to retrieve.
+            key (Hashable): The key whose MinHash hashvalues we want to retrieve.
 
         Returns:
-            MinHash: The corresponding MinHash value for the provided key.
+            hashvalues: The hashvalues for the MinHash object corresponding to the given key.
         """
         byteslist = self.keys.get(key, None)
         if byteslist is None:
@@ -149,8 +149,7 @@ class MinHashLSHForest(object):
             # unswap the bytes, as their representation is flipped during storage
             hv_segment = np.frombuffer(item, dtype=np.uint64).byteswap()
             hashvalues = np.append(hashvalues, hv_segment)
-        minhash = MinHash(hashvalues=hashvalues)
-        return minhash
+        return hashvalues
 
     def _binary_search(self, n, func):
         """
