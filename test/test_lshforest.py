@@ -68,7 +68,11 @@ class TestMinHashLSHForest(unittest.TestCase):
             minhash_ori = data[key]
             hashvalues = forest.get_minhash_hashvalues(key)
             minhash_retrieved = MinHash(hashvalues=hashvalues)
+            retrieved_hashvalues = minhash_retrieved.hashvalues
+            self.assertEqual(len(hashvalues), len(retrieved_hashvalues))
             self.assertEqual(minhash_retrieved.jaccard(minhash_ori), 1.0)
+            for i in range(len(retrieved_hashvalues)):
+                self.assertEqual(hashvalues[i], retrieved_hashvalues[i])
 
     def test_pickle(self):
         forest, _ = self._setup()
