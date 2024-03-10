@@ -144,11 +144,13 @@ class MinHashLSHForest(object):
         byteslist = self.keys.get(key, None)
         if byteslist is None:
             raise KeyError(f"The provided key does not exist in the LSHForest: {key}")
-        hashvalues = np.array([], dtype=np.uint64)
-        for item in byteslist:
+        hashvalue_byte_size = len(byteslist[0])//8
+        hashvalues = np.empty(len(byteslist)*hashvalue_byte_size, dtype=np.uint64)
+        for index, item in enumerate(byteslist):
             # unswap the bytes, as their representation is flipped during storage
             hv_segment = np.frombuffer(item, dtype=np.uint64).byteswap()
-            hashvalues = np.append(hashvalues, hv_segment)
+            curr_index = index*hashvalue_byte_size
+            hashvalues[curr_index:curr_index+hashvalue_byte_size] = hv_segment
         return hashvalues
 
     def _binary_search(self, n, func):
