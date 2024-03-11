@@ -229,21 +229,21 @@ class MinHashLSH(object):
     def merge(
             self,
             other: MinHashLSH,
-            check_disjointness: bool = False      
+            check_overlap: bool = False      
     ):
         """Merge the other MinHashLSH with this one, making this one the union
         of both the MinHashLSH.
 
         Args:
             other (MinHashLSH): The other MinHashLSH.
-            check_duplication (bool): To avoid duplicate keys in the storage
+            check_overlap (bool): Check if there are any overlapping keys before merging and raise if there are any.
                 (`default=True`)
 
         Raises:
             ValueError: If the two MinHashLSH have different initialization
-                parameters.
+                parameters, or if `check_overlap` is `True` and there are overlapping keys.
         """
-        self._merge(other, check_disjointness=check_disjointness, buffer=False)
+        self._merge(other, check_overlap=check_overlap, buffer=False)
 
     def insertion_session(self, buffer_size: int = 50000) -> MinHashLSHInsertionSession:
         """
@@ -304,25 +304,24 @@ class MinHashLSH(object):
     def __equivalent(self, other:MinHashLSH) -> bool:
         """
         Returns:
-            bool: If the two MinHashLSH have equal num_perm, number of bands, size of each band and hashfunc (if provided) then two are equivalent.
+            bool: If the two MinHashLSH have equal num_perm, number of bands, size of each band then two are equivalent.
         """
         return (
             type(self) is type(other) and
             self.h == other.h and
             self.b == other.b and
-            self.r == other.r and
-            type(self.hashfunc) == type(other.hashfunc)
+            self.r == other.r
         )
 
     def _merge(
         self,
         other: MinHashLSH,
-        check_disjointness: bool = False,
+        check_overlap: bool = False,
         buffer: bool = False
     ) -> MinHashLSH:
         if self.__equivalent(other):
-            if check_disjointness and set(self.keys).intersection(set(other.keys)):
-                raise ValueError("The keys are not disjoint, duplicate key exists.")
+            if check_overlap and set(self.keys).intersection(set(other.keys)):
+                raise ValueError("The keys are overlapping, duplicate key exists.")
             for key in other.keys:
                 Hs = other.keys.get(key)
                 self.keys.insert(key, *Hs, buffer=buffer)
