@@ -133,6 +133,7 @@
 <li class="toctree-l4"><a class="reference internal" href="#datasketch.MinHashLSHForest.add"><code class="docutils literal notranslate"><span class="pre">MinHashLSHForest.add()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="#datasketch.MinHashLSHForest.index"><code class="docutils literal notranslate"><span class="pre">MinHashLSHForest.index()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="#datasketch.MinHashLSHForest.query"><code class="docutils literal notranslate"><span class="pre">MinHashLSHForest.query()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#datasketch.MinHashLSHForest.get_minhash_hashvalues"><code class="docutils literal notranslate"><span class="pre">MinHashLSHForest.get_minhash_hashvalues()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="#datasketch.MinHashLSHForest.is_empty"><code class="docutils literal notranslate"><span class="pre">MinHashLSHForest.is_empty()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="#datasketch.MinHashLSHForest.__contains__"><code class="docutils literal notranslate"><span class="pre">MinHashLSHForest.__contains__()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="#datasketch.MinHashLSHForest.__weakref__"><code class="docutils literal notranslate"><span class="pre">MinHashLSHForest.__weakref__</span></code></a></li>
@@ -1409,6 +1410,25 @@ performance won’t degrade too much – however you do have to keep
 the original sets (or MinHashes) around some where so that you
 can make references to them.</p>
 </div>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="datasketch.MinHashLSHForest.get_minhash_hashvalues">
+<span class="sig-name descname"><span class="pre">get_minhash_hashvalues</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">key</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Hashable</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">ndarray</span></span></span><a class="reference internal" href="_modules/datasketch/lshforest.html#MinHashLSHForest.get_minhash_hashvalues"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#datasketch.MinHashLSHForest.get_minhash_hashvalues" title="Link to this definition"></a></dt>
+<dd><p>Returns the hashvalues from the MinHash object that corresponds to the given key in the LSHForest,
+if it exists. This is useful for when we want to reconstruct the original MinHash
+object to manually check the Jaccard Similarity for the top-k results from a query.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>key</strong> (<em>Hashable</em>) – The key whose MinHash hashvalues we want to retrieve.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>The hashvalues for the MinHash object corresponding to the given key.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>hashvalues</p>
+</dd>
+</dl>
 </dd></dl>
 
 <dl class="py method">
