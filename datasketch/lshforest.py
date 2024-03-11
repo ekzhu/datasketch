@@ -1,5 +1,6 @@
 from collections import defaultdict
 from typing import Hashable, List
+import numpy as np
 
 from datasketch.minhash import MinHash
 
@@ -127,6 +128,30 @@ class MinHashLSHForest(object):
                     return list(results)
             r -= 1
         return list(results)
+
+    def get_minhash_hashvalues(self, key: Hashable) -> np.ndarray:
+        """
+        Returns the hashvalues from the MinHash object that corresponds to the given key in the LSHForest,
+        if it exists. This is useful for when we want to reconstruct the original MinHash
+        object to manually check the Jaccard Similarity for the top-k results from a query.
+
+        Args:
+            key (Hashable): The key whose MinHash hashvalues we want to retrieve.
+
+        Returns:
+            hashvalues: The hashvalues for the MinHash object corresponding to the given key.
+        """
+        byteslist = self.keys.get(key, None)
+        if byteslist is None:
+            raise KeyError(f"The provided key does not exist in the LSHForest: {key}")
+        hashvalue_byte_size = len(byteslist[0])//8
+        hashvalues = np.empty(len(byteslist)*hashvalue_byte_size, dtype=np.uint64)
+        for index, item in enumerate(byteslist):
+            # unswap the bytes, as their representation is flipped during storage
+            hv_segment = np.frombuffer(item, dtype=np.uint64).byteswap()
+            curr_index = index*hashvalue_byte_size
+            hashvalues[curr_index:curr_index+hashvalue_byte_size] = hv_segment
+        return hashvalues
 
     def _binary_search(self, n, func):
         """
