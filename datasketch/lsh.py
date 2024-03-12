@@ -226,6 +226,29 @@ class MinHashLSH(object):
         """
         self._insert(key, minhash, check_duplication=check_duplication, buffer=False)
 
+    def merge(
+            self,
+            other: MinHashLSH,
+            check_overlap: bool = False      
+    ):
+        """Merge the other MinHashLSH with this one, making this one the union
+        of both.
+        
+        Note:
+            Only num_perm, number of bands and sizes of each band is checked for equivalency of two MinHashLSH indexes.
+            Other initialization parameters threshold, weights, storage_config, prepickle and hash_func are not checked.
+
+        Args:
+            other (MinHashLSH): The other MinHashLSH.
+            check_overlap (bool): Check if there are any overlapping keys before merging and raise if there are any.
+                (`default=False`)
+
+        Raises:
+            ValueError: If the two MinHashLSH have different initialization
+                parameters, or if `check_overlap` is `True` and there are overlapping keys.
+        """
+        self._merge(other, check_overlap=check_overlap, buffer=False)
+
     def insertion_session(self, buffer_size: int = 50000) -> MinHashLSHInsertionSession:
         """
         Create a context manager for fast insertion into this index.
@@ -281,6 +304,38 @@ class MinHashLSH(object):
         self.keys.insert(key, *Hs, buffer=buffer)
         for H, hashtable in zip(Hs, self.hashtables):
             hashtable.insert(H, key, buffer=buffer)
+
+    def __equivalent(self, other:MinHashLSH) -> bool:
+        """
+        Returns:
+            bool: If the two MinHashLSH have equal num_perm, number of bands, size of each band then two are equivalent.
+        """
+        return (
+            type(self) is type(other) and
+            self.h == other.h and
+            self.b == other.b and
+            self.r == other.r
+        )
+
+    def _merge(
+        self,
+        other: MinHashLSH,
+        check_overlap: bool = False,
+        buffer: bool = False
+    ) -> MinHashLSH:
+        if self.__equivalent(other):
+            if check_overlap and set(self.keys).intersection(set(other.keys)):
+                raise ValueError("The keys are overlapping, duplicate key exists.")
+            for key in other.keys:
+                Hs = other.keys.get(key)
+                self.keys.insert(key, *Hs, buffer=buffer)
+                for H, hashtable in zip(Hs, self.hashtables):
+                    hashtable.insert(H, key, buffer=buffer)
+        else:
+            if type(self) is not type(other):
+                raise ValueError(f"Cannot merge type MinHashLSH and type {type(other).__name__}.")
+            raise ValueError(
+                "Cannot merge MinHashLSH with different initialization parameters.")
 
     def query(self, minhash) -> List[Hashable]:
         """

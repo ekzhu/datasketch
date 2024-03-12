@@ -240,6 +240,117 @@ class TestMinHashLSH(unittest.TestCase):
         for table in counts:
             self.assertEqual(sum(table.values()), 2)
 
+    def test_merge(self):
+        lsh1 = MinHashLSH(threshold=0.5, num_perm=16)
+        m1 = MinHash(16)
+        m1.update("a".encode("utf-8"))
+        m2 = MinHash(16)
+        m2.update("b".encode("utf-8"))
+        lsh1.insert("a",m1)
+        lsh1.insert("b",m2)
+
+        lsh2 = MinHashLSH(threshold=0.5, num_perm=16)
+        m3 = MinHash(16)
+        m3.update("c".encode("utf-8"))
+        m4 = MinHash(16)
+        m4.update("d".encode("utf-8"))
+        lsh2.insert("c",m1)
+        lsh2.insert("d",m2)
+
+        lsh1.merge(lsh2)
+        for t in lsh1.hashtables:
+            self.assertTrue(len(t) >= 1)
+            items = []
+            for H in t:
+                items.extend(t[H])
+            self.assertTrue("c" in items)
+            self.assertTrue("d" in items)
+        self.assertTrue("a" in lsh1)
+        self.assertTrue("b" in lsh1)
+        self.assertTrue("c" in lsh1)
+        self.assertTrue("d" in lsh1)
+        for i, H in enumerate(lsh1.keys["c"]):
+            self.assertTrue("c" in lsh1.hashtables[i][H])
+
+        self.assertTrue(lsh1.merge, lsh2)
+        self.assertRaises(ValueError, lsh1.merge, lsh2, check_overlap=True)
+
+        m5 = MinHash(16)
+        m5.update("e".encode("utf-8"))
+        lsh3 = MinHashLSH(threshold=0.5, num_perm=16)
+        lsh3.insert("a",m5)
+
+        self.assertRaises(ValueError, lsh1.merge, lsh3, check_overlap=True)
+
+        lsh1.merge(lsh3)
+
+        m6 = MinHash(16)
+        m6.update("e".encode("utf-8"))
+        lsh4 = MinHashLSH(threshold=0.5, num_perm=16)
+        lsh4.insert("a",m6)
+
+        lsh1.merge(lsh4, check_overlap=False)
+
+
+    def test_merge_redis(self):
+        with patch('redis.Redis', fake_redis) as mock_redis:
+            lsh1 = MinHashLSH(threshold=0.5, num_perm=16, storage_config={
+                'type': 'redis', 'redis': {'host': 'localhost', 'port': 6379}
+            })
+            lsh2 = MinHashLSH(threshold=0.5, num_perm=16, storage_config={
+                'type': 'redis', 'redis': {'host': 'localhost', 'port': 6379}
+            })
+
+            m1 = MinHash(16)
+            m1.update("a".encode("utf8"))
+            m2 = MinHash(16)
+            m2.update("b".encode("utf8"))
+            lsh1.insert("a", m1)
+            lsh1.insert("b", m2)
+
+            m3 = MinHash(16)
+            m3.update("c".encode("utf8"))
+            m4 = MinHash(16)
+            m4.update("d".encode("utf8"))
+            lsh2.insert("c", m3)
+            lsh2.insert("d", m4)
+
+            lsh1.merge(lsh2)
+            for t in lsh1.hashtables:
+                self.assertTrue(len(t) >= 1)
+                items = []
+                for H in t:
+                    items.extend(t[H])
+                self.assertTrue(pickle.dumps("c") in items)
+                self.assertTrue(pickle.dumps("d") in items)
+            self.assertTrue("a" in lsh1)
+            self.assertTrue("b" in lsh1)
+            self.assertTrue("c" in lsh1)
+            self.assertTrue("d" in lsh1)
+            for i, H in enumerate(lsh1.keys[pickle.dumps("c")]):
+                self.assertTrue(pickle.dumps("c") in lsh1.hashtables[i][H])
+
+            self.assertTrue(lsh1.merge, lsh2)
+            self.assertRaises(ValueError, lsh1.merge, lsh2, check_overlap=True)
+
+            m5 = MinHash(16)
+            m5.update("e".encode("utf-8"))
+            lsh3 = MinHashLSH(threshold=0.5, num_perm=16, storage_config={
+                'type': 'redis', 'redis': {'host': 'localhost', 'port': 6379}
+            })
+            lsh3.insert("a",m5)
+
+            self.assertRaises(ValueError, lsh1.merge, lsh3, check_overlap=True)
+
+            m6 = MinHash(16)
+            m6.update("e".encode("utf-8"))
+            lsh4 = MinHashLSH(threshold=0.5, num_perm=16, storage_config={
+                'type': 'redis', 'redis': {'host': 'localhost', 'port': 6379}
+            })
+            lsh4.insert("a",m6)
+            
+            lsh1.merge(lsh4, check_overlap=False)
+
 
 class TestWeightedMinHashLSH(unittest.TestCase):
 
