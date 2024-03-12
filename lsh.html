@@ -161,6 +161,12 @@ plotting code.</p>
 <figure class="align-default">
 <img alt="MinHashLSH Benchmark" src="_images/lsh_benchmark.png" />
 </figure>
+<p>You can merge two MinHashLSH indexes to create a union index using the <code class="docutils literal notranslate"><span class="pre">merge</span></code> method. This
+makes MinHashLSH useful in parallel processing.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># This merges the lsh1 with lsh2.</span>
+<span class="n">lsh1</span><span class="o">.</span><span class="n">merge</span><span class="p">(</span><span class="n">lsh2</span><span class="p">)</span>
+</pre></div>
+</div>
 <p>There are other optional parameters that can be used to tune the index.
 See the documentation of <a class="reference internal" href="documentation.html#datasketch.MinHashLSH" title="datasketch.MinHashLSH"><code class="xref py py-class docutils literal notranslate"><span class="pre">datasketch.MinHashLSH</span></code></a> for details.</p>
 <p>MinHash LSH does not support Top-K queries.

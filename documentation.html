@@ -112,6 +112,7 @@
 <li class="toctree-l3"><a class="reference internal" href="#datasketch.MinHashLSH"><code class="docutils literal notranslate"><span class="pre">MinHashLSH</span></code></a><ul>
 <li class="toctree-l4"><a class="reference internal" href="#datasketch.MinHashLSH.__init__"><code class="docutils literal notranslate"><span class="pre">MinHashLSH.__init__()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="#datasketch.MinHashLSH.insert"><code class="docutils literal notranslate"><span class="pre">MinHashLSH.insert()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#datasketch.MinHashLSH.merge"><code class="docutils literal notranslate"><span class="pre">MinHashLSH.merge()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="#datasketch.MinHashLSH.insertion_session"><code class="docutils literal notranslate"><span class="pre">MinHashLSH.insertion_session()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="#datasketch.MinHashLSH.query"><code class="docutils literal notranslate"><span class="pre">MinHashLSH.query()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="#datasketch.MinHashLSH.add_to_query_buffer"><code class="docutils literal notranslate"><span class="pre">MinHashLSH.add_to_query_buffer()</span></code></a></li>
@@ -1099,6 +1100,31 @@ of the set referenced by the key.</p>
 if you want to avoid the overhead during insert you can set
 <cite>check_duplication = False</cite>.</p></li>
 </ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="datasketch.MinHashLSH.merge">
+<span class="sig-name descname"><span class="pre">merge</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">other</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#datasketch.MinHashLSH" title="datasketch.lsh.MinHashLSH"><span class="pre">MinHashLSH</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">check_overlap</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/datasketch/lsh.html#MinHashLSH.merge"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#datasketch.MinHashLSH.merge" title="Link to this definition"></a></dt>
+<dd><p>Merge the other MinHashLSH with this one, making this one the union
+of both.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Only num_perm, number of bands and sizes of each band is checked for equivalency of two MinHashLSH indexes.
+Other initialization parameters threshold, weights, storage_config, prepickle and hash_func are not checked.</p>
+</div>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>other</strong> (<a class="reference internal" href="#datasketch.MinHashLSH" title="datasketch.MinHashLSH"><em>MinHashLSH</em></a>) – The other MinHashLSH.</p></li>
+<li><p><strong>check_overlap</strong> (<em>bool</em>) – Check if there are any overlapping keys before merging and raise if there are any.
+(<cite>default=False</cite>)</p></li>
+</ul>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>ValueError</strong> – If the two MinHashLSH have different initialization
+    parameters, or if <cite>check_overlap</cite> is <cite>True</cite> and there are overlapping keys.</p>
 </dd>
 </dl>
 </dd></dl>
