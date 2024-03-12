@@ -77,12 +77,12 @@ plotting code.
 .. figure:: /_static/lsh_benchmark.png
    :alt: MinHashLSH Benchmark
 
-You can merge two MinHashLSH object using the ``merge`` function. This
+You can merge two MinHashLSH indexes to create a union index using the ``merge`` method. This
 makes MinHashLSH useful in parallel processing.
 
 .. code:: python
 
-    # The merges the lsh1 with lsh2.
+    # This merges the lsh1 with lsh2.
     lsh1.merge(lsh2)
 
 There are other optional parameters that can be used to tune the index.

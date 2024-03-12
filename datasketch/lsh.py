@@ -232,12 +232,16 @@ class MinHashLSH(object):
             check_overlap: bool = False      
     ):
         """Merge the other MinHashLSH with this one, making this one the union
-        of both the MinHashLSH.
+        of both.
+        
+        Note:
+            Only num_perm, number of bands and sizes of each band is checked for equivalency of two MinHashLSH indexes.
+            Other initialization parameters threshold, weights, storage_config, prepickle and hash_func are not checked.
 
         Args:
             other (MinHashLSH): The other MinHashLSH.
             check_overlap (bool): Check if there are any overlapping keys before merging and raise if there are any.
-                (`default=True`)
+                (`default=False`)
 
         Raises:
             ValueError: If the two MinHashLSH have different initialization
