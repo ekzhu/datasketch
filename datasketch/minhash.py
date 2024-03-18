@@ -72,16 +72,22 @@ class MinHash(object):
         hashobj: Optional[object] = None,  # Deprecated.
         hashvalues: Optional[Iterable] = None,
         permutations: Optional[Tuple[Iterable, Iterable]] = None,
+        mersenne_prime = _mersenne_prime,
+        max_hash = _max_hash,
+        hash_range = _hash_range
     ) -> None:
+        self.mersenne_prime = mersenne_prime
+        self.max_hash = max_hash
+        self.hash_range = hash_range
         if hashvalues is not None:
             num_perm = len(hashvalues)
-        if num_perm > _hash_range:
+        if num_perm > self.hash_range:
             # Because 1) we don't want the size to be too large, and
             # 2) we are using 4 bytes to store the size value
             raise ValueError(
                 "Cannot have more than %d number of\
                     permutation functions"
-                % _hash_range
+                % self.hash_range
             )
         self.seed = seed
         self.num_perm = num_perm
@@ -108,7 +114,7 @@ class MinHash(object):
             raise ValueError("Numbers of hash values and permutations mismatch")
 
     def _init_hashvalues(self, num_perm: int) -> np.ndarray:
-        return np.ones(num_perm, dtype=np.uint64) * _max_hash
+        return np.ones(num_perm, dtype=np.uint64) * self.max_hash
 
     def _init_permutations(self, num_perm: int) -> np.ndarray:
         # Create parameters for a random bijective permutation function
@@ -118,8 +124,8 @@ class MinHash(object):
         return np.array(
             [
                 (
-                    gen.randint(1, _mersenne_prime, dtype=np.uint64),
-                    gen.randint(0, _mersenne_prime, dtype=np.uint64),
+                    gen.randint(1, self.mersenne_prime, dtype=np.uint64),
+                    gen.randint(0, self.mersenne_prime, dtype=np.uint64),
                 )
                 for _ in range(num_perm)
             ],
@@ -158,7 +164,7 @@ class MinHash(object):
         """
         hv = self.hashfunc(b)
         a, b = self.permutations
-        phv = np.bitwise_and((a * hv + b) % _mersenne_prime, _max_hash)
+        phv = np.bitwise_and((a * hv + b) % self.mersenne_prime, self.max_hash)
         self.hashvalues = np.minimum(phv, self.hashvalues)
 
     def update_batch(self, b: Iterable) -> None:
@@ -180,7 +186,7 @@ class MinHash(object):
         """
         hv = np.array([self.hashfunc(_b) for _b in b], dtype=np.uint64, ndmin=2).T
         a, b = self.permutations
-        phv = (hv * a + b) % _mersenne_prime & _max_hash
+        phv = (hv * a + b) % self.mersenne_prime & self.max_hash
         self.hashvalues = np.vstack([phv, self.hashvalues]).min(axis=0)
 
     def jaccard(self, other: MinHash) -> float:
@@ -219,7 +225,7 @@ class MinHash(object):
             int: The estimated cardinality of the set represented by this MinHash.
         """
         k = len(self)
-        return float(k) / np.sum(self.hashvalues / float(_max_hash)) - 1.0
+        return float(k) / np.sum(self.hashvalues / float(self.max_hash)) - 1.0
 
     def merge(self, other: MinHash) -> None:
         """Merge the other MinHash with this one, making this one the union
@@ -259,7 +265,7 @@ class MinHash(object):
             bool: If the current MinHash is empty - at the state of just
                 initialized.
         """
-        if np.any(self.hashvalues != _max_hash):
+        if np.any(self.hashvalues != self.max_hash):
             return False
         return True
 

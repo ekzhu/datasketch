@@ -75,6 +75,45 @@ class BitArray:
 		return self.num_elements
 
 
+class BandedBitArray:
+	"""
+	Organizes a series of bitarrays meant to model a single band of the signature matrix
+	"""
+	def __init__(self, array_size: int, num_arrays: int):
+		self.r = num_arrays
+		self.arrays = []
+		for i in range(self.r):
+			self.arrays.append(BitArray(array_size))
+
+	def __len__(self):
+		return len(self.arrays)
+
+	def assert_size(self, indices: List[int]):
+		if not len(indices) == self.r:
+			raise RuntimeError(f"Invalid length for indices, {len(indices)}, expected {self.r} items")
+		
+		
+	def insert(self, indices: List[int]):
+		"""
+		Takes as input the indices for a single band and inserts them into the corresponding bit arrays
+		"""
+		self.assert_size(indices)
+		for i in range(self.r):
+			self.arrays[i].insert(indices[i])
+
+	def query(self, indices: List[int]):
+		"""
+		Takes as input the indices for a single band and queries them against the corresponding arrays
+		returns True if the each query returns True, otherwise returns False
+		"""
+		self.assert_size(indices)
+		for i in range(self.r):
+			matched = self.arrays[i].query(indices[i])
+			if not matched:
+				return False
+			
+		return True
+
 
 class MinHashLSHBloom(object):
 	"""
@@ -175,10 +214,10 @@ class MinHashLSHBloom(object):
 		threshold: float = 0.9,
 		num_perm: int = 128,
 		weights: Tuple[float, float] = (0.5, 0.5),
+		hashrange: int = 2**32, # size of each bitarray, equal to size of expected minhash hashes
 		params: Optional[Tuple[int, int]] = None,
 		hashfunc: Optional[Callable[[bytes], bytes]] = None,
 	) -> None:
-		storage_config = {"type": "dict"} if not storage_config else storage_config
 		self._buffer_size = 50000
 		if threshold > 1.0 or threshold < 0.0:
 			raise ValueError("threshold must be in [0.0, 1.0]")
@@ -213,9 +252,9 @@ class MinHashLSHBloom(object):
 		else:
 			self._H = self._byteswap
 
-		basename = storage_config.get("basename", _random_name(11))
+		# create a bitarray for each signature row
 		self.hashtables = [
-			BitArray(size=size)
+			BandedBitArray(array_size=hashrange, num_arrays=self.r)
 			for i in range(self.b)
 		]
 		self.hashranges = [(i * self.r, (i + 1) * self.r) for i in range(self.b)]
@@ -248,7 +287,7 @@ class MinHashLSHBloom(object):
 			raise ValueError(
 				"Expecting minhash with length %d, got %d" % (self.h, len(minhash))
 			)
-		Hs = [self._H(minhash.hashvalues[start:end]) for start, end in self.hashranges]
+		Hs = [minhash.hashvalues[start:end] for start, end in self.hashranges]
 
 		for H, hashtable in zip(Hs, self.hashtables):
 			hashtable.insert(H)
@@ -314,8 +353,9 @@ class MinHashLSHBloom(object):
 			raise ValueError(
 				"Expecting minhash with length %d, got %d" % (self.h, len(minhash))
 			)
+		# if we match in any band, this is a candidate pair
 		for (start, end), hashtable in zip(self.hashranges, self.hashtables):
-			H = self._H(minhash.hashvalues[start:end])
+			H = minhash.hashvalues[start:end]
 			collision = hashtable.query(H)
 			if collision:
 				return True

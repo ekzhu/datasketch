@@ -1,7 +1,9 @@
 import unittest
 from mock import patch
-from datasketch.lsh_bloom import BitArray, MinHashLSHBloom
+from datasketch.lsh_bloom import BitArray, BandedBitArray, MinHashLSHBloom
 from datasketch.minhash import MinHash
+from datasketch.hashfunc import sha1_hash16
+import numpy as np
 
 class TestBitArray(unittest.TestCase):
 	def test_init(self):
@@ -29,7 +31,30 @@ class TestBitArray(unittest.TestCase):
 		self.assertTrue(b.query(31))
 		self.assertFalse(b.query(0))
 		
-"""
+class TestBandedBitArray(unittest.TestCase):
+	def test_init(self):
+		r = 16
+		sz = 32
+		b = BandedBitArray(array_size=sz, num_arrays=r)
+		self.assertEqual(len(b), r)
+		
+	def test_insert(self):
+		r = 3
+		sz = 32
+		b = BandedBitArray(array_size=sz, num_arrays=r)
+		b.insert([2,3,31])
+		self.assertRaises(RuntimeError, b.insert, [2,2])
+
+	def test_query(self):
+		r = 3
+		sz = 32
+		b = BandedBitArray(array_size=sz, num_arrays=r)
+		b.insert([2,3,31])
+		self.assertTrue(b.query([2,3,31]))
+		self.assertFalse(b.query([2,3,30]))
+		self.assertRaises(RuntimeError, b.query, [2,2])
+
+
 class TestMinHashLSHBloom(unittest.TestCase):
 
 	def test_init(self):
@@ -39,6 +64,7 @@ class TestMinHashLSHBloom(unittest.TestCase):
 		b2, r2 = lsh.b, lsh.r
 		self.assertTrue(b1 < b2)
 		self.assertTrue(r1 > r2)
+		self.assertTrue(len(lsh.hashtables) == lsh.b)
 		
 
 	def test_insert(self):
@@ -47,22 +73,13 @@ class TestMinHashLSHBloom(unittest.TestCase):
 		m1.update("a".encode("utf8"))
 		m2 = MinHash(16)
 		m2.update("b".encode("utf8"))
-		lsh.insert("a", m1)
-		lsh.insert("b", m2)
+		lsh.insert(m1)
+		lsh.insert(m2)
 		for t in lsh.hashtables:
-			self.assertTrue(len(t) >= 1)
-			items = []
-			for H in t:
-				items.extend(t[H])
-			self.assertTrue("a" in items)
-			self.assertTrue("b" in items)
-		self.assertTrue("a" in lsh)
-		self.assertTrue("b" in lsh)
-		for i, H in enumerate(lsh.keys["a"]):
-			self.assertTrue("a" in lsh.hashtables[i][H])
+			self.assertTrue(len(t) == lsh.r)
 
 		m3 = MinHash(18)
-		self.assertRaises(ValueError, lsh.insert, "c", m3)
+		self.assertRaises(ValueError, lsh.insert, m3)
 
 	def test_query(self):
 		lsh = MinHashLSHBloom(threshold=0.5, num_perm=16)
@@ -70,35 +87,32 @@ class TestMinHashLSHBloom(unittest.TestCase):
 		m1.update("a".encode("utf8"))
 		m2 = MinHash(16)
 		m2.update("b".encode("utf8"))
-		lsh.insert("a", m1)
-		lsh.insert("b", m2)
+		lsh.insert(m1)
+		lsh.insert(m2)
 		result = lsh.query(m1)
-		self.assertTrue("a" in result)
+		self.assertTrue(result)
 		result = lsh.query(m2)
-		self.assertTrue("b" in result)
+		self.assertTrue(result)
 
 		m3 = MinHash(18)
 		self.assertRaises(ValueError, lsh.query, m3)
 
+	def test_16bit(self):
+		lsh = MinHashLSHBloom(threshold=0.5, num_perm=16, hashrange=2**16)
+		mersenne_prime = np.uint64((1 << 31) - 1)
+		max_hash = np.uint64((1 << 16) - 1)
+		hash_range = 1 << 16
+		m1 = MinHash(16, hashfunc=sha1_hash16, mersenne_prime=mersenne_prime, hash_range=hash_range, max_hash=max_hash)
+		m1.update("a".encode("utf8"))
+		m2 = MinHash(16, hashfunc=sha1_hash16, mersenne_prime=mersenne_prime, hash_range=hash_range, max_hash=max_hash)
+		m2.update("b".encode("utf8"))
+		lsh.insert(m1)
+		lsh.insert(m2)
+		result = lsh.query(m1)
+		self.assertTrue(result)
+		result = lsh.query(m2)
+		self.assertTrue(result)
 
-		with patch('redis.Redis', fake_redis) as mock_redis:
-			lsh = MinHashLSHBloom(threshold=0.5, num_perm=16, storage_config={
-				'type': 'redis', 'redis': {'host': 'localhost', 'port': 6379}
-			})
-			m1 = MinHash(16)
-			m1.update("a".encode("utf8"))
-			m2 = MinHash(16)
-			m2.update("b".encode("utf8"))
-			lsh.insert("a", m1)
-			lsh.insert("b", m2)
-			result = lsh.query(m1)
-			self.assertTrue("a" in result)
-			result = lsh.query(m2)
-			self.assertTrue("b" in result)
-
-			m3 = MinHash(18)
-			self.assertRaises(ValueError, lsh.query, m3)
-"""
 
 if __name__ == "__main__":
 	unittest.main()
