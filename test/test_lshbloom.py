@@ -1,9 +1,7 @@
 import unittest
-from mock import patch
+import pickle
 from datasketch.lsh_bloom import BitArray, BandedBitArray, MinHashLSHBloom
 from datasketch.minhash import MinHash
-from datasketch.hashfunc import sha1_hash16
-import numpy as np
 
 class TestBitArray(unittest.TestCase):
 	def test_init(self):
@@ -58,9 +56,9 @@ class TestBandedBitArray(unittest.TestCase):
 class TestMinHashLSHBloom(unittest.TestCase):
 
 	def test_init(self):
-		lsh = MinHashLSHBloom(threshold=0.8)
+		lsh = MinHashLSHBloom(threshold=0.8, num_bits=16)
 		b1, r1 = lsh.b, lsh.r
-		lsh = MinHashLSHBloom(threshold=0.8, weights=(0.2,0.8))
+		lsh = MinHashLSHBloom(threshold=0.8, weights=(0.2,0.8), num_bits=16)
 		b2, r2 = lsh.b, lsh.r
 		self.assertTrue(b1 < b2)
 		self.assertTrue(r1 > r2)
@@ -68,7 +66,7 @@ class TestMinHashLSHBloom(unittest.TestCase):
 		
 
 	def test_insert(self):
-		lsh = MinHashLSHBloom(threshold=0.5, num_perm=16)
+		lsh = MinHashLSHBloom(threshold=0.5, num_perm=16, num_bits=16)
 		m1 = MinHash(16)
 		m1.update("a".encode("utf8"))
 		m2 = MinHash(16)
@@ -82,7 +80,7 @@ class TestMinHashLSHBloom(unittest.TestCase):
 		self.assertRaises(ValueError, lsh.insert, m3)
 
 	def test_query(self):
-		lsh = MinHashLSHBloom(threshold=0.5, num_perm=16)
+		lsh = MinHashLSHBloom(threshold=0.5, num_perm=16, num_bits=16)
 		m1 = MinHash(16)
 		m1.update("a".encode("utf8"))
 		m2 = MinHash(16)
@@ -97,20 +95,33 @@ class TestMinHashLSHBloom(unittest.TestCase):
 		m3 = MinHash(18)
 		self.assertRaises(ValueError, lsh.query, m3)
 
-	def test_16bit(self):
-		lsh = MinHashLSHBloom(threshold=0.5, num_perm=16, hashrange=2**16)
-		mersenne_prime = np.uint64((1 << 31) - 1)
-		max_hash = np.uint64((1 << 16) - 1)
-		hash_range = 1 << 16
-		m1 = MinHash(16, hashfunc=sha1_hash16, mersenne_prime=mersenne_prime, hash_range=hash_range, max_hash=max_hash)
+	def test_8bit(self):
+		lsh = MinHashLSHBloom(threshold=0.5, num_perm=16, num_bits=8)
+		m1 = MinHash(16)
 		m1.update("a".encode("utf8"))
-		m2 = MinHash(16, hashfunc=sha1_hash16, mersenne_prime=mersenne_prime, hash_range=hash_range, max_hash=max_hash)
+		m2 = MinHash(16)
 		m2.update("b".encode("utf8"))
 		lsh.insert(m1)
 		lsh.insert(m2)
 		result = lsh.query(m1)
 		self.assertTrue(result)
 		result = lsh.query(m2)
+		self.assertTrue(result)
+
+	def test_pickle(self):
+		lsh = MinHashLSHBloom(threshold=0.5, num_perm=16, num_bits=16)
+		m1 = MinHash(16)
+		m1.update("a".encode("utf8"))
+		m2 = MinHash(16)
+		m2.update("b".encode("utf8"))
+		lsh.insert(m1)
+		lsh.insert(m2)
+		lsh2 = pickle.loads(pickle.dumps(lsh))
+		for t in lsh2.hashtables:
+			self.assertTrue(len(t) == lsh.r)
+		result = lsh2.query(m1)
+		self.assertTrue(result)
+		result = lsh2.query(m2)
 		self.assertTrue(result)
 
 

@@ -3,11 +3,10 @@ import pickle
 import struct
 from typing import Callable, Dict, Hashable, List, Optional, Tuple, Union
 from datasketch.minhash import MinHash
-from datasketch.weighted_minhash import WeightedMinHash
+from datasketch.b_bit_minhash import bBitMinHash
 from datasketch.storage import ordered_storage, unordered_storage, _random_name
 from scipy.integrate import quad as integrate
 from bitarray import bitarray
-
 
 def _false_positive_probability(threshold, b, r):
 	_probability = lambda s: 1 - (1 - s ** float(r)) ** float(b)
@@ -214,11 +213,12 @@ class MinHashLSHBloom(object):
 		threshold: float = 0.9,
 		num_perm: int = 128,
 		weights: Tuple[float, float] = (0.5, 0.5),
-		hashrange: int = 2**32, # size of each bitarray, equal to size of expected minhash hashes
+		num_bits: int = 32, # size in bits of each hashvalue, minhashes will be truncated to this size via bBitMinHashing
 		params: Optional[Tuple[int, int]] = None,
 		hashfunc: Optional[Callable[[bytes], bytes]] = None,
 	) -> None:
 		self._buffer_size = 50000
+		self.num_bits = num_bits
 		if threshold > 1.0 or threshold < 0.0:
 			raise ValueError("threshold must be in [0.0, 1.0]")
 		if num_perm < 2:
@@ -253,6 +253,7 @@ class MinHashLSHBloom(object):
 			self._H = self._byteswap
 
 		# create a bitarray for each signature row
+		hashrange = 2**self.num_bits
 		self.hashtables = [
 			BandedBitArray(array_size=hashrange, num_arrays=self.r)
 			for i in range(self.b)
@@ -261,7 +262,7 @@ class MinHashLSHBloom(object):
 
 	def insert(
 		self,
-		minhash: Union[MinHash, WeightedMinHash],
+		minhash: MinHash,
 		check_duplication: bool = True,
 	):
 		"""
@@ -281,13 +282,16 @@ class MinHashLSHBloom(object):
 
 	def _insert(
 		self,
-		minhash: Union[MinHash, WeightedMinHash]
+		minhash: MinHash
 	):
 		if len(minhash) != self.h:
 			raise ValueError(
 				"Expecting minhash with length %d, got %d" % (self.h, len(minhash))
 			)
-		Hs = [minhash.hashvalues[start:end] for start, end in self.hashranges]
+		
+		# truncate minhash to desired bit width
+		trunc_minhash = bBitMinHash(minhash=minhash, b=self.num_bits)
+		Hs = [trunc_minhash.hashvalues[start:end] for start, end in self.hashranges]
 
 		for H, hashtable in zip(Hs, self.hashtables):
 			hashtable.insert(H)
@@ -354,8 +358,9 @@ class MinHashLSHBloom(object):
 				"Expecting minhash with length %d, got %d" % (self.h, len(minhash))
 			)
 		# if we match in any band, this is a candidate pair
+		trunc_minhash = bBitMinHash(minhash=minhash, b=self.num_bits)
 		for (start, end), hashtable in zip(self.hashranges, self.hashtables):
-			H = minhash.hashvalues[start:end]
+			H = trunc_minhash.hashvalues[start:end]
 			collision = hashtable.query(H)
 			if collision:
 				return True
