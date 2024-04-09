@@ -7,6 +7,11 @@ from datasketch.b_bit_minhash import bBitMinHash
 from datasketch.storage import ordered_storage, unordered_storage, _random_name
 from scipy.integrate import quad as integrate
 from bitarray import bitarray
+import mmh3
+import numpy as np
+import math
+
+_mersenne_prime = np.uint64((1 << 61) - 1)
 
 def _false_positive_probability(threshold, b, r):
 	_probability = lambda s: 1 - (1 - s ** float(r)) ** float(b)
@@ -39,79 +44,131 @@ def _optimal_param(threshold, num_perm, false_positive_weight, false_negative_we
 	return opt
 
 
+# https://www.geeksforgeeks.org/bloom-filters-introduction-and-python-implementation/
+class BloomFilter(object): 
+	''' 
+	Class for Bloom filter, using murmur3 hash function 
+	'''
+  
+	def __init__(self, items_count, fp_prob, max_size=None): 
+		''' 
+		items_count : int 
+			Number of items expected to be stored in bloom filter 
+		fp_prob : float 
+			False Positive probability in decimal 
+		'''
+		# False possible probability in decimal 
+		self.fp_prob = fp_prob 
+  
+		# Size of bit array to use 
+		self.size = self.get_size(items_count, fp_prob) 
 
+		if max_size is not None and max_size < self.size:
+			assert type(max_size) is int, "Max Size for Bloom Filter must be an integer"
+			self.size = max_size
+  
+		# number of hash functions to use 
+		self.hash_count = self.get_hash_count(self.size, items_count) 
+  
+		# Bit array of given size 
+		self.bit_array = bitarray(self.size) 
+  
+		# initialize all bits as 0 
+		self.bit_array.setall(0) 
 
-class BitArray:
-	def __init__(self, size):
-		self.array = bitarray(size)
-		self.num_elements = 0
+	def add(self, item): 
+		''' 
+		Add an item in the filter 
+		'''
+		digests = [] 
+		for i in range(self.hash_count): 
+  
+			# create digest for given item. 
+			# i work as seed to mmh3.hash() function 
+			# With different seed, digest created is different 
+			digest = mmh3.hash(item, i) % self.size 
+			digests.append(digest)
+  
+			# set the bit True in bit_array 
+			self.bit_array[digest] = True
 
-	"""
-	Set the bit at the given index
-	"""
-	def insert(self, index: int):
-		if index < 0 or index > self.size():
-			raise IndexError(f"Index out of range for BitArray of size {self.size()}: {index}")
-		self.array[index] = 1
-		self.num_elements += 1
+		# if LOG:
+		# 	print(f"Hashing {item} to {digests}")
+  
+	def check(self, item): 
+		''' 
+		Check for existence of an item in filter 
+		'''
+		for i in range(self.hash_count): 
+			digest = mmh3.hash(item, i) % self.size 
+			if self.bit_array[digest] == False: 
+  
+				# if any of bit is False then,its not present 
+				# in filter 
+				# else there is probability that it exist 
+				return False
+		return True
+  
+	@classmethod
+	def get_size(self, n, p): 
+		''' 
+		Return the size of bit array(m) to used using 
+		following formula 
+		m = -(n * lg(p)) / (lg(2)^2) 
+		n : int 
+			number of items expected to be stored in filter 
+		p : float 
+			False Positive probability in decimal 
+		'''
+		m = -(n * math.log(p))/(math.log(2)**2) 
+		return int(m) 
+  
+	@classmethod
+	def get_hash_count(self, m, n): 
+		''' 
+		Return the hash function(k) to be used using 
+		following formula 
+		k = (m/n) * lg(2) 
+  
+		m : int 
+			size of bit array 
+		n : int 
+			number of items expected to be stored in filter 
+		'''
+		k = (m/n) * math.log(2) 
+		return max(int(k), 1)
 
+class BloomTable:
 	"""
-	Returns whether the given index is set or not
+	Interface to a Bloom Filter meant to model a single band of the signature matrix
 	"""
-	def query(self, index: int) -> bool:
-		return self.array[index] == 1
-	
-	"""
-	Returns the size of the underlying bitarray in bits
-	"""
-	def size(self) -> int:
-		return self.array.nbytes * 8
-	
-	"""
-	Returns the number of items inserted into the underlying bitarray
-	"""
-	def __len__(self) -> int:
-		return self.num_elements
-
-
-class BandedBitArray:
-	"""
-	Organizes a series of bitarrays meant to model a single band of the signature matrix
-	"""
-	def __init__(self, array_size: int, num_arrays: int):
+	def __init__(self, item_count: int, fp: float, num_arrays: int, max_size: int = None):
 		self.r = num_arrays
-		self.arrays = []
-		for i in range(self.r):
-			self.arrays.append(BitArray(array_size))
+		self.bloom_filter = BloomFilter(item_count, fp, max_size=max_size)
 
-	def __len__(self):
-		return len(self.arrays)
 
-	def assert_size(self, indices: List[int]):
-		if not len(indices) == self.r:
-			raise RuntimeError(f"Invalid length for indices, {len(indices)}, expected {self.r} items")
+	def assert_size(self, hashvalues: List[int]):
+		if not len(hashvalues) == self.r:
+			raise RuntimeError(f"Invalid length for indices, {len(hashvalues)}, expected {self.r} items")
 		
-		
-	def insert(self, indices: List[int]):
+	def insert(self, hashvalues: List[int]) -> None:
 		"""
 		Takes as input the indices for a single band and inserts them into the corresponding bit arrays
 		"""
-		self.assert_size(indices)
-		for i in range(self.r):
-			self.arrays[i].insert(indices[i])
+		self.assert_size(hashvalues)
+		# https://en.wikipedia.org/wiki/Universal_hashing#Hashing_vectors
+		# as the hashvalues are the result of a universal hashing function, their sum is also a univeral hash function
+		x = sum(hashvalues) % _mersenne_prime
+		self.bloom_filter.add(x.tobytes())
 
-	def query(self, indices: List[int]):
+	def query(self, hashvalues: List[int]) -> bool:
 		"""
 		Takes as input the indices for a single band and queries them against the corresponding arrays
 		returns True if the each query returns True, otherwise returns False
 		"""
-		self.assert_size(indices)
-		for i in range(self.r):
-			matched = self.arrays[i].query(indices[i])
-			if not matched:
-				return False
-			
-		return True
+		self.assert_size(hashvalues)
+		x = sum(hashvalues) % _mersenne_prime
+		return self.bloom_filter.check(x.tobytes())
 
 
 class MinHashLSHBloom(object):
@@ -214,6 +271,8 @@ class MinHashLSHBloom(object):
 		num_perm: int = 128,
 		weights: Tuple[float, float] = (0.5, 0.5),
 		num_bits: int = 32, # size in bits of each hashvalue, minhashes will be truncated to this size via bBitMinHashing
+		n: int = None,
+		fp: float = None,
 		params: Optional[Tuple[int, int]] = None,
 		hashfunc: Optional[Callable[[bytes], bytes]] = None,
 	) -> None:
@@ -254,8 +313,9 @@ class MinHashLSHBloom(object):
 
 		# create a bitarray for each signature row
 		hashrange = 2**self.num_bits
+		max_size = self.r * hashrange
 		self.hashtables = [
-			BandedBitArray(array_size=hashrange, num_arrays=self.r)
+			BloomTable(item_count=n, fp=fp, num_arrays=self.r, max_size=max_size)
 			for i in range(self.b)
 		]
 		self.hashranges = [(i * self.r, (i + 1) * self.r) for i in range(self.b)]
@@ -290,7 +350,9 @@ class MinHashLSHBloom(object):
 			)
 		
 		# truncate minhash to desired bit width
-		trunc_minhash = bBitMinHash(minhash=minhash, b=self.num_bits)
+		trunc_minhash = minhash
+		if self.num_bits <= 32:
+			trunc_minhash = bBitMinHash(minhash=minhash, b=self.num_bits)
 		Hs = [trunc_minhash.hashvalues[start:end] for start, end in self.hashranges]
 
 		for H, hashtable in zip(Hs, self.hashtables):
@@ -358,7 +420,9 @@ class MinHashLSHBloom(object):
 				"Expecting minhash with length %d, got %d" % (self.h, len(minhash))
 			)
 		# if we match in any band, this is a candidate pair
-		trunc_minhash = bBitMinHash(minhash=minhash, b=self.num_bits)
+		trunc_minhash = minhash
+		if self.num_bits <= 32:
+			trunc_minhash = bBitMinHash(minhash=minhash, b=self.num_bits)
 		for (start, end), hashtable in zip(self.hashranges, self.hashtables):
 			H = trunc_minhash.hashvalues[start:end]
 			collision = hashtable.query(H)
