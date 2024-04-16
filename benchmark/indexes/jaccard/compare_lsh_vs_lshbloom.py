@@ -32,13 +32,13 @@ if __name__ == '__main__':
 	query_set = DATASET['train'][split_point:]
 
 	lsh_csv = 'lsh.csv'
-	test_bits = [1, 2, 4, 8, 16, 32]
+	test_bits = [32] #[1, 2, 4, 8, 16, 32]
 
 	basename = b"test_bench"
 	sim_threshold = 0.8
 	n_hash_funcs = 128
 
-	COMPUTE_LSH = True
+	COMPUTE_LSH = False
 	COMPUTE_LSH_BLOOM = True
 
 	if COMPUTE_LSH:
@@ -80,6 +80,7 @@ if __name__ == '__main__':
 				num_bits=num_bits,
 				n=(len(insert_set['text'])+len(query_set['text'])),
 				fp=0.01,
+				save_dir="./temp_index/"
 			)
 	
 			trunc_csv = f'lsh_bloom_{num_bits}_bit.csv'
@@ -91,6 +92,8 @@ if __name__ == '__main__':
 				if m is not None:
 					lsh.insert(m)
 				
+			num_bits_used = len(lsh.hashtables)*lsh.hashtables[0].bloom_filter.num_bits
+			print(num_bits_used / 8e6, "MB used for bloom filter")
 			
 			# query against index, log whether id is duplicated
 			with open(trunc_csv, 'w') as csvfile:
@@ -105,15 +108,13 @@ if __name__ == '__main__':
 					is_duplicate = result
 					writer.writerow([key, is_duplicate])
 
-		f = open('bloom64.pkl', 'wb')
-		pickle.dump(lsh, f)
-		f.close()
+		# f = open('bloom64.pkl', 'wb')
+		# pickle.dump(lsh, f)
+		# f.close()
 
 		for i, h in enumerate(lsh.hashtables):
-			print(f"Band {i}")
-			for j, arr in enumerate(h.arrays):
-				b = arr.bit_array
-				print(f"\t{j} - {(b.count(1)/len(b))*100} % full")
+			b = h.bloom_filter
+			print(f"Band {i}\t{(b.bit_count/b.num_bits)*100} % full")
 			print()
 			
 

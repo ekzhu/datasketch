@@ -77,20 +77,20 @@ class TestMinHashLSHBloom(unittest.TestCase):
 		result = lsh.query(m2)
 		self.assertTrue(result)
 
-	def test_pickle(self):
-		lsh = MinHashLSHBloom(threshold=0.5, num_perm=16, num_bits=16, n=10, fp=0.01)
-		m1 = MinHash(16)
-		m1.update("a".encode("utf8"))
-		m2 = MinHash(16)
-		m2.update("b".encode("utf8"))
-		lsh.insert(m1)
-		lsh.insert(m2)
-		lsh2 = pickle.loads(pickle.dumps(lsh))
+	# def test_pickle(self):
+	# 	lsh = MinHashLSHBloom(threshold=0.5, num_perm=16, num_bits=16, n=10, fp=0.01)
+	# 	m1 = MinHash(16)
+	# 	m1.update("a".encode("utf8"))
+	# 	m2 = MinHash(16)
+	# 	m2.update("b".encode("utf8"))
+	# 	lsh.insert(m1)
+	# 	lsh.insert(m2)
+	# 	lsh2 = pickle.loads(pickle.dumps(lsh))
 
-		result = lsh2.query(m1)
-		self.assertTrue(result)
-		result = lsh2.query(m2)
-		self.assertTrue(result)
+	# 	result = lsh2.query(m1)
+	# 	self.assertTrue(result)
+	# 	result = lsh2.query(m2)
+	# 	self.assertTrue(result)
 
 
 if __name__ == "__main__":

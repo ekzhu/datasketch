@@ -10,6 +10,8 @@ from bitarray import bitarray
 import mmh3
 import numpy as np
 import math
+from pybloomfilter import BloomFilter
+import os
 
 _mersenne_prime = np.uint64((1 << 61) - 1)
 
@@ -44,107 +46,19 @@ def _optimal_param(threshold, num_perm, false_positive_weight, false_negative_we
 	return opt
 
 
-# https://www.geeksforgeeks.org/bloom-filters-introduction-and-python-implementation/
-class BloomFilter(object): 
-	''' 
-	Class for Bloom filter, using murmur3 hash function 
-	'''
-  
-	def __init__(self, items_count, fp_prob, max_size=None): 
-		''' 
-		items_count : int 
-			Number of items expected to be stored in bloom filter 
-		fp_prob : float 
-			False Positive probability in decimal 
-		'''
-		# False possible probability in decimal 
-		self.fp_prob = fp_prob 
-  
-		# Size of bit array to use 
-		self.size = self.get_size(items_count, fp_prob) 
-
-		if max_size is not None and max_size < self.size:
-			assert type(max_size) is int, "Max Size for Bloom Filter must be an integer"
-			self.size = max_size
-  
-		# number of hash functions to use 
-		self.hash_count = self.get_hash_count(self.size, items_count) 
-  
-		# Bit array of given size 
-		self.bit_array = bitarray(self.size) 
-  
-		# initialize all bits as 0 
-		self.bit_array.setall(0) 
-
-	def add(self, item): 
-		''' 
-		Add an item in the filter 
-		'''
-		digests = [] 
-		for i in range(self.hash_count): 
-  
-			# create digest for given item. 
-			# i work as seed to mmh3.hash() function 
-			# With different seed, digest created is different 
-			digest = mmh3.hash(item, i) % self.size 
-			digests.append(digest)
-  
-			# set the bit True in bit_array 
-			self.bit_array[digest] = True
-
-		# if LOG:
-		# 	print(f"Hashing {item} to {digests}")
-  
-	def check(self, item): 
-		''' 
-		Check for existence of an item in filter 
-		'''
-		for i in range(self.hash_count): 
-			digest = mmh3.hash(item, i) % self.size 
-			if self.bit_array[digest] == False: 
-  
-				# if any of bit is False then,its not present 
-				# in filter 
-				# else there is probability that it exist 
-				return False
-		return True
-  
-	@classmethod
-	def get_size(self, n, p): 
-		''' 
-		Return the size of bit array(m) to used using 
-		following formula 
-		m = -(n * lg(p)) / (lg(2)^2) 
-		n : int 
-			number of items expected to be stored in filter 
-		p : float 
-			False Positive probability in decimal 
-		'''
-		m = -(n * math.log(p))/(math.log(2)**2) 
-		return int(m) 
-  
-	@classmethod
-	def get_hash_count(self, m, n): 
-		''' 
-		Return the hash function(k) to be used using 
-		following formula 
-		k = (m/n) * lg(2) 
-  
-		m : int 
-			size of bit array 
-		n : int 
-			number of items expected to be stored in filter 
-		'''
-		k = (m/n) * math.log(2) 
-		return max(int(k), 1)
-
 class BloomTable:
 	"""
 	Interface to a Bloom Filter meant to model a single band of the signature matrix
 	"""
-	def __init__(self, item_count: int, fp: float, num_arrays: int, max_size: int = None):
+	def __init__(self, item_count: int, fp: float, num_arrays: int, fname: str = None, max_size: int = None):
 		self.r = num_arrays
-		self.bloom_filter = BloomFilter(item_count, fp, max_size=max_size)
+		if max_size is not None and item_count > max_size:
+			item_count = max_size
+		if fname is not None and os.path.exists(fname):
+			print(f"Loading Bloom Filter at {fname}...")
+			self.bloom_filter = BloomFilter.open(fname)
+		else:
+			self.bloom_filter = BloomFilter(capacity=item_count, error_rate=fp, filename=fname)
 
 
 	def assert_size(self, hashvalues: List[int]):
@@ -159,7 +73,7 @@ class BloomTable:
 		# https://en.wikipedia.org/wiki/Universal_hashing#Hashing_vectors
 		# as the hashvalues are the result of a universal hashing function, their sum is also a univeral hash function
 		x = sum(hashvalues) % _mersenne_prime
-		self.bloom_filter.add(x.tobytes())
+		self.bloom_filter.add(x)#.tobytes())
 
 	def query(self, hashvalues: List[int]) -> bool:
 		"""
@@ -168,7 +82,7 @@ class BloomTable:
 		"""
 		self.assert_size(hashvalues)
 		x = sum(hashvalues) % _mersenne_prime
-		return self.bloom_filter.check(x.tobytes())
+		return x in self.bloom_filter #self.bloom_filter.check(x.tobytes())
 
 
 class MinHashLSHBloom(object):
@@ -273,6 +187,7 @@ class MinHashLSHBloom(object):
 		num_bits: int = 32, # size in bits of each hashvalue, minhashes will be truncated to this size via bBitMinHashing
 		n: int = None,
 		fp: float = None,
+		save_dir: str = None, # place to save bloom filter index, if it is filled we'll load the bloom filters from there
 		params: Optional[Tuple[int, int]] = None,
 		hashfunc: Optional[Callable[[bytes], bytes]] = None,
 	) -> None:
@@ -312,10 +227,17 @@ class MinHashLSHBloom(object):
 			self._H = self._byteswap
 
 		# create a bitarray for each signature row
+		if save_dir is not None:
+			os.makedirs(save_dir, exist_ok=True)
 		hashrange = 2**self.num_bits
 		max_size = self.r * hashrange
 		self.hashtables = [
-			BloomTable(item_count=n, fp=fp, num_arrays=self.r, max_size=max_size)
+			BloomTable(
+					item_count=n, 
+					fp=fp, num_arrays=self.r, 
+					fname=os.path.join(save_dir, f"band-{i}.bf") if save_dir is not None else None, 
+					max_size=max_size
+				)
 			for i in range(self.b)
 		]
 		self.hashranges = [(i * self.r, (i + 1) * self.r) for i in range(self.b)]
