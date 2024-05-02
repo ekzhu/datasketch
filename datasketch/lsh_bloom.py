@@ -370,6 +370,11 @@ class MinHashLSHBloom(object):
 			if collision:
 				return True
 		return False
+	
+	def sync(self):
+		print("Saving Bloom Index...")
+		for table in self.hashtables:
+			table.sync()
 
 
 	def _hashed_byteswap(self, hs):
