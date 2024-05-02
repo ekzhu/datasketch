@@ -39,21 +39,44 @@ def _optimal_param(threshold, num_perm, false_positive_weight, false_negative_we
 				opt = (b, r)
 	return opt
 
+def read_base64(fname):
+	with open(fname, 'rb') as f:
+		content = f.read()
+
+	return content
+
+def write_base64(fname, content):
+	with open(fname, 'wb') as f:
+		f.write(content)
 
 class BloomTable:
 	"""
 	Interface to a Bloom Filter meant to model a single band of the signature matrix
 	"""
-	def __init__(self, item_count: int, fp: float, num_arrays: int, fname: str = None, max_size: int = None):
+	def __init__(self, item_count: int, fp: float, num_arrays: int, fname: str = None, max_size: int = None, use_mmap: bool = False):
 		self.r = num_arrays
+		self.fname = fname
+		self.use_mmap = use_mmap
 		if max_size is not None and item_count > max_size:
 			item_count = max_size
 		if fname is not None and os.path.exists(fname):
 			print(f"Loading Bloom Filter at {fname}...")
-			self.bloom_filter = BloomFilter.open(fname)
+			if self.use_mmap:
+				self.bloom_filter = BloomFilter.open(fname)
+			else:
+				b64_repr = read_base64(fname)
+				print(type(b64_repr), b64_repr)
+				self.bloom_filter = BloomFilter.from_base64("/tmp/temp.bf", b64_repr)
 		else:
 			self.bloom_filter = BloomFilter(capacity=item_count, error_rate=fp, filename=fname)
 
+	def sync(self):
+		if self.use_mmap:
+			self.bloom_filter.sync()
+		else:
+			b64_repr = self.bloom_filter.to_base64()
+			print(type(b64_repr), b64_repr)
+			write_base64(self.fname, b64_repr)
 
 	def assert_size(self, hashvalues: List[int]):
 		if not len(hashvalues) == self.r:
@@ -182,6 +205,7 @@ class MinHashLSHBloom(object):
 		n: int = None,
 		fp: float = None,
 		save_dir: str = None, # place to save bloom filter index, if it is filled we'll load the bloom filters from there
+		use_mmap: bool = False,
 		params: Optional[Tuple[int, int]] = None,
 		hashfunc: Optional[Callable[[bytes], bytes]] = None,
 	) -> None:
@@ -230,7 +254,8 @@ class MinHashLSHBloom(object):
 					item_count=n, 
 					fp=fp, num_arrays=self.r, 
 					fname=os.path.join(save_dir, f"band-{i}.bf") if save_dir is not None else None, 
-					max_size=max_size
+					max_size=max_size,
+					use_mmap=use_mmap
 				)
 			for i in range(self.b)
 		]

@@ -3,6 +3,7 @@ import pickle
 from datasketch.lsh_bloom import BloomTable, MinHashLSHBloom
 from datasketch.minhash import MinHash
 import numpy as np
+import os
 
 class TestBloomTable(unittest.TestCase):
 	def test_insert(self):
@@ -22,6 +23,52 @@ class TestBloomTable(unittest.TestCase):
 		self.assertTrue(b.query(x))
 		self.assertFalse(b.query(np.array([2,3,30], dtype=np.uint32)))
 		self.assertRaises(RuntimeError, b.query, [2,2])
+
+	def test_sync_in_memory(self):
+		fname = "/tmp/bloomfilter-mem.bf"
+		if os.path.exists(fname):
+			os.remove(fname)
+		r = 3
+		sz = 32
+		x = np.array([2,3,31], dtype=np.uint32)
+		y = np.array([12,10,29], dtype=np.uint32)
+		z = np.array([27,30,8], dtype=np.uint32)
+		items = [x,y,z]
+		b = BloomTable(10, 0.01, num_arrays=r, fname=fname, use_mmap=False)
+		for item in items:
+			b.insert(item)
+		for item in items:
+			self.assertTrue(b.query(item))
+		b.sync()
+
+		del b
+
+		b_ = BloomTable(10, 0.01, num_arrays=r, fname=fname, use_mmap=False)
+		for item in items:
+			self.assertTrue(b_.query(item))
+
+	def test_sync_mmap(self):
+		fname = "/tmp/bloomfilter.bf"
+		if os.path.exists(fname):
+			os.remove(fname)
+		r = 3
+		sz = 32
+		x = np.array([2,3,31], dtype=np.uint32)
+		y = np.array([12,10,29], dtype=np.uint32)
+		z = np.array([27,30,8], dtype=np.uint32)
+		items = [x,y,z]
+		b = BloomTable(10, 0.01, num_arrays=r, fname=fname, use_mmap=True)
+		for item in items:
+			b.insert(item)
+		for item in items:
+			self.assertTrue(b.query(item))
+		b.sync()
+
+		del b
+
+		b_ = BloomTable(10, 0.01, num_arrays=r, fname=fname, use_mmap=True)
+		for item in items:
+			self.assertTrue(b_.query(item))
 
 
 class TestMinHashLSHBloom(unittest.TestCase):
