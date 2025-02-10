@@ -42,7 +42,6 @@ def _optimal_param(threshold, num_perm, false_positive_weight, false_negative_we
 def read_base64(fname):
 	with open(fname, 'rb') as f:
 		content = f.read()
-
 	return content
 
 def write_base64(fname, content):
@@ -65,17 +64,19 @@ class BloomTable:
 				self.bloom_filter = BloomFilter.open(fname)
 			else:
 				b64_repr = read_base64(fname)
-				print(type(b64_repr), b64_repr)
 				self.bloom_filter = BloomFilter.from_base64("/tmp/temp.bf", b64_repr)
 		else:
-			self.bloom_filter = BloomFilter(capacity=item_count, error_rate=fp, filename=fname)
+			self.bloom_filter = BloomFilter(
+				capacity=item_count, 
+				error_rate=fp, 
+				filename=self.fname if self.use_mmap else None
+			)
 
 	def sync(self):
 		if self.use_mmap:
 			self.bloom_filter.sync()
 		else:
 			b64_repr = self.bloom_filter.to_base64()
-			print(type(b64_repr), b64_repr)
 			write_base64(self.fname, b64_repr)
 
 	def assert_size(self, hashvalues: List[int]):
