@@ -53,7 +53,7 @@ class BloomTable:
 	"""
 	Interface to a Bloom Filter meant to model a single band of the signature matrix
 	"""
-	def __init__(self, item_count: int, fp: float, num_arrays: int, fname: str = None, max_size: int = None, use_mmap: bool = False):
+	def __init__(self, item_count: int, fp: float, num_arrays: int, fname: str = None, max_size: int = None, use_mmap: bool = True):
 		self.r = num_arrays
 		self.fname = fname
 		self.use_mmap = use_mmap
@@ -205,7 +205,7 @@ class MinHashLSHBloom(object):
 		n: int = None,
 		fp: float = None,
 		save_dir: str = None, # place to save bloom filter index, if it is filled we'll load the bloom filters from there
-		use_mmap: bool = False,
+		use_mmap: bool = True,
 		params: Optional[Tuple[int, int]] = None,
 		hashfunc: Optional[Callable[[bytes], bytes]] = None,
 	) -> None:
