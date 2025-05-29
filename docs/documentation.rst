@@ -35,7 +35,6 @@ MinHash LSH
     :members:
     :special-members:
 
-
 Asynchronous MinHash LSH
 ------------------------
 
