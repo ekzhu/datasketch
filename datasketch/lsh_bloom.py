@@ -104,12 +104,12 @@ class MinHashLSHBloom(object):
 	"""
 	The :ref:`lsh_bloom` index.
 	It supports query with `Jaccard similarity`_ threshold.
-	Reference: `LSHBloom
+	Reference: `LSHBloom paper
 	<https://arxiv.org/abs/2411.04257>`_.
 
 	Args:
 		threshold (float): The Jaccard similarity threshold between 0.0 and
-			1.0. The initialized MinHash LSH index will be optimized for the threshold by
+			1.0. The initialized LSH index will be optimized for the threshold by
 			minizing the false positive and false negative.
 		num_perm (int): The number of permutation functions used
 			by the MinHash to be indexed. For weighted MinHash, this
@@ -236,8 +236,8 @@ class MinHashLSHBloom(object):
 		minhash: MinHash
 	):
 		"""
-		Insert a key to the index, together with a MinHash or Weighted MinHash
-		of the set referenced by the key.
+		Insert the MinHash or Weighted MinHash
+		of a set to the index.
 
 		Args:
 			minhash (Union[MinHash, WeightedMinHash]): The MinHash of the set.
@@ -261,7 +261,7 @@ class MinHashLSHBloom(object):
 
 	def query(self, minhash) -> bool:
 		"""
-		Giving the MinHash of the query set, determine
+		Given the MinHash of the query set, determine
 		whether any previously inserted sets have 
 		Jaccard similarity with the query that is
 		likely greater than the threshold.
