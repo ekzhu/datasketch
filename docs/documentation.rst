@@ -35,10 +35,18 @@ MinHash LSH
     :members:
     :special-members:
 
+
 Asynchronous MinHash LSH
 ------------------------
 
 .. autoclass:: datasketch.experimental.aio.lsh.AsyncMinHashLSH
+    :members:
+    :special-members:
+
+LSHBloom
+------------------------
+
+.. autoclass:: datasketch.MinHashLSHBloom
     :members:
     :special-members:
 
