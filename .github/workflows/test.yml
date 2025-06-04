@@ -5,7 +5,7 @@ on: [push, pull_request]
 
 jobs:
   build:
-    runs-on: "ubuntu-latest"
+    runs-on: "ubuntu-22.04"
     strategy:
       matrix:
         python-version: ["3.7", "3.8", "3.9", "3.10", "3.11"]
@@ -24,7 +24,7 @@ jobs:
         run: |
           # Disable Cassandra optional extensions (faster testing).
           export CASS_DRIVER_NO_EXTENSIONS=1
-          pip install -e .[test,experimental_aio]
+          pip install -e .[test,experimental_aio,bloom]
       - name: Test with pytest
         run: |
           pytest
