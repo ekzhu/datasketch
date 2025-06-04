@@ -9,16 +9,26 @@ This algorithm requires the Bloom filter dependency for datasketch:
 
     pip install datasketch[bloom]
 
-LSHBloom is a space-efficient alternative to :ref:`minhash_lsh` that uses `Bloom filters <https://en.wikipedia.org/wiki/Bloom_filter>`__
-to significantly reduce disk usage as well as insertion and query speed. The details
-of this algorithm can be found in the `LSHBloom paper <https://arxiv.org/abs/2411.04257>`__.
+Suppose that you want to filter a collection of sets such that the filtered collection consists of those
+sets that do not exceed a certain Jaccard similarity threshold, *T*, with any other set in the collection.
+We can perform this kind of task quickly and efficiently with MinHashes and LSHBloom.
 
-Like MinHash LSH, LSHBloom supports approximate Jaccard similarity matches. However, 
+LSHBloom is a space-efficient alternative to :ref:`minhash_lsh` that operates on the MinHash signature matrix
+(like MinHash LSH) but replaces the traditional LSHIndex with `Bloom filters <https://en.wikipedia.org/wiki/Bloom_filter>`__
+to significantly reduce disk usage as well as insertion and query speed.
+
+Like MinHash LSH, LSHBloom supports approximate Jaccard similarity matches and has a sub-linear query cost. However, 
 whereas MinHash LSH returns a series of candidate duplicates for each query set, LSHBloom 
-can only return a binary signal (0 or 1) as to whether the given query set is duplicated.
-That is, one loses the ability to manually filter candidate pairs. Additionally, one must
+can only return a binary signal (0 or 1) as to whether the given query set is duplicated (that is,
+whether it has a Jaccard similarity :math:`>= T` with any other set in the collection).
+With LSHBloom, one loses the ability to manually filter candidate pairs of duplicates, but benefits from
+significantly increased resource efficiency as a result. Another difference with MinHash LSH is that one must
 provide an estimate of the dataset size and the acceptable false positive overhead per Bloom filter
-ahead of time to properly allocate the Bloom filter index. 
+ahead of time to properly allocate the Bloom filter index. For information on these settings see :ref:`bloom-error`
+below.
+
+Further details can be found in the `LSHBloom paper <https://arxiv.org/abs/2411.04257>`__.
+
 
 .. code:: python
         
@@ -48,6 +58,7 @@ ahead of time to properly allocate the Bloom filter index.
         is_duplicate = lsh.query(m1)
         print("Is Duplicate: ", is_duplicate)
 
+.. _bloom-error:
 Error Overhead
 -----------
 
@@ -56,10 +67,10 @@ false positives. In particular, LSHBloom introduces a new parameter, *fp*, which
 allowable false positive rate for each Bloom filter in the index. Decreasing the false positive rate
 will increase the size of the index and vice versa. Given a MinHash signature matrix with *b* bands,
 a dataset of *n* sets, and a desired false positive probability per Bloom filter of *fp* the space 
-usage of LSHBloom in bits will be:
+usage of LSHBloom will be:
 
 .. math::
-   m = b * \frac{-n \ln(fp)}{(\ln 2)^2}
+   m = b * \frac{-n \ln(fp)}{(\ln 2)^2} \text{ bits}
 
 The false positive overhead per Bloom filter also alters the false positive and negative rates compared
 to MinHash LSH. In particular, for a given LSHBloom index the net false positive overhead will be
@@ -70,9 +81,9 @@ to MinHash LSH. In particular, for a given LSHBloom index the net false positive
 For MinHash LSH, the false positive and false negative rates respectively are:
 
 .. math::
-    FP = \int_{0}^{T} 1 - (1 - t^r)^b dt 
+    FP_{MinHash} = \int_{0}^{T} 1 - (1 - t^r)^b dt 
     \\
-    FN = \int_{T}^{1} 1 - (1 - (1 - t^r)^b) dt
+    FN_{MinHash} = \int_{T}^{1} 1 - (1 - (1 - t^r)^b) dt
 
 Where *T* is the Jaccard similarity threshold, *b* is the number of bands in the MinHash signature matrix,
 and *r* is the band size. 
@@ -80,9 +91,9 @@ and *r* is the band size.
 The effective false positive and false negative rates for LSHBloom are then:
 
 .. math::
-    FP_{bloom} = FP + (1 - FP) * p
+    FP_{Bloom} = FP_{MinHash} + (1 - FP_{MinHash}) * p
     \\
-    FN_{bloom} = (1 - p) * FN
+    FN_{Bloom} = (1 - p) * FN_{MinHash}
 
 So LSHBloom will slightly increase the false positive rate and slightly decrease the false negative rate,
 depending on the value of p.
