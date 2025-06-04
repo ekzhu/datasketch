@@ -3,6 +3,12 @@
 LSHBloom
 ===========
 
+This algorithm requires the Bloom filter dependency for datasketch:
+
+::
+
+    pip install datasketch[bloom]
+
 LSHBloom is a space-efficient alternative to :ref:`minhash_lsh` that uses `Bloom filters <https://en.wikipedia.org/wiki/Bloom_filter>`__
 to significantly reduce disk usage as well as insertion and query speed. The details
 of this algorithm can be found in the `LSHBloom paper <https://arxiv.org/abs/2411.04257>`__.

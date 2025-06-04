@@ -70,6 +70,11 @@ To install with Cassandra dependency:
 
     pip install datasketch[cassandra]
 
+To install with Bloom filter dependency:
+
+::
+
+    pip install datasketch[bloom]
 
 .. _`MinHash`: https://ekzhu.github.io/datasketch/minhash.html
 .. _`Weighted MinHash`: https://ekzhu.github.io/datasketch/weightedminhash.html

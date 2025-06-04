@@ -50,7 +50,6 @@ setup(
     install_requires=[
         'numpy>=1.11',
         'scipy>=1.0.0',
-        'pybloomfiltermmap3>=0.6.0',
     ],
     extras_require={
         'cassandra': [
@@ -58,6 +57,9 @@ setup(
         ],
         'redis': [
             'redis>=2.10.0',
+        ],
+        'bloom': [
+            'pybloomfilter3>=0.7.0',
         ],
         'benchmark': [
             'pyhash>=0.9.3',
