@@ -59,7 +59,7 @@ setup(
             'redis>=2.10.0',
         ],
         'bloom': [
-            'pybloomfilter3>=0.7.0',
+            'pybloomfilter3>=0.7.2',
         ],
         'benchmark': [
             'pyhash>=0.9.3',
