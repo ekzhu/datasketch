@@ -92,7 +92,14 @@ class bBitMinHash(object):
             hvs = self.hashvalues[start:start+n]
             # Store the n b-bit hashed values in the current block
             for j, hv in enumerate(hvs):
-                blocks[i] |= np.uint64(hv << (n - 1 - j) * slot_size)
+                # We do this in BigInteger rather than np.uint64 because of inconsistencies 
+                # in NumPy type coercion rules between NumPy 1.x and NumPy 2.x environments.
+                # In NumPy 2.x, implicit type conversion during bitwise operations is not 
+                # performed which can cause integer overflows. This, in turn can corrupt 
+                # hashvalues and cause pickled bBitMinHash objects to have the wrong representation. 
+                # Doing this in BigInteger guarantees we do not experience overflow and still 
+                # coerces to np.uint64 as expected. 
+                blocks[i] = int(blocks[i]) | (int(hv) << (n - 1 - j) * slot_size)
         fmt = self._serial_fmt_params + \
                 "%d%s" % (num_blocks, self._serial_fmt_block)
         struct.pack_into(fmt, buffer, 0, self.seed, self.b, self.r, \
