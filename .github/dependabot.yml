@@ -1,11 +1,17 @@
+# Basic dependabot.yml file with minimum configuration
 version: 2
 updates:
+  # Enable version updates for python
   - package-ecosystem: "pip"
     directory: "/"
     schedule:
       interval: "weekly"
-    open-pull-requests-limit: 10
+    open-pull-requests-limit: 5
     versioning-strategy: "widen"
+    labels:
+      - "dependencies"
+    pull-request-branch-name:
+      separator: "-"
     groups:
       python-minor-patch:
         update-types:
@@ -14,3 +20,14 @@ updates:
       python-major:
         update-types:
           - "major"
+
+  # Enable version updates for GitHub Actions
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+    labels:
+      - "ci"
+    pull-request-branch-name:
+      separator: "-"
+    open-pull-requests-limit: 5
