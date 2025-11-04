@@ -16,7 +16,7 @@ jobs:
     steps:
       - uses: actions/checkout@v3
       - name: Setup MongoDB
-        uses: supercharge/mongodb-github-action@1.8.0
+        uses: supercharge/mongodb-github-action@1.12.0
       - name: Set up Python ${{ matrix.python-version }}
         uses: actions/setup-python@v6
         with:
