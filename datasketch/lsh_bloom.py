@@ -1,12 +1,15 @@
 from __future__ import annotations
 from typing import Callable, List, Optional, Tuple
 from datasketch.minhash import MinHash
-from datasketch.b_bit_minhash import bBitMinHash
 from scipy.integrate import quad as integrate
 import numpy as np
-from pybloomfilter import BloomFilter
 import warnings
 import os
+
+try:
+	import pybloomfilter
+except ImportError:
+	pybloomfilter = None
 
 _mersenne_prime = np.uint64((1 << 61) - 1)
 
@@ -40,65 +43,69 @@ def _optimal_param(threshold, num_perm, false_positive_weight, false_negative_we
 				opt = (b, r)
 	return opt
 
-class BloomTable:
-	"""
-	Interface to a Bloom Filter meant to model a single band of the MinHash signature matrix
-
-	Args:
-		item_count (int): Number of items expected to be inserted (size of dataset). Used to create Bloom filter.
-		fp (float): False positive rate for Bloom filter in (0,1).
-		band_size (int): Size of band from MinHash signature matrix this filter is meant to model.
-		fname (str): File path where Bloom filter will be saved. If this file already exists, will initialize the Bloom filter from this path.
-		max_size (int): Maximum number of elements we should plan to insert into this Bloom filter. Upper bounds the size of the Bloom filter.
-	"""
-	def __init__(self, item_count: int, fp: float, band_size: int, fname: str = None):
-		self.r = band_size
-		self.fname = fname
-		if fname is not None and os.path.exists(fname):
-			print(f"Loading Bloom Filter at {fname}...")
-			self.bloom_filter = BloomFilter.open(fname)
-		else:
-			self.bloom_filter = BloomFilter(
-				capacity=item_count, 
-				error_rate=fp, 
-				filename=self.fname
-			)
-
-	def sync(self):
-		if self.fname is not None:
-			self.bloom_filter.sync()
-		else:
-			warnings.warn("Attempting to save in-memory Bloom filter, this is a no-op.", RuntimeWarning)
-
-	def assert_size(self, hashvalues: List[int]):
-		if not len(hashvalues) == self.r:
-			raise RuntimeError(f"Invalid length for indices, {len(hashvalues)}, expected {self.r} hashvalues in band")
-		
-	def insert(self, hashvalues: List[int]) -> None:
+if pybloomfilter is not None:
+	class BloomTable:
 		"""
-		Takes as input the indices for a single band and inserts them into the corresponding bit arrays
+		Interface to a Bloom Filter meant to model a single band of the MinHash signature matrix
 
 		Args:
-			hashvalues (List[int]): The hashvalues from a single band of a MinHash object.
+			item_count (int): Number of items expected to be inserted (size of dataset). Used to create Bloom filter.
+			fp (float): False positive rate for Bloom filter in (0,1).
+			band_size (int): Size of band from MinHash signature matrix this filter is meant to model.
+			fname (str): File path where Bloom filter will be saved. If this file already exists, will initialize the Bloom filter from this path.
+			max_size (int): Maximum number of elements we should plan to insert into this Bloom filter. Upper bounds the size of the Bloom filter.
 		"""
-		self.assert_size(hashvalues)
-		# https://en.wikipedia.org/wiki/Universal_hashing#Hashing_vectors
-		# as the hashvalues are the result of a universal hashing function, their sum is also a univeral hash function
-		x = sum(hashvalues) % _mersenne_prime
-		self.bloom_filter.add(x)
+		def __init__(self, item_count: int, fp: float, band_size: int, fname: str = None):
+			self.r = band_size
+			self.fname = fname
+			if fname is not None and os.path.exists(fname):
+				print(f"Loading Bloom Filter at {fname}...")
+				self.bloom_filter = pybloomfilter.BloomFilter.open(fname)
+			else:
+				self.bloom_filter = pybloomfilter.BloomFilter(
+					capacity=item_count, 
+					error_rate=fp, 
+					filename=self.fname
+				)
 
-	def query(self, hashvalues: List[int]) -> bool:
-		"""
-		Takes as input the indices for a single band and queries them against the corresponding arrays
-		returns True if the each query returns True, otherwise returns False
+		def sync(self):
+			if self.fname is not None:
+				self.bloom_filter.sync()
+			else:
+				warnings.warn("Attempting to save in-memory Bloom filter, this is a no-op.", RuntimeWarning)
 
-		Args:
-			hashvalues (List[int]): The hashvalues from a single band of a MinHash object.
-		"""
-		self.assert_size(hashvalues)
-		x = sum(hashvalues) % _mersenne_prime
-		return x in self.bloom_filter
+		def assert_size(self, hashvalues: List[int]):
+			if not len(hashvalues) == self.r:
+				raise RuntimeError(f"Invalid length for indices, {len(hashvalues)}, expected {self.r} hashvalues in band")
+			
+		def insert(self, hashvalues: List[int]) -> None:
+			"""
+			Takes as input the indices for a single band and inserts them into the corresponding bit arrays
 
+			Args:
+				hashvalues (List[int]): The hashvalues from a single band of a MinHash object.
+			"""
+			self.assert_size(hashvalues)
+			# https://en.wikipedia.org/wiki/Universal_hashing#Hashing_vectors
+			# as the hashvalues are the result of a universal hashing function, their sum is also a univeral hash function
+			x = sum(hashvalues) % _mersenne_prime
+			self.bloom_filter.add(x)
+
+		def query(self, hashvalues: List[int]) -> bool:
+			"""
+			Takes as input the indices for a single band and queries them against the corresponding arrays
+			returns True if the each query returns True, otherwise returns False
+
+			Args:
+				hashvalues (List[int]): The hashvalues from a single band of a MinHash object.
+			"""
+			self.assert_size(hashvalues)
+			x = sum(hashvalues) % _mersenne_prime
+			return x in self.bloom_filter
+else:
+	class BloomTable:
+		def __init__(self, item_count: int, fp: float, band_size: int, fname: str = None):
+			raise ImportError("Required dependency pybloomfilter is missing, did you `pip install datasketch[bloom]`?")
 
 class MinHashLSHBloom(object):
 	"""
