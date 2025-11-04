@@ -78,3 +78,30 @@ To install with Cassandra dependency:
 .. _`MinHash LSH Ensemble`: https://ekzhu.github.io/datasketch/lshensemble.html
 .. _`Minhash LSH at Scale`: http://ekzhu.github.io/datasketch/lsh.html#minhash-lsh-at-scale
 .. _`HNSW`: https://ekzhu.github.io/datasketch/documentation.html#hnsw
+
+Development Setup (using uv)
+----------------------------
+
+For contributors who wish to build or test `datasketch` locally, the project now supports
+the modern `uv` build system.
+
+To set up your local environment:
+
+::
+
+    uv sync
+
+To run the tests:
+
+::
+
+    uv run pytest
+
+You can also install optional dependencies for testing or benchmarking:
+
+::
+
+    uv sync --group test
+    uv sync --group benchmark
+
+Learn more about `uv` at https://docs.astral.sh/uv/
