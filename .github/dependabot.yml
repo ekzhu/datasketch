@@ -1,0 +1,16 @@
+version: 2
+updates:
+  - package-ecosystem: "pip"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+    open-pull-requests-limit: 10
+    versioning-strategy: "widen"
+    groups:
+      python-minor-patch:
+        update-types:
+          - "minor"
+          - "patch"
+      python-major:
+        update-types:
+          - "major"
