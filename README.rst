@@ -40,7 +40,7 @@ sub-linear query time:
 | `HNSW`_                   | Any                         | Custom Metric Top-K    |
 +---------------------------+-----------------------------+------------------------+
 
-datasketch must be used with Python 3.7 or above, NumPy 1.11 or above, and Scipy. 
+datasketch must be used with Python 3.8 or above, NumPy 1.11 or above, and Scipy. 
 
 Note that `MinHash LSH`_ and `MinHash LSH Ensemble`_ also support Redis and Cassandra 
 storage layer (see `MinHash LSH at Scale`_).
