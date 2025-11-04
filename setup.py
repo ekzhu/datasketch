@@ -80,8 +80,8 @@ setup(
             'pytest',
         ],
         'experimental_aio': [
-            "aiounittest ; python_version>='3.6'",
-            "motor ; python_version>='3.6'",
+            "aiounittest ; python_version>='3.8'",
+            "motor ; python_version>='3.8'",
         ],
     },
 )
