@@ -1,0 +1,67 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+include = ["datasketch*"]
+
+[project]
+name = "datasketch"
+version = "1.6.5"
+description = "datasketch gives you probabilistic data structures that can process and search very large amount of data super fast, with little loss of accuracy."
+readme = "README.rst"
+requires-python = ">=3.7"
+license = "MIT"
+license-files = ["LICENSE"]
+keywords = ["database", "datamining"]
+classifiers = [
+  "Development Status :: 5 - Production/Stable",
+  "Intended Audience :: Developers",
+  "Topic :: Database",
+  "Topic :: Scientific/Engineering :: Information Analysis",
+  "Programming Language :: Python :: 3.7",
+  "Programming Language :: Python :: 3.8",
+  "Programming Language :: Python :: 3.9",
+  "Programming Language :: Python :: 3.10",
+  "Programming Language :: Python :: 3.11",
+]
+authors = [
+  {name = "ekzhu", email = "ekzhu@cs.toronto.edu"}
+]
+dependencies = [
+  "numpy>=1.11",
+  "scipy>=1.0.0"
+]
+
+[project.urls]
+Homepage = "https://ekzhu.github.io/datasketch"
+Source = "https://github.com/ekzhu/datasketch"
+
+[project.optional-dependencies]
+cassandra = ["cassandra-driver>=3.20"]
+redis     = ["redis>=2.10.0"]
+benchmark = [
+  "pyhash>=0.9.3",
+  "matplotlib>=3.1.2",
+  "scikit-learn>=0.21.3",
+  "scipy>=1.3.3",
+  "pandas>=0.25.3",
+  "SetSimilaritySearch>=0.1.7",
+  "pyfarmhash>=0.2.2",
+  "nltk>=3.4.5",
+]
+test      = [
+  "cassandra-driver>=3.20",
+  "redis>=2.10.0",
+  "mock>=2.0.0",
+  "mockredispy",
+  "coverage",
+  "pymongo>=3.9.0",
+  "nose>=1.3.7",
+  "nose-exclude>=0.5.0",
+  "pytest",
+]
+experimental_aio = [
+  "aiounittest ; python_version>='3.6'",
+  "motor ; python_version>='3.6'",
+]
