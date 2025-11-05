@@ -1,8 +1,13 @@
 name: Restrict Releases
 
+# Note: This workflow runs after a release event has occurred.
+# It serves as a monitoring and audit tool to detect unauthorized releases.
+# For proactive prevention, consider using repository protection rules or
+# GitHub Actions environments with required reviewers.
+
 on:
   release:
-    types: [published, created, edited, deleted, prereleased, released, unpublished]
+    types: [published, created, edited, deleted, prereleased, unpublished]
 
 jobs:
   check-release-permission:
