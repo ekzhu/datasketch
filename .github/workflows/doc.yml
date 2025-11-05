@@ -1,14 +1,23 @@
 name: Build Documentation
 
-# Triggers the workflow on push or pull request events
-on: [push, pull_request]
+# Triggers the workflow only after successful PyPI deployment
+on:
+  workflow_run:
+    workflows: ["Upload Python Package"]
+    types:
+      - completed
+
+permissions:
+  contents: write
 
 jobs:
   build:
     runs-on: "ubuntu-latest"
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
+    environment: doc
     steps:
       - uses: actions/checkout@v5
-      - name: Set up Python ${{ matrix.python-version }}
+      - name: Set up Python
         uses: actions/setup-python@v6
         with:
           python-version: "3.x"
@@ -27,10 +36,9 @@ jobs:
           cd docs
           make html
       - name: Deploy to GitHub pages
-        if: ${{ github.ref == 'refs/heads/master' }}
         uses: JamesIves/github-pages-deploy-action@v4
         with:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          BRANCH: gh-pages
-          FOLDER: docs/_build/html
-          CLEAN: true
+          token: ${{ secrets.GITHUB_TOKEN }}
+          branch: gh-pages
+          folder: docs/_build/html
+          clean: true
