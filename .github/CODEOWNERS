@@ -1,0 +1,5 @@
+# This file defines code ownership for the datasketch repository
+# Each line is a file pattern followed by one or more owners
+
+# ekzhu owns all files in the .github directory
+.github/** @ekzhu
