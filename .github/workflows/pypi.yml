@@ -4,9 +4,11 @@
 name: Upload Python Package
 
 on:
-  release:
-    types: [published]
   workflow_dispatch:
+    inputs:
+      ref:
+        description: "Tag to deploy"
+        required: true
 
 permissions:
   contents: read
@@ -19,6 +21,8 @@ jobs:
 
     steps:
       - uses: actions/checkout@v5
+        with:
+          ref: ${{ github.event.inputs.ref }}
       - name: Set up Python
         uses: actions/setup-python@v6
         with:
