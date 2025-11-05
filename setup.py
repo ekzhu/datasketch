@@ -55,7 +55,7 @@ setup(
     ],
     extras_require={
         'cassandra': [
-            'cassandra-driver>=3.25',
+            'cassandra-driver>=3.20',
         ],
         'redis': [
             'redis>=2.10.0',
@@ -71,7 +71,7 @@ setup(
             'nltk>=3.4.5',
         ],
         'test': [
-            'cassandra-driver>=3.25',
+            'cassandra-driver>=3.20',
             'redis>=2.10.0',
             'mock>=2.0.0',
             'mockredispy',
