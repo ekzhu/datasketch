@@ -1,0 +1,19 @@
+name: Restrict Releases
+
+on:
+  release:
+    types: [published, created, edited, deleted, prereleased, released, unpublished]
+
+jobs:
+  check-release-permission:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check if release is created/updated by ekzhu
+        run: |
+          if [ "${{ github.actor }}" != "ekzhu" ]; then
+            echo "Error: Only user 'ekzhu' is allowed to create or update releases."
+            echo "Current user: ${{ github.actor }}"
+            exit 1
+          else
+            echo "Release permission granted for user 'ekzhu'."
+          fi
