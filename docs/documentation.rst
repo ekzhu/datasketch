@@ -42,6 +42,13 @@ Asynchronous MinHash LSH
     :members:
     :special-members:
 
+LSHBloom
+------------------------
+
+.. autoclass:: datasketch.MinHashLSHBloom
+    :members:
+    :special-members:
+
 MinHash LSH Forest
 ------------------
 

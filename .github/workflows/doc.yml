@@ -20,7 +20,7 @@ jobs:
         run: |
           # Disable Cassandra optional extensions (faster testing).
           export CASS_DRIVER_NO_EXTENSIONS=1
-          pip install -e .
+          pip install -e .[bloom]
       - name: Compile documentation
         run: |
           python -m pip install sphinx sphinx-rtd-theme

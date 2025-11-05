@@ -35,7 +35,7 @@ jobs:
         run: |
           # Disable Cassandra optional extensions (faster testing).
           export CASS_DRIVER_NO_EXTENSIONS=1
-          uv pip install -e .[test,experimental_aio]
+          uv pip install -e .[test,experimental_aio,bloom]
       - name: Test with pytest
         run: |
           export DO_TEST_CASSANDRA=true
