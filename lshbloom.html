@@ -1,0 +1,207 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="./">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>LSHBloom &mdash; datasketch 1.6.5 documentation</title>
+      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=03e43079" />
+      <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=e59714d7" />
+
+  
+      <script src="_static/jquery.js?v=5d32c60e"></script>
+      <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="_static/documentation_options.js?v=2ad11211"></script>
+      <script src="_static/doctools.js?v=9bcbadda"></script>
+      <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script async="async" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="MinHash LSH Ensemble" href="lshensemble.html" />
+    <link rel="prev" title="MinHash LSH" href="lsh.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="index.html" class="icon icon-home">
+            datasketch
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="documentation.html">API Documentation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="hyperloglog.html">HyperLogLog</a></li>
+<li class="toctree-l1"><a class="reference internal" href="hyperloglog.html#hyperloglog-plusplus">HyperLogLog++</a></li>
+<li class="toctree-l1"><a class="reference internal" href="lsh.html">MinHash LSH</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">LSHBloom</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#error-overhead">Error Overhead</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="lshensemble.html">MinHash LSH Ensemble</a></li>
+<li class="toctree-l1"><a class="reference internal" href="lshforest.html">MinHash LSH Forest</a></li>
+<li class="toctree-l1"><a class="reference internal" href="minhash.html">MinHash</a></li>
+<li class="toctree-l1"><a class="reference internal" href="weightedminhash.html">Weighted MinHash</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">datasketch</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">LSHBloom</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/lshbloom.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="lshbloom">
+<span id="lsh-bloom"></span><h1>LSHBloom<a class="headerlink" href="#lshbloom" title="Link to this heading"></a></h1>
+<p>This algorithm requires the Bloom filter dependency for datasketch:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">pip</span> <span class="n">install</span> <span class="n">datasketch</span><span class="p">[</span><span class="n">bloom</span><span class="p">]</span>
+</pre></div>
+</div>
+<p>Suppose that you want to filter a collection of sets such that the filtered collection consists of those
+sets that do not exceed a certain Jaccard similarity threshold, <em>T</em>, with any other set in the collection.
+We can perform this kind of task quickly and efficiently with MinHashes and LSHBloom.</p>
+<p>LSHBloom is a space-efficient alternative to <a class="reference internal" href="lsh.html#minhash-lsh"><span class="std std-ref">MinHash LSH</span></a> that operates on the MinHash signature matrix
+(like MinHash LSH) but replaces the traditional LSHIndex with <a class="reference external" href="https://en.wikipedia.org/wiki/Bloom_filter">Bloom filters</a>
+to significantly reduce disk usage as well as insertion and query speed.</p>
+<p>Like MinHash LSH, LSHBloom supports approximate Jaccard similarity matches and has a sub-linear query cost. However,
+whereas MinHash LSH returns a series of candidate duplicates for each query set, LSHBloom
+can only return a binary signal (0 or 1) as to whether the given query set is duplicated (that is,
+whether it has a Jaccard similarity <span class="math notranslate nohighlight">\(&gt;= T\)</span> with any other set in the collection).
+With LSHBloom, one loses the ability to manually filter candidate pairs of duplicates, but benefits from
+significantly increased resource efficiency as a result. Another difference with MinHash LSH is that one must
+provide an estimate of the dataset size and the acceptable false positive overhead per Bloom filter
+ahead of time to properly allocate the Bloom filter index. For information on these settings see <a class="reference internal" href="#bloom-error"><span class="std std-ref">Error Overhead</span></a>
+below.</p>
+<p>Further details can be found in the <a class="reference external" href="https://arxiv.org/abs/2411.04257">LSHBloom paper</a>.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">datasketch</span><span class="w"> </span><span class="kn">import</span> <span class="n">MinHash</span><span class="p">,</span> <span class="n">MinHashLSHBloom</span>
+
+<span class="n">set1</span> <span class="o">=</span> <span class="nb">set</span><span class="p">([</span><span class="s1">&#39;minhash&#39;</span><span class="p">,</span> <span class="s1">&#39;is&#39;</span><span class="p">,</span> <span class="s1">&#39;a&#39;</span><span class="p">,</span> <span class="s1">&#39;probabilistic&#39;</span><span class="p">,</span> <span class="s1">&#39;data&#39;</span><span class="p">,</span> <span class="s1">&#39;structure&#39;</span><span class="p">,</span> <span class="s1">&#39;for&#39;</span><span class="p">,</span>
+            <span class="s1">&#39;estimating&#39;</span><span class="p">,</span> <span class="s1">&#39;the&#39;</span><span class="p">,</span> <span class="s1">&#39;similarity&#39;</span><span class="p">,</span> <span class="s1">&#39;between&#39;</span><span class="p">,</span> <span class="s1">&#39;datasets&#39;</span><span class="p">])</span>
+<span class="n">set2</span> <span class="o">=</span> <span class="nb">set</span><span class="p">([</span><span class="s1">&#39;minhash&#39;</span><span class="p">,</span> <span class="s1">&#39;is&#39;</span><span class="p">,</span> <span class="s1">&#39;a&#39;</span><span class="p">,</span> <span class="s1">&#39;probability&#39;</span><span class="p">,</span> <span class="s1">&#39;data&#39;</span><span class="p">,</span> <span class="s1">&#39;structure&#39;</span><span class="p">,</span> <span class="s1">&#39;for&#39;</span><span class="p">,</span>
+            <span class="s1">&#39;estimating&#39;</span><span class="p">,</span> <span class="s1">&#39;the&#39;</span><span class="p">,</span> <span class="s1">&#39;similarity&#39;</span><span class="p">,</span> <span class="s1">&#39;between&#39;</span><span class="p">,</span> <span class="s1">&#39;documents&#39;</span><span class="p">])</span>
+<span class="n">set3</span> <span class="o">=</span> <span class="nb">set</span><span class="p">([</span><span class="s1">&#39;minhash&#39;</span><span class="p">,</span> <span class="s1">&#39;is&#39;</span><span class="p">,</span> <span class="s1">&#39;probability&#39;</span><span class="p">,</span> <span class="s1">&#39;data&#39;</span><span class="p">,</span> <span class="s1">&#39;structure&#39;</span><span class="p">,</span> <span class="s1">&#39;for&#39;</span><span class="p">,</span>
+            <span class="s1">&#39;estimating&#39;</span><span class="p">,</span> <span class="s1">&#39;the&#39;</span><span class="p">,</span> <span class="s1">&#39;similarity&#39;</span><span class="p">,</span> <span class="s1">&#39;between&#39;</span><span class="p">,</span> <span class="s1">&#39;documents&#39;</span><span class="p">])</span>
+
+<span class="n">m1</span> <span class="o">=</span> <span class="n">MinHash</span><span class="p">(</span><span class="n">num_perm</span><span class="o">=</span><span class="mi">128</span><span class="p">)</span>
+<span class="n">m2</span> <span class="o">=</span> <span class="n">MinHash</span><span class="p">(</span><span class="n">num_perm</span><span class="o">=</span><span class="mi">128</span><span class="p">)</span>
+<span class="n">m3</span> <span class="o">=</span> <span class="n">MinHash</span><span class="p">(</span><span class="n">num_perm</span><span class="o">=</span><span class="mi">128</span><span class="p">)</span>
+<span class="k">for</span> <span class="n">d</span> <span class="ow">in</span> <span class="n">set1</span><span class="p">:</span>
+    <span class="n">m1</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">d</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="s1">&#39;utf8&#39;</span><span class="p">))</span>
+<span class="k">for</span> <span class="n">d</span> <span class="ow">in</span> <span class="n">set2</span><span class="p">:</span>
+    <span class="n">m2</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">d</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="s1">&#39;utf8&#39;</span><span class="p">))</span>
+<span class="k">for</span> <span class="n">d</span> <span class="ow">in</span> <span class="n">set3</span><span class="p">:</span>
+    <span class="n">m3</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">d</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="s1">&#39;utf8&#39;</span><span class="p">))</span>
+
+<span class="c1"># Create LSHBloom index</span>
+<span class="n">lsh</span> <span class="o">=</span> <span class="n">MinHashLSHBloom</span><span class="p">(</span><span class="n">threshold</span><span class="o">=</span><span class="mf">0.5</span><span class="p">,</span> <span class="n">num_perm</span><span class="o">=</span><span class="mi">128</span><span class="p">,</span> <span class="n">n</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span> <span class="n">fp</span><span class="o">=</span><span class="mf">0.001</span><span class="p">)</span>
+<span class="n">lsh</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="s2">&quot;m2&quot;</span><span class="p">,</span> <span class="n">m2</span><span class="p">)</span>
+<span class="n">lsh</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="s2">&quot;m3&quot;</span><span class="p">,</span> <span class="n">m3</span><span class="p">)</span>
+<span class="n">is_duplicate</span> <span class="o">=</span> <span class="n">lsh</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">m1</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Is Duplicate: &quot;</span><span class="p">,</span> <span class="n">is_duplicate</span><span class="p">)</span>
+</pre></div>
+</div>
+<section id="error-overhead">
+<span id="bloom-error"></span><h2>Error Overhead<a class="headerlink" href="#error-overhead" title="Link to this heading"></a></h2>
+<p>Because LSHBloom uses Bloom filters to save space, it also introduces some additonal
+false positives. In particular, LSHBloom introduces a new parameter, <em>fp</em>, which is the
+allowable false positive rate for each Bloom filter in the index. Decreasing the false positive rate
+will increase the size of the index and vice versa. Given a MinHash signature matrix with <em>b</em> bands,
+a dataset of <em>n</em> sets, and a desired false positive probability per Bloom filter of <em>fp</em> the space
+usage of LSHBloom will be:</p>
+<div class="math notranslate nohighlight">
+\[m = b * \frac{-n \ln(fp)}{(\ln 2)^2} \text{ bits}\]</div>
+<p>The false positive overhead per Bloom filter also alters the false positive and negative rates compared
+to MinHash LSH. In particular, for a given LSHBloom index the net false positive overhead will be</p>
+<div class="math notranslate nohighlight">
+\[p = 1 - (1 - fp)^b\]</div>
+<p>For MinHash LSH, the false positive and false negative rates respectively are:</p>
+<div class="math notranslate nohighlight">
+\[\begin{split}FP_{MinHash} = \int_{0}^{T} 1 - (1 - t^r)^b dt
+\\
+FN_{MinHash} = \int_{T}^{1} 1 - (1 - (1 - t^r)^b) dt\end{split}\]</div>
+<p>Where <em>T</em> is the Jaccard similarity threshold, <em>b</em> is the number of bands in the MinHash signature matrix,
+and <em>r</em> is the band size.</p>
+<p>The effective false positive and false negative rates for LSHBloom are then:</p>
+<div class="math notranslate nohighlight">
+\[\begin{split}FP_{Bloom} = FP_{MinHash} + (1 - FP_{MinHash}) * p
+\\
+FN_{Bloom} = (1 - p) * FN_{MinHash}\end{split}\]</div>
+<p>So LSHBloom will slightly increase the false positive rate and slightly decrease the false negative rate,
+depending on the value of p.</p>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="lsh.html" class="btn btn-neutral float-left" title="MinHash LSH" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="lshensemble.html" class="btn btn-neutral float-right" title="MinHash LSH Ensemble" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2025, Eric Zhu.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+    <!-- Theme Analytics -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=UA-93507731-1"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+
+      gtag('config', 'UA-93507731-1', {
+          'anonymize_ip': false,
+      });
+    </script> 
+
+</body>
+</html>
