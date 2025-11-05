@@ -12,6 +12,8 @@ on:
 jobs:
   check-release-permission:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
     steps:
       - name: Check if release is created/updated by ekzhu
         run: |
