@@ -101,7 +101,7 @@ You can also install optional dependencies for testing or benchmarking:
 
 ::
 
-    uv sync --group test
-    uv sync --group benchmark
+    uv sync --extra test
+    uv sync --extra benchmark
 
 Learn more about `uv` at https://docs.astral.sh/uv/
