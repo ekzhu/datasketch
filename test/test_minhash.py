@@ -10,7 +10,6 @@ from test.utils import fake_hash_func
 
 
 class TestMinHash(unittest.TestCase):
-
     def test_init(self):
         m1 = minhash.MinHash(4, 1, hashfunc=fake_hash_func)
         m2 = minhash.MinHash(4, 1, hashfunc=fake_hash_func)
@@ -107,7 +106,7 @@ class TestMinHash(unittest.TestCase):
 
     def test_byte_tokens(self):
         m = minhash.MinHash(4, 1)
-        m.update(b'Hello')
+        m.update(b"Hello")
         self.assertListEqual(
             m.hashvalues.tolist(),
             [734825475, 960773806, 359816889, 342714745],
@@ -115,7 +114,7 @@ class TestMinHash(unittest.TestCase):
 
     def test_bulk(self):
         kwargs = dict(num_perm=4, seed=1, hashfunc=fake_hash_func)
-        b = [[n*4 for n in range(4)]]*2
+        b = [[n * 4 for n in range(4)]] * 2
         m1 = minhash.MinHash(**kwargs)
         m1.update_batch(b[0])
         m2, m3 = minhash.MinHash.bulk(b, **kwargs)
@@ -124,7 +123,6 @@ class TestMinHash(unittest.TestCase):
 
 
 class TestbBitMinHash(unittest.TestCase):
-
     def setUp(self):
         self.m = minhash.MinHash(hashfunc=fake_hash_func)
         self.m.update(11)
@@ -184,7 +182,7 @@ class TestbBitMinHash(unittest.TestCase):
 
     def test_bytesize(self):
         s = bBitMinHash(self.m).bytesize()
-        self.assertGreaterEqual(s, 8*2+4+1+self.m.hashvalues.size/64)
+        self.assertGreaterEqual(s, 8 * 2 + 4 + 1 + self.m.hashvalues.size / 64)
 
     def test_pickle(self):
         for num_perm in [1 << i for i in range(4, 10)]:

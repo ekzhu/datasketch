@@ -18,22 +18,21 @@ def fake_redis(**kwargs):
 
 
 class TestMinHashLSH(unittest.TestCase):
-
     def test_init(self):
         lsh = MinHashLSH(threshold=0.8)
         self.assertTrue(lsh.is_empty())
         b1, r1 = lsh.b, lsh.r
-        lsh = MinHashLSH(threshold=0.8, weights=(0.2,0.8))
+        lsh = MinHashLSH(threshold=0.8, weights=(0.2, 0.8))
         b2, r2 = lsh.b, lsh.r
         self.assertTrue(b1 < b2)
         self.assertTrue(r1 > r2)
 
     def test__H(self):
-        '''
+        """
         Check _H output consistent bytes length given
         the same concatenated hash value size
-        '''
-        for l in range(2, 128+1, 16):
+        """
+        for l in range(2, 128 + 1, 16):
             lsh = MinHashLSH(num_perm=128)
             m = MinHash()
             m.update(b"abcdefg")
@@ -141,10 +140,12 @@ class TestMinHashLSH(unittest.TestCase):
         self.assertTrue("b" in result)
 
     def test_insert_redis(self):
-        with patch('redis.Redis', fake_redis) as mock_redis:
-            lsh = MinHashLSH(threshold=0.5, num_perm=16, storage_config={
-                'type': 'redis', 'redis': {'host': 'localhost', 'port': 6379}
-            })
+        with patch("redis.Redis", fake_redis) as mock_redis:
+            lsh = MinHashLSH(
+                threshold=0.5,
+                num_perm=16,
+                storage_config={"type": "redis", "redis": {"host": "localhost", "port": 6379}},
+            )
             m1 = MinHash(16)
             m1.update(b"a")
             m2 = MinHash(16)
@@ -167,10 +168,12 @@ class TestMinHashLSH(unittest.TestCase):
             self.assertRaises(ValueError, lsh.insert, "c", m3)
 
     def test_query_redis(self):
-        with patch('redis.Redis', fake_redis) as mock_redis:
-            lsh = MinHashLSH(threshold=0.5, num_perm=16, storage_config={
-                'type': 'redis', 'redis': {'host': 'localhost', 'port': 6379}
-            })
+        with patch("redis.Redis", fake_redis) as mock_redis:
+            lsh = MinHashLSH(
+                threshold=0.5,
+                num_perm=16,
+                storage_config={"type": "redis", "redis": {"host": "localhost", "port": 6379}},
+            )
             m1 = MinHash(16)
             m1.update(b"a")
             m2 = MinHash(16)
@@ -186,10 +189,12 @@ class TestMinHashLSH(unittest.TestCase):
             self.assertRaises(ValueError, lsh.query, m3)
 
     def test_query_buffer_redis(self):
-        with patch('redis.Redis', fake_redis) as mock_redis:
-            lsh = MinHashLSH(threshold=0.5, num_perm=16, storage_config={
-                'type': 'redis', 'redis': {'host': 'localhost', 'port': 6379}
-            })
+        with patch("redis.Redis", fake_redis) as mock_redis:
+            lsh = MinHashLSH(
+                threshold=0.5,
+                num_perm=16,
+                storage_config={"type": "redis", "redis": {"host": "localhost", "port": 6379}},
+            )
             m1 = MinHash(16)
             m1.update(b"a")
             m2 = MinHash(16)
@@ -248,16 +253,16 @@ class TestMinHashLSH(unittest.TestCase):
         m1.update(b"a")
         m2 = MinHash(16)
         m2.update(b"b")
-        lsh1.insert("a",m1)
-        lsh1.insert("b",m2)
+        lsh1.insert("a", m1)
+        lsh1.insert("b", m2)
 
         lsh2 = MinHashLSH(threshold=0.5, num_perm=16)
         m3 = MinHash(16)
         m3.update(b"c")
         m4 = MinHash(16)
         m4.update(b"d")
-        lsh2.insert("c",m1)
-        lsh2.insert("d",m2)
+        lsh2.insert("c", m1)
+        lsh2.insert("d", m2)
 
         lsh1.merge(lsh2)
         for t in lsh1.hashtables:
@@ -280,7 +285,7 @@ class TestMinHashLSH(unittest.TestCase):
         m5 = MinHash(16)
         m5.update(b"e")
         lsh3 = MinHashLSH(threshold=0.5, num_perm=16)
-        lsh3.insert("a",m5)
+        lsh3.insert("a", m5)
 
         self.assertRaises(ValueError, lsh1.merge, lsh3, check_overlap=True)
 
@@ -289,19 +294,22 @@ class TestMinHashLSH(unittest.TestCase):
         m6 = MinHash(16)
         m6.update(b"e")
         lsh4 = MinHashLSH(threshold=0.5, num_perm=16)
-        lsh4.insert("a",m6)
+        lsh4.insert("a", m6)
 
         lsh1.merge(lsh4, check_overlap=False)
 
-
     def test_merge_redis(self):
-        with patch('redis.Redis', fake_redis) as mock_redis:
-            lsh1 = MinHashLSH(threshold=0.5, num_perm=16, storage_config={
-                'type': 'redis', 'redis': {'host': 'localhost', 'port': 6379}
-            })
-            lsh2 = MinHashLSH(threshold=0.5, num_perm=16, storage_config={
-                'type': 'redis', 'redis': {'host': 'localhost', 'port': 6379}
-            })
+        with patch("redis.Redis", fake_redis) as mock_redis:
+            lsh1 = MinHashLSH(
+                threshold=0.5,
+                num_perm=16,
+                storage_config={"type": "redis", "redis": {"host": "localhost", "port": 6379}},
+            )
+            lsh2 = MinHashLSH(
+                threshold=0.5,
+                num_perm=16,
+                storage_config={"type": "redis", "redis": {"host": "localhost", "port": 6379}},
+            )
 
             m1 = MinHash(16)
             m1.update(b"a")
@@ -337,41 +345,44 @@ class TestMinHashLSH(unittest.TestCase):
 
             m5 = MinHash(16)
             m5.update(b"e")
-            lsh3 = MinHashLSH(threshold=0.5, num_perm=16, storage_config={
-                'type': 'redis', 'redis': {'host': 'localhost', 'port': 6379}
-            })
-            lsh3.insert("a",m5)
+            lsh3 = MinHashLSH(
+                threshold=0.5,
+                num_perm=16,
+                storage_config={"type": "redis", "redis": {"host": "localhost", "port": 6379}},
+            )
+            lsh3.insert("a", m5)
 
             self.assertRaises(ValueError, lsh1.merge, lsh3, check_overlap=True)
 
             m6 = MinHash(16)
             m6.update(b"e")
-            lsh4 = MinHashLSH(threshold=0.5, num_perm=16, storage_config={
-                'type': 'redis', 'redis': {'host': 'localhost', 'port': 6379}
-            })
-            lsh4.insert("a",m6)
+            lsh4 = MinHashLSH(
+                threshold=0.5,
+                num_perm=16,
+                storage_config={"type": "redis", "redis": {"host": "localhost", "port": 6379}},
+            )
+            lsh4.insert("a", m6)
 
             lsh1.merge(lsh4, check_overlap=False)
 
 
 class TestWeightedMinHashLSH(unittest.TestCase):
-
     def test_init(self):
         lsh = MinHashLSH(threshold=0.8)
         self.assertTrue(lsh.is_empty())
         b1, r1 = lsh.b, lsh.r
-        lsh = MinHashLSH(threshold=0.8, weights=(0.2,0.8))
+        lsh = MinHashLSH(threshold=0.8, weights=(0.2, 0.8))
         b2, r2 = lsh.b, lsh.r
         self.assertTrue(b1 < b2)
         self.assertTrue(r1 > r2)
 
     def test__H(self):
-        '''
+        """
         Check _H output consistent bytes length given
         the same concatenated hash value size
-        '''
+        """
         mg = WeightedMinHashGenerator(100, sample_size=128)
-        for l in range(2, mg.sample_size+1, 16):
+        for l in range(2, mg.sample_size + 1, 16):
             m = mg.minhash(np.random.randint(1, 99999999, 100))
             lsh = MinHashLSH(num_perm=128)
             lsh.insert("m", m)

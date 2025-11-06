@@ -17,7 +17,6 @@ def fake_redis(**kwargs):
 
 
 class TestMinHashLSHEnsemble(unittest.TestCase):
-
     def test_init(self):
         lsh = MinHashLSHEnsemble(threshold=0.8)
         self.assertTrue(lsh.is_empty())
@@ -63,9 +62,8 @@ class TestMinHashLSHEnsemble(unittest.TestCase):
                 "port": 6379,
             },
         }
-        with patch('redis.Redis', fake_redis):
-            lsh = MinHashLSHEnsemble(threshold=0.8,
-                    storage_config=storage_config)
+        with patch("redis.Redis", fake_redis):
+            lsh = MinHashLSHEnsemble(threshold=0.8, storage_config=storage_config)
             lsh.index(self._data(64))
             self.assertFalse(lsh.is_empty())
             self.assertTrue(41 in lsh)
@@ -78,9 +76,8 @@ class TestMinHashLSHEnsemble(unittest.TestCase):
                 "port": 6379,
             },
         }
-        with patch('redis.Redis', fake_redis):
-            lsh = MinHashLSHEnsemble(threshold=0.9,
-                    storage_config=storage_config)
+        with patch("redis.Redis", fake_redis):
+            lsh = MinHashLSHEnsemble(threshold=0.9, storage_config=storage_config)
             data = list(self._data(64))
             lsh.index(data)
             for key, minhash, size in data:

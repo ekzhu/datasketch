@@ -8,41 +8,37 @@ from datasketch.minhash import MinHash
 from datasketch.weighted_minhash import WeightedMinHashGenerator
 
 STORAGE_CONFIG_CASSANDRA = {
-    'basename': b'test',
-    'type': 'cassandra',
-    'cassandra': {
-        'seeds': ['127.0.0.1'],
-        'keyspace': 'lsh_test',
-        'replication': {
-            'class': 'SimpleStrategy',
-            'replication_factor': '1'
-        },
-        'drop_keyspace': True,
-        'drop_tables': True,
-    }
+    "basename": b"test",
+    "type": "cassandra",
+    "cassandra": {
+        "seeds": ["127.0.0.1"],
+        "keyspace": "lsh_test",
+        "replication": {"class": "SimpleStrategy", "replication_factor": "1"},
+        "drop_keyspace": True,
+        "drop_tables": True,
+    },
 }
 DO_TEST_CASSANDRA = os.environ.get("DO_TEST_CASSANDRA") == "true"
 
 
 class TestMinHashLSHCassandra(unittest.TestCase):
-
     @unittest.skipIf(not DO_TEST_CASSANDRA, "Skipping test_cassandra__init")
     def test_cassandra__init(self):
         lsh = MinHashLSH(threshold=0.8, storage_config=STORAGE_CONFIG_CASSANDRA)
         self.assertTrue(lsh.is_empty())
         b1, r1 = lsh.b, lsh.r
-        lsh = MinHashLSH(threshold=0.8, weights=(0.2,0.8))
+        lsh = MinHashLSH(threshold=0.8, weights=(0.2, 0.8))
         b2, r2 = lsh.b, lsh.r
         self.assertTrue(b1 < b2)
         self.assertTrue(r1 > r2)
 
     @unittest.skipIf(not DO_TEST_CASSANDRA, "Skipping test_cassandra__H")
     def test_cassandra__H(self):
-        '''
+        """
         Check _H output consistent bytes length given
         the same concatenated hash value size
-        '''
-        for l in range(2, 128+1, 16):
+        """
+        for l in range(2, 128 + 1, 16):
             lsh = MinHashLSH(num_perm=128, storage_config=STORAGE_CONFIG_CASSANDRA)
             m = MinHash()
             m.update(b"abcdefg")
@@ -181,25 +177,24 @@ class TestMinHashLSHCassandra(unittest.TestCase):
 
 
 class TestWeightedMinHashLSHCassandra(unittest.TestCase):
-
     @unittest.skipIf(not DO_TEST_CASSANDRA, "Skipping test_cassandra__init")
     def test_cassandra__init(self):
         lsh = MinHashLSH(threshold=0.8, storage_config=STORAGE_CONFIG_CASSANDRA)
         self.assertTrue(lsh.is_empty())
         b1, r1 = lsh.b, lsh.r
-        lsh = MinHashLSH(threshold=0.8, weights=(0.2,0.8), storage_config=STORAGE_CONFIG_CASSANDRA)
+        lsh = MinHashLSH(threshold=0.8, weights=(0.2, 0.8), storage_config=STORAGE_CONFIG_CASSANDRA)
         b2, r2 = lsh.b, lsh.r
         self.assertTrue(b1 < b2)
         self.assertTrue(r1 > r2)
 
     @unittest.skipIf(not DO_TEST_CASSANDRA, "Skipping test_cassandra__H")
     def test_cassandra__H(self):
-        '''
+        """
         Check _H output consistent bytes length given
         the same concatenated hash value size
-        '''
+        """
         mg = WeightedMinHashGenerator(100, sample_size=128)
-        for l in range(2, mg.sample_size+1, 16):
+        for l in range(2, mg.sample_size + 1, 16):
             m = mg.minhash(np.random.randint(1, 99999999, 100))
             lsh = MinHashLSH(num_perm=128, storage_config=STORAGE_CONFIG_CASSANDRA)
             lsh.insert("m", m)
