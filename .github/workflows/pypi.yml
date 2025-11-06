@@ -4,14 +4,13 @@
 name: Build and Publish Package
 
 on:
-  # push:
-  #   branches: [master]
-  # pull_request:
-  #   branches: [master]
-  #   paths:
-  #     - ".github/workflows/pypi.yml"
-  #     - "pyproject.toml"
-  #     - "datasketch/**"
+  push:
+    branches: [master]
+  pull_request:
+    branches: [master]
+    paths:
+      - ".github/workflows/pypi.yml"
+      - "pyproject.toml"
   workflow_dispatch:
     inputs:
       ref:
@@ -54,9 +53,9 @@ jobs:
           uv run python -c "from datasketch import MinHash, HyperLogLog, MinHashLSH; print('✓ Core imports')"
           uv run python -c "from datasketch import LeanMinHash, WeightedMinHash; print('✓ Additional imports')"
 
-      - name: Publish package to PyPI
-        if: github.event_name == 'workflow_dispatch' && github.event.inputs.ref != '' # Only on manual trigger
-        uses: pypa/gh-action-pypi-publish@v1.13.0
+      # - name: Publish package to PyPI
+      #   if: github.event_name == 'workflow_dispatch' && github.event.inputs.ref != '' # Only on manual trigger
+      #   uses: pypa/gh-action-pypi-publish@v1.13.0
 
       - name: Minimize uv cache
         run: uv cache prune --ci
