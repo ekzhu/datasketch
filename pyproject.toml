@@ -7,7 +7,7 @@ include = ["datasketch*"]
 
 [project]
 name = "datasketch"
-version = "1.6.5"
+version = "1.7.0"
 description = "datasketch gives you probabilistic data structures that can process and search very large amount of data super fast, with little loss of accuracy."
 readme = "README.rst"
 requires-python = ">=3.7"
@@ -65,4 +65,8 @@ experimental_aio = [
   "aiounittest ; python_version>='3.6'",
   "motor ; python_version>='3.6'",
 ]
-docs = ["sphinx>=7.0.0", "sphinx-rtd-theme>=2.0.0"]
+docs = ["sphinx", "sphinx-rtd-theme"]
+bloom = [
+    'pybloomfilter3>=0.7.2 ; python_version>="3.9"',
+    'pybloomfiltermmap3==0.6.0 ; python_version<"3.9"',
+]

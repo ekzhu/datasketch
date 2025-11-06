@@ -10,7 +10,7 @@ jobs:
     steps:
       - uses: actions/checkout@v5
       - name: Set up Python ${{ matrix.python-version }}
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v6
         with:
           python-version: "3.x"
 
@@ -21,7 +21,7 @@ jobs:
         run: |
           # Disable Cassandra optional extensions (faster testing).
           export CASS_DRIVER_NO_EXTENSIONS=1
-          uv sync --group docs
+          uv sync --extra docs --extra bloom
 
       - name: Build documentation
         run: |

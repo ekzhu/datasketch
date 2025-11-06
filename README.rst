@@ -33,6 +33,8 @@ sub-linear query time:
 +===========================+=============================+========================+
 | `MinHash LSH`_            | MinHash, Weighted MinHash   | Jaccard Threshold      |
 +---------------------------+-----------------------------+------------------------+
+| `LSHBloom`_               | MinHash, Weighted MinHash   | Jaccard Threshold      |
++---------------------------+-----------------------------+------------------------+
 | `MinHash LSH Forest`_     | MinHash, Weighted MinHash   | Jaccard Top-K          |
 +---------------------------+-----------------------------+------------------------+
 | `MinHash LSH Ensemble`_   | MinHash                     | Containment Threshold  |
@@ -40,7 +42,7 @@ sub-linear query time:
 | `HNSW`_                   | Any                         | Custom Metric Top-K    |
 +---------------------------+-----------------------------+------------------------+
 
-datasketch must be used with Python 3.7 or above, NumPy 1.11 or above, and Scipy. 
+datasketch must be used with Python 3.8 or above, NumPy 1.11 or above, and Scipy.
 
 Note that `MinHash LSH`_ and `MinHash LSH Ensemble`_ also support Redis and Cassandra 
 storage layer (see `MinHash LSH at Scale`_).
@@ -68,6 +70,11 @@ To install with Cassandra dependency:
 
     pip install datasketch[cassandra]
 
+To install with Bloom filter dependency:
+
+::
+
+    pip install datasketch[bloom]
 
 .. _`MinHash`: https://ekzhu.github.io/datasketch/minhash.html
 .. _`Weighted MinHash`: https://ekzhu.github.io/datasketch/weightedminhash.html
@@ -76,6 +83,7 @@ To install with Cassandra dependency:
 .. _`MinHash LSH`: https://ekzhu.github.io/datasketch/lsh.html
 .. _`MinHash LSH Forest`: https://ekzhu.github.io/datasketch/lshforest.html
 .. _`MinHash LSH Ensemble`: https://ekzhu.github.io/datasketch/lshensemble.html
+.. _`LSHBloom`: https://ekzhu.github.io/datasketch/lshbloom.html
 .. _`Minhash LSH at Scale`: http://ekzhu.github.io/datasketch/lsh.html#minhash-lsh-at-scale
 .. _`HNSW`: https://ekzhu.github.io/datasketch/documentation.html#hnsw
 
