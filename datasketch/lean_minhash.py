@@ -5,7 +5,7 @@ from collections.abc import Iterable
 
 import numpy as np
 
-from datasketch import MinHash
+from datasketch.minhash import MinHash
 
 
 class LeanMinHash(MinHash):
