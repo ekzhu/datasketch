@@ -127,7 +127,8 @@ ignore = [
   "F841",   # TODO: local variable is assigned to but never used
   "E741",   # TODO: ambiguous variable name
   "UP008",  # TODO: super-call-with-parameters
-  "UP028",  # TODO: use `yield from` instead of `for` loop
+  "UP028",  # TODO: yield-in-for-loop
+  "UP031",  # TODO: printf-string-formatting
 ]
 
 [tool.setuptools.dynamic]
