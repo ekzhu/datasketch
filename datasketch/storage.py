@@ -250,7 +250,7 @@ class DictSetStorage(UnorderedStorage, DictListStorage):
 
 if cassandra is not None:
 
-    class CassandraSharedSession(object):
+    class CassandraSharedSession:
         """Cassandra session shared across all storage instances."""
 
         __session = None
@@ -300,7 +300,7 @@ if cassandra is not None:
             return cls.__session_select_buffer
 
 
-    class CassandraClient(object):
+    class CassandraClient:
         """Cassandra Client."""
 
         MIN_TOKEN = -(2 ** 63)
@@ -694,7 +694,7 @@ if cassandra is not None:
             return None
 
 
-    class CassandraStorage(object):
+    class CassandraStorage:
         """
         Storage implementation using Cassandra.
 

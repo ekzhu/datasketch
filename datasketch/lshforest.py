@@ -6,7 +6,7 @@ import numpy as np
 from datasketch.minhash import MinHash
 
 
-class MinHashLSHForest(object):
+class MinHashLSHForest:
     """
     The LSH Forest for MinHash. It supports top-k query in Jaccard
     similarity.

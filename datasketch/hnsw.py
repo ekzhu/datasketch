@@ -20,7 +20,7 @@ from typing import (
 import numpy as np
 
 
-class _Layer(object):
+class _Layer:
     """A graph layer in the HNSW index. This is a dictionary-like object
     that maps a key to a dictionary of neighbors.
 
@@ -125,7 +125,7 @@ class _LayerWithReversedEdges(_Layer):
         return self._reverse_edges[key]
 
 
-class _Node(object):
+class _Node:
     """A node in the HNSW graph."""
 
     def __init__(self, key: Hashable, point: np.ndarray, is_deleted=False) -> None:

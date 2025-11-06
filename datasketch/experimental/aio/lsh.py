@@ -16,7 +16,7 @@ from datasketch.lsh import _optimal_param
 from datasketch.storage import _random_name, unordered_storage
 
 
-class AsyncMinHashLSH(object):
+class AsyncMinHashLSH:
     """
     Asynchronous MinHashLSH index.
 

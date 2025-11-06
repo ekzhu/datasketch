@@ -17,7 +17,7 @@ _max_hash = np.uint64((1 << 32) - 1)
 _hash_range = 1 << 32
 
 
-class MinHash(object):
+class MinHash:
     """MinHash is a probabilistic data structure for computing
     `Jaccard similarity`_ between sets.
 

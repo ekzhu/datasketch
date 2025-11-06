@@ -62,8 +62,8 @@ class TestAsyncMinHashLSH(aiounittest.AsyncTestCase):
         """
         for l in range(2, 128 + 1, 16):
             m = MinHash()
-            m.update("abcdefg".encode("utf8"))
-            m.update("1234567".encode("utf8"))
+            m.update(b"abcdefg")
+            m.update(b"1234567")
             async with AsyncMinHashLSH(storage_config=self._storage_config_mongo,
                                        num_perm=128) as lsh:
                 await lsh.insert("m", m)
@@ -108,11 +108,11 @@ class TestAsyncMinHashLSH(aiounittest.AsyncTestCase):
         async with AsyncMinHashLSH(storage_config=self._storage_config_mongo,
                                    threshold=0.5, num_perm=16) as lsh:
             m1 = MinHash(16)
-            m1.update("a".encode("utf8"))
+            m1.update(b"a")
             m2 = MinHash(16)
-            m2.update("b".encode("utf8"))
+            m2.update(b"b")
             m3 = MinHash(16)
-            m3.update("b".encode("utf8"))
+            m3.update(b"b")
             fs = (lsh.insert("a", m1, check_duplication=False), lsh.insert("b", m2, check_duplication=False),
                   lsh.insert("b", m3, check_duplication=False))
             await asyncio.gather(*fs)
@@ -130,11 +130,11 @@ class TestAsyncMinHashLSH(aiounittest.AsyncTestCase):
         async with AsyncMinHashLSH(storage_config=self._storage_config_mongo,
                                    threshold=0.5, num_perm=16) as lsh:
             m1 = MinHash(16)
-            m1.update("a".encode("utf8"))
+            m1.update(b"a")
             m2 = MinHash(16)
-            m2.update("b".encode("utf8"))
+            m2.update(b"b")
             m3 = MinHash(16)
-            m3.update("a".encode("utf8"))
+            m3.update(b"a")
             await lsh.insert("a", m1)
             await lsh.insert("b", m2)
             await lsh.insert("a1", m3)
@@ -159,9 +159,9 @@ class TestAsyncMinHashLSH(aiounittest.AsyncTestCase):
     async def test_pickle_mongo(self):
         async with AsyncMinHashLSH(storage_config=self._storage_config_mongo, threshold=0.5, num_perm=16) as lsh:
             m1 = MinHash(16)
-            m1.update("a".encode("utf8"))
+            m1.update(b"a")
             m2 = MinHash(16)
-            m2.update("b".encode("utf8"))
+            m2.update(b"b")
             await lsh.insert("a", m1)
             await lsh.insert("b", m2)
             pickled = pickle.dumps(lsh)
@@ -241,23 +241,23 @@ class TestAsyncMinHashLSH(aiounittest.AsyncTestCase):
                 for H in await t.keys():
                     items.extend(await t.get(H))
                 for key in keys_to_remove:
-                    self.assertTrue(key not in items, '{0} in items, but should not be'.format(key))
+                    self.assertTrue(key not in items, f'{key} in items, but should not be')
                 for key in keys_left:
-                    self.assertTrue(key in items, '{0} not in items, but should be'.format(key))
+                    self.assertTrue(key in items, f'{key} not in items, but should be')
 
             for key in keys_to_remove:
-                self.assertTrue(not (await lsh.has_key(key)), '<{0}> key should not be in LSH index'.format(key))
+                self.assertTrue(not (await lsh.has_key(key)), f'<{key}> key should not be in LSH index')
             for key in keys_left:
-                self.assertTrue(await lsh.has_key(key), '<{0}> key should be in LSH index'.format(key))
+                self.assertTrue(await lsh.has_key(key), f'<{key}> key should be in LSH index')
 
     @unittest.skipIf(not DO_TEST_MONGO, "Skipping test_get_counts_mongo")
     async def test_get_counts_mongo(self):
         async with AsyncMinHashLSH(storage_config=self._storage_config_mongo,
                                    threshold=0.5, num_perm=16) as lsh:
             m1 = MinHash(16)
-            m1.update("a".encode("utf8"))
+            m1.update(b"a")
             m2 = MinHash(16)
-            m2.update("b".encode("utf8"))
+            m2.update(b"b")
             await lsh.insert("a", m1)
             await lsh.insert("b", m2)
             counts = await lsh.get_counts()

@@ -48,8 +48,8 @@ class TestMinHashLSHForest(unittest.TestCase):
         for l in range(2, 128 + 1, 16):
             forest = MinHashLSHForest(num_perm=128, l=l)
             m = MinHash()
-            m.update("abcdefg".encode("utf8"))
-            m.update("1234567".encode("utf8"))
+            m.update(b"abcdefg")
+            m.update(b"1234567")
             forest.add("m", m)
             sizes = [len(H) for ht in forest.hashtables for H in ht]
             self.assertTrue(all(sizes[0] == s for s in sizes))

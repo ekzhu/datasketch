@@ -22,7 +22,7 @@ if not hasattr(int, "bit_length"):
     _bit_length = lambda bits: len(bin(bits)) - 2 if bits > 0 else 0
 
 
-class HyperLogLog(object):
+class HyperLogLog:
     """
     The HyperLogLog data sketch for estimating
     cardinality of very large dataset in a single pass.

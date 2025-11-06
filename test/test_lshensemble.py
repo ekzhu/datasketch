@@ -3,7 +3,7 @@ import unittest
 
 import mockredis
 import numpy as np
-from mock import patch
+from unittest.mock import patch
 
 from datasketch.lshensemble import MinHashLSHEnsemble
 from datasketch.minhash import MinHash

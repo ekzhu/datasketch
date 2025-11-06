@@ -111,7 +111,7 @@ if motor is not None and ReturnDocument is not None:
             await self.execute_command(val=kwargs['val'], command='delete_by_val')
 
 
-    class AsyncMongoStorage(object):
+    class AsyncMongoStorage:
         """Base class for asynchronous MongoDB-based storage containers.
 
         :param dict config: MongoDB storage units require a configuration

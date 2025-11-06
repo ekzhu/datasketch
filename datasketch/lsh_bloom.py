@@ -110,7 +110,7 @@ else:
 		def __init__(self, item_count: int, fp: float, band_size: int, fname: str = None):
 			raise ImportError("Required dependency pybloomfilter is missing, did you `pip install datasketch[bloom]`?")
 
-class MinHashLSHBloom(object):
+class MinHashLSHBloom:
 	"""
 	The :ref:`lsh_bloom` index.
 	It supports query with `Jaccard similarity`_ threshold.
@@ -215,10 +215,8 @@ class MinHashLSHBloom(object):
 			if self.b * self.r > num_perm:
 				raise ValueError(
 					"The product of b and r in params is "
-					"{} * {} = {} -- it must be less than num_perm {}. "
-					"Did you forget to specify num_perm?".format(
-						self.b, self.r, self.b * self.r, num_perm
-					)
+					f"{self.b} * {self.r} = {self.b * self.r} -- it must be less than num_perm {num_perm}. "
+					"Did you forget to specify num_perm?"
 				)
 		else:
 			false_positive_weight, false_negative_weight = weights

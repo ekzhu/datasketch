@@ -11,7 +11,7 @@ import struct
 import numpy as np
 
 
-class bBitMinHash(object):
+class bBitMinHash:
     '''
     The b-bit MinHash object
     '''

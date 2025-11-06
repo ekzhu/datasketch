@@ -60,7 +60,7 @@ def _optimal_param(
     return opt
 
 
-class MinHashLSHEnsemble(object):
+class MinHashLSHEnsemble:
     """
     The :ref:`minhash_lsh_ensemble` index. It supports
     :ref:`containment` queries.

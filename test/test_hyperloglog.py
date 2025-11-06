@@ -3,7 +3,7 @@ import struct
 import unittest
 
 import numpy as np
-from mock import patch
+from unittest.mock import patch
 
 from datasketch.hyperloglog import HyperLogLog, HyperLogLogPlusPlus
 from test.utils import fake_hash_func

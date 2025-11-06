@@ -64,9 +64,9 @@ class TestMinHashLSHBloom(unittest.TestCase):
 	def test_insert(self):
 		lsh = MinHashLSHBloom(threshold=0.5, num_perm=16, n=10, fp=0.01)
 		m1 = MinHash(16)
-		m1.update("a".encode("utf8"))
+		m1.update(b"a")
 		m2 = MinHash(16)
-		m2.update("b".encode("utf8"))
+		m2.update(b"b")
 		lsh.insert(m1)
 		lsh.insert(m2)
 
@@ -76,9 +76,9 @@ class TestMinHashLSHBloom(unittest.TestCase):
 	def test_query(self):
 		lsh = MinHashLSHBloom(threshold=0.5, num_perm=16, n=10, fp=0.01)
 		m1 = MinHash(16)
-		m1.update("a".encode("utf8"))
+		m1.update(b"a")
 		m2 = MinHash(16)
-		m2.update("b".encode("utf8"))
+		m2.update(b"b")
 		lsh.insert(m1)
 		lsh.insert(m2)
 		result = lsh.query(m1)
@@ -96,9 +96,9 @@ class TestMinHashLSHBloom(unittest.TestCase):
 
 		lsh = MinHashLSHBloom(threshold=0.5, num_perm=16, n=10, fp=0.01, save_dir=save_path)
 		m1 = MinHash(16)
-		m1.update("a".encode("utf8"))
+		m1.update(b"a")
 		m2 = MinHash(16)
-		m2.update("b".encode("utf8"))
+		m2.update(b"b")
 		lsh.insert(m1)
 		lsh.insert(m2)
 		lsh.sync()
@@ -115,9 +115,9 @@ class TestMinHashLSHBloom(unittest.TestCase):
 			lsh = MinHashLSHBloom(threshold=0.5, num_perm=16, n=10, fp=0.01, save_dir=None)
 
 		m1 = MinHash(16)
-		m1.update("a".encode("utf8"))
+		m1.update(b"a")
 		m2 = MinHash(16)
-		m2.update("b".encode("utf8"))
+		m2.update(b"b")
 		lsh.insert(m1)
 		lsh.insert(m2)
 

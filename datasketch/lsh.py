@@ -42,7 +42,7 @@ def _optimal_param(threshold, num_perm, false_positive_weight, false_negative_we
     return opt
 
 
-class MinHashLSH(object):
+class MinHashLSH:
     """
     The :ref:`minhash_lsh` index.
     It supports query with `Jaccard similarity`_ threshold.
@@ -162,10 +162,8 @@ class MinHashLSH(object):
             if self.b * self.r > num_perm:
                 raise ValueError(
                     "The product of b and r in params is "
-                    "{} * {} = {} -- it must be less than num_perm {}. "
-                    "Did you forget to specify num_perm?".format(
-                        self.b, self.r, self.b * self.r, num_perm
-                    )
+                    f"{self.b} * {self.r} = {self.b * self.r} -- it must be less than num_perm {num_perm}. "
+                    "Did you forget to specify num_perm?"
                 )
         else:
             false_positive_weight, false_negative_weight = weights

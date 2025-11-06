@@ -45,8 +45,8 @@ class TestMinHashLSHCassandra(unittest.TestCase):
         for l in range(2, 128+1, 16):
             lsh = MinHashLSH(num_perm=128, storage_config=STORAGE_CONFIG_CASSANDRA)
             m = MinHash()
-            m.update("abcdefg".encode("utf8"))
-            m.update("1234567".encode("utf8"))
+            m.update(b"abcdefg")
+            m.update(b"1234567")
             lsh.insert("m", m)
             sizes = [len(H) for ht in lsh.hashtables for H in ht]
             self.assertTrue(all(sizes[0] == s for s in sizes))
@@ -55,9 +55,9 @@ class TestMinHashLSHCassandra(unittest.TestCase):
     def test_cassandra__insert(self):
         lsh = MinHashLSH(threshold=0.5, num_perm=16, storage_config=STORAGE_CONFIG_CASSANDRA)
         m1 = MinHash(16)
-        m1.update("a".encode("utf8"))
+        m1.update(b"a")
         m2 = MinHash(16)
-        m2.update("b".encode("utf8"))
+        m2.update(b"b")
         lsh.insert("a", m1)
         lsh.insert("b", m2)
         for t in lsh.hashtables:
@@ -76,9 +76,9 @@ class TestMinHashLSHCassandra(unittest.TestCase):
     def test_cassandra__query(self):
         lsh = MinHashLSH(threshold=0.5, num_perm=16, storage_config=STORAGE_CONFIG_CASSANDRA)
         m1 = MinHash(16)
-        m1.update("a".encode("utf8"))
+        m1.update(b"a")
         m2 = MinHash(16)
-        m2.update("b".encode("utf8"))
+        m2.update(b"b")
         lsh.insert("a", m1)
         lsh.insert("b", m2)
         result = lsh.query(m1)
@@ -92,9 +92,9 @@ class TestMinHashLSHCassandra(unittest.TestCase):
     def test_cassandra__query_buffer(self):
         lsh = MinHashLSH(threshold=0.5, num_perm=16, storage_config=STORAGE_CONFIG_CASSANDRA)
         m1 = MinHash(16)
-        m1.update("a".encode("utf8"))
+        m1.update(b"a")
         m2 = MinHash(16)
-        m2.update("b".encode("utf8"))
+        m2.update(b"b")
         lsh.insert("a", m1)
         lsh.insert("b", m2)
         lsh.add_to_query_buffer(m1)
@@ -110,9 +110,9 @@ class TestMinHashLSHCassandra(unittest.TestCase):
     def test_cassandra__remove(self):
         lsh = MinHashLSH(threshold=0.5, num_perm=16, storage_config=STORAGE_CONFIG_CASSANDRA)
         m1 = MinHash(16)
-        m1.update("a".encode("utf8"))
+        m1.update(b"a")
         m2 = MinHash(16)
-        m2.update("b".encode("utf8"))
+        m2.update(b"b")
         lsh.insert("a", m1)
         lsh.insert("b", m2)
 
@@ -128,9 +128,9 @@ class TestMinHashLSHCassandra(unittest.TestCase):
     @unittest.skipIf(not DO_TEST_CASSANDRA, "Skipping test_cassandra__get_subset_counts")
     def test_cassandra__get_subset_counts(self):
         m1 = MinHash(16)
-        m1.update("a".encode("utf8"))
+        m1.update(b"a")
         m2 = MinHash(16)
-        m2.update("b".encode("utf8"))
+        m2.update(b"b")
 
         lsh_c = MinHashLSH(threshold=0.5, num_perm=16, storage_config=STORAGE_CONFIG_CASSANDRA)
         lsh_c.insert("a", m1)
@@ -146,9 +146,9 @@ class TestMinHashLSHCassandra(unittest.TestCase):
     def test_cassandra__insertion_session(self):
         lsh = MinHashLSH(threshold=0.5, num_perm=16, storage_config=STORAGE_CONFIG_CASSANDRA)
         m1 = MinHash(16)
-        m1.update("a".encode("utf8"))
+        m1.update(b"a")
         m2 = MinHash(16)
-        m2.update("b".encode("utf8"))
+        m2.update(b"b")
         data = [("a", m1), ("b", m2)]
         with lsh.insertion_session() as session:
             for key, minhash in data:
@@ -169,9 +169,9 @@ class TestMinHashLSHCassandra(unittest.TestCase):
     def test_cassandra__get_counts(self):
         lsh = MinHashLSH(threshold=0.5, num_perm=16, storage_config=STORAGE_CONFIG_CASSANDRA)
         m1 = MinHash(16)
-        m1.update("a".encode("utf8"))
+        m1.update(b"a")
         m2 = MinHash(16)
-        m2.update("b".encode("utf8"))
+        m2.update(b"b")
         lsh.insert("a", m1)
         lsh.insert("b", m2)
         counts = lsh.get_counts()
