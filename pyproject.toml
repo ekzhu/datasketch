@@ -8,8 +8,7 @@ dynamic = ["version"]
 description = "Probabilistic data structures for processing and searching very large datasets"
 readme = "README.rst"
 requires-python = ">=3.8"
-license = "MIT"
-license-files = ["LICENSE"]
+license = { text = "MIT" }
 authors = [{ name = "ekzhu", email = "ekzhu@cs.toronto.edu" }]
 keywords = ["database", "datamining"]
 classifiers = [
@@ -111,25 +110,25 @@ select = [
   "RUF100", # implementation for yesqa
 ]
 ignore = [
-  "E203",   # whitespace before ':'
-  "E266",   # too many leading '#' for block comment
-  "E501",   # line too long
-  "E731",   # do not assign a lambda expression, use a def
-  "F403",   # 'from module import *' used; unable to detect undefined names
-  "F401",   # module imported but unused
-  "F821",   # TODO: undefined name `buffer
-  "C901",   # function is too complex
-  "UP007",  # non-pep604-annotation-union
-  "UP045",  # non-pep604-annotation-optional
-  "N801",   # TODO: class name should use CapWords convention
-  "N802",   # TODO: invalid-function-name
-  "N803",   # TODO: argument name should be lowercase
-  "N806",   # TODO: non-lowercase-variable-in-function
-  "F841",   # TODO: local variable is assigned to but never used
-  "E741",   # TODO: ambiguous variable name
-  "UP008",  # TODO: super-call-with-parameters
-  "UP028",  # TODO: yield-in-for-loop
-  "UP031",  # TODO: printf-string-formatting
+  "E203",  # whitespace before ':'
+  "E266",  # too many leading '#' for block comment
+  "E501",  # line too long
+  "E731",  # do not assign a lambda expression, use a def
+  "F403",  # 'from module import *' used; unable to detect undefined names
+  "F401",  # module imported but unused
+  "F821",  # TODO: undefined name `buffer
+  "C901",  # function is too complex
+  "UP007", # non-pep604-annotation-union
+  "UP045", # non-pep604-annotation-optional
+  "N801",  # TODO: class name should use CapWords convention
+  "N802",  # TODO: invalid-function-name
+  "N803",  # TODO: argument name should be lowercase
+  "N806",  # TODO: non-lowercase-variable-in-function
+  "F841",  # TODO: local variable is assigned to but never used
+  "E741",  # TODO: ambiguous variable name
+  "UP008", # TODO: super-call-with-parameters
+  "UP028", # TODO: yield-in-for-loop
+  "UP031", # TODO: printf-string-formatting
 ]
 
 [tool.setuptools.dynamic]
