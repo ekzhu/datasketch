@@ -384,7 +384,8 @@ class TestMinHashLSH(unittest.TestCase):
                 'type': 'redis', 'redis': {'host': 'localhost', 'port': 6379}
             })
 
-            # The library's RedisBuffer is incompatible with mockredis. In order to fix this, we:
+            # The library's RedisBuffer is not completely compatible with mockredis.
+            # In order to account for this, we:
             # 1. Replace the buffer with mockredis's own simple pipeline, which can execute.
             # 2. Patch __init__ to prevent the buffer flush from resetting the storage object
             #    and wiping mock data.
