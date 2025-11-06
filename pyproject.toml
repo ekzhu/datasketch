@@ -122,6 +122,7 @@ ignore = [
   "UP007",  # non-pep604-annotation-union
   "UP045",  # non-pep604-annotation-optional
   "N801",   # TODO: class name should use CapWords convention
+  "N802",   # TODO: invalid-function-name
   "N803",   # TODO: argument name should be lowercase
   "F841",   # TODO: local variable is assigned to but never used
   "UP028",  # TODO: use `yield from` instead of `for` loop
