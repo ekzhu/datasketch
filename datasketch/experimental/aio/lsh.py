@@ -1,8 +1,6 @@
+import asyncio
 import pickle
 import sys
-
-
-import asyncio
 from itertools import chain
 
 from datasketch.experimental.aio.storage import (

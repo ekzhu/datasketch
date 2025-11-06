@@ -1,8 +1,6 @@
-import sys
-
-
 import asyncio
 import os
+import sys
 from abc import ABCMeta
 from itertools import chain
 
