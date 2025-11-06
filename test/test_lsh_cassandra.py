@@ -139,8 +139,8 @@ class TestMinHashLSHCassandra(unittest.TestCase):
         lsh_m.insert("a", m1)
         lsh_m.insert("b", m2)
 
-        self.assertEquals(lsh_c.get_subset_counts("a"), lsh_m.get_subset_counts("a"))
-        self.assertEquals(lsh_c.get_subset_counts("b"), lsh_m.get_subset_counts("b"))
+        self.assertEqual(lsh_c.get_subset_counts("a"), lsh_m.get_subset_counts("a"))
+        self.assertEqual(lsh_c.get_subset_counts("b"), lsh_m.get_subset_counts("b"))
 
     @unittest.skipIf(not DO_TEST_CASSANDRA, "Skipping test_cassandra__insertion_session")
     def test_cassandra__insertion_session(self):
