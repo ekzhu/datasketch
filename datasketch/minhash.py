@@ -2,8 +2,8 @@ from __future__ import annotations
 
 import copy
 import warnings
-from typing import Callable, Optional
 from collections.abc import Generator, Iterable
+from typing import Callable, Optional
 
 import numpy as np
 

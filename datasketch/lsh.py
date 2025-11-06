@@ -2,8 +2,8 @@ from __future__ import annotations
 
 import pickle
 import struct
-from typing import Callable, Optional, Union
 from collections.abc import Hashable
+from typing import Callable, Optional, Union
 
 from scipy.integrate import quad as integrate
 

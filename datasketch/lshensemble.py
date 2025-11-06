@@ -1,7 +1,7 @@
 import struct
 from collections import Counter, deque
-from typing import Optional
 from collections.abc import Generator, Hashable, Iterable
+from typing import Optional
 
 import numpy as np
 
