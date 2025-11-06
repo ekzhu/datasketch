@@ -72,9 +72,9 @@ class MinHash:
         num_perm: int = 128,
         seed: int = 1,
         hashfunc: Callable = sha1_hash32,
-        hashobj: object | None = None,  # Deprecated.
-        hashvalues: Iterable | None = None,
-        permutations: tuple[Iterable, Iterable] | None = None,
+        hashobj: Optional[object] = None,  # Deprecated.
+        hashvalues: Optional[Iterable] = None,
+        permutations: Optional[tuple[Iterable, Iterable]] = None,
     ) -> None:
         if hashvalues is not None:
             num_perm = len(hashvalues)

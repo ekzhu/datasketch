@@ -142,10 +142,10 @@ class MinHashLSH:
         threshold: float = 0.9,
         num_perm: int = 128,
         weights: tuple[float, float] = (0.5, 0.5),
-        params: tuple[int, int] | None = None,
-        storage_config: dict | None = None,
-        prepickle: bool | None = None,
-        hashfunc: Callable[[bytes], bytes] | None = None,
+        params: Optional[tuple[int, int]] = None,
+        storage_config: Optional[dict] = None,
+        prepickle: Optional[bool] = None,
+        hashfunc: Optional[Callable[[bytes], bytes]] = None,
     ) -> None:
         storage_config = {"type": "dict"} if not storage_config else storage_config
         self._buffer_size = 50000

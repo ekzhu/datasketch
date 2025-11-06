@@ -113,8 +113,8 @@ class MinHashLSHEnsemble:
         num_part: int = 16,
         m: int = 8,
         weights: tuple[float, float] = (0.5, 0.5),
-        storage_config: dict | None = None,
-        prepickle: bool | None = None,
+        storage_config: Optional[dict] = None,
+        prepickle: Optional[bool] = None,
     ) -> None:
         if threshold > 1.0 or threshold < 0.0:
             raise ValueError("threshold must be in [0.0, 1.0]")

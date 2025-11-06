@@ -151,7 +151,7 @@ class WeightedMinHashGenerator:
             hashvalues[i][0], hashvalues[i][1] = k, int(t[k])
         return WeightedMinHash(self.seed, hashvalues)
 
-    def minhash_many(self, X: sp.sparse.spmatrix | np.ndarray) -> list[WeightedMinHash | None]:
+    def minhash_many(self, X: Union[sp.sparse.spmatrix, np.ndarray]) -> list[Union[WeightedMinHash, None]]:
         """Create new WeightedMinHash instances given a matrix of weighted
         Jaccard vectors. In the input matrix X, each row corresponds to a
         multi-set, and each column stores the integer frequency of the

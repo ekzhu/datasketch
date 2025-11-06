@@ -2,6 +2,7 @@ import asyncio
 import pickle
 import sys
 from itertools import chain
+from typing import Optional
 
 from datasketch.experimental.aio.storage import (
     async_ordered_storage,
@@ -45,9 +46,9 @@ class AsyncMinHashLSH:
         threshold: float = 0.9,
         num_perm: int = 128,
         weights: tuple[float, float] = (0.5, 0.5),
-        params: tuple[int, int] = None,
-        storage_config: dict = None,
-        prepickle: bool = None,
+        params: Optional[tuple[int, int]] = None,
+        storage_config: Optional[dict] = None,
+        prepickle: Optional[bool] = None,
     ):
         if storage_config is None:
             storage_config = {"type": "aiomongo", "mongo": {"host": "localhost", "port": 27017}}

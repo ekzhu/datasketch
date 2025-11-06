@@ -197,7 +197,7 @@ class MinHashLSHBloom:
         fp: float = None,
         save_dir: str = None,
         weights: tuple[float, float] = (0.5, 0.5),
-        params: tuple[int, int] | None = None,
+        params: Optional[tuple[int, int]] = None,
     ) -> None:
         if threshold > 1.0 or threshold < 0.0:
             raise ValueError("threshold must be in [0.0, 1.0]")
