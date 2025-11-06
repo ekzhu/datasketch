@@ -124,6 +124,7 @@ ignore = [
   "N801",   # TODO: class name should use CapWords convention
   "N802",   # TODO: invalid-function-name
   "N803",   # TODO: argument name should be lowercase
+  "N806",   # TODO: non-lowercase-variable-in-function
   "F841",   # TODO: local variable is assigned to but never used
   "E741",   # TODO: ambiguous variable name
   "UP008",  # TODO: super-call-with-parameters
