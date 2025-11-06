@@ -208,11 +208,11 @@ class DictListStorage(OrderedStorage):
     def get(self, key):
         return self._dict.get(key, [])
 
-    def remove(self, *keys):
+    def remove(self, *keys, **kwargs):
         for key in keys:
             del self._dict[key]
 
-    def remove_val(self, key, val):
+    def remove_val(self, key, val, **kwargs):
         self._dict[key].remove(val)
 
     def insert(self, key, *vals, **kwargs):
@@ -1015,15 +1015,26 @@ if redis is not None:
         def _get_items(r, k):
             return r.lrange(k, 0, -1)
 
-        def remove(self, *keys):
-            self._redis.hdel(self._name, *keys)
-            self._redis.delete(*[self.redis_key(key) for key in keys])
+        def remove(self, *keys, **kwargs):
+            buffer = kwargs.pop("buffer", False)
+            if buffer:
+                self._remove(self._buffer, *keys)
+            else:
+                self._remove(self._redis, *keys)
 
-        def remove_val(self, key, val):
+        def _remove(self, r, *keys):
+            r.hdel(self._name, *keys)
+            r.delete(*[self.redis_key(key) for key in keys])
+
+        def remove_val(self, key, val, **kwargs):
+            buffer = kwargs.pop("buffer", False)
             redis_key = self.redis_key(key)
-            self._redis.lrem(redis_key, val)
-            if not self._redis.exists(redis_key):
-                self._redis.hdel(self._name, redis_key)
+            if buffer:
+                self._buffer.lrem(redis_key, val)
+            else:
+                self._redis.lrem(redis_key, val)
+                if not self._redis.exists(redis_key):
+                    self._redis.hdel(self._name, redis_key)
 
         def insert(self, key, *vals, **kwargs):
             # Using buffer=True outside of an `insertion_session`
@@ -1075,11 +1086,15 @@ if redis is not None:
         def _get_items(r, k):
             return r.smembers(k)
 
-        def remove_val(self, key, val):
+        def remove_val(self, key, val, **kwargs):
+            buffer = kwargs.pop("buffer", False)
             redis_key = self.redis_key(key)
-            self._redis.srem(redis_key, val)
-            if not self._redis.exists(redis_key):
-                self._redis.hdel(self._name, redis_key)
+            if buffer:
+                self._buffer.srem(redis_key, val)
+            else:
+                self._redis.srem(redis_key, val)
+                if not self._redis.exists(redis_key):
+                    self._redis.hdel(self._name, redis_key)
 
         def _insert(self, r, key, *values):
             redis_key = self.redis_key(key)
