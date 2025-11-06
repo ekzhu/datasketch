@@ -4,14 +4,14 @@
 name: Build and Publish Package
 
 on:
-  push:
-    branches: [master]
-  pull_request:
-    branches: [master]
-    paths:
-      - ".github/workflows/pypi.yml"
-      - "pyproject.toml"
-      - "datasketch/**"
+  # push:
+  #   branches: [master]
+  # pull_request:
+  #   branches: [master]
+  #   paths:
+  #     - ".github/workflows/pypi.yml"
+  #     - "pyproject.toml"
+  #     - "datasketch/**"
   workflow_dispatch:
     inputs:
       ref:
