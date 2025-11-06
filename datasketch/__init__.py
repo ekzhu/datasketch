@@ -8,9 +8,12 @@ from datasketch.lsh_bloom import MinHashLSHBloom
 from datasketch.lshensemble import MinHashLSHEnsemble
 from datasketch.lshforest import MinHashLSHForest
 from datasketch.minhash import MinHash
+
+# Version
 from datasketch.version import __version__
-from datasketch.weighted_minhash import WeightedMinHash, WeightedMinHashGenerator
 
 # Alias
+from datasketch.weighted_minhash import WeightedMinHash, WeightedMinHashGenerator
+
 WeightedMinHashLSH = MinHashLSH
 WeightedMinHashLSHForest = MinHashLSHForest
