@@ -10,7 +10,7 @@ readme = "README.rst"
 requires-python = ">=3.8"
 license = "MIT"
 license-files = ["LICENSE"]
-authors = [{name = "ekzhu", email = "ekzhu@cs.toronto.edu"}]
+authors = [{ name = "ekzhu", email = "ekzhu@cs.toronto.edu" }]
 keywords = ["database", "datamining"]
 classifiers = [
   "Development Status :: 5 - Production/Stable",
@@ -21,7 +21,7 @@ classifiers = [
   "Programming Language :: Python :: 3.9",
   "Programming Language :: Python :: 3.10",
   "Programming Language :: Python :: 3.11",
-  "Programming Language :: Python :: 3.12"
+  "Programming Language :: Python :: 3.12",
 ]
 dependencies = ["numpy>=1.11", "scipy>=1.0.0"]
 
@@ -30,7 +30,7 @@ cassandra = ["cassandra-driver>=3.20"]
 redis = ["redis>=2.10.0"]
 bloom = [
   "pybloomfilter3>=0.7.2 ; python_version>='3.9'",
-  "pybloomfiltermmap3==0.6.0 ; python_version<'3.9'"
+  "pybloomfiltermmap3==0.6.0 ; python_version<'3.9'",
 ]
 benchmark = [
   "pyhash>=0.9.3",
@@ -40,7 +40,7 @@ benchmark = [
   "pandas>=0.25.3",
   "SetSimilaritySearch>=0.1.7",
   "pyfarmhash>=0.2.2",
-  "nltk>=3.4.5"
+  "nltk>=3.4.5",
 ]
 test = [
   "cassandra-driver>=3.20",
@@ -51,11 +51,11 @@ test = [
   "pymongo>=3.9.0",
   "nose>=1.3.7",
   "nose-exclude>=0.5.0",
-  "pytest"
+  "pytest",
 ]
 experimental_aio = [
   "aiounittest ; python_version>='3.8'",
-  "motor>3.6.0 ; python_version>='3.8'"
+  "motor>3.6.0 ; python_version>='3.8'",
 ]
 
 [project.urls]
@@ -97,23 +97,23 @@ exclude = [
   "dist",
   "docs",
   "examples",
-  "travis"
+  "travis",
 ]
 
 [tool.ruff.lint]
 select = [
   "E",
-  "W", # see: https://pypi.org/project/pycodestyle
-  "F", # see: https://pypi.org/project/pyflakes
-  "N", # see: https://pypi.org/project/pep8-naming
-  "I", # implementation for isort
-  "UP", # implementation for pyupgrade
-  "RUF100" # implementation for yesqa
+  "W",      # see: https://pypi.org/project/pycodestyle
+  "F",      # see: https://pypi.org/project/pyflakes
+  "N",      # see: https://pypi.org/project/pep8-naming
+  "I",      # implementation for isort
+  "UP",     # implementation for pyupgrade
+  "RUF100", # implementation for yesqa
 ]
 ignore = ["E203", "E266", "E501", "F403", "F401", "C901"]
 
 [tool.setuptools.dynamic]
-version = {attr = "datasketch.version.__version__"}
+version = { attr = "datasketch.version.__version__" }
 
-[tool.setuptools.packages.find]
-include = ["datasketch*"]
+[tool.setuptools]
+packages = ["datasketch"]
