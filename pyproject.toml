@@ -110,7 +110,7 @@ select = [
   "UP",     # implementation for pyupgrade
   "RUF100", # implementation for yesqa
 ]
-ignore = ["E203", "E266", "E501", "F403", "F401", "C901"]
+ignore = ["E203", "E266", "E501", "E731", "F403", "F401", "C901"]
 
 [tool.setuptools.dynamic]
 version = { attr = "datasketch.version.__version__" }
