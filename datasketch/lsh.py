@@ -285,6 +285,39 @@ class MinHashLSH(object):
         """
         return MinHashLSHInsertionSession(self, buffer_size=buffer_size)
 
+    def deletion_session(self, buffer_size: int = 50000) -> "MinHashLSHDeletionSession":
+        """
+        Create a context manager for fast deletion from this index.
+
+        Args:
+            buffer_size (int): The buffer size for deletion operations (default=50000).
+
+        Returns:
+            MinHashLSHDeletionSession: The context manager.
+
+        Example:
+
+            Delete keys from a Redis-backed index using a session:
+
+            .. code-block:: python
+
+                from datasketch import MinHashLSH
+
+                lsh = MinHashLSH(threshold=0.5, num_perm=128, storage_config={
+                    'type': 'redis',
+                    'redis': {'host': 'localhost', 'port': 6379},
+                })
+
+                # ... insert some data ...
+
+                keys_to_delete = ["key1", "key2", "key3"]
+                with lsh.deletion_session() as session:
+                    for key in keys_to_delete:
+                        session.remove(key)
+
+        """
+        return MinHashLSHDeletionSession(self, buffer_size=buffer_size)
+
     def _insert(
         self,
         key: Hashable,
@@ -478,15 +511,28 @@ class MinHashLSH(object):
             ValueError: If the key does not exist.
 
         """
+        self._remove(key, buffer=False)
+
+    def _remove(self, key: Hashable, buffer: bool = False) -> None:
+        """
+        Internal remove method with optional buffering support.
+
+        Args:
+            key (Hashable): The unique identifier of a set.
+            buffer (bool): If True, buffer the removal operations.
+
+        Raises:
+            ValueError: If the key does not exist.
+        """
         if self.prepickle:
             key = pickle.dumps(key)
         if key not in self.keys:
             raise ValueError("The given key does not exist")
         for H, hashtable in zip(self.keys[key], self.hashtables):
-            hashtable.remove_val(H, key)
+            hashtable.remove_val(H, key, buffer=buffer)
             if not hashtable.get(H):
-                hashtable.remove(H)
-        self.keys.remove(key)
+                hashtable.remove(H, buffer=buffer)
+        self.keys.remove(key, buffer=buffer)
 
     def is_empty(self) -> bool:
         """
@@ -593,3 +639,39 @@ class MinHashLSHInsertionSession:
             minhash (Union[MinHash, WeightedMinhash]): The MinHash of the set.
         """
         self.lsh._insert(key, minhash, check_duplication=check_duplication, buffer=True)
+
+
+class MinHashLSHDeletionSession:
+    """Context manager for batch deletion of documents from a MinHashLSH.
+
+    Args:
+        lsh (MinHashLSH): The MinHashLSH to delete from.
+        buffer_size (int): The buffer size for deletion operations.
+    """
+
+    def __init__(self, lsh: MinHashLSH, buffer_size: int):
+        self.lsh = lsh
+        self.lsh.buffer_size = buffer_size
+
+    def __enter__(self) -> "MinHashLSHDeletionSession":
+        return self
+
+    def __exit__(self, exc_type, exc_val, exc_tb) -> None:
+        self.close()
+
+    def close(self) -> None:
+        self.lsh.keys.empty_buffer()
+        for hashtable in self.lsh.hashtables:
+            hashtable.empty_buffer()
+
+    def remove(self, key: Hashable) -> None:
+        """
+        Remove a key from the index.
+
+        Args:
+            key (Hashable): The unique identifier to remove.
+
+        Raises:
+            ValueError: If the key does not exist.
+        """
+        self.lsh._remove(key, buffer=True)
