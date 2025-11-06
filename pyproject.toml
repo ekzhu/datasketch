@@ -117,6 +117,7 @@ ignore = [
   "E731",   # do not assign a lambda expression, use a def
   "F403",   # 'from module import *' used; unable to detect undefined names
   "F401",   # module imported but unused
+  "F821",   # TODO: undefined name `buffer
   "C901",   # function is too complex
   "UP007",  # non-pep604-annotation-union
   "UP045",  # non-pep604-annotation-optional
