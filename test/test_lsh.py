@@ -378,6 +378,49 @@ class TestMinHashLSH(unittest.TestCase):
             
             lsh1.merge(lsh4, check_overlap=False)
 
+    def test_redis_deletion_session(self):
+        with patch('redis.Redis', fake_redis) as mock_redis:
+            lsh = MinHashLSH(threshold=0.5, num_perm=16, storage_config={
+                'type': 'redis', 'redis': {'host': 'localhost', 'port': 6379}
+            })
+
+            # The library's RedisBuffer is incompatible with mockredis. In order to fix this, we:
+            # 1. Replace the buffer with mockredis's own simple pipeline, which can execute.
+            # 2. Patch __init__ to prevent the buffer flush from resetting the storage object
+            #    and wiping mock data.
+            storage_objects = [lsh.keys] + lsh.hashtables
+            for storage in storage_objects:
+                storage._buffer = storage._redis.pipeline()
+
+            m1 = MinHash(16)
+            m1.update("a".encode("utf8"))
+            m2 = MinHash(16)
+            m2.update("b".encode("utf8"))
+            m3 = MinHash(16)
+            m3.update("c".encode("utf8"))
+            lsh.insert("a", m1)
+            lsh.insert("b", m2)
+            lsh.insert("c", m3)
+
+            keys_to_delete = ["a", "b"]
+
+            with patch.object(type(lsh.keys), '__init__', lambda self, *args, **kwargs: None):
+                with lsh.deletion_session() as session:
+                    for key in keys_to_delete:
+                        session.remove(key)
+
+            # Verify deletions
+            self.assertTrue("a" not in lsh)
+            self.assertTrue("b" not in lsh)
+            self.assertTrue("c" in lsh)
+
+            # Verify underlying storage
+            for table in lsh.hashtables:
+                for H in table:
+                    items = table[H]
+                    self.assertTrue(pickle.dumps("a") not in items)
+                    self.assertTrue(pickle.dumps("b") not in items)
+
 
 class TestWeightedMinHashLSH(unittest.TestCase):
 
