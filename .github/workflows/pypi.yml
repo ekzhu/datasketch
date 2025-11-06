@@ -24,7 +24,7 @@ permissions:
 jobs:
   build-publish:
     runs-on: ubuntu-latest
-    environment: package
+    # environment: package
 
     steps:
       - uses: actions/checkout@v5
