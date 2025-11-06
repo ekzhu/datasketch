@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import os
 import warnings
-from typing import Callable, List, Optional, Tuple
+from typing import Callable, Optional
 
 import numpy as np
 from scipy.integrate import quad as integrate
@@ -77,18 +77,18 @@ if pybloomfilter is not None:
             else:
                 warnings.warn("Attempting to save in-memory Bloom filter, this is a no-op.", RuntimeWarning)
 
-        def assert_size(self, hashvalues: List[int]):
+        def assert_size(self, hashvalues: list[int]):
             if not len(hashvalues) == self.r:
                 raise RuntimeError(
                     f"Invalid length for indices, {len(hashvalues)}, expected {self.r} hashvalues in band"
                 )
 
-        def insert(self, hashvalues: List[int]) -> None:
+        def insert(self, hashvalues: list[int]) -> None:
             """
             Takes as input the indices for a single band and inserts them into the corresponding bit arrays
 
             Args:
-                    hashvalues (List[int]): The hashvalues from a single band of a MinHash object.
+                    hashvalues (list[int]): The hashvalues from a single band of a MinHash object.
             """
             self.assert_size(hashvalues)
             # https://en.wikipedia.org/wiki/Universal_hashing#Hashing_vectors
@@ -96,13 +96,13 @@ if pybloomfilter is not None:
             x = sum(hashvalues) % _mersenne_prime
             self.bloom_filter.add(x)
 
-        def query(self, hashvalues: List[int]) -> bool:
+        def query(self, hashvalues: list[int]) -> bool:
             """
             Takes as input the indices for a single band and queries them against the corresponding arrays
             returns True if the each query returns True, otherwise returns False
 
             Args:
-                    hashvalues (List[int]): The hashvalues from a single band of a MinHash object.
+                    hashvalues (list[int]): The hashvalues from a single band of a MinHash object.
             """
             self.assert_size(hashvalues)
             x = sum(hashvalues) % _mersenne_prime
@@ -196,8 +196,8 @@ class MinHashLSHBloom:
         n: int = None,
         fp: float = None,
         save_dir: str = None,
-        weights: Tuple[float, float] = (0.5, 0.5),
-        params: Optional[Tuple[int, int]] = None,
+        weights: tuple[float, float] = (0.5, 0.5),
+        params: tuple[int, int] | None = None,
     ) -> None:
         if threshold > 1.0 or threshold < 0.0:
             raise ValueError("threshold must be in [0.0, 1.0]")

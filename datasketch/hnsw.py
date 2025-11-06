@@ -5,11 +5,7 @@ from collections import OrderedDict
 from collections.abc import Hashable, Iterable, Iterator, Mapping, MutableMapping
 from typing import (
     Callable,
-    Dict,
-    List,
     Optional,
-    Set,
-    Tuple,
     Union,
 )
 
@@ -27,15 +23,15 @@ class _Layer:
     def __init__(self, key: Hashable) -> None:
         # self._graph[key] contains a {j: dist} dictionary,
         # where j is a neighbor of key and dist is distance.
-        self._graph: Dict[Hashable, Dict[Hashable, float]] = {key: {}}
+        self._graph: dict[Hashable, dict[Hashable, float]] = {key: {}}
 
     def __contains__(self, key: Hashable) -> bool:
         return key in self._graph
 
-    def __getitem__(self, key: Hashable) -> Dict[Hashable, float]:
+    def __getitem__(self, key: Hashable) -> dict[Hashable, float]:
         return self._graph[key]
 
-    def __setitem__(self, key: Hashable, value: Dict[Hashable, float]) -> None:
+    def __setitem__(self, key: Hashable, value: dict[Hashable, float]) -> None:
         self._graph[key] = value
 
     def __delitem__(self, key: Hashable) -> None:
@@ -58,7 +54,7 @@ class _Layer:
         new_layer._graph = {k: dict(v) for k, v in self._graph.items()}
         return new_layer
 
-    def get_reverse_edges(self, key: Hashable) -> Set[Hashable]:
+    def get_reverse_edges(self, key: Hashable) -> set[Hashable]:
         reverse_edges = set()
         for neighbor, neighbors in self._graph.items():
             if key in neighbors:
@@ -76,11 +72,11 @@ class _LayerWithReversedEdges(_Layer):
     def __init__(self, key: Hashable) -> None:
         # self._graph[key] contains a {j: dist} dictionary,
         # where j is a neighbor of key and dist is distance.
-        self._graph: Dict[Hashable, Dict[Hashable, float]] = {key: {}}
+        self._graph: dict[Hashable, dict[Hashable, float]] = {key: {}}
         # self._reverse_edges[key] contains a set of neighbors of key.
-        self._reverse_edges: Dict[Hashable, Set] = {}
+        self._reverse_edges: dict[Hashable, set] = {}
 
-    def __setitem__(self, key: Hashable, value: Dict[Hashable, float]) -> None:
+    def __setitem__(self, key: Hashable, value: dict[Hashable, float]) -> None:
         old_neighbors = self._graph.get(key, {})
         self._graph[key] = value
         for neighbor in old_neighbors:
@@ -114,7 +110,7 @@ class _LayerWithReversedEdges(_Layer):
         new_layer._reverse_edges = {k: set(v) for k, v in self._reverse_edges.items()}
         return new_layer
 
-    def get_reverse_edges(self, key: Hashable) -> Set[Hashable]:
+    def get_reverse_edges(self, key: Hashable) -> set[Hashable]:
         return self._reverse_edges[key]
 
 
@@ -224,7 +220,7 @@ class HNSW(MutableMapping):
         self._ef_construction = ef_construction
         self._m0 = 2 * m if m0 is None else m0
         self._level_mult = 1 / np.log(m)
-        self._graphs: List[_Layer] = []
+        self._graphs: list[_Layer] = []
         self._entry_point = None
         self._random = np.random.RandomState(seed)
         self._layer_class = _LayerWithReversedEdges if reversed_edges else _Layer
@@ -693,12 +689,12 @@ class HNSW(MutableMapping):
     def _search_base_layer(
         self,
         query_point: np.ndarray,
-        entry_points: List[Tuple[float, Hashable]],
+        entry_points: list[tuple[float, Hashable]],
         layer: _Layer,
         ef: int,
         allow_soft_deleted: bool = False,
         key_to_hard_delete: Optional[Hashable] = None,
-    ) -> List[Tuple[float, Hashable]]:
+    ) -> list[tuple[float, Hashable]]:
         """The ef search algorithm for finding neighbors in a given layer.
 
         Args:
@@ -766,13 +762,13 @@ class HNSW(MutableMapping):
 
         return entry_points
 
-    def _heuristic_prune(self, candidates: List[Tuple[float, Hashable]], max_size: int) -> List[Tuple[float, Hashable]]:
+    def _heuristic_prune(self, candidates: list[tuple[float, Hashable]], max_size: int) -> list[tuple[float, Hashable]]:
         """Prune the potential neigbors to keep only the top max_size neighbors.
         This algorithm is based on hnswlib's heuristic pruning algorithm:
         <https://github.com/nmslib/hnswlib/blob/978f7137bc9555a1b61920f05d9d0d8252ca9169/hnswlib/hnswalg.h#L382>`_.
 
         Args:
-            candidates (List[Tuple[float, Hashable]]): A list of (distance, key) pairs
+            candidates (list[tuple[float, Hashable]]): A list of (distance, key) pairs
                 representing the potential neighbors.
             max_size (int): The maximum number of neighbors to keep.
 

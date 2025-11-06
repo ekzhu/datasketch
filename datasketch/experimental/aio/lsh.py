@@ -6,7 +6,6 @@ if sys.version_info < (3, 6):
 
 import asyncio
 from itertools import chain
-from typing import Dict, Tuple
 
 from datasketch.experimental.aio.storage import (
     async_ordered_storage,
@@ -49,9 +48,9 @@ class AsyncMinHashLSH:
         self,
         threshold: float = 0.9,
         num_perm: int = 128,
-        weights: Tuple[float, float] = (0.5, 0.5),
-        params: Tuple[int, int] = None,
-        storage_config: Dict = None,
+        weights: tuple[float, float] = (0.5, 0.5),
+        params: tuple[int, int] = None,
+        storage_config: dict = None,
         prepickle: bool = None,
     ):
         if storage_config is None:

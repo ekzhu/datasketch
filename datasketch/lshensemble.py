@@ -1,6 +1,6 @@
 import struct
 from collections import Counter, deque
-from typing import Dict, Optional, Tuple
+from typing import Optional
 from collections.abc import Generator, Hashable, Iterable
 
 import numpy as np
@@ -112,9 +112,9 @@ class MinHashLSHEnsemble:
         num_perm: int = 128,
         num_part: int = 16,
         m: int = 8,
-        weights: Tuple[float, float] = (0.5, 0.5),
-        storage_config: Optional[Dict] = None,
-        prepickle: Optional[bool] = None,
+        weights: tuple[float, float] = (0.5, 0.5),
+        storage_config: dict | None = None,
+        prepickle: bool | None = None,
     ) -> None:
         if threshold > 1.0 or threshold < 0.0:
             raise ValueError("threshold must be in [0.0, 1.0]")
@@ -187,13 +187,13 @@ class MinHashLSHEnsemble:
         config["basename"] = b"-".join([basename, struct.pack(">H", partition), struct.pack(">H", r)])
         return config
 
-    def index(self, entries: Iterable[Tuple[Hashable, MinHash, int]]) -> None:
+    def index(self, entries: Iterable[tuple[Hashable, MinHash, int]]) -> None:
         """
         Index all sets given their keys, MinHashes, and sizes.
         It can be called only once after the index is created.
 
         Args:
-            entries (Iterable[Tuple[Hashable, MinHash, int]]): An iterable of
+            entries (Iterable[tuple[Hashable, MinHash, int]]): An iterable of
                 tuples, each must be in the form of ``(key, minhash, size)``,
                 where ``key`` is the unique
                 identifier of a set, ``minhash`` is the MinHash of the set,

@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import copy
 import warnings
-from typing import Callable, List, Optional, Tuple
+from typing import Callable, Optional
 from collections.abc import Generator, Iterable
 
 import numpy as np
@@ -72,9 +72,9 @@ class MinHash:
         num_perm: int = 128,
         seed: int = 1,
         hashfunc: Callable = sha1_hash32,
-        hashobj: Optional[object] = None,  # Deprecated.
-        hashvalues: Optional[Iterable] = None,
-        permutations: Optional[Tuple[Iterable, Iterable]] = None,
+        hashobj: object | None = None,  # Deprecated.
+        hashvalues: Iterable | None = None,
+        permutations: tuple[Iterable, Iterable] | None = None,
     ) -> None:
         if hashvalues is not None:
             num_perm = len(hashvalues)
@@ -348,7 +348,7 @@ class MinHash:
         )
 
     @classmethod
-    def bulk(cls, b: Iterable, **minhash_kwargs) -> List[MinHash]:
+    def bulk(cls, b: Iterable, **minhash_kwargs) -> list[MinHash]:
         """Compute MinHashes in bulk. This method avoids unnecessary
         overhead when initializing many minhashes by reusing the initialized
         state.

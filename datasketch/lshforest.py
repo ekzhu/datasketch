@@ -1,5 +1,4 @@
 from collections import defaultdict
-from typing import List
 from collections.abc import Hashable
 
 import numpy as np
@@ -88,7 +87,7 @@ class MinHashLSHForest:
                         yield key
                     j += 1
 
-    def query(self, minhash: MinHash, k: int) -> List[Hashable]:
+    def query(self, minhash: MinHash, k: int) -> list[Hashable]:
         """
         Return the approximate top-k keys that have the
         (approximately) highest Jaccard similarities to the query set.

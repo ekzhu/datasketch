@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import pickle
 import struct
-from typing import Callable, Dict, List, Optional, Tuple, Union
+from typing import Callable, Optional, Union
 from collections.abc import Hashable
 
 from scipy.integrate import quad as integrate
@@ -141,11 +141,11 @@ class MinHashLSH:
         self,
         threshold: float = 0.9,
         num_perm: int = 128,
-        weights: Tuple[float, float] = (0.5, 0.5),
-        params: Optional[Tuple[int, int]] = None,
-        storage_config: Optional[Dict] = None,
-        prepickle: Optional[bool] = None,
-        hashfunc: Optional[Callable[[bytes], bytes]] = None,
+        weights: tuple[float, float] = (0.5, 0.5),
+        params: tuple[int, int] | None = None,
+        storage_config: dict | None = None,
+        prepickle: bool | None = None,
+        hashfunc: Callable[[bytes], bytes] | None = None,
     ) -> None:
         storage_config = {"type": "dict"} if not storage_config else storage_config
         self._buffer_size = 50000
