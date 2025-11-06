@@ -41,7 +41,7 @@ class TestMinHashLSH(unittest.TestCase):
             lsh.insert("m", m)
             sizes = [len(H) for ht in lsh.hashtables for H in ht]
             self.assertTrue(all(sizes[0] == s for s in sizes))
-    
+
     def test_unpacking(self):
         for b in range(2, 1024 + 1):
             lsh = MinHashLSH(num_perm=b * 4, params=(b, 4))
@@ -350,7 +350,7 @@ class TestMinHashLSH(unittest.TestCase):
                 'type': 'redis', 'redis': {'host': 'localhost', 'port': 6379}
             })
             lsh4.insert("a",m6)
-            
+
             lsh1.merge(lsh4, check_overlap=False)
 
 

@@ -59,7 +59,7 @@ class TestMinHashLSHBloom(unittest.TestCase):
 		self.assertTrue(b1 < b2)
 		self.assertTrue(r1 > r2)
 		self.assertTrue(len(lsh.hashtables) == lsh.b)
-		
+
 
 	def test_insert(self):
 		lsh = MinHashLSHBloom(threshold=0.5, num_perm=16, n=10, fp=0.01)

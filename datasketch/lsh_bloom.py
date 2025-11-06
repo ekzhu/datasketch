@@ -66,8 +66,8 @@ if pybloomfilter is not None:
 				self.bloom_filter = pybloomfilter.BloomFilter.open(fname)
 			else:
 				self.bloom_filter = pybloomfilter.BloomFilter(
-					capacity=item_count, 
-					error_rate=fp, 
+					capacity=item_count,
+					error_rate=fp,
 					filename=self.fname
 				)
 
@@ -80,7 +80,7 @@ if pybloomfilter is not None:
 		def assert_size(self, hashvalues: List[int]):
 			if not len(hashvalues) == self.r:
 				raise RuntimeError(f"Invalid length for indices, {len(hashvalues)}, expected {self.r} hashvalues in band")
-			
+
 		def insert(self, hashvalues: List[int]) -> None:
 			"""
 			Takes as input the indices for a single band and inserts them into the corresponding bit arrays
@@ -233,8 +233,8 @@ class MinHashLSHBloom(object):
 			os.makedirs(save_dir, exist_ok=True)
 		self.hashtables = [
 			BloomTable(
-					item_count=n, 
-					fp=fp, band_size=self.r, 
+					item_count=n,
+					fp=fp, band_size=self.r,
 					fname=os.path.join(save_dir, f"band-{i}.bf") if save_dir is not None else None,
 				)
 			for i in range(self.b)
@@ -263,7 +263,7 @@ class MinHashLSHBloom(object):
 			raise ValueError(
 				"Expecting minhash with length %d, got %d" % (self.h, len(minhash))
 			)
-		
+
 		Hs = [minhash.hashvalues[start:end] for start, end in self.hashranges]
 
 		for H, hashtable in zip(Hs, self.hashtables):
@@ -323,7 +323,7 @@ class MinHashLSHBloom(object):
 			raise ValueError(
 				"Expecting minhash with length %d, got %d" % (self.h, len(minhash))
 			)
-		
+
 		# if we match in any band, this is a candidate pair
 		for (start, end), hashtable in zip(self.hashranges, self.hashtables):
 			H = minhash.hashvalues[start:end]
@@ -331,7 +331,7 @@ class MinHashLSHBloom(object):
 			if collision:
 				return True
 		return False
-	
+
 	def sync(self):
 		print("Saving Bloom Index...")
 		for table in self.hashtables:

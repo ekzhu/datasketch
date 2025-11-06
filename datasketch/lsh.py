@@ -231,7 +231,7 @@ class MinHashLSH(object):
     def merge(
             self,
             other: MinHashLSH,
-            check_overlap: bool = False      
+            check_overlap: bool = False
     ):
         """Merge the other MinHashLSH with this one, making this one the union
         of both.

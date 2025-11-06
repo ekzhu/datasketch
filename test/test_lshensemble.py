@@ -28,7 +28,7 @@ class TestMinHashLSHEnsemble(unittest.TestCase):
             m = MinHash()
             for i in range(size):
                 m.update(("%d" % i).encode("utf8"))
-            yield (key, m, size) 
+            yield (key, m, size)
 
     def test_index(self):
         lsh = MinHashLSHEnsemble(threshold=0.8)
@@ -54,7 +54,7 @@ class TestMinHashLSHEnsemble(unittest.TestCase):
             keys1 = lsh.query(minhash, size)
             keys2 = lsh2.query(minhash, size)
             self.assertTrue(set(keys1) == set(keys2))
-    
+
     def test_index_redis(self):
         storage_config = {
             "type": "redis",
@@ -64,7 +64,7 @@ class TestMinHashLSHEnsemble(unittest.TestCase):
             },
         }
         with patch('redis.Redis', fake_redis):
-            lsh = MinHashLSHEnsemble(threshold=0.8, 
+            lsh = MinHashLSHEnsemble(threshold=0.8,
                     storage_config=storage_config)
             lsh.index(self._data(64))
             self.assertFalse(lsh.is_empty())
@@ -79,7 +79,7 @@ class TestMinHashLSHEnsemble(unittest.TestCase):
             },
         }
         with patch('redis.Redis', fake_redis):
-            lsh = MinHashLSHEnsemble(threshold=0.9, 
+            lsh = MinHashLSHEnsemble(threshold=0.9,
                     storage_config=storage_config)
             data = list(self._data(64))
             lsh.index(data)
