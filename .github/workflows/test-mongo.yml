@@ -30,7 +30,8 @@ jobs:
         run: |
           # Disable Cassandra optional extensions (faster testing).
           export CASS_DRIVER_NO_EXTENSIONS=1
-          uv pip install -e .[test,experimental_aio,bloom]
+          uv pip install -e ."[test,experimental_aio,bloom]"
+          uv pip list
       - name: Test with pytest
         run: |
           export DO_TEST_MONGO=true
