@@ -23,11 +23,12 @@ permissions:
 jobs:
   deploy:
     runs-on: ubuntu-latest
+    environment: package
 
     steps:
       - uses: actions/checkout@v5
         with:
-          ref: ${{ github.event.inputs.ref || 'master' }}
+          ref: ${{ github.event.inputs.ref }}
       - name: Install uv
         uses: astral-sh/setup-uv@v7
         with:
@@ -54,8 +55,6 @@ jobs:
       - name: Publish package to PyPI
         if: github.event_name == 'workflow_dispatch' && github.event.inputs.ref != ''
         uses: pypa/gh-action-pypi-publish@v1.13.0
-        with:
-          skip-existing: true
 
       - name: Minimize uv cache
         run: uv cache prune --ci
