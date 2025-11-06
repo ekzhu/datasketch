@@ -1,7 +1,5 @@
 import sys
 
-if sys.version_info < (3, 6):
-    raise ImportError("Can't use AsyncMinHashLSH module. Python version should be >=3.6")
 
 import asyncio
 import os

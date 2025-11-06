@@ -12,7 +12,4 @@ from new_module import NewModuleClass
 
 import sys
 
-if sys.version_info < (3, 6):
-    AsyncMinHashLSH = None
-else:
-    from datasketch.experimental.aio.lsh import AsyncMinHashLSH
+from datasketch.experimental.aio.lsh import AsyncMinHashLSH
