@@ -118,6 +118,8 @@ ignore = [
   "F403",   # 'from module import *' used; unable to detect undefined names
   "F401",   # module imported but unused
   "C901",   # function is too complex
+  "UP007",  # non-pep604-annotation-union
+  "UP045",  # non-pep604-annotation-optional
   "N801",   # TODO: class name should use CapWords convention
   "N803",   # TODO: argument name should be lowercase
   "F841",   # TODO: local variable is assigned to but never used
