@@ -4,6 +4,12 @@
 name: Upload Python Package
 
 on:
+  push:
+    branches: [master]
+  pull_request:
+    branches: [master]
+    paths:
+      - ".github/workflows/pypi.yml"
   workflow_dispatch:
     inputs:
       ref:
@@ -17,24 +23,39 @@ permissions:
 jobs:
   deploy:
     runs-on: ubuntu-latest
-    environment: package
 
     steps:
       - uses: actions/checkout@v5
         with:
-          ref: ${{ github.event.inputs.ref }}
+          ref: ${{ github.event.inputs.ref || 'master' }}
       - name: Install uv
-        uses: astral-sh/setup-uv@v7
         uses: astral-sh/setup-uv@v7
         with:
           activate-environment: true
           python-version: "3.12"
           enable-cache: true
+
       - name: Build package
         run: uv build
 
-      - name: Publish package
+      - name: Check package
+        run: |
+          uvx twine check dist/* --strict
+
+      - name: Verify package installation and imports
+        run: |
+          # Install the built wheel in a temporary environment
+          uv pip install dist/*.whl
+          # Test basic imports and version
+          uv run python -c "import datasketch; print(f'datasketch version: {datasketch.__version__}')"
+          uv run python -c "from datasketch import MinHash, HyperLogLog, MinHashLSH; print('Core imports successful')"
+          uv run python -c "from datasketch import LeanMinHash, WeightedMinHash; print('Additional imports successful')"
+
+      - name: Publish package to PyPI
+        if: github.event_name == 'workflow_dispatch' && github.event.inputs.ref != ''
         uses: pypa/gh-action-pypi-publish@v1.13.0
+        with:
+          skip-existing: true
 
       - name: Minimize uv cache
         run: uv cache prune --ci
