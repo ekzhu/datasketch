@@ -227,6 +227,33 @@ class TestMinHashLSH(unittest.TestCase):
         for i, H in enumerate(lsh.keys["a"]):
             self.assertTrue("a" in lsh.hashtables[i][H])
 
+    def test_deletion_session(self):
+        lsh = MinHashLSH(threshold=0.5, num_perm=16)
+        m1 = MinHash(16)
+        m1.update("a".encode("utf8"))
+        m2 = MinHash(16)
+        m2.update("b".encode("utf8"))
+        m3 = MinHash(16)
+        m3.update("c".encode("utf8"))
+        lsh.insert("a", m1)
+        lsh.insert("b", m2)
+        lsh.insert("c", m3)
+
+        keys_to_delete = ["a", "b"]
+        with lsh.deletion_session() as session:
+            for key in keys_to_delete:
+                session.remove(key)
+
+        # Verify deletions
+        self.assertTrue("a" not in lsh.keys)
+        self.assertTrue("b" not in lsh.keys)
+        self.assertTrue("c" in lsh.keys)
+
+        for table in lsh.hashtables:
+            for H in table:
+                self.assertTrue("a" not in table[H])
+                self.assertTrue("b" not in table[H])
+
     def test_get_counts(self):
         lsh = MinHashLSH(threshold=0.5, num_perm=16)
         m1 = MinHash(16)
