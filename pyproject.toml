@@ -110,7 +110,17 @@ select = [
   "UP",     # implementation for pyupgrade
   "RUF100", # implementation for yesqa
 ]
-ignore = ["E203", "E266", "E501", "E731", "F403", "F401", "C901"]
+ignore = [
+  "E203",   # whitespace before ':'
+  "E266",   # too many leading '#' for block comment
+  "E501",   # line too long
+  "E731",   # do not assign a lambda expression, use a def
+  "F403",   # 'from module import *' used; unable to detect undefined names
+  "F401",   # module imported but unused
+  "C901",   # function is too complex
+  "N801",   # TODO: class name should use CapWords convention
+  "N803",   # TODO: argument name should be lowercase
+]
 
 [tool.setuptools.dynamic]
 version = { attr = "datasketch.version.__version__" }
