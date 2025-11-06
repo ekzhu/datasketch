@@ -97,7 +97,7 @@ class MinHashLSHForest:
             k (int): The maximum number of keys to return.
 
         Returns:
-            List[Hashable]: list of at most k keys.
+            list[Hashable]: list of at most k keys.
 
         Note:
             Tip for improving accuracy:

@@ -360,7 +360,7 @@ class MinHash:
                 will be used for all minhashes.
 
         Returns:
-            List[datasketch.MinHash]: A list of computed MinHashes.
+            list[datasketch.MinHash]: A list of computed MinHashes.
 
         Example:
 

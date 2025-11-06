@@ -305,7 +305,7 @@ class HNSW(MutableMapping):
             return default
         return self._nodes[key].point
 
-    def items(self) -> Iterator[Tuple[Hashable, np.ndarray]]:
+    def items(self) -> Iterator[tuple[Hashable, np.ndarray]]:
         """Return an iterator of the indexed points that were not soft-removed
         as (key, point) pairs."""
         return ((key, node.point) for key, node in self._nodes.items() if not node.is_deleted)
@@ -332,7 +332,7 @@ class HNSW(MutableMapping):
         self.remove(key, hard=hard)
         return point
 
-    def popitem(self, last: bool = True, hard: bool = False) -> Tuple[Hashable, np.ndarray]:
+    def popitem(self, last: bool = True, hard: bool = False) -> tuple[Hashable, np.ndarray]:
         """Remove and return a (key, point) pair from the index. Pairs are
         returned in LIFO order if `last` is true or FIFO order if false.
         If the index is empty or all points are soft-removed, raise KeyError.
@@ -593,7 +593,7 @@ class HNSW(MutableMapping):
         query_point: np.ndarray,
         k: Optional[int] = None,
         ef: Optional[int] = None,
-    ) -> List[Tuple[Hashable, float]]:
+    ) -> list[tuple[Hashable, float]]:
         """Search for the k nearest neighbors of the query point.
 
         Args:
@@ -604,7 +604,7 @@ class HNSW(MutableMapping):
                 If None, use the construction ef.
 
         Returns:
-            List[Tuple[Hashable, float]]: A list of (key, distance) pairs for the k
+            list[Tuple[Hashable, float]]: A list of (key, distance) pairs for the k
                 nearest neighbors of the query point.
 
         Raises:
@@ -639,7 +639,7 @@ class HNSW(MutableMapping):
         layer: _Layer,
         allow_soft_deleted: bool = False,
         key_to_hard_delete: Optional[Hashable] = None,
-    ) -> Tuple[Hashable, float]:
+    ) -> tuple[Hashable, float]:
         """The greedy search algorithm for finding the closest neighbor only.
 
         Args:
@@ -699,7 +699,7 @@ class HNSW(MutableMapping):
 
         Args:
             query (np.ndarray): The query point.
-            entry_points (List[Tuple[float, Hashable]]): A list of (-distance, key) pairs
+            entry_points (list[Tuple[float, Hashable]]): A list of (-distance, key) pairs
                 representing the entry points for the search.
             layer (_Layer): The graph for the layer.
             ef (int): The number of neighbors to consider during search.
@@ -709,7 +709,7 @@ class HNSW(MutableMapping):
                 hard-deleted, if any. This point should never be returned.
 
         Returns:
-            List[Tuple[float, Hashable]]: A heap of (-distance, key) pairs representing
+            list[Tuple[float, Hashable]]: A heap of (-distance, key) pairs representing
                 the neighbors found.
 
         Note:
@@ -773,7 +773,7 @@ class HNSW(MutableMapping):
             max_size (int): The maximum number of neighbors to keep.
 
         Returns:
-            List[Tuple[float, Hashable]]: A list of (distance, key) pairs representing
+            list[Tuple[float, Hashable]]: A list of (distance, key) pairs representing
                 the pruned neighbors.
         """
         if len(candidates) < max_size:

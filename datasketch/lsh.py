@@ -317,7 +317,7 @@ class MinHashLSH:
                 raise ValueError(f"Cannot merge type MinHashLSH and type {type(other).__name__}.")
             raise ValueError("Cannot merge MinHashLSH with different initialization parameters.")
 
-    def query(self, minhash) -> List[Hashable]:
+    def query(self, minhash) -> list[Hashable]:
         """
         Giving the MinHash of the query set, retrieve
         the keys that reference sets with Jaccard
@@ -407,7 +407,7 @@ class MinHashLSH:
             H = self._H(minhash.hashvalues[start:end])
             hashtable.add_to_select_buffer([H])
 
-    def collect_query_buffer(self) -> List[Hashable]:
+    def collect_query_buffer(self) -> list[Hashable]:
         """
         Execute and return buffered queries given
         by :meth:`add_to_query_buffer`.
@@ -491,7 +491,7 @@ class MinHashLSH:
         else:
             return candidates
 
-    def get_counts(self) -> List[Dict[Hashable, int]]:
+    def get_counts(self) -> list[dict[Hashable, int]]:
         """
         Returns a list of length :attr:`b` (i.e., number of hash tables) with
         each element a dictionary mapping hash table bucket key to the number
@@ -502,7 +502,7 @@ class MinHashLSH:
         """
         return [hashtable.itemcounts() for hashtable in self.hashtables]
 
-    def get_subset_counts(self, *keys: Hashable) -> List[Dict[Hashable, int]]:
+    def get_subset_counts(self, *keys: Hashable) -> list[dict[Hashable, int]]:
         """
         Returns the bucket allocation counts (see :meth:`get_counts` above)
         restricted to the list of keys given.

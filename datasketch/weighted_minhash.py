@@ -166,7 +166,7 @@ class WeightedMinHashGenerator:
                 vectors (rows).
 
         Returns:
-            List[Union[WeightedMinHash, None]] - A list of length X.shape[0].
+            list[Union[WeightedMinHash, None]] - A list of length X.shape[0].
             Each element is either a :class:`WeightedMinHash` instance or None
             (if the original row in X is empty).
         """
