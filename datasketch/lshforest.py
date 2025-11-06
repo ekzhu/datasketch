@@ -59,9 +59,7 @@ class MinHashLSHForest:
             raise ValueError("The num_perm of MinHash out of range")
         if key in self.keys:
             raise ValueError("The given key has already been added")
-        self.keys[key] = [
-            self._H(minhash.hashvalues[start:end]) for start, end in self.hashranges
-        ]
+        self.keys[key] = [self._H(minhash.hashvalues[start:end]) for start, end in self.hashranges]
         for H, hashtable in zip(self.keys[key], self.hashtables):
             hashtable[H].append(key)
 
@@ -77,10 +75,7 @@ class MinHashLSHForest:
         if r > self.k or r <= 0 or b > self.l or b <= 0:
             raise ValueError("parameter outside range")
         # Generate prefixes of concatenated hash values
-        hps = [
-            self._H(minhash.hashvalues[start : start + r])
-            for start, _ in self.hashranges
-        ]
+        hps = [self._H(minhash.hashvalues[start : start + r]) for start, _ in self.hashranges]
         # Set the prefix length for look-ups in the sorted hash values list
         prefix_size = len(hps[0])
         for ht, hp, hashtable in zip(self.sorted_hashtables, hps, self.hashtables):
@@ -145,13 +140,13 @@ class MinHashLSHForest:
         byteslist = self.keys.get(key, None)
         if byteslist is None:
             raise KeyError(f"The provided key does not exist in the LSHForest: {key}")
-        hashvalue_byte_size = len(byteslist[0])//8
-        hashvalues = np.empty(len(byteslist)*hashvalue_byte_size, dtype=np.uint64)
+        hashvalue_byte_size = len(byteslist[0]) // 8
+        hashvalues = np.empty(len(byteslist) * hashvalue_byte_size, dtype=np.uint64)
         for index, item in enumerate(byteslist):
             # unswap the bytes, as their representation is flipped during storage
             hv_segment = np.frombuffer(item, dtype=np.uint64).byteswap()
-            curr_index = index*hashvalue_byte_size
-            hashvalues[curr_index:curr_index+hashvalue_byte_size] = hv_segment
+            curr_index = index * hashvalue_byte_size
+            hashvalues[curr_index : curr_index + hashvalue_byte_size] = hv_segment
         return hashvalues
 
     def _binary_search(self, n, func):

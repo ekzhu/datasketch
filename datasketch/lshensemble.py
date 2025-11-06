@@ -37,9 +37,7 @@ def _false_negative_probability(threshold, b, r, xq):
     return 0.0
 
 
-def _optimal_param(
-    threshold, num_perm, max_r, xq, false_positive_weight, false_negative_weight
-):
+def _optimal_param(threshold, num_perm, max_r, xq, false_positive_weight, false_negative_weight):
     """
     Compute the optimal parameters that minimizes the weighted sum
     of probabilities of false positive and false negative.
@@ -143,9 +141,7 @@ class MinHashLSHEnsemble:
                     MinHashLSH(
                         num_perm=self.h,
                         params=(int(self.h / r), r),
-                        storage_config=self._get_storage_config(
-                            basename, storage_config, partition, r
-                        ),
+                        storage_config=self._get_storage_config(basename, storage_config, partition, r),
                         prepickle=prepickle,
                     ),
                 )
@@ -187,9 +183,7 @@ class MinHashLSHEnsemble:
 
     def _get_storage_config(self, basename, base_config, partition, r):
         config = dict(base_config)
-        config["basename"] = b"-".join(
-            [basename, struct.pack(">H", partition), struct.pack(">H", r)]
-        )
+        config["basename"] = b"-".join([basename, struct.pack(">H", partition), struct.pack(">H", r)])
         return config
 
     def index(self, entries: Iterable[Tuple[Hashable, MinHash, int]]) -> None:
@@ -281,7 +275,5 @@ if __name__ == "__main__":
     num_perm = 256
     false_negative_weight, false_positive_weight = 0.5, 0.5
     for xq in xqs:
-        b, r = _optimal_param(
-            threshold, num_perm, max_r, xq, false_positive_weight, false_negative_weight
-        )
+        b, r = _optimal_param(threshold, num_perm, max_r, xq, false_positive_weight, false_negative_weight)
         print("threshold: %.2f, xq: %.3f, b: %d, r: %d" % (threshold, xq, b, r))

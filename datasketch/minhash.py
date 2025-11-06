@@ -93,9 +93,7 @@ class MinHash:
         self.hashfunc = hashfunc
         # Check for use of hashobj and issue warning.
         if hashobj is not None:
-            warnings.warn(
-                "hashobj is deprecated, use hashfunc instead.", DeprecationWarning
-            )
+            warnings.warn("hashobj is deprecated, use hashfunc instead.", DeprecationWarning)
         # Initialize hash values
         if hashvalues is not None:
             self.hashvalues = self._parse_hashvalues(hashvalues)
@@ -209,9 +207,7 @@ class MinHash:
                 "Cannot compute Jaccard given MinHash with\
                     different numbers of permutation functions"
             )
-        return float(np.count_nonzero(self.hashvalues == other.hashvalues)) / float(
-            len(self)
-        )
+        return float(np.count_nonzero(self.hashvalues == other.hashvalues)) / float(len(self))
 
     def count(self) -> float:
         """Estimate the cardinality count based on the technique described in
@@ -297,9 +293,7 @@ class MinHash:
             bool: If their seeds and hash values are both equal then two are equivalent.
         """
         return (
-            type(self) is type(other)
-            and self.seed == other.seed
-            and np.array_equal(self.hashvalues, other.hashvalues)
+            type(self) is type(other) and self.seed == other.seed and np.array_equal(self.hashvalues, other.hashvalues)
         )
 
     @classmethod

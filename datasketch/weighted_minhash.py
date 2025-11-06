@@ -88,9 +88,7 @@ class WeightedMinHash:
             are equivalent.
         """
         return (
-            type(self) is type(other)
-            and self.seed == other.seed
-            and np.array_equal(self.hashvalues, other.hashvalues)
+            type(self) is type(other) and self.seed == other.seed and np.array_equal(self.hashvalues, other.hashvalues)
         )
 
 
@@ -116,9 +114,7 @@ class WeightedMinHashGenerator:
         self.seed = seed
         generator = np.random.RandomState(seed=seed)
         self.rs = generator.gamma(2, 1, (sample_size, dim)).astype(np.float32)
-        self.ln_cs = np.log(generator.gamma(2, 1, (sample_size, dim))).astype(
-            np.float32
-        )
+        self.ln_cs = np.log(generator.gamma(2, 1, (sample_size, dim))).astype(np.float32)
         self.betas = generator.uniform(0, 1, (sample_size, dim)).astype(np.float32)
 
     def minhash(self, v: np.ndarray) -> WeightedMinHash:
@@ -155,9 +151,7 @@ class WeightedMinHashGenerator:
             hashvalues[i][0], hashvalues[i][1] = k, int(t[k])
         return WeightedMinHash(self.seed, hashvalues)
 
-    def minhash_many(
-        self, X: Union[sp.sparse.spmatrix, np.ndarray]
-    ) -> List[Union[WeightedMinHash, None]]:
+    def minhash_many(self, X: Union[sp.sparse.spmatrix, np.ndarray]) -> List[Union[WeightedMinHash, None]]:
         """Create new WeightedMinHash instances given a matrix of weighted
         Jaccard vectors. In the input matrix X, each row corresponds to a
         multi-set, and each column stores the integer frequency of the

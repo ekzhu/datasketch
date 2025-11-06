@@ -103,10 +103,7 @@ class _LayerWithReversedEdges(_Layer):
     def __eq__(self, __value: object) -> bool:
         if not isinstance(__value, _LayerWithReversedEdges):
             return False
-        return (
-            self._graph == __value._graph
-            and self._reverse_edges == __value._reverse_edges
-        )
+        return self._graph == __value._graph and self._reverse_edges == __value._reverse_edges
 
     def __len__(self) -> int:
         return len(self._graph)
@@ -146,9 +143,7 @@ class _Node:
         return hash(self.key)
 
     def __repr__(self) -> str:
-        return (
-            f"_Node(key={self.key}, point={self.point}, is_deleted={self.is_deleted})"
-        )
+        return f"_Node(key={self.key}, point={self.point}, is_deleted={self.is_deleted})"
 
     def copy(self) -> _Node:
         return _Node(self.key, self.point, self.is_deleted)
@@ -311,9 +306,7 @@ class HNSW(MutableMapping):
             and self._graphs == __value._graphs
         )
 
-    def get(
-        self, key: Hashable, default: Optional[np.ndarray] = None
-    ) -> Union[np.ndarray, None]:
+    def get(self, key: Hashable, default: Optional[np.ndarray] = None) -> Union[np.ndarray, None]:
         """Return the point for key in the index, else default. If default is not
         given and key is not in the index or it was soft-removed, return None."""
         if key not in self:
@@ -323,11 +316,7 @@ class HNSW(MutableMapping):
     def items(self) -> Iterator[Tuple[Hashable, np.ndarray]]:
         """Return an iterator of the indexed points that were not soft-removed
         as (key, point) pairs."""
-        return (
-            (key, node.point)
-            for key, node in self._nodes.items()
-            if not node.is_deleted
-        )
+        return ((key, node.point) for key, node in self._nodes.items() if not node.is_deleted)
 
     def keys(self) -> Iterator[Hashable]:
         """Return an iterator of the keys of the index points that were not
@@ -338,9 +327,7 @@ class HNSW(MutableMapping):
         """Return an iterator of the index points that were not soft-removed."""
         return (node.point for node in self._nodes.values() if not node.is_deleted)
 
-    def pop(
-        self, key: Hashable, default: Optional[np.ndarray] = None, hard: bool = False
-    ) -> np.ndarray:
+    def pop(self, key: Hashable, default: Optional[np.ndarray] = None, hard: bool = False) -> np.ndarray:
         """If key is in the index, remove it and return its associated point,
         else return default. If default is not given and key is not in the index
         or it was soft-removed, raise KeyError.
@@ -353,9 +340,7 @@ class HNSW(MutableMapping):
         self.remove(key, hard=hard)
         return point
 
-    def popitem(
-        self, last: bool = True, hard: bool = False
-    ) -> Tuple[Hashable, np.ndarray]:
+    def popitem(self, last: bool = True, hard: bool = False) -> Tuple[Hashable, np.ndarray]:
         """Remove and return a (key, point) pair from the index. Pairs are
         returned in LIFO order if `last` is true or FIFO order if false.
         If the index is empty or all points are soft-removed, raise KeyError.
@@ -369,17 +354,11 @@ class HNSW(MutableMapping):
             raise KeyError("popitem(): index is empty")
         if last:
             key = next(
-                (
-                    key
-                    for key in reversed(self._nodes)
-                    if not self._nodes[key].is_deleted
-                ),
+                (key for key in reversed(self._nodes) if not self._nodes[key].is_deleted),
                 None,
             )
         else:
-            key = next(
-                (key for key in self._nodes if not self._nodes[key].is_deleted), None
-            )
+            key = next((key for key in self._nodes if not self._nodes[key].is_deleted), None)
         if key is None:
             raise KeyError("popitem(): index is empty")
         point = self._nodes[key].point
@@ -405,9 +384,7 @@ class HNSW(MutableMapping):
             ef_construction=self._ef_construction,
             m0=self._m0,
         )
-        new_index._nodes = OrderedDict(
-            (key, node.copy()) for key, node in self._nodes.items()
-        )
+        new_index._nodes = OrderedDict((key, node.copy()) for key, node in self._nodes.items())
         new_index._graphs = [layer.copy() for layer in self._graphs]
         new_index._entry_point = self._entry_point
         new_index._random.set_state(self._random.get_state())
@@ -496,17 +473,13 @@ class HNSW(MutableMapping):
         if level is None:
             level = int(-np.log(self._random.random_sample()) * self._level_mult)
         self._nodes[key] = _Node(key, new_point)
-        if (
-            self._entry_point is not None
-        ):  # The HNSW is not empty, we have an entry point
+        if self._entry_point is not None:  # The HNSW is not empty, we have an entry point
             dist = self._distance_func(new_point, self._nodes[self._entry_point].point)
             point = self._entry_point
             # For all levels in which we dont have to insert elem,
             # we search for the closest neighbor using greedy search.
             for layer in reversed(self._graphs[level + 1 :]):
-                point, dist = self._search_ef1(
-                    new_point, point, dist, layer, allow_soft_deleted=True
-                )
+                point, dist = self._search_ef1(new_point, point, dist, layer, allow_soft_deleted=True)
             # Entry points for search at each level to insert.
             entry_points = [(-dist, point)]
             for layer in reversed(self._graphs[: level + 1]):
@@ -514,16 +487,11 @@ class HNSW(MutableMapping):
                 level_m = self._m if layer is not self._graphs[0] else self._m0
                 # Search this layer for neighbors to insert, and update entry points
                 # for the next level.
-                entry_points = self._search_base_layer(
-                    new_point, entry_points, layer, ef, allow_soft_deleted=True
-                )
+                entry_points = self._search_base_layer(new_point, entry_points, layer, ef, allow_soft_deleted=True)
                 # Insert the new node into the graph with out-going edges.
                 # We prune the out-going edges to keep only the top level_m neighbors.
                 layer[key] = {
-                    p: d
-                    for d, p in self._heuristic_prune(
-                        [(-mdist, p) for mdist, p in entry_points], level_m
-                    )
+                    p: d for d, p in self._heuristic_prune([(-mdist, p) for mdist, p in entry_points], level_m)
                 }
                 # For each neighbor of the new node, we insert the new node as a neighbor.
                 for neighbor_key, dist in layer[key].items():
@@ -532,8 +500,7 @@ class HNSW(MutableMapping):
                         # We prune the edges to keep only the top level_m neighbors
                         # based on heuristic.
                         for d, p in self._heuristic_prune(
-                            [(d, p) for p, d in layer[neighbor_key].items()]
-                            + [(dist, key)],
+                            [(d, p) for p, d in layer[neighbor_key].items()] + [(dist, key)],
                             level_m,
                         )
                     }
@@ -580,19 +547,12 @@ class HNSW(MutableMapping):
                 for candidate_key in neighborhood_keys:
                     if candidate_key == p:
                         continue
-                    dist = self._distance_func(
-                        self._nodes[candidate_key].point, self._nodes[p].point
-                    )
+                    dist = self._distance_func(self._nodes[candidate_key].point, self._nodes[p].point)
                     if len(cands) < elem_to_keep:
                         heapq.heappush(cands, (-dist, candidate_key))
                     elif dist < -cands[0][0]:
                         heapq.heappushpop(cands, (-dist, candidate_key))
-                layer[p] = {
-                    p2: d2
-                    for d2, p2 in self._heuristic_prune(
-                        [(-md, p) for md, p in cands], layer_m
-                    )
-                }
+                layer[p] = {p2: d2 for d2, p2 in self._heuristic_prune([(-md, p) for md, p in cands], layer_m)}
         self._repair_connections(key, new_point, ef)
 
     def _repair_connections(
@@ -603,9 +563,7 @@ class HNSW(MutableMapping):
         key_to_delete: Optional[Hashable] = None,
     ) -> None:
         entry_point = self._entry_point
-        entry_point_dist = self._distance_func(
-            new_point, self._nodes[entry_point].point
-        )
+        entry_point_dist = self._distance_func(new_point, self._nodes[entry_point].point)
         entry_points = [(-entry_point_dist, entry_point)]
         for layer in reversed(self._graphs):
             if key not in layer:
@@ -636,9 +594,7 @@ class HNSW(MutableMapping):
                 # Filter out the updated node itself.
                 filtered_candidates = [(-md, p) for md, p in entry_points if p != key]
                 # Update the out-going edges of the updated node at this level.
-                layer[key] = {
-                    p: d for d, p in self._heuristic_prune(filtered_candidates, level_m)
-                }
+                layer[key] = {p: d for d, p in self._heuristic_prune(filtered_candidates, level_m)}
 
     def query(
         self,
@@ -666,20 +622,14 @@ class HNSW(MutableMapping):
             ef = self._ef_construction
         if self._entry_point is None:
             raise ValueError("Entry point not found.")
-        entry_point_dist = self._distance_func(
-            query_point, self._nodes[self._entry_point].point
-        )
+        entry_point_dist = self._distance_func(query_point, self._nodes[self._entry_point].point)
         entry_point = self._entry_point
         # Search for the closest neighbor from the highest level to the 2nd
         # level using greedy search.
         for layer in reversed(self._graphs[1:]):
-            entry_point, entry_point_dist = self._search_ef1(
-                query_point, entry_point, entry_point_dist, layer
-            )
+            entry_point, entry_point_dist = self._search_ef1(query_point, entry_point, entry_point_dist, layer)
         # Search for the neighbors at the base layer using ef search.
-        candidates = self._search_base_layer(
-            query_point, [(-entry_point_dist, entry_point)], self._graphs[0], ef
-        )
+        candidates = self._search_base_layer(query_point, [(-entry_point_dist, entry_point)], self._graphs[0], ef)
         if k is not None:
             # If k is specified, we return the k nearest neighbors.
             candidates = heapq.nlargest(k, candidates)
@@ -729,16 +679,11 @@ class HNSW(MutableMapping):
             # Find the neighbors of the current node
             neighbors = [p for p in layer[curr] if p not in visited]
             visited.update(neighbors)
-            dists = [
-                self._distance_func(query_point, self._nodes[p].point)
-                for p in neighbors
-            ]
+            dists = [self._distance_func(query_point, self._nodes[p].point) for p in neighbors]
             for p, d in zip(neighbors, dists):
                 # Update the best node if we find a closer node.
                 if d < best_dist:
-                    if (not allow_soft_deleted and self._nodes[p].is_deleted) or (
-                        p == key_to_hard_delete
-                    ):
+                    if (not allow_soft_deleted and self._nodes[p].is_deleted) or (p == key_to_hard_delete):
                         # If the neighbor has been deleted or to be hard-deleted,
                         # we don't update the best node but we continue to
                         # explore the neighbor's neighbors.
@@ -802,14 +747,9 @@ class HNSW(MutableMapping):
             # Find the neighbors of the current node
             neighbors = [p for p in layer[curr_key] if p not in visited]
             visited.update(neighbors)
-            dists = [
-                self._distance_func(query_point, self._nodes[p].point)
-                for p in neighbors
-            ]
+            dists = [self._distance_func(query_point, self._nodes[p].point) for p in neighbors]
             for p, dist in zip(neighbors, dists):
-                if (not allow_soft_deleted and self._nodes[p].is_deleted) or (
-                    p == key_to_hard_delete
-                ):
+                if (not allow_soft_deleted and self._nodes[p].is_deleted) or (p == key_to_hard_delete):
                     if dist <= closet_dist:
                         # If the neighbor has been deleted or to be deleted,
                         # we add it to the heap to explore its neighbors but
@@ -830,9 +770,7 @@ class HNSW(MutableMapping):
 
         return entry_points
 
-    def _heuristic_prune(
-        self, candidates: List[Tuple[float, Hashable]], max_size: int
-    ) -> List[Tuple[float, Hashable]]:
+    def _heuristic_prune(self, candidates: List[Tuple[float, Hashable]], max_size: int) -> List[Tuple[float, Hashable]]:
         """Prune the potential neigbors to keep only the top max_size neighbors.
         This algorithm is based on hnswlib's heuristic pruning algorithm:
         <https://github.com/nmslib/hnswlib/blob/978f7137bc9555a1b61920f05d9d0d8252ca9169/hnswlib/hnswalg.h#L382>`_.

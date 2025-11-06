@@ -167,15 +167,11 @@ class MinHashLSH:
                 )
         else:
             false_positive_weight, false_negative_weight = weights
-            self.b, self.r = _optimal_param(
-                threshold, num_perm, false_positive_weight, false_negative_weight
-            )
+            self.b, self.r = _optimal_param(threshold, num_perm, false_positive_weight, false_negative_weight)
         if self.b < 2:
             raise ValueError("The number of bands are too small (b < 2)")
 
-        self.prepickle = (
-            storage_config["type"] == "redis" if not prepickle else prepickle
-        )
+        self.prepickle = storage_config["type"] == "redis" if not prepickle else prepickle
 
         self.hashfunc = hashfunc
         if hashfunc:
@@ -226,14 +222,10 @@ class MinHashLSH:
         """
         self._insert(key, minhash, check_duplication=check_duplication, buffer=False)
 
-    def merge(
-            self,
-            other: MinHashLSH,
-            check_overlap: bool = False
-    ):
+    def merge(self, other: MinHashLSH, check_overlap: bool = False):
         """Merge the other MinHashLSH with this one, making this one the union
         of both.
-        
+
         Note:
             Only num_perm, number of bands and sizes of each band is checked for equivalency of two MinHashLSH indexes.
             Other initialization parameters threshold, weights, storage_config, prepickle and hash_func are not checked.
@@ -293,9 +285,7 @@ class MinHashLSH:
         buffer: bool = False,
     ):
         if len(minhash) != self.h:
-            raise ValueError(
-                "Expecting minhash with length %d, got %d" % (self.h, len(minhash))
-            )
+            raise ValueError("Expecting minhash with length %d, got %d" % (self.h, len(minhash)))
         if self.prepickle:
             key = pickle.dumps(key)
         if check_duplication and key in self.keys:
@@ -305,24 +295,14 @@ class MinHashLSH:
         for H, hashtable in zip(Hs, self.hashtables):
             hashtable.insert(H, key, buffer=buffer)
 
-    def __equivalent(self, other:MinHashLSH) -> bool:
+    def __equivalent(self, other: MinHashLSH) -> bool:
         """
         Returns:
             bool: If the two MinHashLSH have equal num_perm, number of bands, size of each band then two are equivalent.
         """
-        return (
-            type(self) is type(other) and
-            self.h == other.h and
-            self.b == other.b and
-            self.r == other.r
-        )
+        return type(self) is type(other) and self.h == other.h and self.b == other.b and self.r == other.r
 
-    def _merge(
-        self,
-        other: MinHashLSH,
-        check_overlap: bool = False,
-        buffer: bool = False
-    ) -> MinHashLSH:
+    def _merge(self, other: MinHashLSH, check_overlap: bool = False, buffer: bool = False) -> MinHashLSH:
         if self.__equivalent(other):
             if check_overlap and set(self.keys).intersection(set(other.keys)):
                 raise ValueError("The keys are overlapping, duplicate key exists.")
@@ -334,8 +314,7 @@ class MinHashLSH:
         else:
             if type(self) is not type(other):
                 raise ValueError(f"Cannot merge type MinHashLSH and type {type(other).__name__}.")
-            raise ValueError(
-                "Cannot merge MinHashLSH with different initialization parameters.")
+            raise ValueError("Cannot merge MinHashLSH with different initialization parameters.")
 
     def query(self, minhash) -> List[Hashable]:
         """
@@ -395,9 +374,7 @@ class MinHashLSH:
 
         """
         if len(minhash) != self.h:
-            raise ValueError(
-                "Expecting minhash with length %d, got %d" % (self.h, len(minhash))
-            )
+            raise ValueError("Expecting minhash with length %d, got %d" % (self.h, len(minhash)))
         candidates = set()
         for (start, end), hashtable in zip(self.hashranges, self.hashtables):
             H = self._H(minhash.hashvalues[start:end])
@@ -424,9 +401,7 @@ class MinHashLSH:
             minhash (MinHash): The MinHash of the query set.
         """
         if len(minhash) != self.h:
-            raise ValueError(
-                "Expecting minhash with length %d, got %d" % (self.h, len(minhash))
-            )
+            raise ValueError("Expecting minhash with length %d, got %d" % (self.h, len(minhash)))
         for (start, end), hashtable in zip(self.hashranges, self.hashtables):
             H = self._H(minhash.hashvalues[start:end])
             hashtable.add_to_select_buffer([H])
@@ -450,9 +425,7 @@ class MinHashLSH:
         if not collected_result_sets:
             return []
         if self.prepickle:
-            return [
-                pickle.loads(key) for key in set.intersection(*collected_result_sets)
-            ]
+            return [pickle.loads(key) for key in set.intersection(*collected_result_sets)]
         return list(set.intersection(*collected_result_sets))
 
     def __contains__(self, key: Hashable) -> bool:
@@ -503,9 +476,7 @@ class MinHashLSH:
 
     def _query_b(self, minhash, b):
         if len(minhash) != self.h:
-            raise ValueError(
-                "Expecting minhash with length %d, got %d" % (self.h, len(minhash))
-            )
+            raise ValueError("Expecting minhash with length %d, got %d" % (self.h, len(minhash)))
         if b > len(self.hashtables):
             raise ValueError("b must be less or equal to the number of hash tables")
         candidates = set()

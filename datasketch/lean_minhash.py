@@ -80,17 +80,14 @@ class LeanMinHash(MinHash):
         self.seed = seed
         self.hashvalues = self._parse_hashvalues(hashvalues)
 
-    def __init__(
-        self, minhash: MinHash = None, seed: int = None, hashvalues: Iterable = None
-    ):
+    def __init__(self, minhash: MinHash = None, seed: int = None, hashvalues: Iterable = None):
         if minhash is not None:
             self._initialize_slots(minhash.seed, minhash.hashvalues)
         elif hashvalues is not None and seed is not None:
             self._initialize_slots(seed, hashvalues)
         else:
             raise ValueError(
-                "Init parameters cannot be None: make sure "
-                "to set either minhash or both of hash values and seed"
+                "Init parameters cannot be None: make sure to set either minhash or both of hash values and seed"
             )
 
     def update(self, b) -> None:

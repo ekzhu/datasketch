@@ -94,9 +94,7 @@ class HyperLogLog:
             raise ValueError("The hashfunc must be a callable.")
         # Check for use of hashobj and issue warning.
         if hashobj is not None:
-            warnings.warn(
-                "hashobj is deprecated, use hashfunc instead.", DeprecationWarning
-            )
+            warnings.warn("hashobj is deprecated, use hashfunc instead.", DeprecationWarning)
         self.hashfunc = hashfunc
         # Common settings
         self.alpha = self._get_alpha(self.p)
@@ -152,10 +150,8 @@ class HyperLogLog:
         small_range_threshold = (5.0 / 2.0) * self.m
         if abs(e - small_range_threshold) / small_range_threshold < 0.15:
             warnings.warn(
-
-                    "Warning: estimate is close to error correction threshold. "
-                    + "Output may not satisfy HyperLogLog accuracy guarantee."
-
+                "Warning: estimate is close to error correction threshold. "
+                + "Output may not satisfy HyperLogLog accuracy guarantee."
             )
         if e <= small_range_threshold:
             num_zero = self.m - np.count_nonzero(self.reg)
@@ -300,13 +296,9 @@ class HyperLogLog:
         h = cls(p)
         offset = size
         try:
-            h.reg = np.array(
-                struct.unpack_from("%dB" % h.m, buf, offset), dtype=np.int8
-            )
+            h.reg = np.array(struct.unpack_from("%dB" % h.m, buf, offset), dtype=np.int8)
         except TypeError:
-            h.reg = np.array(
-                struct.unpack_from("%dB" % h.m, buffer(buf), offset), dtype=np.int8
-            )
+            h.reg = np.array(struct.unpack_from("%dB" % h.m, buffer(buf), offset), dtype=np.int8)
         return h
 
     def __getstate__(self):
@@ -323,13 +315,9 @@ class HyperLogLog:
         self.__init__(p=p)
         offset = size
         try:
-            self.reg = np.array(
-                struct.unpack_from("%dB" % self.m, buf, offset), dtype=np.int8
-            )
+            self.reg = np.array(struct.unpack_from("%dB" % self.m, buf, offset), dtype=np.int8)
         except TypeError:
-            self.reg = np.array(
-                struct.unpack_from("%dB" % self.m, buffer(buf), offset), dtype=np.int8
-            )
+            self.reg = np.array(struct.unpack_from("%dB" % self.m, buffer(buf), offset), dtype=np.int8)
 
 
 class HyperLogLogPlusPlus(HyperLogLog):
@@ -366,9 +354,7 @@ class HyperLogLogPlusPlus(HyperLogLog):
         hashfunc: Callable = sha1_hash64,
         hashobj: Optional[object] = None,
     ):
-        super(HyperLogLogPlusPlus, self).__init__(
-            p=p, reg=reg, hashfunc=hashfunc, hashobj=hashobj
-        )
+        super(HyperLogLogPlusPlus, self).__init__(p=p, reg=reg, hashfunc=hashfunc, hashobj=hashobj)
 
     def _get_threshold(self, p):
         return _thresholds[p - 4]
