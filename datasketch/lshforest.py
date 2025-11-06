@@ -1,5 +1,6 @@
 from collections import defaultdict
-from typing import Hashable, List
+from typing import List
+from collections.abc import Hashable
 
 import numpy as np
 

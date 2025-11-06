@@ -2,15 +2,11 @@ from __future__ import annotations
 
 import heapq
 from collections import OrderedDict
+from collections.abc import Hashable, Iterable, Iterator, Mapping, MutableMapping
 from typing import (
     Callable,
     Dict,
-    Hashable,
-    Iterable,
-    Iterator,
     List,
-    Mapping,
-    MutableMapping,
     Optional,
     Set,
     Tuple,
