@@ -28,7 +28,7 @@ jobs:
       - name: Sync dependencies for tests
         # Sync only the groups we need
         run: |
-          uv sync --group test --group experimental_aio --reinstall
+          uv sync --extra test --extra experimental_aio --extra bloom --reinstall
 
       - name: Run tests
         # optionally: run uv run pytest -v --maxfail=1
