@@ -1,8 +1,10 @@
-import unittest
-import struct
 import pickle
-from mock import patch
+import struct
+import unittest
+
 import numpy as np
+from mock import patch
+
 from datasketch.hyperloglog import HyperLogLog, HyperLogLogPlusPlus
 from test.utils import fake_hash_func
 

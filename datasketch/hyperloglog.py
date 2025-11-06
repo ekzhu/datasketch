@@ -1,14 +1,17 @@
 from __future__ import annotations
-import struct, copy
-from typing import Callable, Optional
-import numpy as np
+
+import copy
+import struct
 import warnings
+from typing import Callable, Optional
+
+import numpy as np
 
 try:
-    from .hyperloglog_const import _thresholds, _raw_estimate, _bias
+    from .hyperloglog_const import _bias, _raw_estimate, _thresholds
 except ImportError:
     # For Python 2
-    from hyperloglog_const import _thresholds, _raw_estimate, _bias
+    from hyperloglog_const import _bias, _raw_estimate, _thresholds
 
 from datasketch.hashfunc import sha1_hash32, sha1_hash64
 

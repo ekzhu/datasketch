@@ -1,10 +1,11 @@
-import unittest
 import os
+import unittest
+
 import numpy as np
+
 from datasketch.lsh import MinHashLSH
 from datasketch.minhash import MinHash
 from datasketch.weighted_minhash import WeightedMinHashGenerator
-
 
 STORAGE_CONFIG_CASSANDRA = {
     'basename': b'test',

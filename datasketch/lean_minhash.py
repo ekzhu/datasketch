@@ -1,6 +1,8 @@
 from __future__ import annotations
+
 import struct
 from typing import Iterable
+
 import numpy as np
 
 from datasketch import MinHash

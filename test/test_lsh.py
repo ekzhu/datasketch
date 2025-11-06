@@ -1,8 +1,10 @@
-import unittest
 import pickle
-import numpy as np
+import unittest
+
 import mockredis
+import numpy as np
 from mock import patch
+
 from datasketch.lsh import MinHashLSH
 from datasketch.minhash import MinHash
 from datasketch.weighted_minhash import WeightedMinHashGenerator

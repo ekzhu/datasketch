@@ -1,9 +1,12 @@
-import unittest
 import pickle
+import unittest
+
 import numpy as np
 import scipy as sp
 import scipy.sparse
-from datasketch.weighted_minhash import WeightedMinHashGenerator, WeightedMinHash
+
+from datasketch.weighted_minhash import WeightedMinHash, WeightedMinHashGenerator
+
 
 class TestWeightedMinHash(unittest.TestCase):
 

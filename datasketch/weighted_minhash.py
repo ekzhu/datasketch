@@ -1,8 +1,8 @@
 from __future__ import annotations
-from typing import Union, List
 
 import collections.abc
 import copy
+from typing import List, Union
 
 import numpy as np
 import scipy as sp

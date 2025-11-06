@@ -1,10 +1,11 @@
 from __future__ import annotations
-from collections import OrderedDict
+
 import heapq
+from collections import OrderedDict
 from typing import (
-    Hashable,
     Callable,
     Dict,
+    Hashable,
     Iterable,
     Iterator,
     List,

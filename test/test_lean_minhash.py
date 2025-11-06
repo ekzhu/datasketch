@@ -1,10 +1,12 @@
-import unittest
-import struct
 import pickle
+import struct
+import unittest
+
 import numpy as np
-from datasketch import MinHash
-from datasketch import LeanMinHash
+
+from datasketch import LeanMinHash, MinHash
 from test.utils import fake_hash_func
+
 
 class TestLeanMinHash(unittest.TestCase):
 

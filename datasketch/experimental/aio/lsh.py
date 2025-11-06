@@ -5,13 +5,15 @@ if sys.version_info < (3, 6):
     raise ImportError("Can't use AsyncMinHashLSH module. Python version should be >=3.6")
 
 import asyncio
-
-from typing import Tuple, Dict
 from itertools import chain
-from datasketch.experimental.aio.storage import (async_ordered_storage, async_unordered_storage, )
+from typing import Dict, Tuple
 
+from datasketch.experimental.aio.storage import (
+    async_ordered_storage,
+    async_unordered_storage,
+)
 from datasketch.lsh import _optimal_param
-from datasketch.storage import unordered_storage, _random_name
+from datasketch.storage import _random_name, unordered_storage
 
 
 class AsyncMinHashLSH(object):

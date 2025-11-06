@@ -1,14 +1,14 @@
-import sys
-import os
-import unittest
 import asyncio
+import os
 import pickle
 import random
 import string
+import sys
+import unittest
+from itertools import chain, islice
+
 import aiounittest
 import numpy as np
-
-from itertools import chain, islice
 from motor.motor_asyncio import AsyncIOMotorClient
 from pymongo import MongoClient
 

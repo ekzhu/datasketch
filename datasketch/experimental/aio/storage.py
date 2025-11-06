@@ -3,13 +3,12 @@ import sys
 if sys.version_info < (3, 6):
     raise ImportError("Can't use AsyncMinHashLSH module. Python version should be >=3.6")
 
-import os
 import asyncio
-
+import os
+from abc import ABCMeta
 from itertools import chain
 
-from datasketch.storage import UnorderedStorage, OrderedStorage, _random_name, RedisStorage, RedisBuffer, Storage
-from abc import ABCMeta
+from datasketch.storage import OrderedStorage, RedisBuffer, RedisStorage, Storage, UnorderedStorage, _random_name
 
 ABC = ABCMeta('ABC', (object,), {})
 

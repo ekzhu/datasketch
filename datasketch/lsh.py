@@ -1,12 +1,14 @@
 from __future__ import annotations
+
 import pickle
 import struct
 from typing import Callable, Dict, Hashable, List, Optional, Tuple, Union
-from datasketch.minhash import MinHash
-from datasketch.weighted_minhash import WeightedMinHash
-from datasketch.storage import ordered_storage, unordered_storage, _random_name
 
 from scipy.integrate import quad as integrate
+
+from datasketch.minhash import MinHash
+from datasketch.storage import _random_name, ordered_storage, unordered_storage
+from datasketch.weighted_minhash import WeightedMinHash
 
 
 def _false_positive_probability(threshold, b, r):

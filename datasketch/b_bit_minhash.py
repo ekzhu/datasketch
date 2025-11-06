@@ -7,7 +7,9 @@ of each minimum hashed value, without significant loss of accuracy.
 '''
 
 import struct
+
 import numpy as np
+
 
 class bBitMinHash(object):
     '''

@@ -1,12 +1,13 @@
-from collections import deque, Counter
 import struct
+from collections import Counter, deque
 from typing import Dict, Generator, Hashable, Iterable, Optional, Tuple
 
 import numpy as np
+
+from datasketch.lsh import MinHashLSH, integrate
+from datasketch.lshensemble_partition import optimal_partitions
 from datasketch.minhash import MinHash
 from datasketch.storage import _random_name
-from datasketch.lsh import integrate, MinHashLSH
-from datasketch.lshensemble_partition import optimal_partitions
 
 
 def _false_positive_probability(threshold, b, r, xq):

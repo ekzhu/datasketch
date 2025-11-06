@@ -1,8 +1,8 @@
-import unittest
 import pickle
+import unittest
 
-import numpy as np
 import mockredis
+import numpy as np
 from mock import patch
 
 from datasketch.lshensemble import MinHashLSHEnsemble

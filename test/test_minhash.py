@@ -1,7 +1,9 @@
-import unittest
-import struct
 import pickle
+import struct
+import unittest
+
 import numpy as np
+
 from datasketch import minhash
 from datasketch.b_bit_minhash import bBitMinHash
 from test.utils import fake_hash_func

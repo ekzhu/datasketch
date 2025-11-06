@@ -1,10 +1,13 @@
 from __future__ import annotations
-from typing import Callable, List, Optional, Tuple
-from datasketch.minhash import MinHash
-from scipy.integrate import quad as integrate
-import numpy as np
-import warnings
+
 import os
+import warnings
+from typing import Callable, List, Optional, Tuple
+
+import numpy as np
+from scipy.integrate import quad as integrate
+
+from datasketch.minhash import MinHash
 
 try:
 	import pybloomfilter

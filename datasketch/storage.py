@@ -1,4 +1,3 @@
-from collections import defaultdict
 import binascii
 import collections
 import itertools
@@ -7,16 +6,19 @@ import os
 import random
 import string
 from abc import ABCMeta, abstractmethod
+from collections import defaultdict
+
 ABC = ABCMeta('ABC', (object,), {}) # compatible with Python 2 *and* 3
 try:
     import redis
 except ImportError:
     redis = None
 try:
+    import logging
+
     import cassandra
     from cassandra import cluster as c_cluster
     from cassandra import concurrent as c_concurrent
-    import logging
     logging.getLogger("cassandra").setLevel(logging.ERROR)
 except ImportError:
     cassandra = None

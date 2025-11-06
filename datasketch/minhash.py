@@ -1,7 +1,9 @@
 from __future__ import annotations
+
 import copy
-from typing import Callable, Generator, Iterable, List, Optional, Tuple
 import warnings
+from typing import Callable, Generator, Iterable, List, Optional, Tuple
+
 import numpy as np
 
 from datasketch.hashfunc import sha1_hash32

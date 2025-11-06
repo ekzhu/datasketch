@@ -1,6 +1,7 @@
 import hashlib
 import struct
 
+
 def sha1_hash32(data):
     """A 32-bit hash function based on SHA1.
 

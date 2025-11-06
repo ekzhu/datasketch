@@ -1,10 +1,13 @@
-import unittest
+import os
 import pickle
+import unittest
 from glob import glob
+
+import numpy as np
+
 from datasketch.lsh_bloom import BloomTable, MinHashLSHBloom
 from datasketch.minhash import MinHash
-import numpy as np
-import os
+
 
 class TestBloomTable(unittest.TestCase):
 	def test_insert(self):

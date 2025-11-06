@@ -1,9 +1,11 @@
-import unittest
 import pickle
+import unittest
+
 import numpy as np
+
+from datasketch import WeightedMinHashGenerator
 from datasketch.lshforest import MinHashLSHForest
 from datasketch.minhash import MinHash
-from datasketch import WeightedMinHashGenerator
 
 
 class TestMinHashLSHForest(unittest.TestCase):
