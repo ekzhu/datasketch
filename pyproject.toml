@@ -125,6 +125,7 @@ ignore = [
   "N802",   # TODO: invalid-function-name
   "N803",   # TODO: argument name should be lowercase
   "F841",   # TODO: local variable is assigned to but never used
+  "E741",   # TODO: ambiguous variable name
   "UP008",  # TODO: super-call-with-parameters
   "UP028",  # TODO: use `yield from` instead of `for` loop
 ]
