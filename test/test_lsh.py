@@ -1,9 +1,9 @@
 import pickle
 import unittest
+from unittest.mock import patch
 
 import mockredis
 import numpy as np
-from unittest.mock import patch
 
 from datasketch.lsh import MinHashLSH
 from datasketch.minhash import MinHash

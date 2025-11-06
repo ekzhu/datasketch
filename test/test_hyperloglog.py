@@ -1,9 +1,9 @@
 import pickle
 import struct
 import unittest
+from unittest.mock import patch
 
 import numpy as np
-from unittest.mock import patch
 
 from datasketch.hyperloglog import HyperLogLog, HyperLogLogPlusPlus
 from test.utils import fake_hash_func
