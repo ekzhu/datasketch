@@ -65,3 +65,4 @@ experimental_aio = [
   "aiounittest ; python_version>='3.6'",
   "motor ; python_version>='3.6'",
 ]
+docs = ["sphinx>=7.0.0", "sphinx-rtd-theme>=2.0.0"]
