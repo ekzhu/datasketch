@@ -1,0 +1,54 @@
+name: Build and Verify Package
+
+on:
+  push:
+    branches: [master]
+  pull_request:
+    branches: [master]
+    paths:
+      - ".github/workflows/build.yml"
+      - "pyproject.toml"
+      - "datasketch/**"
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v7
+        with:
+          python-version: "3.12"
+          enable-cache: true
+
+      - name: Build package
+        run: uv build
+
+      - name: Check package metadata
+        run: |
+          uvx twine check dist/* --strict
+
+      - name: List package contents
+        run: |
+          echo "=== Wheel contents ==="
+          unzip -l dist/*.whl
+          echo ""
+          echo "=== Source distribution contents ==="
+          tar -tzf dist/*.tar.gz | head -50
+          echo "..."
+          echo "Total files: $(tar -tzf dist/*.tar.gz | wc -l)"
+
+      - name: Test package installation
+        run: |
+          # Install the built wheel
+          uv pip install dist/*.whl
+          # Verify version and imports
+          uv run python -c "import datasketch; print(f'Version: {datasketch.__version__}')"
+          uv run python -c "from datasketch import MinHash, HyperLogLog, MinHashLSH; print('✓ Core imports')"
+          uv run python -c "from datasketch import LeanMinHash, WeightedMinHash; print('✓ Additional imports')"
+          uv run python -c "from datasketch import MinHashLSHEnsemble, MinHashLSHForest; print('✓ LSH imports')"
+
+      - name: Minimize uv cache
+        run: uv cache prune --ci
