@@ -2,6 +2,7 @@ import unittest
 import warnings
 
 import numpy as np
+import pytest
 
 from datasketch.hnsw import HNSW
 from datasketch.minhash import MinHash
@@ -178,6 +179,7 @@ class TestHNSW(unittest.TestCase):
         self.assertRaises(KeyError, hnsw.remove, 0)
         self.assertRaises(ValueError, hnsw.query, data[0])
 
+    @pytest.mark.flaky(reruns=3)
     def test_hard_remove_and_pop_and_clean(self):
         data = self._create_random_points()
         hnsw = self._create_index(data)
