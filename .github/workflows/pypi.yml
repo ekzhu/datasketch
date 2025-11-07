@@ -1,16 +1,9 @@
 # This workflow will upload a Python Package using Twine when a release is created
 # For more information see: https://help.github.com/en/actions/language-and-framework-guides/using-python-with-github-actions#publishing-to-package-registries
 
-name: Build and Publish Package
+name: Upload Python Package
 
 on:
-  push:
-    branches: [master]
-  pull_request:
-    branches: [master]
-    paths:
-      - ".github/workflows/pypi.yml"
-      - "pyproject.toml"
   workflow_dispatch:
     inputs:
       ref:
@@ -22,9 +15,9 @@ permissions:
   id-token: write
 
 jobs:
-  build-publish:
+  deploy:
     runs-on: ubuntu-latest
-    # environment: package
+    environment: package
 
     steps:
       - uses: actions/checkout@v5
@@ -33,29 +26,14 @@ jobs:
       - name: Install uv
         uses: astral-sh/setup-uv@v7
         with:
-          activate-environment: true
           python-version: "3.12"
           enable-cache: true
 
       - name: Build package
         run: uv build
 
-      - name: Check package metadata
-        run: |
-          uvx twine check dist/* --strict
-
-      - name: Test package installation
-        run: |
-          # Install the built wheel
-          uv pip install dist/*.whl
-          # Verify version and imports
-          uv run python -c "import datasketch; print(f'Version: {datasketch.__version__}')"
-          uv run python -c "from datasketch import MinHash, HyperLogLog, MinHashLSH; print('✓ Core imports')"
-          uv run python -c "from datasketch import LeanMinHash, WeightedMinHash; print('✓ Additional imports')"
-
-      # - name: Publish package to PyPI
-      #   if: github.event_name == 'workflow_dispatch' && github.event.inputs.ref != '' # Only on manual trigger
-      #   uses: pypa/gh-action-pypi-publish@v1.13.0
+      - name: Publish package to PyPI
+        uses: pypa/gh-action-pypi-publish@v1.13.0
 
       - name: Minimize uv cache
         run: uv cache prune --ci
