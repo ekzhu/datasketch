@@ -52,7 +52,7 @@ Install
 
 To install datasketch using ``pip``:
 
-::
+.. code-block:: bash
 
     pip install datasketch
 
@@ -60,19 +60,19 @@ This will also install NumPy as dependency.
 
 To install with Redis dependency:
 
-::
+.. code-block:: bash
 
     pip install datasketch[redis]
 
 To install with Cassandra dependency:
 
-::
+.. code-block:: bash
 
     pip install datasketch[cassandra]
 
 To install with Bloom filter dependency:
 
-::
+.. code-block:: bash
 
     pip install datasketch[bloom]
 
@@ -101,37 +101,40 @@ The project uses `uv` for fast and reliable Python package management. Follow th
 
 2. **Clone the repository**:
 
-   ::
+   .. code-block:: bash
 
        git clone https://github.com/ekzhu/datasketch.git
        cd datasketch
 
 3. **Set up the environment**:
 
-   ::
+   .. code-block:: bash
 
        # Install all dependencies
        uv sync
 
 4. **Verify installation**:
 
-   ::
+   .. code-block:: bash
 
        # Run tests to ensure everything works
        uv run pytest
 
 5. **Optional dependencies** (for specific development needs):
 
-   ::
+   .. code-block:: bash
 
        # For testing
        uv sync --extra test
 
-       # For benchmarking
-       uv sync --extra benchmark
+       # For Cassandra support
+       uv sync --extra cassandra
+
+       # For Redis support
+       uv sync --extra redis
 
        # For all extras
-       uv sync --extra test --extra benchmark
+       uv sync --all-extras
 
 Learn more about `uv` at https://docs.astral.sh/uv/
 
@@ -142,7 +145,7 @@ Development Workflow
 
 2. **Create a feature branch** for your changes:
 
-   ::
+   .. code-block:: bash
 
        git checkout -b feature/your-feature-name
        # Or for bug fixes:
@@ -152,13 +155,13 @@ Development Workflow
 
 4. **Run the tests** to ensure nothing is broken:
 
-   ::
+   .. code-block:: bash
 
        uv run pytest
 
 5. **Check code quality** with ruff:
 
-   ::
+   .. code-block:: bash
 
        # Check for issues
        uvx ruff check .
@@ -168,13 +171,13 @@ Development Workflow
 
 6. **Commit your changes** with a clear, descriptive commit message:
 
-   ::
+   .. code-block:: bash
 
        git commit -m "Add feature: brief description of what was changed"
 
 7. **Push to your fork** and create a pull request on GitHub:
 
-   ::
+   .. code-block:: bash
 
        git push origin your-branch-name
 
