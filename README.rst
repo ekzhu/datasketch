@@ -92,7 +92,8 @@ Contributing
 
 We welcome contributions from everyone. Whether you're fixing bugs, adding features, improving documentation, or helping with tests, your contributions are valuable.
 
-### Development Setup
+Development Setup
+^^^^^^^^^^^^^^^^^
 
 The project uses `uv` for fast and reliable Python package management. Follow these steps to set up your development environment:
 
@@ -134,7 +135,8 @@ The project uses `uv` for fast and reliable Python package management. Follow th
 
 Learn more about `uv` at https://docs.astral.sh/uv/
 
-### Development Workflow
+Development Workflow
+^^^^^^^^^^^^^^^^^^^^
 
 1. **Fork the repository** on GitHub if you haven't already.
 
@@ -178,7 +180,8 @@ Learn more about `uv` at https://docs.astral.sh/uv/
 
 8. **Respond to feedback** from maintainers and iterate on your changes.
 
-### Guidelines
+Guidelines
+^^^^^^^^^^
 
 - Follow PEP 8 style guidelines
 - Write tests for new features
