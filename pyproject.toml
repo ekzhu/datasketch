@@ -92,6 +92,7 @@ exclude = [
   "docs",
   "examples",
   "travis",
+  "datasketch/hyperloglog_const.py",
 ]
 
 [tool.ruff.lint]
