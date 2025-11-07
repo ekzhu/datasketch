@@ -87,29 +87,103 @@ To install with Bloom filter dependency:
 .. _`Minhash LSH at Scale`: http://ekzhu.github.io/datasketch/lsh.html#minhash-lsh-at-scale
 .. _`HNSW`: https://ekzhu.github.io/datasketch/documentation.html#hnsw
 
-Development Setup (using uv)
-----------------------------
+Contributing
+------------
 
-For contributors who wish to build or test `datasketch` locally, the project now supports
-the modern `uv` build system.
+We welcome contributions from everyone. Whether you're fixing bugs, adding features, improving documentation, or helping with tests, your contributions are valuable.
 
-To set up your local environment:
+### Development Setup
 
-::
+The project uses `uv` for fast and reliable Python package management. Follow these steps to set up your development environment:
 
-    uv sync
+1. **Install uv**: Follow the official installation guide at https://docs.astral.sh/uv/getting-started/installation/
 
-To run the tests:
+2. **Clone the repository**:
 
-::
+   ::
 
-    uv run pytest
+       git clone https://github.com/ekzhu/datasketch.git
+       cd datasketch
 
-You can also install optional dependencies for testing or benchmarking:
+3. **Set up the environment**:
 
-::
+   ::
 
-    uv sync --extra test
-    uv sync --extra benchmark
+       # Install all dependencies
+       uv sync
+
+4. **Verify installation**:
+
+   ::
+
+       # Run tests to ensure everything works
+       uv run pytest
+
+5. **Optional dependencies** (for specific development needs):
+
+   ::
+
+       # For testing
+       uv sync --extra test
+
+       # For benchmarking
+       uv sync --extra benchmark
+
+       # For all extras
+       uv sync --extra test --extra benchmark
 
 Learn more about `uv` at https://docs.astral.sh/uv/
+
+### Development Workflow
+
+1. **Fork the repository** on GitHub if you haven't already.
+
+2. **Create a feature branch** for your changes:
+
+   ::
+
+       git checkout -b feature/your-feature-name
+       # Or for bug fixes:
+       git checkout -b fix/issue-description
+
+3. **Make your changes** following the project's coding standards.
+
+4. **Run the tests** to ensure nothing is broken:
+
+   ::
+
+       uv run pytest
+
+5. **Check code quality** with ruff:
+
+   ::
+
+       # Check for issues
+       uvx ruff check .
+
+       # Auto-fix formatting issues
+       uvx ruff format .
+
+6. **Commit your changes** with a clear, descriptive commit message:
+
+   ::
+
+       git commit -m "Add feature: brief description of what was changed"
+
+7. **Push to your fork** and create a pull request on GitHub:
+
+   ::
+
+       git push origin your-branch-name
+
+8. **Respond to feedback** from maintainers and iterate on your changes.
+
+### Guidelines
+
+- Follow PEP 8 style guidelines
+- Write tests for new features
+- Update documentation as needed
+- Keep commits focused and atomic
+- Be respectful in discussions
+
+For more information, check the `GitHub issues <https://github.com/ekzhu/datasketch/issues>`_ for current priorities or areas needing help. You can also join the discussion on `project roadmap and priorities <https://github.com/ekzhu/datasketch/discussions/252>`_.
