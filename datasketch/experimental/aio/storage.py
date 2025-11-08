@@ -31,7 +31,7 @@ async def async_ordered_storage(config, name=None):
         if motor is None:
             raise RuntimeError("motor is not installed")
         return AsyncMongoListStorage(config, name=name)
-    elif tp == "aioredis":
+    if tp == "aioredis":
         if redis is None:
             raise RuntimeError("redis is not installed")
         return AsyncRedisListStorage(config, name=name)
@@ -44,7 +44,7 @@ async def async_unordered_storage(config, name=None):
         if motor is None:
             raise RuntimeError("motor is not installed")
         return AsyncMongoSetStorage(config, name=name)
-    elif tp == "aioredis":
+    if tp == "aioredis":
         if redis is None:
             raise RuntimeError("redis is not installed")
         return AsyncRedisSetStorage(config, name=name)

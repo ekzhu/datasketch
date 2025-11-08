@@ -287,8 +287,7 @@ class AsyncMinHashLSH:
         candidates = frozenset(chain.from_iterable(await asyncio.gather(*fs)))
         if self.prepickle:
             return [pickle.loads(key) for key in candidates]
-        else:
-            return list(candidates)
+        return list(candidates)
 
     async def has_key(self, key):
         """See :class:`datasketch.MinHashLSH`.

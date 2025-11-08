@@ -378,5 +378,4 @@ class HyperLogLogPlusPlus(HyperLogLog):
         e = self.alpha * float(self.m**2) / np.sum(2.0 ** (-self.reg))
         if e <= 5 * self.m:
             return e - self._estimate_bias(e, self.p)
-        else:
-            return e
+        return e

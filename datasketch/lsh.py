@@ -411,8 +411,7 @@ class MinHashLSH:
                 candidates.add(key)
         if self.prepickle:
             return [pickle.loads(key) for key in candidates]
-        else:
-            return list(candidates)
+        return list(candidates)
 
     def add_to_query_buffer(self, minhash: Union[MinHash, WeightedMinHash]) -> None:
         """Giving the MinHash of the query set, buffer
@@ -528,8 +527,7 @@ class MinHashLSH:
                     candidates.add(key)
         if self.prepickle:
             return {pickle.loads(key) for key in candidates}
-        else:
-            return candidates
+        return candidates
 
     def get_counts(self) -> list[dict[Hashable, int]]:
         """Returns a list of length :attr:`b` (i.e., number of hash tables) with
