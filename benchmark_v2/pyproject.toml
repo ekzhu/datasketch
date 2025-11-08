@@ -5,6 +5,7 @@ description = "Add your description here"
 readme = "README.md"
 requires-python = ">=3.11"
 dependencies = [
+    "coverage>=7.11.1",
     "datasketch>=1.7.0",
     "numpy>=2.3.4",
     "ruff>=0.14.4",
