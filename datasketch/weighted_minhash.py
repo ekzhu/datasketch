@@ -178,7 +178,6 @@ class WeightedMinHashGenerator:
             (if the original row in X is empty).
 
         """
-
         # Input validation
         if not isinstance(X, (sp.sparse.spmatrix, np.ndarray)):
             raise TypeError("Input X must be a sparse matrix or numpy matrix")

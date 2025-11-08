@@ -115,7 +115,6 @@ def _compute_best_partitions(num_part, sizes, nfps):
             all sub-problems given upper bound set size and number of partitions.
 
     """
-
     if num_part < 2:
         raise ValueError("num_part cannot be less than 2")
     if num_part > len(sizes):
