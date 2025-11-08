@@ -64,8 +64,7 @@ class MinHashLSHForest:
             hashtable[H].append(key)
 
     def index(self) -> None:
-        """Index all the keys added so far and make them searchable.
-        """
+        """Index all the keys added so far and make them searchable."""
         for i, hashtable in enumerate(self.hashtables):
             self.sorted_hashtables[i] = [H for H in hashtable.keys()]
             self.sorted_hashtables[i].sort()
@@ -149,8 +148,7 @@ class MinHashLSHForest:
         return hashvalues
 
     def _binary_search(self, n, func):
-        """https://golang.org/src/sort/search.go?s=2247:2287#L49
-        """
+        """https://golang.org/src/sort/search.go?s=2247:2287#L49"""
         i, j = 0, n
         while i < j:
             h = int(i + (j - i) / 2)

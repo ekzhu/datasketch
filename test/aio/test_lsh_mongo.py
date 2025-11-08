@@ -28,8 +28,7 @@ else:
 
 @unittest.skipIf(sys.version_info < (3, 6), "Skipping TestAsyncMinHashLSH. Supported Python version >= 3.6")
 class TestAsyncMinHashLSH(aiounittest.AsyncTestCase):
-    """For tests Mongo should be installed on local machine or set right host.
-    """
+    """For tests Mongo should be installed on local machine or set right host."""
 
     def setUp(self):
         self._storage_config_mongo = STORAGE_CONFIG_MONGO

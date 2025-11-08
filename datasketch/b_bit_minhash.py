@@ -11,8 +11,7 @@ import numpy as np
 
 
 class bBitMinHash:
-    """The b-bit MinHash object
-    """
+    """The b-bit MinHash object"""
 
     __slots__ = ("b", "hashvalues", "r", "seed")
 
@@ -42,8 +41,7 @@ class bBitMinHash:
         self.r = r
 
     def __eq__(self, other):
-        """Check for full equality of two b-bit MinHash objects.
-        """
+        """Check for full equality of two b-bit MinHash objects."""
         return (
             type(self) is type(other)
             and self.seed == other.seed
@@ -74,8 +72,7 @@ class bBitMinHash:
         return (raw_est - c1) / (1 - c2)
 
     def bytesize(self):
-        """Get the serialized size of this b-bit MinHash in number of bytes.
-        """
+        """Get the serialized size of this b-bit MinHash in number of bytes."""
         return self._bytesize()[-1]
 
     def __getstate__(self):
@@ -128,16 +125,14 @@ class bBitMinHash:
                 self.hashvalues[start + j] = np.uint32(hv)
 
     def _calc_a(self, r, b):
-        """Compute the function A(r, b)
-        """
+        """Compute the function A(r, b)"""
         if r == 0.0:
             # Find the limit of A(r, b) as r -> 0.
             return 1.0 / (1 << b)
         return r * (1 - r) ** (2**b - 1) / (1 - (1 - r) ** (2 * b))
 
     def _calc_c(self, a1, a2, r1, r2):
-        """Compute the functions C1 and C2
-        """
+        """Compute the functions C1 and C2"""
         if r1 == 0.0 and r2 == 0.0:
             # Find the limits of C1 and C2 as r1 -> 0 and r2 -> 0
             # Since the b-value must be the same and r1 = r2,

@@ -24,8 +24,7 @@ def _false_positive_probability(threshold, b, r, xq):
 
 
 def _false_negative_probability(threshold, b, r, xq):
-    """Compute the false negative probability given the containment threshold
-    """
+    """Compute the false negative probability given the containment threshold"""
     _probability = lambda t: 1 - (1 - (1 - (t / (1 + xq - t)) ** float(r)) ** float(b))
     if xq >= 1.0:
         a, err = integrate(_probability, threshold, 1.0)

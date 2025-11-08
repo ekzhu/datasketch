@@ -206,8 +206,7 @@ class HyperLogLog:
         return not np.any(self.reg)
 
     def clear(self) -> None:
-        """Reset the current HyperLogLog to empty.
-        """
+        """Reset the current HyperLogLog to empty."""
         self.reg = np.zeros((self.m,), dtype=np.int8)
 
     def __len__(self) -> int:

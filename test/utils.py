@@ -1,5 +1,4 @@
-"""Test utilities.
-"""
+"""Test utilities."""
 
 
 def fake_hash_func(data):

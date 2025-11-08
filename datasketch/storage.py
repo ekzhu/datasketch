@@ -500,8 +500,7 @@ if cassandra is not None:
                 self.empty_buffer()
 
         def empty_buffer(self):
-            """Empty the buffer of statements and parameters.
-            """
+            """Empty the buffer of statements and parameters."""
             # copy the underlying list in a python2/3 compatible way
             buffer = list(self._statements_and_parameters)
             # delete the actual elements in a python2/3 compatible way
