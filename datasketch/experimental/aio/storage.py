@@ -1,10 +1,9 @@
 import asyncio
 import os
-import sys
 from abc import ABCMeta
 from itertools import chain
 
-from datasketch.storage import OrderedStorage, RedisBuffer, RedisStorage, Storage, UnorderedStorage, _random_name
+from datasketch.storage import OrderedStorage, RedisStorage, Storage, UnorderedStorage, _random_name
 
 ABC = ABCMeta("ABC", (object,), {})
 

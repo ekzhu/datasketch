@@ -1,5 +1,4 @@
 import pickle
-import struct
 import unittest
 
 import numpy as np

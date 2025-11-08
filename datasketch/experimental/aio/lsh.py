@@ -1,6 +1,5 @@
 import asyncio
 import pickle
-import sys
 from itertools import chain
 from typing import Optional
 

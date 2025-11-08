@@ -1,5 +1,4 @@
 import os
-import pickle
 import unittest
 from glob import glob
 
