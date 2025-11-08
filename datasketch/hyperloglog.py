@@ -264,8 +264,7 @@ class HyperLogLog:
                     different precisions"
             )
         reg = np.maximum.reduce([h.reg for h in hyperloglogs])
-        h = cls(reg=reg)
-        return h
+        return cls(reg=reg)
 
     def bytesize(self) -> int:
         """Get the size of the HyperLogLog in bytes."""

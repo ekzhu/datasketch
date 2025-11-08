@@ -392,8 +392,7 @@ if redis is not None:
             ks = await self.keys()
             for k in ks:
                 await self._get_len(pipe, self.redis_key(k))
-            d = dict(zip(ks, await pipe.execute()))
-            return d
+            return dict(zip(ks, await pipe.execute()))
 
         @staticmethod
         async def _get_len(r, k):

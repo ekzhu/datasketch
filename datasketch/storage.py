@@ -1017,8 +1017,7 @@ if redis is not None:
             ks = self.keys()
             for k in ks:
                 self._get_len(pipe, self.redis_key(k))
-            d = dict(zip(ks, pipe.execute()))
-            return d
+            return dict(zip(ks, pipe.execute()))
 
         @staticmethod
         def _get_len(r, k):
