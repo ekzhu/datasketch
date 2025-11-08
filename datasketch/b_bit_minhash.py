@@ -14,7 +14,7 @@ class bBitMinHash:
     """The b-bit MinHash object
     """
 
-    __slots__ = ("seed", "b", "r", "hashvalues")
+    __slots__ = ("b", "hashvalues", "r", "seed")
 
     # seed as int64
     # b as uint8

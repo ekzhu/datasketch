@@ -46,7 +46,7 @@ class HyperLogLog:
 
     """
 
-    __slots__ = ("p", "m", "reg", "alpha", "max_rank", "hashfunc")
+    __slots__ = ("alpha", "hashfunc", "m", "max_rank", "p", "reg")
 
     # The range of the hash values used for HyperLogLog
     _hash_range_bit = 32
