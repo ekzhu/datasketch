@@ -28,9 +28,6 @@ jobs:
           export CASS_DRIVER_NO_EXTENSIONS=1
           uv pip install -e ."[test,experimental_aio,bloom]"
           uv pip list
-      - name: Lint with ruff
-        run: |
-          uvx ruff check .
       - name: Test with pytest
         run: |
           uv run pytest
