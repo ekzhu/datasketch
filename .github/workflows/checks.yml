@@ -17,5 +17,4 @@ jobs:
       - name: Link Checker
         uses: lycheeverse/lychee-action@v2
         with:
-          args: --verbose --no-progress --include-fragments "**/README.md"
           fail: true
