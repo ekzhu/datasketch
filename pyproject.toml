@@ -129,7 +129,9 @@ ignore = [
   "FIX002", # allow todo comments
   "B027",   # allow empty non-abstract method in ABC
   "S324",   # TODO: hashlib-insecure-hash-function
+  "D101",   # TODO: missing docstring in public class
   "D102",   # TODO: missing docstring in public method
+  "D107",   # TODO: missing docstring in public init
   "D205",   # TODO: missing blank line after summary
 ]
 
