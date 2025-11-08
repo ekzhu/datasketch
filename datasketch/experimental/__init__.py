@@ -1,5 +1,5 @@
 """
-WARNING:
+Warning:
 
 datasketch.experimental is dedicated to new modules that are to be merged into
 the stable interface of datasketch. So their interfaces may change in future
