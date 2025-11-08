@@ -560,10 +560,7 @@ class MinHashLSH:
         Returns:
             list: a list of dictionaries.
         """
-        if self.prepickle:
-            key_set = [pickle.dumps(key) for key in set(keys)]
-        else:
-            key_set = list(set(keys))
+        key_set = [pickle.dumps(key) for key in set(keys)] if self.prepickle else list(set(keys))
         hashtables = [unordered_storage({"type": "dict"}) for _ in range(self.b)]
         Hss = self.keys.getmany(*key_set)
         for key, Hs in zip(key_set, Hss):

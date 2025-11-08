@@ -26,10 +26,7 @@ def _compute_nfp_uniform(l, u, cum_counts, sizes):
     """
     if l > u:
         raise ValueError("l must be less or equal to u")
-    if l == 0:
-        n = cum_counts[u]
-    else:
-        n = cum_counts[u] - cum_counts[l - 1]
+    n = cum_counts[u] if l == 0 else cum_counts[u] - cum_counts[l - 1]
     return n * float(sizes[u] - sizes[l]) / float(2 * sizes[u])
 
 
