@@ -23,6 +23,7 @@ def _compute_nfp_uniform(l, u, cum_counts, sizes):
         sizes: the complete domain of set sizes.
 
     Return (float): the expected number of false positives.
+
     """
     if l > u:
         raise ValueError("l must be less or equal to u")
@@ -42,6 +43,7 @@ def _compute_nfps_uniform(cum_counts, sizes):
     Return (np.array): the 2-D array of expected number of false positives
         for every pair of [l, u] interval, where l is axis-0 and u is
         axis-1.
+
     """
     nfps = np.zeros((len(sizes), len(sizes)))
     # All u an l are inclusive bounds for intervals.
@@ -64,6 +66,7 @@ def _compute_nfp_real(l, u, counts, sizes):
         sizes: the complete domain of set sizes.
 
     Return (float): the expected number of false positives.
+
     """
     if l > u:
         raise ValueError("l must be less or equal to u")
@@ -81,6 +84,7 @@ def _compute_nfps_real(counts, sizes):
     Return (np.array): the 2-D array of expected number of false positives
         for every pair of [l, u] interval, where l is axis-0 and u is
         axis-1.
+
     """
     nfps = np.zeros((len(sizes), len(sizes)))
     # All u an l are inclusive bounds for intervals.
@@ -109,6 +113,7 @@ def _compute_best_partitions(num_part, sizes, nfps):
             partitions.
         cost (numpy.array): a N x p-1 matrix of the computed optimal NFPs for
             all sub-problems given upper bound set size and number of partitions.
+
     """
 
     if num_part < 2:
@@ -184,6 +189,7 @@ def optimal_partitions(sizes, counts, num_part):
         list: A list of partitions in the form of `(lower, upper)` tuples,
             where `lower` and `upper` are lower and upper bound (inclusive)
             set sizes of each partition.
+
     """
     if num_part < 2:
         return [(sizes[0], sizes[-1])]

@@ -44,6 +44,7 @@ class HyperLogLog:
             The default hash function is based on SHA1 from hashlib_.
         hashobj (**deprecated**): This argument is deprecated since version
             1.4.0. It is a no-op and has been replaced by `hashfunc`.
+
     """
 
     __slots__ = ("p", "m", "reg", "alpha", "max_rank", "hashfunc")
@@ -131,6 +132,7 @@ class HyperLogLog:
 
                 hll = HyperLogLog(hashfunc=_hash_32)
                 hll.update("new value")
+
         """
         # Digest the hash object to get the hash value
         hv = self.hashfunc(b)
@@ -147,6 +149,7 @@ class HyperLogLog:
 
         Returns:
             float: The estimated cardinality.
+
         """
         # Use HyperLogLog estimation function
         e = self.alpha * float(self.m**2) / np.sum(2.0 ** (-self.reg))
@@ -173,6 +176,7 @@ class HyperLogLog:
 
         Args:
             other (HyperLogLog): The other HyperLogLog to be merged.
+
         """
         if self.m != other.m or self.p != other.p:
             raise ValueError(
@@ -185,6 +189,7 @@ class HyperLogLog:
         """
         Returns:
             numpy.array: The current internal state.
+
         """
         return copy.copy(self.reg)
 
@@ -194,6 +199,7 @@ class HyperLogLog:
 
         Returns:
             HyperLogLog: A copy of the current HyperLogLog.
+
         """
         return self.__class__(reg=self.digest(), hashfunc=self.hashfunc)
 
@@ -202,6 +208,7 @@ class HyperLogLog:
         Returns:
             bool: True if the current HyperLogLog is empty - at the state of just
             initialized.
+
         """
         return not np.any(self.reg)
 
@@ -216,6 +223,7 @@ class HyperLogLog:
         Returns:
             int: Get the size of the HyperLogLog as the size of
                 `reg`.
+
         """
         return len(self.reg)
 
@@ -228,6 +236,7 @@ class HyperLogLog:
 
         Returns:
             bool: True if both have the same internal state.
+
         """
         return (
             type(self) is type(other)
@@ -344,6 +353,7 @@ class HyperLogLogPlusPlus(HyperLogLog):
             The default hash function is based on SHA1 from hashlib_.
         hashobj (**deprecated**): This argument is deprecated since version
             1.4.0. It is a no-op and has been replaced by `hashfunc`.
+
     """
 
     _hash_range_bit = 64

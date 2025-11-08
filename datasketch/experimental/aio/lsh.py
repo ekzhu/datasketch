@@ -218,6 +218,7 @@ class AsyncMinHashLSH:
                         async with lsh.insertion_session(batch_size=1000) as session:
                             fs = (session.insert(key, minhash, check_duplication=True) for key, minhash in data)
                             await asyncio.gather(*fs)
+
         """
         return AsyncMinHashLSHInsertionSession(self, batch_size=batch_size)
 

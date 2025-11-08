@@ -25,6 +25,7 @@ class MinHashLSHForest:
     Note:
         The MinHash LSH Forest also works with weighted Jaccard similarity
         and weighted MinHash without modification.
+
     """
 
     def __init__(self, num_perm: int = 128, l: int = 8) -> None:
@@ -54,6 +55,7 @@ class MinHashLSHForest:
         Args:
             key (Hashable): The unique identifier of the set.
             minhash (MinHash): The MinHash of the set.
+
         """
         if len(minhash) < self.k * self.l:
             raise ValueError("The num_perm of MinHash out of range")
@@ -110,6 +112,7 @@ class MinHashLSHForest:
             performance won't degrade too much -- however you do have to keep
             the original sets (or MinHashes) around some where so that you
             can make references to them.
+
         """
         if k <= 0:
             raise ValueError("k must be positive")
@@ -136,6 +139,7 @@ class MinHashLSHForest:
 
         Returns:
             hashvalues: The hashvalues for the MinHash object corresponding to the given key.
+
         """
         byteslist = self.keys.get(key, None)
         if byteslist is None:
@@ -169,6 +173,7 @@ class MinHashLSHForest:
 
         Returns:
             bool: True if there is no searchable key in the index.
+
         """
         return any(len(t) == 0 for t in self.sorted_hashtables)
 
@@ -179,5 +184,6 @@ class MinHashLSHForest:
         """
         Returns:
             bool: True only if the key has been added to the index.
+
         """
         return key in self.keys

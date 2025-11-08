@@ -18,6 +18,7 @@ class WeightedMinHash:
         seed (int): The random seed used to generate this weighted
             MinHash.
         hashvalues (numpy.ndarray): The internal state of this weighted MinHash.
+
     """
 
     def __init__(self, seed: int, hashvalues: np.ndarray) -> None:
@@ -39,6 +40,7 @@ class WeightedMinHash:
                 seeds or different numbers of hash values.
 
         .. _`weighted Jaccard similarity`: http://mathoverflow.net/questions/123339/weighted-jaccard-similarity
+
         """
         if other.seed != self.seed:
             raise ValueError(
@@ -63,6 +65,7 @@ class WeightedMinHash:
 
         Returns:
             numpy.ndarray: The hash values which is a Numpy array.
+
         """
         return copy.copy(self.hashvalues)
 
@@ -71,6 +74,7 @@ class WeightedMinHash:
         Returns:
             WeightedMinHash: A copy of this weighted MinHash by exporting
             its state.
+
         """
         return WeightedMinHash(self.seed, self.digest())
 
@@ -78,6 +82,7 @@ class WeightedMinHash:
         """
         Returns:
             int: The number of hash values.
+
         """
         return len(self.hashvalues)
 
@@ -86,6 +91,7 @@ class WeightedMinHash:
         Returns:
             bool: If their seeds and hash values are both equal then two
             are equivalent.
+
         """
         return (
             type(self) is type(other) and self.seed == other.seed and np.array_equal(self.hashvalues, other.hashvalues)
@@ -128,6 +134,7 @@ class WeightedMinHashGenerator:
 
         Returns:
             WeightedMinHash: The weighted MinHash.
+
         """
         if not isinstance(v, collections.abc.Iterable):
             raise TypeError("Input vector must be an iterable")
@@ -169,6 +176,7 @@ class WeightedMinHashGenerator:
             list[Union[WeightedMinHash, None]] - A list of length X.shape[0].
             Each element is either a :class:`WeightedMinHash` instance or None
             (if the original row in X is empty).
+
         """
 
         # Input validation

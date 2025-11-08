@@ -65,6 +65,7 @@ class LeanMinHash(MinHash):
         hashvalues (optional): The hash values used to inititialize the state
             of the LeanMinHash. This parameter must be used together with
             `seed`.
+
     """
 
     __slots__ = ("seed", "hashvalues")
@@ -76,6 +77,7 @@ class LeanMinHash(MinHash):
             seed (int): The random seed controls the set of random
                 permutation functions generated for this LeanMinHash.
             hashvalues (Iterable): The hash values is the internal state of the LeanMinHash.
+
         """
         self.seed = seed
         self.hashvalues = self._parse_hashvalues(hashvalues)
@@ -113,6 +115,7 @@ class LeanMinHash(MinHash):
 
         Returns:
             int: Size in number of bytes after serialization.
+
         """
         # Use 8 bytes to store the seed integer
         seed_size = struct.calcsize(byteorder + "q")
@@ -164,6 +167,7 @@ class LeanMinHash(MinHash):
         .. _`buffer`: https://docs.python.org/3/c-api/buffer.html
         .. _`bytearray`: https://docs.python.org/3.6/library/functions.html#bytearray
         .. _`byteorder`: https://docs.python.org/3/library/struct.html
+
         """
         if len(buf) < self.bytesize():
             raise ValueError(
@@ -196,6 +200,7 @@ class LeanMinHash(MinHash):
             .. code-block:: python
 
                 lean_minhash = LeanMinHash.deserialize(buf)
+
         """
         fmt_seed_size = "%sqi" % byteorder
         fmt_hash = byteorder + "%dI"

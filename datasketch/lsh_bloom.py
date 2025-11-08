@@ -60,6 +60,7 @@ if pybloomfilter is not None:
                 band_size (int): Size of band from MinHash signature matrix this filter is meant to model.
                 fname (str): File path where Bloom filter will be saved. If this file already exists, will initialize the Bloom filter from this path.
                 max_size (int): Maximum number of elements we should plan to insert into this Bloom filter. Upper bounds the size of the Bloom filter.
+
         """
 
         def __init__(self, item_count: int, fp: float, band_size: int, fname: str = None):
@@ -89,6 +90,7 @@ if pybloomfilter is not None:
 
             Args:
                     hashvalues (list[int]): The hashvalues from a single band of a MinHash object.
+
             """
             self.assert_size(hashvalues)
             # https://en.wikipedia.org/wiki/Universal_hashing#Hashing_vectors
@@ -103,6 +105,7 @@ if pybloomfilter is not None:
 
             Args:
                     hashvalues (list[int]): The hashvalues from a single band of a MinHash object.
+
             """
             self.assert_size(hashvalues)
             x = sum(hashvalues) % _mersenne_prime
@@ -187,6 +190,7 @@ class MinHashLSHBloom:
 
                     # Query whether m1 is a duplicate according to the given threshold
                     is_duplicate = lsh.query(m1)
+
     """
 
     def __init__(

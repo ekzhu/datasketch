@@ -239,6 +239,7 @@ class MinHashLSH:
         Raises:
             ValueError: If the two MinHashLSH have different initialization
                 parameters, or if `check_overlap` is `True` and there are overlapping keys.
+
         """
         self._merge(other, check_overlap=check_overlap, buffer=False)
 
@@ -333,6 +334,7 @@ class MinHashLSH:
         """
         Returns:
             bool: If the two MinHashLSH have equal num_perm, number of bands, size of each band then two are equivalent.
+
         """
         return type(self) is type(other) and self.h == other.h and self.b == other.b and self.r == other.r
 
@@ -433,6 +435,7 @@ class MinHashLSH:
 
         Args:
             minhash (MinHash): The MinHash of the query set.
+
         """
         if len(minhash) != self.h:
             raise ValueError("Expecting minhash with length %d, got %d" % (self.h, len(minhash)))
@@ -450,6 +453,7 @@ class MinHashLSH:
 
         Returns:
             list: a list of unique keys.
+
         """
         collected_result_sets = [
             set(collected_result_lists)
@@ -469,6 +473,7 @@ class MinHashLSH:
 
         Returns:
             bool: True only if the key exists in the index.
+
         """
         if self.prepickle:
             key = pickle.dumps(key)
@@ -497,6 +502,7 @@ class MinHashLSH:
 
         Raises:
             ValueError: If the key does not exist.
+
         """
         if self.prepickle:
             key = pickle.dumps(key)
@@ -512,6 +518,7 @@ class MinHashLSH:
         """
         Returns:
             bool: `True` only if the index is empty.
+
         """
         return any(t.size() == 0 for t in self.hashtables)
 
@@ -545,6 +552,7 @@ class MinHashLSH:
 
         Returns:
             list: a list of dictionaries.
+
         """
         return [hashtable.itemcounts() for hashtable in self.hashtables]
 
@@ -559,6 +567,7 @@ class MinHashLSH:
 
         Returns:
             list: a list of dictionaries.
+
         """
         key_set = [pickle.dumps(key) for key in set(keys)] if self.prepickle else list(set(keys))
         hashtables = [unordered_storage({"type": "dict"}) for _ in range(self.b)]
@@ -575,6 +584,7 @@ class MinHashLSHInsertionSession:
     Args:
         lsh (MinHashLSH): The MinHashLSH to insert into.
         buffer_size (int): The buffer size for insert_session mode.
+
     """
 
     def __init__(self, lsh: MinHashLSH, buffer_size: int):
@@ -606,6 +616,7 @@ class MinHashLSHInsertionSession:
         Args:
             key (Hashable): The unique identifier of the set.
             minhash (Union[MinHash, WeightedMinhash]): The MinHash of the set.
+
         """
         self.lsh._insert(key, minhash, check_duplication=check_duplication, buffer=True)
 
@@ -616,6 +627,7 @@ class MinHashLSHDeletionSession:
     Args:
         lsh (MinHashLSH): The MinHashLSH to delete from.
         buffer_size (int): The buffer size for deletion operations.
+
     """
 
     def __init__(self, lsh: MinHashLSH, buffer_size: int):
@@ -642,5 +654,6 @@ class MinHashLSHDeletionSession:
 
         Raises:
             ValueError: If the key does not exist.
+
         """
         self.lsh._remove(key, buffer=True)

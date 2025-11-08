@@ -18,6 +18,7 @@ class _Layer:
 
     Args:
         key (Hashable): The first key to insert into the graph.
+
     """
 
     def __init__(self, key: Hashable) -> None:
@@ -67,6 +68,7 @@ class _LayerWithReversedEdges(_Layer):
 
     Args:
         key (Hashable): The first key to insert into the graph.
+
     """
 
     def __init__(self, key: Hashable) -> None:
@@ -341,6 +343,7 @@ class HNSW(MutableMapping):
             In versions of Python before 3.7, the order of items in the index
             is not guaranteed. This method will remove and return an arbitrary
             (key, point) pair.
+
         """
         if not self._nodes:
             raise KeyError("popitem(): index is empty")
@@ -512,6 +515,7 @@ class HNSW(MutableMapping):
 
         Raises:
             KeyError: If the key does not exist in the index.
+
         """
         if key not in self._nodes:
             raise KeyError(key)
@@ -609,6 +613,7 @@ class HNSW(MutableMapping):
 
         Raises:
             ValueError: If the entry point is not found.
+
         """
         if ef is None:
             ef = self._ef_construction
@@ -656,6 +661,7 @@ class HNSW(MutableMapping):
         Returns:
             Tuple[Hashable, float]: A tuple of (key, distance) representing the closest
                 neighbor found.
+
         """
         candidates = [(entry_point_dist, entry_point)]
         visited = set([entry_point])
@@ -719,6 +725,7 @@ class HNSW(MutableMapping):
             soft-deleted points even if allow_soft_deleted is False. Therefore,
             the caller should check input entry_points for soft-deleted
             points if necessary.
+
         """
         # candidates is a heap of (distance, key) pairs.
         candidates = [(-mdist, p) for mdist, p in entry_points]
@@ -775,6 +782,7 @@ class HNSW(MutableMapping):
         Returns:
             list[Tuple[float, Hashable]]: A list of (distance, key) pairs representing
                 the pruned neighbors.
+
         """
         if len(candidates) < max_size:
             # If the number of entry points is smaller than max_size, we return
@@ -882,6 +890,7 @@ class HNSW(MutableMapping):
                 index.clean()
 
         .. _hnswlib issue #4: https://github.com/nmslib/hnswlib/issues/4
+
         """
         if not self._nodes or key not in self._nodes:
             raise KeyError(key)
@@ -943,6 +952,7 @@ class HNSW(MutableMapping):
         Args:
             ef (Optional[int]): The number of neighbors to consider during
                 re-assignment. If None, use the construction ef.
+
         """
         keys_to_remove = list(key for key in self._nodes if self._nodes[key].is_deleted)
         for key in keys_to_remove:

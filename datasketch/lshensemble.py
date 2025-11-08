@@ -104,6 +104,7 @@ class MinHashLSHEnsemble:
 
     .. _`Go implementation`: https://github.com/ekzhu/lshensemble
     .. _`the paper`: http://www.vldb.org/pvldb/vol9/p1185-zhu.pdf
+
     """
 
     def __init__(
@@ -240,6 +241,7 @@ class MinHashLSHEnsemble:
 
         Returns:
             Generator[Hashable, None, None]: an iterator of keys.
+
         """
         for i, index in enumerate(self.indexes):
             u = self.uppers[i]
@@ -256,6 +258,7 @@ class MinHashLSHEnsemble:
 
         Returns:
             bool: True only if the key exists in the index.
+
         """
         return any(any(key in index[r] for r in index) for index in self.indexes)
 
@@ -263,6 +266,7 @@ class MinHashLSHEnsemble:
         """
         Returns:
             bool: Check if the index is empty.
+
         """
         return all(all(index[r].is_empty() for r in index) for index in self.indexes)
 

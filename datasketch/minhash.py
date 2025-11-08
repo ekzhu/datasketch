@@ -65,6 +65,7 @@ class MinHash:
     .. _`Jaccard similarity`: https://en.wikipedia.org/wiki/Jaccard_index
     .. _hashlib: https://docs.python.org/3.5/library/hashlib.html
     .. _`pickle`: https://docs.python.org/3/library/pickle.html
+
     """
 
     def __init__(
@@ -156,6 +157,7 @@ class MinHash:
                     return farmhash.hash32(b)
                 minhash = MinHash(hashfunc=_hash_32)
                 minhash.update("new value")
+
         """
         hv = self.hashfunc(b)
         a, b = self.permutations
@@ -178,6 +180,7 @@ class MinHash:
 
                 minhash = Minhash()
                 minhash.update_batch([s.encode('utf-8') for s in ["token1", "token2"]])
+
         """
         hv = np.array([self.hashfunc(_b) for _b in b], dtype=np.uint64, ndmin=2).T
         a, b = self.permutations
@@ -197,6 +200,7 @@ class MinHash:
         Raises:
             ValueError: If the two MinHashes have different numbers of
                 permutation functions or different seeds.
+
         """
         if other.seed != self.seed:
             raise ValueError(
@@ -216,6 +220,7 @@ class MinHash:
 
         Returns:
             int: The estimated cardinality of the set represented by this MinHash.
+
         """
         k = len(self)
         return float(k) / np.sum(self.hashvalues / float(_max_hash)) - 1.0
@@ -230,6 +235,7 @@ class MinHash:
         Raises:
             ValueError: If the two MinHashes have different numbers of
                 permutation functions or different seeds.
+
         """
         if other.seed != self.seed:
             raise ValueError(
@@ -249,6 +255,7 @@ class MinHash:
 
         Returns:
             numpy.ndarray: The hash values which is a Numpy array.
+
         """
         return copy.copy(self.hashvalues)
 
@@ -257,6 +264,7 @@ class MinHash:
         Returns:
             bool: If the current MinHash is empty - at the state of just
                 initialized.
+
         """
         return not np.any(self.hashvalues != _max_hash)
 
@@ -271,6 +279,7 @@ class MinHash:
         """
         Returns:
             MinHash: a copy of this MinHash by exporting its state.
+
         """
         return MinHash(
             seed=self.seed,
@@ -283,6 +292,7 @@ class MinHash:
         """
         Returns:
             int: The number of hash values.
+
         """
         return len(self.hashvalues)
 
@@ -290,6 +300,7 @@ class MinHash:
         """
         Returns:
             bool: If their seeds and hash values are both equal then two are equivalent.
+
         """
         return (
             type(self) is type(other) and self.seed == other.seed and np.array_equal(self.hashvalues, other.hashvalues)
@@ -326,6 +337,7 @@ class MinHash:
 
                 # Union m1 and m2.
                 m = MinHash.union(m1, m2)
+
         """
         if len(mhs) < 2:
             raise ValueError("Cannot union less than 2 MinHash")

@@ -55,6 +55,7 @@ def ordered_storage(config, name=None):
             For dict-type containers, this is ignored. For Redis containers,
             this name is used to prefix keys pertaining to this storage
             container within the database.
+
     """
     tp = config["type"]
     if tp == "dict":
@@ -92,6 +93,7 @@ def unordered_storage(config, name=None):
             For dict-type containers, this is ignored. For Redis containers,
             this name is used to prefix keys pertaining to this storage
             container within the database.
+
     """
     tp = config["type"]
     if tp == "dict":
@@ -909,6 +911,7 @@ if redis is not None:
             name (bytes, optional): A prefix to namespace all keys in
                 the database pertaining to this storage container.
                 If None, a random name will be chosen.
+
         """
 
         def __init__(self, config, name=None):
