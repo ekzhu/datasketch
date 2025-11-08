@@ -191,9 +191,8 @@ if motor is not None and ReturnDocument is not None:
         def _parse_config(config):
             cfg = {}
             for key, value in config.items():
-                if isinstance(value, dict):
-                    if "env" in value:
-                        value = os.getenv(value["env"], value.get("default", None))
+                if isinstance(value, dict) and "env" in value:
+                    value = os.getenv(value["env"], value.get("default", None))
                 cfg[key] = value
             return cfg
 

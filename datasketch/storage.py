@@ -712,9 +712,8 @@ if cassandra is not None:
             """
             cfg = {}
             for key, value in config.items():
-                if isinstance(value, dict):
-                    if "env" in value:
-                        value = os.getenv(value["env"], value.get("default", None))
+                if isinstance(value, dict) and "env" in value:
+                    value = os.getenv(value["env"], value.get("default", None))
                 cfg[key] = value
             return cfg
 
@@ -925,9 +924,8 @@ if redis is not None:
                 # 'default'.
                 # (This is useful if the database relocates to a different host
                 # during the lifetime of the LSH object)
-                if isinstance(value, dict):
-                    if "env" in value:
-                        value = os.getenv(value["env"], value.get("default", None))
+                if isinstance(value, dict) and "env" in value:
+                    value = os.getenv(value["env"], value.get("default", None))
                 cfg[key] = value
             return cfg
 
