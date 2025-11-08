@@ -256,7 +256,7 @@ if motor is not None and ReturnDocument is not None:
             }
 
         async def has_key(self, key):
-            return True if await self._collection.find_one({"key": key}) else False
+            return bool(await self._collection.find_one({"key": key}))
 
         async def status(self):
             status = self._parse_config(self.config["mongo"])
