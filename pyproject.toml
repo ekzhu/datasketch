@@ -133,6 +133,9 @@ ignore = [
   "D102",   # TODO: missing docstring in public method
   "D107",   # TODO: missing docstring in public init
   "D205",   # TODO: missing blank line after summary
+  "D400",   # TODO: missing trailing period
+  "D401",   # TODO: non imperative mood
+  "D415",   # TODO: missing-terminal-punctuation
 ]
 
 [tool.ruff.format]
