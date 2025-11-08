@@ -1,0 +1,18 @@
+[project]
+name = "benchmark-v2"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = [
+    "datasketch>=1.7.0",
+    "numpy>=2.3.4",
+    "ruff>=0.14.4",
+    "tqdm>=4.67.1",
+    "typer>=0.20.0",
+]
+
+[dependency-groups]
+dev = [
+    "pytest>=8.4.2",
+]

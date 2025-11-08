@@ -1,0 +1,40 @@
+set shell := ["bash", "-lc"]
+export CACHE_ROOT := "$HOME/.cache/datasketch/benchmark_v2"
+
+default:
+	@just --list
+
+install:
+	uv sync
+
+format:
+	uv run ruff format .
+
+lint:
+	uv run ruff check .
+
+test:
+	uv run python -m pytest
+
+coverage:
+	uv run coverage run -m pytest && uv run coverage report
+
+# Pass-through CLI: `just cli -- subcommand --flag value`
+cli *args:
+	uv run python -m benchmark_v2 {{args}}
+
+list-datasets:
+	uv run python -m benchmark_v2 datasets list
+
+# Example: just sync my-dataset
+#          just sync my-dataset with_ground_truth=""   (to omit the flag)
+#          just sync my-dataset extra_flags="--limit 100"
+sync dataset with_ground_truth="--with-ground-truth" memmap="--memmap" extra_flags="":
+	uv run python -m benchmark_v2 datasets sync {{dataset}} --cache-root "$CACHE_ROOT" {{with_ground_truth}} {{memmap}} {{extra_flags}}
+
+# Example: just sync-all
+#          just sync-all workers="--workers 8"
+#          just sync-all with_ground_truth="" memmap=""
+sync-all workers="" with_ground_truth="--with-ground-truth" memmap="--memmap" extra_flags="":
+	uv run python -m benchmark_v2 datasets sync-all --cache-root "$CACHE_ROOT" {{with_ground_truth}} {{memmap}} {{workers}} {{extra_flags}}
+
