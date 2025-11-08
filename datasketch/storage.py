@@ -5,10 +5,9 @@ import operator
 import os
 import random
 import string
-from abc import ABCMeta, abstractmethod
+from abc import ABC, abstractmethod
 from collections import defaultdict
 
-ABC = ABCMeta("ABC", (object,), {})  # compatible with Python 2 *and* 3
 try:
     import redis
 except ImportError:
