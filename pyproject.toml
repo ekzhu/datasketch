@@ -131,6 +131,7 @@ ignore = [
   "S324",   # TODO: hashlib-insecure-hash-function
   "D101",   # TODO: missing docstring in public class
   "D102",   # TODO: missing docstring in public method
+  "D103",   # TODO: missing docstring in public function
   "D105",   # TODO: missing docstring in magic method
   "D107",   # TODO: missing docstring in public init
   "D205",   # TODO: missing blank line after summary
@@ -138,6 +139,7 @@ ignore = [
   "D401",   # TODO: non imperative mood
   "D417",   # TODO: undocumented-param
   "E731",   # TODO: allow lambda assignment
+  "E741",   # TODO: ambiguous-variable-name
   "F821",   # TODO: Undefined name `buffer`
   "S301",   # TODO: suspicious-pickle-usage
 ]
