@@ -116,15 +116,19 @@ class HyperLogLog:
             .. code-block:: python
 
                 hll = HyperLogLog()
-                hll.update("new value".encode('utf-8'))
+                hll.update("new value".encode("utf-8"))
 
             We can also use a different hash function, for example, `pyfarmhash`:
 
             .. code-block:: python
 
                 import farmhash
+
+
                 def _hash_32(b):
                     return farmhash.hash32(b)
+
+
                 hll = HyperLogLog(hashfunc=_hash_32)
                 hll.update("new value")
         """
@@ -151,7 +155,7 @@ class HyperLogLog:
         if abs(e - small_range_threshold) / small_range_threshold < 0.15:
             warnings.warn(
                 "Warning: estimate is close to error correction threshold. "
-                + "Output may not satisfy HyperLogLog accuracy guarantee."
+                 "Output may not satisfy HyperLogLog accuracy guarantee."
             )
         if e <= small_range_threshold:
             num_zero = self.m - np.count_nonzero(self.reg)
