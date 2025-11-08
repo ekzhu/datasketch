@@ -133,7 +133,8 @@ if motor is not None and ReturnDocument is not None:
         """
 
         def __init__(self, config, name=None):
-            assert config["type"] == "aiomongo", "Storage type <{}> not supported".format(config["type"])
+            if config["type"] != "aiomongo":
+                raise ValueError("Storage type <{}> not supported".format(config["type"]))
             self._config = config
             self._mongo_param = self._parse_config(self._config["mongo"])
 
