@@ -21,7 +21,7 @@ jobs:
         uses: astral-sh/setup-uv@v7
         with:
           activate-environment: true
-          python-version: "3.12"
+          python-version: "3.10"
           enable-cache: true
 
       - name: Build package
