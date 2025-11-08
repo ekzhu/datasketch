@@ -25,8 +25,10 @@ class TestBloomTable(unittest.TestCase):
         self.assertFalse(b.query(np.array([2, 3, 30], dtype=np.uint32)))
         self.assertRaises(RuntimeError, b.query, [2, 2])
 
-    def test_save(self, tmp_path):
-        fname = tmp_path / "bloomfilter.bf"
+    def test_save(self):
+        fname = "/tmp/bloomfilter.bf"  # noqa: S108
+        if os.path.exists(fname):
+            os.remove(fname)
         r = 3
         x = np.array([2, 3, 31], dtype=np.uint32)
         y = np.array([12, 10, 29], dtype=np.uint32)
