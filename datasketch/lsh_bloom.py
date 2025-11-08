@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import logging
 import os
 import warnings
 from typing import Optional
@@ -13,6 +14,8 @@ try:
     import pybloomfilter
 except ImportError:
     pybloomfilter = None
+
+logger = logging.getLogger(__name__)
 
 _mersenne_prime = np.uint64((1 << 61) - 1)
 
@@ -65,7 +68,7 @@ if pybloomfilter is not None:
             self.r = band_size
             self.fname = fname
             if fname is not None and os.path.exists(fname):
-                print(f"Loading Bloom Filter at {fname}...")
+                logger.info(f"Loading Bloom Filter at {fname}...")
                 self.bloom_filter = pybloomfilter.BloomFilter.open(fname)
             else:
                 self.bloom_filter = pybloomfilter.BloomFilter(capacity=item_count, error_rate=fp, filename=self.fname)
@@ -322,6 +325,6 @@ class MinHashLSHBloom:
         return False
 
     def sync(self):
-        print("Saving Bloom Index...")
+        logger.info("Saving Bloom Index...")
         for table in self.hashtables:
             table.sync()

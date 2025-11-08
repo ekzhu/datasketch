@@ -1,3 +1,4 @@
+import logging
 import struct
 from collections import Counter, deque
 from collections.abc import Generator, Hashable, Iterable
@@ -9,6 +10,8 @@ from datasketch.lsh import MinHashLSH, integrate
 from datasketch.lshensemble_partition import optimal_partitions
 from datasketch.minhash import MinHash
 from datasketch.storage import _random_name
+
+logger = logging.getLogger(__name__)
 
 
 def _false_positive_probability(threshold, b, r, xq):
@@ -272,4 +275,4 @@ if __name__ == "__main__":
     false_negative_weight, false_positive_weight = 0.5, 0.5
     for xq in xqs:
         b, r = _optimal_param(threshold, num_perm, max_r, xq, false_positive_weight, false_negative_weight)
-        print("threshold: %.2f, xq: %.3f, b: %d, r: %d" % (threshold, xq, b, r))
+        logger.info("threshold: %.2f, xq: %.3f, b: %d, r: %d", threshold, xq, b, r)
