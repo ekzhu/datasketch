@@ -54,7 +54,7 @@ class TestAsyncMinHashLSH(aiounittest.AsyncTestCase):
         """Check _H output consistent bytes length given
         the same concatenated hash value size.
         """
-        for l in range(2, 128 + 1, 16):
+        for _l in range(2, 128 + 1, 16):
             m = MinHash()
             m.update(b"abcdefg")
             m.update(b"1234567")
@@ -323,7 +323,7 @@ class TestWeightedMinHashLSH(aiounittest.AsyncTestCase):
         the same concatenated hash value size.
         """
         mg = WeightedMinHashGenerator(100, sample_size=128)
-        for l in range(2, mg.sample_size + 1, 16):
+        for _l in range(2, mg.sample_size + 1, 16):
             m = mg.minhash(np.random.randint(1, 99999999, 100))
             async with AsyncMinHashLSH(storage_config=self._storage_config_mongo, num_perm=128) as lsh:
                 await lsh.insert("m", m)

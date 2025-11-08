@@ -49,7 +49,7 @@ class TestMinHashLSHEnsemble(unittest.TestCase):
         lsh.index(data)
         buf = pickle.dumps(lsh)
         lsh2 = pickle.loads(buf)
-        for key, minhash, size in data:
+        for _key, minhash, size in data:
             keys1 = lsh.query(minhash, size)
             keys2 = lsh2.query(minhash, size)
             self.assertTrue(set(keys1) == set(keys2))
