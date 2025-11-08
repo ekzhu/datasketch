@@ -393,10 +393,12 @@ class TestMinHashLSH(unittest.TestCase):
             lsh1.merge(lsh4, check_overlap=False)
 
     def test_redis_deletion_session(self):
-        with patch('redis.Redis', fake_redis) as mock_redis:
-            lsh = MinHashLSH(threshold=0.5, num_perm=16, storage_config={
-                'type': 'redis', 'redis': {'host': 'localhost', 'port': 6379}
-            })
+        with patch("redis.Redis", fake_redis) as mock_redis:
+            lsh = MinHashLSH(
+                threshold=0.5,
+                num_perm=16,
+                storage_config={"type": "redis", "redis": {"host": "localhost", "port": 6379}},
+            )
 
             # The library's RedisBuffer is not completely compatible with mockredis.
             # In order to account for this, we:
@@ -419,7 +421,7 @@ class TestMinHashLSH(unittest.TestCase):
 
             keys_to_delete = ["a", "b"]
 
-            with patch.object(type(lsh.keys), '__init__', lambda self, config, name: None):
+            with patch.object(type(lsh.keys), "__init__", lambda self, config, name: None):
                 with lsh.deletion_session() as session:
                     for key in keys_to_delete:
                         session.remove(key)
