@@ -96,37 +96,45 @@ exclude = [
 ]
 
 [tool.ruff.lint]
+fixable = ["ALL"]
+unfixable = []
 select = [
-  "E",
-  "W",      # see: https://pypi.org/project/pycodestyle
-  "F",      # see: https://pypi.org/project/pyflakes
-  "N",      # see: https://pypi.org/project/pep8-naming
-  "I",      # implementation for isort
-  "UP",     # implementation for pyupgrade
-  "RUF100", # implementation for yesqa
+  "ASYNC", # async checks
+  "B",     # bugbear checks
+  "D",     # pydocstyle checks
+  "E",     # pycodestyle error checks
+  "ERA",   # remove connected out code
+  "F",     # pyflakes checks
+  "FIX",   # fixme checks
+  "I",     # isort
+  "INP",   # implicit namespace package
+  "ISC",   # implicit string concat
+  "Q",     # flake8-quotes checks
+  "RET",   # flake8-return check
+  "RSE",   # raise exception parantheses check
+  "RUF",   # RUF specific rules
+  "SIM",   # flake8-simplify check
+  "T20",   # typing checks
+  "W",     # pycodestyle warning checks
+  "T100",  # Debugger,
+  "S",     # Bandit checks
 ]
 ignore = [
-  "E203",  # whitespace before ':'
-  "E266",  # too many leading '#' for block comment
-  "E501",  # line too long
-  "E731",  # do not assign a lambda expression, use a def
-  "F403",  # 'from module import *' used; unable to detect undefined names
-  "F401",  # module imported but unused
-  "F821",  # TODO: undefined name `buffer
-  "C901",  # function is too complex
-  "UP007", # non-pep604-annotation-union
-  "UP045", # non-pep604-annotation-optional
-  "N801",  # TODO: class name should use CapWords convention
-  "N802",  # TODO: invalid-function-name
-  "N803",  # TODO: argument name should be lowercase
-  "N806",  # TODO: non-lowercase-variable-in-function
-  "F841",  # TODO: local variable is assigned to but never used
-  "E741",  # TODO: ambiguous variable name
-  "UP008", # TODO: super-call-with-parameters
-  "UP028", # TODO: yield-in-for-loop
-  "UP031", # TODO: printf-string-formatting
+  "D100",   # allow missing docstring in public module
+  "D104",   # allow missing docstring in public package
+  "D203",   # incompatible with D211
+  "D213",   # incompatible with D212
+  "D418",   # allow overload to have a docstring
+  "TD003",  # allow missing link to todo issue
+  "FIX002", # allow todo comments
+  "B027",   # allow empty non-abstract method in ABC
+  "S324",   # TODO: hashlib-insecure-hash-function
+  "D102",   # TODO: missing docstring in public method
+  "D205",   # TODO: missing blank line after summary
 ]
 
+[tool.ruff.format]
+docstring-code-format = true
 
 [tool.hatch.build.targets.wheel]
 packages = ["datasketch"]
