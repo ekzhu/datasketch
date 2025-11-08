@@ -64,6 +64,7 @@ def ordered_storage(config, name=None):
         return RedisListStorage(config, name=name)
     if tp == "cassandra":
         return CassandraListStorage(config, name=name)
+    return None
 
 
 def unordered_storage(config, name=None):
@@ -102,6 +103,7 @@ def unordered_storage(config, name=None):
         return RedisSetStorage(config, name=name)
     if tp == "cassandra":
         return CassandraSetStorage(config, name=name)
+    return None
 
 
 class Storage(ABC):
