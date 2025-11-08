@@ -77,7 +77,7 @@ class MinHashLSHForest:
         # Set the prefix length for look-ups in the sorted hash values list
         prefix_size = len(hps[0])
         for ht, hp, hashtable in zip(self.sorted_hashtables, hps, self.hashtables):
-            i = self._binary_search(len(ht), lambda x: ht[x][:prefix_size] >= hp)
+            i = self._binary_search(len(ht), lambda x, ht=ht, hp=hp: ht[x][:prefix_size] >= hp)
             if i < len(ht) and ht[i][:prefix_size] == hp:
                 j = i
                 while j < len(ht) and ht[j][:prefix_size] == hp:
