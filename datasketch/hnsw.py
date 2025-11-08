@@ -165,7 +165,6 @@ class HNSW(MutableMapping):
             usage and slows down :meth:`insert`.
 
     Examples:
-
         Create an HNSW index with Euclidean distance and insert 1000 random
         vectors of dimension 10.
 
@@ -405,7 +404,6 @@ class HNSW(MutableMapping):
             other (Union[Mapping, HNSW]): The other Mapping or HNSW object.
 
         Examples:
-
             Create an HNSW index with a dictionary of points.
 
             .. code-block:: python

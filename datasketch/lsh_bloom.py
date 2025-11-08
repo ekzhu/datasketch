@@ -153,7 +153,6 @@ class MinHashLSHBloom:
             of documents, but may not be appropriate for all use cases.
 
     Examples:
-
             Create an index with 128 permutation functions optimized for Jaccard
             threshold 0.9:
 

@@ -84,7 +84,6 @@ class MinHashLSH:
         Try to live with a small difference between weights (i.e. < 0.5).
 
     Examples:
-
         Create an index with 128 permutation functions optimized for Jaccard
         threshold 0.9:
 
@@ -250,7 +249,6 @@ class MinHashLSH:
             MinHashLSHInsertionSession: The context manager.
 
         Example:
-
             Insert 100 MinHashes into an Redis-backed index using a session:
 
             .. code-block:: python
@@ -285,7 +283,6 @@ class MinHashLSH:
             MinHashLSHDeletionSession: The context manager.
 
         Example:
-
             Delete keys from a Redis-backed index using a session:
 
             .. code-block:: python
@@ -363,7 +360,6 @@ class MinHashLSH:
             list: a list of unique keys.
 
         Example:
-
             Query and rank results using :meth:`MinHash.jaccard`.
 
             .. code-block:: python
