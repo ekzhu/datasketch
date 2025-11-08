@@ -164,6 +164,35 @@ class TestMinHashLSHCassandra(unittest.TestCase):
         for i, H in enumerate(lsh.keys["a"]):
             self.assertTrue("a" in lsh.hashtables[i][H])
 
+    @unittest.skipIf(not DO_TEST_CASSANDRA, "Skipping test_cassandra__deletion_session")
+    def test_cassandra__deletion_session(self):
+        lsh = MinHashLSH(threshold=0.5, num_perm=16, storage_config=STORAGE_CONFIG_CASSANDRA)
+        m1 = MinHash(16)
+        m1.update("a".encode("utf8"))
+        m2 = MinHash(16)
+        m2.update("b".encode("utf8"))
+        m3 = MinHash(16)
+        m3.update("c".encode("utf8"))
+        lsh.insert("a", m1)
+        lsh.insert("b", m2)
+        lsh.insert("c", m3)
+
+        keys_to_delete = ["a", "b"]
+        with lsh.deletion_session() as session:
+            for key in keys_to_delete:
+                session.remove(key)
+
+        # Verify deletions
+        self.assertTrue("a" not in lsh.keys)
+        self.assertTrue("b" not in lsh.keys)
+        self.assertTrue("c" in lsh.keys)
+
+        for table in lsh.hashtables:
+            for H in table:
+                items = table[H]
+                self.assertTrue("a" not in items)
+                self.assertTrue("b" not in items)
+
     @unittest.skipIf(not DO_TEST_CASSANDRA, "Skipping test_cassandra__get_counts")
     def test_cassandra__get_counts(self):
         lsh = MinHashLSH(threshold=0.5, num_perm=16, storage_config=STORAGE_CONFIG_CASSANDRA)
