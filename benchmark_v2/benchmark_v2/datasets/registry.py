@@ -36,7 +36,8 @@ def _add_builtin(entry: DatasetEntry) -> None:
     _DATASETS[entry.name] = entry
 
 
-# Core benchmark datasets collected from the public repository referenced by the user.
+# Core benchmark datasets from the original implementation that reference this repository:
+# https://github.com/ekzhu/set-similarity-search-benchmarks
 _add_builtin(
     DatasetEntry(
         name="kosarak",
