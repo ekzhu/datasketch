@@ -145,7 +145,7 @@ if motor is not None and ReturnDocument is not None:
             else:
                 self._collection_name = "lsh_" + self._name
 
-            db_lsh = self.mongo_param["db"] if "db" in self.mongo_param else "db_0"
+            db_lsh = self.mongo_param.get("db", "db_0")
             if "url" in self.mongo_param:
                 dsn = self.mongo_param["url"]
             elif "replica_set" in self.mongo_param:
