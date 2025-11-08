@@ -897,9 +897,8 @@ class HNSW(MutableMapping):
                 )
                 if new_entry_point is not None:
                     break
-                else:
-                    # As the layer is going to be empty after deletion, we remove it.
-                    self._graphs.pop()
+                # As the layer is going to be empty after deletion, we remove it.
+                self._graphs.pop()
             if new_entry_point is None:
                 # If the point to be deleted is the only point in the index,
                 # we clear the index.
