@@ -380,7 +380,7 @@ class TestMinHashLSH(unittest.TestCase):
 
     def test_redis_deletion_session(self):
         with patch('redis.Redis', fake_redis) as mock_redis:
-            lsh = MinHashLSH(threshold=0.5, num_perm=16, storage_config={
+            lsh = MinHashLSH(threshold=0.5, num_perm=16, prepickle=False, storage_config={
                 'type': 'redis', 'redis': {'host': 'localhost', 'port': 6379}
             })
 
@@ -419,8 +419,8 @@ class TestMinHashLSH(unittest.TestCase):
             for table in lsh.hashtables:
                 for H in table:
                     items = table[H]
-                    self.assertTrue(pickle.dumps("a") not in items)
-                    self.assertTrue(pickle.dumps("b") not in items)
+                    self.assertTrue("a".encode("utf8") not in items)
+                    self.assertTrue("b".encode("utf8") not in items)
 
 
 class TestWeightedMinHashLSH(unittest.TestCase):
