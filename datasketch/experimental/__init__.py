@@ -10,6 +10,6 @@ from new_module import NewModuleClass
 
 """
 
-import sys
-
 from datasketch.experimental.aio.lsh import AsyncMinHashLSH
+
+__all__ = ["AsyncMinHashLSH"]

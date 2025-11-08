@@ -22,3 +22,22 @@ from datasketch.weighted_minhash import WeightedMinHash, WeightedMinHashGenerato
 # Alias
 WeightedMinHashLSH = MinHashLSH
 WeightedMinHashLSHForest = MinHashLSHForest
+
+
+__all__ = [
+    "HNSW",
+    "HyperLogLog",
+    "HyperLogLogPlusPlus",
+    "LeanMinHash",
+    "MinHash",
+    "MinHashLSH",
+    "MinHashLSHBloom",
+    "MinHashLSHEnsemble",
+    "MinHashLSHForest",
+    "WeightedMinHash",
+    "WeightedMinHashGenerator",
+    "WeightedMinHashLSH",
+    "WeightedMinHashLSHForest",
+    "bBitMinHash",
+    "sha1_hash32",
+]
