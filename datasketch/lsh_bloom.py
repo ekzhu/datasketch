@@ -22,13 +22,13 @@ _mersenne_prime = np.uint64((1 << 61) - 1)
 
 def _false_positive_probability(threshold, b, r):
     _probability = lambda s: 1 - (1 - s ** float(r)) ** float(b)
-    a, err = integrate(_probability, 0.0, threshold)
+    a, _err = integrate(_probability, 0.0, threshold)
     return a
 
 
 def _false_negative_probability(threshold, b, r):
     _probability = lambda s: 1 - (1 - (1 - s ** float(r)) ** float(b))
-    a, err = integrate(_probability, threshold, 1.0)
+    a, _err = integrate(_probability, threshold, 1.0)
     return a
 
 

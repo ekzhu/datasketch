@@ -22,7 +22,7 @@ def _false_positive_probability(threshold, b, r, xq):
     if xq >= threshold:
         a, err = integrate(_probability, 0.0, threshold)
         return a
-    a, err = integrate(_probability, 0.0, xq)
+    a, _err = integrate(_probability, 0.0, xq)
     return a
 
 
@@ -33,7 +33,7 @@ def _false_negative_probability(threshold, b, r, xq):
         a, err = integrate(_probability, threshold, 1.0)
         return a
     if xq >= threshold:
-        a, err = integrate(_probability, threshold, xq)
+        a, _err = integrate(_probability, threshold, xq)
         return a
     return 0.0
 

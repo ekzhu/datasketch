@@ -111,7 +111,7 @@ class bBitMinHash:
         offset = struct.calcsize(self._serial_fmt_params)
         self.hashvalues = np.zeros((num_perm,), dtype=np.uint32)
         # Reconstruct the hash values
-        slot_size, n, num_blocks, total = self._bytesize()
+        slot_size, n, num_blocks, _total = self._bytesize()
         fmt = "%d%s" % (num_blocks, self._serial_fmt_block)
         try:
             blocks = struct.unpack_from(fmt, buf, offset)
