@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import struct
 from collections.abc import Iterable
+from typing import Optional
 
 import numpy as np
 
@@ -82,7 +83,7 @@ class LeanMinHash(MinHash):
         self.seed = seed
         self.hashvalues = self._parse_hashvalues(hashvalues)
 
-    def __init__(self, minhash: MinHash = None, seed: int = None, hashvalues: Iterable = None):
+    def __init__(self, minhash: MinHash = None, seed: Optional[int] = None, hashvalues: Optional[Iterable] = None):
         if minhash is not None:
             self._initialize_slots(minhash.seed, minhash.hashvalues)
         elif hashvalues is not None and seed is not None:

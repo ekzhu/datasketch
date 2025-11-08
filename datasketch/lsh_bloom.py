@@ -68,7 +68,7 @@ if pybloomfilter is not None:
 
         """
 
-        def __init__(self, item_count: int, fp: float, band_size: int, fname: str = None):
+        def __init__(self, item_count: int, fp: float, band_size: int, fname: Optional[str] = None):
             self.r = band_size
             self.fname = fname
             if fname is not None and os.path.exists(fname):
@@ -117,7 +117,7 @@ if pybloomfilter is not None:
 else:
 
     class BloomTable:
-        def __init__(self, item_count: int, fp: float, band_size: int, fname: str = None):
+        def __init__(self, item_count: int, fp: float, band_size: int, fname: Optional[str] = None):
             raise ImportError("Required dependency pybloomfilter is missing, did you `pip install datasketch[bloom]`?")
 
 
@@ -199,9 +199,9 @@ class MinHashLSHBloom:
         self,
         threshold: float = 0.9,
         num_perm: int = 128,
-        n: int = None,
-        fp: float = None,
-        save_dir: str = None,
+        n: Optional[int] = None,
+        fp: Optional[float] = None,
+        save_dir: Optional[str] = None,
         weights: tuple[float, float] = (0.5, 0.5),
         params: Optional[tuple[int, int]] = None,
     ) -> None:
