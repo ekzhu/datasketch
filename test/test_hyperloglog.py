@@ -16,7 +16,7 @@ class TestHyperLogLog(unittest.TestCase):
         h = self._class(4, hashfunc=fake_hash_func)
         self.assertEqual(h.m, 1 << 4)
         self.assertEqual(len(h.reg), h.m)
-        self.assertTrue(all(0 == i for i in h.reg))
+        self.assertTrue(all(i == 0 for i in h.reg))
 
     def test_init_from_reg(self):
         reg = np.array([1 for _ in range(1 << 4)], dtype=np.int8)
