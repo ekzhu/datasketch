@@ -1,5 +1,5 @@
 """This module implements the b-bit MinHash.
-http://research.microsoft.com/pubs/120078/wfc0398-liPS.pdf
+http://research.microsoft.com/pubs/120078/wfc0398-liPS.pdf.
 
 b-bit MinHash reduces storage space by storing only the b lowest bits
 of each minimum hashed value, without significant loss of accuracy.
@@ -11,7 +11,7 @@ import numpy as np
 
 
 class bBitMinHash:
-    """The b-bit MinHash object"""
+    """The b-bit MinHash object."""
 
     __slots__ = ("b", "hashvalues", "r", "seed")
 
@@ -125,14 +125,14 @@ class bBitMinHash:
                 self.hashvalues[start + j] = np.uint32(hv)
 
     def _calc_a(self, r, b):
-        """Compute the function A(r, b)"""
+        """Compute the function A(r, b)."""
         if r == 0.0:
             # Find the limit of A(r, b) as r -> 0.
             return 1.0 / (1 << b)
         return r * (1 - r) ** (2**b - 1) / (1 - (1 - r) ** (2 * b))
 
     def _calc_c(self, a1, a2, r1, r2):
-        """Compute the functions C1 and C2"""
+        """Compute the functions C1 and C2."""
         if r1 == 0.0 and r2 == 0.0:
             # Find the limits of C1 and C2 as r1 -> 0 and r2 -> 0
             # Since the b-value must be the same and r1 = r2,

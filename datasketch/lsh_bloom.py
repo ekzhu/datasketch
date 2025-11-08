@@ -50,7 +50,7 @@ def _optimal_param(threshold, num_perm, false_positive_weight, false_negative_we
 if pybloomfilter is not None:
 
     class BloomTable:
-        """Interface to a Bloom Filter meant to model a single band of the MinHash signature matrix
+        """Interface to a Bloom Filter meant to model a single band of the MinHash signature matrix.
 
         Args:
                 item_count (int): Number of items expected to be inserted (size of dataset). Used to create Bloom filter.
@@ -83,7 +83,7 @@ if pybloomfilter is not None:
                 )
 
         def insert(self, hashvalues: list[int]) -> None:
-            """Takes as input the indices for a single band and inserts them into the corresponding bit arrays
+            """Takes as input the indices for a single band and inserts them into the corresponding bit arrays.
 
             Args:
                     hashvalues (list[int]): The hashvalues from a single band of a MinHash object.
@@ -97,7 +97,7 @@ if pybloomfilter is not None:
 
         def query(self, hashvalues: list[int]) -> bool:
             """Takes as input the indices for a single band and queries them against the corresponding arrays
-            returns True if the each query returns True, otherwise returns False
+            returns True if the each query returns True, otherwise returns False.
 
             Args:
                     hashvalues (list[int]): The hashvalues from a single band of a MinHash object.

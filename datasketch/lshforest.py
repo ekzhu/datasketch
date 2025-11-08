@@ -148,7 +148,7 @@ class MinHashLSHForest:
         return hashvalues
 
     def _binary_search(self, n, func):
-        """https://golang.org/src/sort/search.go?s=2247:2287#L49"""
+        """https://golang.org/src/sort/search.go?s=2247:2287#L49."""
         i, j = 0, n
         while i < j:
             h = int(i + (j - i) / 2)

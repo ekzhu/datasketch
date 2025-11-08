@@ -385,5 +385,5 @@ class AsyncMinHashLSHDeleteSession:
         await asyncio.gather(*fs)
 
     async def remove(self, key):
-        """Remove key from LSH index"""
+        """Remove key from LSH index."""
         await self.lsh._remove(key, buffer=True)

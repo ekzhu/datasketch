@@ -218,7 +218,7 @@ class HyperLogLog:
         return len(self.reg)
 
     def __eq__(self, other: HyperLogLog) -> bool:
-        """Check equivalence between two HyperLogLogs
+        """Check equivalence between two HyperLogLogs.
 
         Args:
             other (HyperLogLog):

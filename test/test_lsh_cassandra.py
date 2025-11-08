@@ -35,7 +35,7 @@ class TestMinHashLSHCassandra(unittest.TestCase):
     @unittest.skipIf(not DO_TEST_CASSANDRA, "Skipping test_cassandra__H")
     def test_cassandra__H(self):
         """Check _H output consistent bytes length given
-        the same concatenated hash value size
+        the same concatenated hash value size.
         """
         for l in range(2, 128 + 1, 16):
             lsh = MinHashLSH(num_perm=128, storage_config=STORAGE_CONFIG_CASSANDRA)
@@ -218,7 +218,7 @@ class TestWeightedMinHashLSHCassandra(unittest.TestCase):
     @unittest.skipIf(not DO_TEST_CASSANDRA, "Skipping test_cassandra__H")
     def test_cassandra__H(self):
         """Check _H output consistent bytes length given
-        the same concatenated hash value size
+        the same concatenated hash value size.
         """
         mg = WeightedMinHashGenerator(100, sample_size=128)
         for l in range(2, mg.sample_size + 1, 16):

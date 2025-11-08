@@ -52,7 +52,7 @@ class TestAsyncMinHashLSH(aiounittest.AsyncTestCase):
     @unittest.skipIf(not DO_TEST_MONGO, "Skipping test__H_mongo")
     async def test__H_mongo(self):
         """Check _H output consistent bytes length given
-        the same concatenated hash value size
+        the same concatenated hash value size.
         """
         for l in range(2, 128 + 1, 16):
             m = MinHash()
@@ -320,7 +320,7 @@ class TestWeightedMinHashLSH(aiounittest.AsyncTestCase):
     @unittest.skipIf(not DO_TEST_MONGO, "Skipping test__H_mongo")
     async def test__H_mongo(self):
         """Check _H output consistent bytes length given
-        the same concatenated hash value size
+        the same concatenated hash value size.
         """
         mg = WeightedMinHashGenerator(100, sample_size=128)
         for l in range(2, mg.sample_size + 1, 16):

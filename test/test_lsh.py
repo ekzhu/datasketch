@@ -29,7 +29,7 @@ class TestMinHashLSH(unittest.TestCase):
 
     def test__H(self):
         """Check _H output consistent bytes length given
-        the same concatenated hash value size
+        the same concatenated hash value size.
         """
         for l in range(2, 128 + 1, 16):
             lsh = MinHashLSH(num_perm=128)
@@ -452,7 +452,7 @@ class TestWeightedMinHashLSH(unittest.TestCase):
 
     def test__H(self):
         """Check _H output consistent bytes length given
-        the same concatenated hash value size
+        the same concatenated hash value size.
         """
         mg = WeightedMinHashGenerator(100, sample_size=128)
         for l in range(2, mg.sample_size + 1, 16):

@@ -125,12 +125,12 @@ class Storage(ABC):
 
     @abstractmethod
     def keys(self):
-        """Return an iterator on keys in storage"""
+        """Return an iterator on keys in storage."""
         return []
 
     @abstractmethod
     def get(self, key):
-        """Get list of values associated with a key
+        """Get list of values associated with a key.
 
         Returns empty list ([]) if `key` is not found
         """
@@ -141,32 +141,32 @@ class Storage(ABC):
 
     @abstractmethod
     def insert(self, key, *vals, **kwargs):
-        """Add `val` to storage against `key`"""
+        """Add `val` to storage against `key`."""
         pass
 
     @abstractmethod
     def remove(self, *keys):
-        """Remove `keys` from storage"""
+        """Remove `keys` from storage."""
         pass
 
     @abstractmethod
     def remove_val(self, key, val):
-        """Remove `val` from list of values under `key`"""
+        """Remove `val` from list of values under `key`."""
         pass
 
     @abstractmethod
     def size(self):
-        """Return size of storage with respect to number of keys"""
+        """Return size of storage with respect to number of keys."""
         pass
 
     @abstractmethod
     def itemcounts(self, **kwargs):
-        """Returns the number of items stored under each key"""
+        """Returns the number of items stored under each key."""
         pass
 
     @abstractmethod
     def has_key(self, key):
-        """Determines whether the key is in the storage or not"""
+        """Determines whether the key is in the storage or not."""
         pass
 
     def status(self):
@@ -176,14 +176,14 @@ class Storage(ABC):
         pass
 
     def add_to_select_buffer(self, keys):
-        """Query keys and add them to internal buffer"""
+        """Query keys and add them to internal buffer."""
         if not hasattr(self, "_select_buffer"):
             self._select_buffer = self.getmany(*keys)
         else:
             self._select_buffer.extend(self.getmany(*keys))
 
     def collect_select_buffer(self):
-        """Return buffered query results"""
+        """Return buffered query results."""
         if not hasattr(self, "_select_buffer"):
             return []
         buffer = list(self._select_buffer)
@@ -201,7 +201,7 @@ class UnorderedStorage(Storage):
 
 class DictListStorage(OrderedStorage):
     """This is a wrapper class around ``defaultdict(list)`` enabling
-    it to support an API consistent with `Storage`
+    it to support an API consistent with `Storage`.
     """
 
     def __init__(self, config):
@@ -239,7 +239,7 @@ class DictListStorage(OrderedStorage):
 
 class DictSetStorage(UnorderedStorage, DictListStorage):
     """This is a wrapper class around ``defaultdict(set)`` enabling
-    it to support an API consistent with `Storage`
+    it to support an API consistent with `Storage`.
     """
 
     def __init__(self, config):
@@ -600,7 +600,7 @@ if cassandra is not None:
             self._select_statements_and_parameters_with_decoders.extend(statements_and_parameters_with_decoders)
 
         def collect_select_buffer(self):
-            """Perform buffered select queries
+            """Perform buffered select queries.
 
             :return: list of list of query results
             """
