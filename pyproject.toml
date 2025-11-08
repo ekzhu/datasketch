@@ -136,7 +136,9 @@ ignore = [
   "D205",   # TODO: missing blank line after summary
   "D400",   # TODO: missing trailing period
   "D401",   # TODO: non imperative mood
+  "D417",   # TODO: undocumented-param
   "E731",   # TODO: allow lambda assignment
+  "F821",   # TODO: Undefined name `buffer`
 ]
 
 [tool.ruff.format]
