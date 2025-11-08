@@ -574,6 +574,7 @@ wheels = [
 
 [[package]]
 name = "datasketch"
+version = "1.7.0"
 source = { editable = "." }
 dependencies = [
     { name = "numpy", version = "2.0.2", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.10'" },
@@ -655,7 +656,7 @@ requires-dist = [
     { name = "scipy", marker = "extra == 'benchmark'", specifier = ">=1.3.3" },
     { name = "setsimilaritysearch", marker = "extra == 'benchmark'", specifier = ">=0.1.7" },
 ]
-provides-extras = ["benchmark", "bloom", "cassandra", "experimental-aio", "redis", "test"]
+provides-extras = ["cassandra", "redis", "bloom", "benchmark", "test", "experimental-aio"]
 
 [[package]]
 name = "dnspython"
