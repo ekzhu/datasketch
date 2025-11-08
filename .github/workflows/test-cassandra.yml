@@ -1,8 +1,6 @@
 name: Test Cassandra
 
 on:
-  pull_request:
-    branches: [master]
   workflow_run:
     workflows:
       - Test
