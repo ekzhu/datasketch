@@ -113,6 +113,9 @@ The project uses `uv` for fast and reliable Python package management. Follow th
        # Install all dependencies
        uv sync
 
+       # Activate the virtual environment (optional, uv run commands work without it)
+       source .venv/bin/activate
+
 4. **Verify installation**:
 
    .. code-block:: bash
