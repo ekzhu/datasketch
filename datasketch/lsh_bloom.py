@@ -81,7 +81,9 @@ if pybloomfilter is not None:
             if self.fname is not None:
                 self.bloom_filter.sync()
             else:
-                warnings.warn("Attempting to save in-memory Bloom filter, this is a no-op.", RuntimeWarning)
+                warnings.warn(
+                    "Attempting to save in-memory Bloom filter, this is a no-op.", RuntimeWarning, stacklevel=2
+                )
 
         def assert_size(self, hashvalues: list[int]):
             if not len(hashvalues) == self.r:
@@ -168,12 +170,53 @@ class MinHashLSHBloom:
 
                     from datasketch import MinHash, MinHashLSH
 
-                    set1 = set(['minhash', 'is', 'a', 'probabilistic', 'data', 'structure', 'for',
-                            'estimating', 'the', 'similarity', 'between', 'datasets'])
-                    set2 = set(['minhash', 'is', 'a', 'probability', 'data', 'structure', 'for',
-                                            'estimating', 'the', 'similarity', 'between', 'documents'])
-                    set3 = set(['minhash', 'is', 'probability', 'data', 'structure', 'for',
-                                            'estimating', 'the', 'similarity', 'between', 'documents'])
+                    set1 = set(
+                        [
+                            "minhash",
+                            "is",
+                            "a",
+                            "probabilistic",
+                            "data",
+                            "structure",
+                            "for",
+                            "estimating",
+                            "the",
+                            "similarity",
+                            "between",
+                            "datasets",
+                        ]
+                    )
+                    set2 = set(
+                        [
+                            "minhash",
+                            "is",
+                            "a",
+                            "probability",
+                            "data",
+                            "structure",
+                            "for",
+                            "estimating",
+                            "the",
+                            "similarity",
+                            "between",
+                            "documents",
+                        ]
+                    )
+                    set3 = set(
+                        [
+                            "minhash",
+                            "is",
+                            "probability",
+                            "data",
+                            "structure",
+                            "for",
+                            "estimating",
+                            "the",
+                            "similarity",
+                            "between",
+                            "documents",
+                        ]
+                    )
 
                     m1 = MinHash(num_perm=128)
                     m2 = MinHash(num_perm=128)
@@ -215,7 +258,9 @@ class MinHashLSHBloom:
             raise ValueError("fp must be in (0.0, 1.0)")
         if save_dir is None:
             warnings.warn(
-                "Creating LSHBloom index without save directory, this index will not be persisted.", RuntimeWarning
+                "Creating LSHBloom index without save directory, this index will not be persisted.",
+                RuntimeWarning,
+                stacklevel=2,
             )
         if any(w < 0.0 or w > 1.0 for w in weights):
             raise ValueError("Weight must be in [0.0, 1.0]")

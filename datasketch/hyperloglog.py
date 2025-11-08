@@ -94,7 +94,7 @@ class HyperLogLog:
             raise ValueError("The hashfunc must be a callable.")
         # Check for use of hashobj and issue warning.
         if hashobj is not None:
-            warnings.warn("hashobj is deprecated, use hashfunc instead.", DeprecationWarning)
+            warnings.warn("hashobj is deprecated, use hashfunc instead.", DeprecationWarning, stacklevel=2)
         self.hashfunc = hashfunc
         # Common settings
         self.alpha = self._get_alpha(self.p)
@@ -155,7 +155,7 @@ class HyperLogLog:
         if abs(e - small_range_threshold) / small_range_threshold < 0.15:
             warnings.warn(
                 "Warning: estimate is close to error correction threshold. "
-                "Output may not satisfy HyperLogLog accuracy guarantee."
+                "Output may not satisfy HyperLogLog accuracy guarantee.", stacklevel=2
             )
         if e <= small_range_threshold:
             num_zero = self.m - np.count_nonzero(self.reg)

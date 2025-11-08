@@ -95,7 +95,7 @@ class MinHash:
         self.hashfunc = hashfunc
         # Check for use of hashobj and issue warning.
         if hashobj is not None:
-            warnings.warn("hashobj is deprecated, use hashfunc instead.", DeprecationWarning)
+            warnings.warn("hashobj is deprecated, use hashfunc instead.", DeprecationWarning, stacklevel=2)
         # Initialize hash values
         if hashvalues is not None:
             self.hashvalues = self._parse_hashvalues(hashvalues)
