@@ -202,7 +202,7 @@ class UnorderedStorage(Storage):
 
 
 class DictListStorage(OrderedStorage):
-    """This is a wrapper class around ``defaultdict(list)`` enabling
+    """A wrapper class around ``defaultdict(list)`` enabling
     it to support an API consistent with `Storage`.
     """
 
@@ -240,7 +240,7 @@ class DictListStorage(OrderedStorage):
 
 
 class DictSetStorage(UnorderedStorage, DictListStorage):
-    """This is a wrapper class around ``defaultdict(set)`` enabling
+    """A wrapper class around ``defaultdict(set)`` enabling
     it to support an API consistent with `Storage`.
     """
 

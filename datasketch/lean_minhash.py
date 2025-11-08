@@ -94,7 +94,7 @@ class LeanMinHash(MinHash):
             )
 
     def update(self, b) -> None:
-        """This method is not available on a LeanMinHash.
+        """Not available on a LeanMinHash.
         Calling it raises a TypeError.
         """
         raise TypeError("Cannot update a LeanMinHash")

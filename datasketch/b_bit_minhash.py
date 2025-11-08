@@ -1,4 +1,4 @@
-"""This module implements the b-bit MinHash.
+"""Implements the b-bit MinHash.
 http://research.microsoft.com/pubs/120078/wfc0398-liPS.pdf.
 
 b-bit MinHash reduces storage space by storing only the b lowest bits
@@ -76,7 +76,7 @@ class bBitMinHash:
         return self._bytesize()[-1]
 
     def __getstate__(self):
-        """This function is called when pickling the b-bit MinHash object.
+        """Called when pickling the b-bit MinHash object.
         Returns a bytearray which will then be pickled.
         """
         slot_size, n, num_blocks, total = self._bytesize()
@@ -101,7 +101,7 @@ class bBitMinHash:
         return buffer
 
     def __setstate__(self, buf):
-        """This function is called when unpickling the b-bit MinHash object.
+        """Called when unpickling the b-bit MinHash object.
         Initialize the object with data in the buffer.
         """
         try:
