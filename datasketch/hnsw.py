@@ -229,24 +229,28 @@ class HNSW(MutableMapping):
 
     def __len__(self) -> int:
         """Return the number of points in the index excluding those
-        that were soft-removed."""
+        that were soft-removed.
+        """
         return sum(not node.is_deleted for node in self._nodes.values())
 
     def __contains__(self, key: Hashable) -> bool:
         """Return ``True`` if the index contains the key and it was
-        not soft-removed, else ``False``."""
+        not soft-removed, else ``False``.
+        """
         return key in self._nodes and not self._nodes[key].is_deleted
 
     def __getitem__(self, key: Hashable) -> np.ndarray:
         """Get the point associated with the key. Raises KeyError if the key
-        does not exist in the index or it was soft-removed."""
+        does not exist in the index or it was soft-removed.
+        """
         if key not in self:
             raise KeyError(key)
         return self._nodes[key].point
 
     def __setitem__(self, key: Hashable, value: np.ndarray) -> None:
         """Set the point associated with the key and update the index.
-        This is equivalent to calling :meth:`insert` with the key and point."""
+        This is equivalent to calling :meth:`insert` with the key and point.
+        """
         self.insert(key, value)
 
     def __delitem__(self, key: Hashable) -> None:
@@ -258,17 +262,20 @@ class HNSW(MutableMapping):
 
     def __iter__(self) -> Iterator[Hashable]:
         """Return an iterator over the keys of the index that were not
-        soft-removed."""
+        soft-removed.
+        """
         return (key for key in self._nodes if not self._nodes[key].is_deleted)
 
     def reversed(self) -> Iterator[Hashable]:
         """Return a reverse iterator over the keys of the index that were not
-        soft-removed."""
+        soft-removed.
+        """
         return (key for key in reversed(self._nodes) if not self._nodes[key].is_deleted)
 
     def __eq__(self, __value: object) -> bool:
         """Return True only if the index parameters, random states, keys, points
-        points, and index structures are equal, including deleted points."""
+        points, and index structures are equal, including deleted points.
+        """
         if not isinstance(__value, HNSW):
             return False
         # Check if the index parameters are equal.
@@ -302,19 +309,22 @@ class HNSW(MutableMapping):
 
     def get(self, key: Hashable, default: Optional[np.ndarray] = None) -> Union[np.ndarray, None]:
         """Return the point for key in the index, else default. If default is not
-        given and key is not in the index or it was soft-removed, return None."""
+        given and key is not in the index or it was soft-removed, return None.
+        """
         if key not in self:
             return default
         return self._nodes[key].point
 
     def items(self) -> Iterator[tuple[Hashable, np.ndarray]]:
         """Return an iterator of the indexed points that were not soft-removed
-        as (key, point) pairs."""
+        as (key, point) pairs.
+        """
         return ((key, node.point) for key, node in self._nodes.items() if not node.is_deleted)
 
     def keys(self) -> Iterator[Hashable]:
         """Return an iterator of the keys of the index points that were not
-        soft-removed."""
+        soft-removed.
+        """
         return (key for key in self._nodes if not self._nodes[key].is_deleted)
 
     def values(self) -> Iterator[np.ndarray]:
@@ -362,7 +372,8 @@ class HNSW(MutableMapping):
 
     def clear(self) -> None:
         """Clear the index of all data points. This will not reset the random
-        number generator."""
+        number generator.
+        """
         self._nodes = {}
         self._graphs = []
         self._entry_point = None
@@ -372,7 +383,8 @@ class HNSW(MutableMapping):
         as the original index and the same keys and points, but will not share
         any index data structures (i.e., graphs) with the original index.
         The new index's random state will start from a copy of the original
-        index's."""
+        index's.
+        """
         new_index = HNSW(
             self._distance_func,
             m=self._m,
@@ -431,7 +443,8 @@ class HNSW(MutableMapping):
     def setdefault(self, key: Hashable, default: np.ndarray) -> np.ndarray:
         """If key is in the index and it was not soft-removed, return
         its associated point. If not, insert
-        key with a value of default and return default. default cannot be None."""
+        key with a value of default and return default. default cannot be None.
+        """
         if default is None:
             raise ValueError("Default value cannot be None.")
         if key not in self._nodes or self._nodes[key].is_deleted:

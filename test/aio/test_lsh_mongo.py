@@ -296,7 +296,8 @@ class TestAsyncMinHashLSH(aiounittest.AsyncTestCase):
 @unittest.skipIf(sys.version_info < (3, 6), "Skipping TestAsyncMinHashLSH. Supported Python version >= 3.6")
 class TestWeightedMinHashLSH(aiounittest.AsyncTestCase):
     """For tests Redis should be installed on local machine.
-    Don't forget to clean Redis DB=0."""
+    Don't forget to clean Redis DB=0.
+    """
 
     def setUp(self):
         super().setUp()
