@@ -278,7 +278,7 @@ class MinHashLSH:
         """
         return MinHashLSHInsertionSession(self, buffer_size=buffer_size)
 
-    def deletion_session(self, buffer_size: int = 50000) -> "MinHashLSHDeletionSession":
+    def deletion_session(self, buffer_size: int = 50000) -> MinHashLSHDeletionSession:
         """
         Create a context manager for fast deletion from this index.
 
@@ -625,7 +625,7 @@ class MinHashLSHDeletionSession:
         self.lsh = lsh
         self.lsh.buffer_size = buffer_size
 
-    def __enter__(self) -> "MinHashLSHDeletionSession":
+    def __enter__(self) -> MinHashLSHDeletionSession:
         return self
 
     def __exit__(self, exc_type, exc_val, exc_tb) -> None:
