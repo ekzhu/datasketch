@@ -68,7 +68,7 @@ class LeanMinHash(MinHash):
 
     """
 
-    __slots__ = ("hashvalues", "seed")
+    __slots__ = ("seed", "hashvalues")
 
     def _initialize_slots(self, seed, hashvalues):
         """Initialize the slots of the LeanMinHash.
