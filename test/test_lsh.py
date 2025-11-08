@@ -405,7 +405,7 @@ class TestMinHashLSH(unittest.TestCase):
             # 1. Replace the buffer with mockredis's own simple pipeline, which can execute.
             # 2. Patch __init__ to prevent the buffer flush from resetting the storage object
             #    and wiping mock data.
-            storage_objects = [lsh.keys] + lsh.hashtables
+            storage_objects = [lsh.keys, *lsh.hashtables]
             for storage in storage_objects:
                 storage._buffer = storage._redis.pipeline()
 
