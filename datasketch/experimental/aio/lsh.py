@@ -34,7 +34,8 @@ class AsyncMinHashLSH:
         MONGO = {'type': 'aiomongo', 'basename': 'base_name_1', 'mongo': {'host': 'localhost', 'port': 27017}}
 
     .. note::
-        * The module supports Python version >=3.6, and is currently experimental. So the interface may change slightly in the future.
+        * The module supports Python version >=3.6, and is currently experimental.
+          So the interface may change slightly in the future.
         * For main functionality of LSH algorithm see :class:`datasketch.MinHashLSH`.
         * For additional information see :ref:`minhash_lsh_at_scale` and :ref:`minhash_lsh_async`
     """
@@ -198,7 +199,10 @@ class AsyncMinHashLSH:
                     return iter(lambda: tuple(islice(it, size)), ())
 
                 _chunked_str = chunk((random.choice(string.ascii_lowercase) for _ in range(10000)), 4)
-                seq = frozenset(chain((''.join(s) for s in _chunked_str), ('aahhb', 'aahh', 'aahhc', 'aac', 'kld', 'bhg', 'kkd', 'yow', 'ppi', 'eer')))
+                seq = frozenset(chain(
+                    (''.join(s) for s in _chunked_str),
+                    ('aahhb', 'aahh', 'aahhc', 'aac', 'kld', 'bhg', 'kkd', 'yow', 'ppi', 'eer')
+                ))
                 objs = [MinHash(16) for _ in range(len(seq))]
                 for e, obj in zip(seq, objs):
                     for i in e:
@@ -234,7 +238,10 @@ class AsyncMinHashLSH:
                     return iter(lambda: tuple(islice(it, size)), ())
 
                 _chunked_str = chunk((random.choice(string.ascii_lowercase) for _ in range(10000)), 4)
-                seq = frozenset(chain((''.join(s) for s in _chunked_str), ('aahhb', 'aahh', 'aahhc', 'aac', 'kld', 'bhg', 'kkd', 'yow', 'ppi', 'eer')))
+                seq = frozenset(chain(
+                    (''.join(s) for s in _chunked_str),
+                    ('aahhb', 'aahh', 'aahhc', 'aac', 'kld', 'bhg', 'kkd', 'yow', 'ppi', 'eer')
+                ))
                 objs = [MinHash(16) for _ in range(len(seq))]
                 for e, obj in zip(seq, objs):
                     for i in e:

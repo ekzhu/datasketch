@@ -56,11 +56,15 @@ if pybloomfilter is not None:
         """Interface to a Bloom Filter meant to model a single band of the MinHash signature matrix.
 
         Args:
-                item_count (int): Number of items expected to be inserted (size of dataset). Used to create Bloom filter.
+                item_count (int): Number of items expected to be inserted
+                    (size of dataset). Used to create Bloom filter.
                 fp (float): False positive rate for Bloom filter in (0,1).
-                band_size (int): Size of band from MinHash signature matrix this filter is meant to model.
-                fname (str): File path where Bloom filter will be saved. If this file already exists, will initialize the Bloom filter from this path.
-                max_size (int): Maximum number of elements we should plan to insert into this Bloom filter. Upper bounds the size of the Bloom filter.
+                band_size (int): Size of band from MinHash signature matrix
+                    this filter is meant to model.
+                fname (str): File path where Bloom filter will be saved. If this file
+                    already exists, will initialize the Bloom filter from this path.
+                max_size (int): Maximum number of elements we should plan to insert
+                    into this Bloom filter. Upper bounds the size of the Bloom filter.
 
         """
 
@@ -94,7 +98,8 @@ if pybloomfilter is not None:
             """
             self.assert_size(hashvalues)
             # https://en.wikipedia.org/wiki/Universal_hashing#Hashing_vectors
-            # as the hashvalues are the result of a universal hashing function, their sum is also a univeral hash function
+            # as the hashvalues are the result of a universal hashing function,
+            # their sum is also a universal hash function
             x = sum(hashvalues) % _mersenne_prime
             self.bloom_filter.add(x)
 
@@ -174,11 +179,11 @@ class MinHashLSHBloom:
                     m2 = MinHash(num_perm=128)
                     m3 = MinHash(num_perm=128)
                     for d in set1:
-                            m1.update(d.encode('utf8'))
+                        m1.update(d.encode("utf8"))
                     for d in set2:
-                            m2.update(d.encode('utf8'))
+                        m2.update(d.encode("utf8"))
                     for d in set3:
-                            m3.update(d.encode('utf8'))
+                        m3.update(d.encode("utf8"))
 
                     # Create LSHBloom index
                     lsh = MinHashLSHBloom(threshold=0.5, num_perm=128, n=100, fp=0.0001, save_dir="./index/")
@@ -287,15 +292,12 @@ class MinHashLSHBloom:
                         import numpy as np
 
                         # Generate 100 random MinHashes.
-                        minhashes = MinHash.bulk(
-                                np.random.randint(low=0, high=30, size=(100, 10)),
-                                num_perm=128
-                        )
+                        minhashes = MinHash.bulk(np.random.randint(low=0, high=30, size=(100, 10)), num_perm=128)
 
                         # Create LSHBloom index.
                         lsh = MinHashLSHBloom(threshold=0.5, num_perm=128, n=100, fp=0.0001, save_dir="./index/")
                         for i, m in enumerate(minhashes):
-                                lsh.insert(i, m)
+                            lsh.insert(i, m)
 
                         # Get the duplication result from LSHBloom.
                         query = minhashes[0]

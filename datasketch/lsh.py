@@ -391,7 +391,8 @@ class MinHashLSH:
 
             .. code-block::
 
-                [(1.0, 0), (0.421875, 4), (0.4140625, 19), (0.359375, 58), (0.3359375, 78), (0.265625, 62), (0.2578125, 11), (0.25, 98), (0.171875, 21)]
+                [(1.0, 0), (0.421875, 4), (0.4140625, 19), (0.359375, 58),
+                 (0.3359375, 78), (0.265625, 62), (0.2578125, 11), (0.25, 98), (0.171875, 21)]
 
             Note that although the threshold is set to 0.5, the results are not
             guaranteed to be above 0.5 because the LSH index is approximate and
