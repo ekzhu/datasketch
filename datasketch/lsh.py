@@ -174,7 +174,7 @@ class MinHashLSH(object):
             raise ValueError("The number of bands are too small (b < 2)")
 
         self.prepickle = (
-            storage_config["type"] == "redis" if not prepickle else prepickle
+            storage_config["type"] == "redis" if prepickle is None else prepickle
         )
 
         self.hashfunc = hashfunc
