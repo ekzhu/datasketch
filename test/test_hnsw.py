@@ -151,7 +151,6 @@ class TestHNSW(unittest.TestCase):
             hnsw.remove(i)
             results = hnsw.query(data[i], 10)
             # Check graph connectivity.
-            # self.assertEqual(len(results), min(10, len(data) - i - 1))
             expected_result_size = min(10, len(data) - i - 1)
             if len(results) != expected_result_size:
                 warnings.warn(
