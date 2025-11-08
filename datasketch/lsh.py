@@ -144,7 +144,7 @@ class MinHashLSH:
         prepickle: Optional[bool] = None,
         hashfunc: Optional[Callable[[bytes], bytes]] = None,
     ) -> None:
-        storage_config = {"type": "dict"} if not storage_config else storage_config
+        storage_config = storage_config if storage_config else {"type": "dict"}
         self._buffer_size = 50000
         if threshold > 1.0 or threshold < 0.0:
             raise ValueError("threshold must be in [0.0, 1.0]")
@@ -169,7 +169,7 @@ class MinHashLSH:
         if self.b < 2:
             raise ValueError("The number of bands are too small (b < 2)")
 
-        self.prepickle = storage_config["type"] == "redis" if not prepickle else prepickle
+        self.prepickle = prepickle if prepickle else storage_config["type"] == "redis"
 
         self.hashfunc = hashfunc
         if hashfunc:
