@@ -421,10 +421,12 @@ class TestMinHashLSH(unittest.TestCase):
 
             keys_to_delete = ["a", "b"]
 
-            with patch.object(type(lsh.keys), "__init__", lambda self, config, name: None):
-                with lsh.deletion_session() as session:
-                    for key in keys_to_delete:
-                        session.remove(key)
+            with (
+                patch.object(type(lsh.keys), "__init__", lambda self, config, name: None),
+                lsh.deletion_session() as session,
+            ):
+                for key in keys_to_delete:
+                    session.remove(key)
 
             # Verify deletions
             self.assertTrue("a" not in lsh)
