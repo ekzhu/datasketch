@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "datasketch"
-dynamic = ["version"]
+version = "1.7.0"
 description = "Probabilistic data structures for processing and searching very large datasets"
 readme = "README.rst"
 requires-python = ">=3.9"
@@ -127,10 +127,6 @@ ignore = [
   "UP031", # TODO: printf-string-formatting
 ]
 
-
-[tool.hatch.version]
-path = "datasketch/version.py"
-pattern = "__version__ = \"(?P<version>.+)\""
 
 [tool.hatch.build.targets.wheel]
 packages = ["datasketch"]
