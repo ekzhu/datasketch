@@ -139,7 +139,7 @@ class TestMinHashLSH(unittest.TestCase):
         self.assertTrue("b" in result)
 
     def test_insert_redis(self):
-        with patch("redis.Redis", fake_redis) as mock_redis:
+        with patch("redis.Redis", fake_redis):
             lsh = MinHashLSH(
                 threshold=0.5,
                 num_perm=16,
@@ -167,7 +167,7 @@ class TestMinHashLSH(unittest.TestCase):
             self.assertRaises(ValueError, lsh.insert, "c", m3)
 
     def test_query_redis(self):
-        with patch("redis.Redis", fake_redis) as mock_redis:
+        with patch("redis.Redis", fake_redis):
             lsh = MinHashLSH(
                 threshold=0.5,
                 num_perm=16,
@@ -188,7 +188,7 @@ class TestMinHashLSH(unittest.TestCase):
             self.assertRaises(ValueError, lsh.query, m3)
 
     def test_query_buffer_redis(self):
-        with patch("redis.Redis", fake_redis) as mock_redis:
+        with patch("redis.Redis", fake_redis):
             lsh = MinHashLSH(
                 threshold=0.5,
                 num_perm=16,
@@ -325,7 +325,7 @@ class TestMinHashLSH(unittest.TestCase):
         lsh1.merge(lsh4, check_overlap=False)
 
     def test_merge_redis(self):
-        with patch("redis.Redis", fake_redis) as mock_redis:
+        with patch("redis.Redis", fake_redis):
             lsh1 = MinHashLSH(
                 threshold=0.5,
                 num_perm=16,
@@ -392,7 +392,7 @@ class TestMinHashLSH(unittest.TestCase):
             lsh1.merge(lsh4, check_overlap=False)
 
     def test_redis_deletion_session(self):
-        with patch("redis.Redis", fake_redis) as mock_redis:
+        with patch("redis.Redis", fake_redis):
             lsh = MinHashLSH(
                 threshold=0.5,
                 num_perm=16,

@@ -132,16 +132,16 @@ class TestbBitMinHash(unittest.TestCase):
         self.m.update(32)
 
     def test_init(self):
-        bm = bBitMinHash(self.m, 1)
-        bm = bBitMinHash(self.m, 2)
-        bm = bBitMinHash(self.m, 3)
-        bm = bBitMinHash(self.m, 4)
-        bm = bBitMinHash(self.m, 5)
-        bm = bBitMinHash(self.m, 8)
-        bm = bBitMinHash(self.m, 12)
-        bm = bBitMinHash(self.m, 16)
-        bm = bBitMinHash(self.m, 27)
-        bm = bBitMinHash(self.m, 32)
+        bBitMinHash(self.m, 1)
+        bBitMinHash(self.m, 2)
+        bBitMinHash(self.m, 3)
+        bBitMinHash(self.m, 4)
+        bBitMinHash(self.m, 5)
+        bBitMinHash(self.m, 8)
+        bBitMinHash(self.m, 12)
+        bBitMinHash(self.m, 16)
+        bBitMinHash(self.m, 27)
+        bBitMinHash(self.m, 32)
 
     def test_eq(self):
         m1 = minhash.MinHash(4, 1, hashfunc=fake_hash_func)
