@@ -131,11 +131,13 @@ ignore = [
   "S324",   # TODO: hashlib-insecure-hash-function
   "D101",   # TODO: missing docstring in public class
   "D102",   # TODO: missing docstring in public method
+  "D105",   # TODO: missing docstring in magic method
   "D107",   # TODO: missing docstring in public init
   "D205",   # TODO: missing blank line after summary
   "D400",   # TODO: missing trailing period
   "D401",   # TODO: non imperative mood
   "D415",   # TODO: missing-terminal-punctuation
+  "E731",   # TODO: allow lambda assignment
 ]
 
 [tool.ruff.format]
