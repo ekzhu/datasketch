@@ -132,7 +132,7 @@ class MinHashLSHEnsemble:
         self.m = m
         rs = self._init_optimal_params(weights)
         # Initialize multiple LSH indexes for each partition
-        storage_config = {"type": "dict"} if not storage_config else storage_config
+        storage_config = storage_config if storage_config else {"type": "dict"}
         basename = storage_config.get("basename", _random_name(11))
         self.indexes = [
             dict(
