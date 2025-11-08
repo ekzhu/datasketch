@@ -23,8 +23,7 @@ if not hasattr(int, "bit_length"):
 
 
 class HyperLogLog:
-    """
-    The HyperLogLog data sketch for estimating
+    """The HyperLogLog data sketch for estimating
     cardinality of very large dataset in a single pass.
     The original HyperLogLog is described `here
     <http://algo.inria.fr/flajolet/Publications/FlFuGaMe07.pdf>`_.
@@ -102,8 +101,7 @@ class HyperLogLog:
         self.max_rank = self._hash_range_bit - self.p
 
     def update(self, b) -> None:
-        """
-        Update the HyperLogLog with a new data value in bytes.
+        """Update the HyperLogLog with a new data value in bytes.
         The value will be hashed using the hash function specified by
         the `hashfunc` argument in the constructor.
 
@@ -144,8 +142,7 @@ class HyperLogLog:
         self.reg[reg_index] = max(self.reg[reg_index], self._get_rank(bits))
 
     def count(self) -> float:
-        """
-        Estimate the cardinality of the data values seen so far.
+        """Estimate the cardinality of the data values seen so far.
 
         Returns:
             float: The estimated cardinality.
@@ -170,8 +167,7 @@ class HyperLogLog:
         return self._largerange_correction(e)
 
     def merge(self, other: HyperLogLog) -> None:
-        """
-        Merge the other HyperLogLog with this one, making this the union of the
+        """Merge the other HyperLogLog with this one, making this the union of the
         two.
 
         Args:
@@ -186,16 +182,14 @@ class HyperLogLog:
         self.reg = np.maximum(self.reg, other.reg)
 
     def digest(self) -> np.ndarray:
-        """
-        Returns:
+        """Returns:
             numpy.array: The current internal state.
 
         """
         return copy.copy(self.reg)
 
     def copy(self) -> HyperLogLog:
-        """
-        Create a copy of the current HyperLogLog by exporting its state.
+        """Create a copy of the current HyperLogLog by exporting its state.
 
         Returns:
             HyperLogLog: A copy of the current HyperLogLog.
@@ -204,8 +198,7 @@ class HyperLogLog:
         return self.__class__(reg=self.digest(), hashfunc=self.hashfunc)
 
     def is_empty(self) -> bool:
-        """
-        Returns:
+        """Returns:
             bool: True if the current HyperLogLog is empty - at the state of just
             initialized.
 
@@ -213,14 +206,12 @@ class HyperLogLog:
         return not np.any(self.reg)
 
     def clear(self) -> None:
-        """
-        Reset the current HyperLogLog to empty.
+        """Reset the current HyperLogLog to empty.
         """
         self.reg = np.zeros((self.m,), dtype=np.int8)
 
     def __len__(self) -> int:
-        """
-        Returns:
+        """Returns:
             int: Get the size of the HyperLogLog as the size of
                 `reg`.
 
@@ -228,8 +219,7 @@ class HyperLogLog:
         return len(self.reg)
 
     def __eq__(self, other: HyperLogLog) -> bool:
-        """
-        Check equivalence between two HyperLogLogs
+        """Check equivalence between two HyperLogLogs
 
         Args:
             other (HyperLogLog):
@@ -332,8 +322,7 @@ class HyperLogLog:
 
 
 class HyperLogLogPlusPlus(HyperLogLog):
-    """
-    HyperLogLog++ is an enhanced HyperLogLog `from Google
+    """HyperLogLog++ is an enhanced HyperLogLog `from Google
     <http://research.google.com/pubs/pub40671.html>`_.
     Main changes from the original HyperLogLog:
 

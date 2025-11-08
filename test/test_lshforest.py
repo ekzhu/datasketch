@@ -41,8 +41,7 @@ class TestMinHashLSHForest(unittest.TestCase):
         return forest, data
 
     def test__H(self):
-        """
-        Check _H output consistent bytes length given
+        """Check _H output consistent bytes length given
         the same concatenated hash value size
         """
         for l in range(2, 128 + 1, 16):
@@ -119,8 +118,7 @@ class TestWeightedMinHashLSHForest(unittest.TestCase):
         return forest, data
 
     def test__H(self):
-        """
-        Check _H output consistent bytes length given
+        """Check _H output consistent bytes length given
         the same concatenated hash value size
         """
         mg = WeightedMinHashGenerator(100, sample_size=128)

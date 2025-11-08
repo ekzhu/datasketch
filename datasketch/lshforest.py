@@ -7,8 +7,7 @@ from datasketch.minhash import MinHash
 
 
 class MinHashLSHForest:
-    """
-    The LSH Forest for MinHash. It supports top-k query in Jaccard
+    """The LSH Forest for MinHash. It supports top-k query in Jaccard
     similarity.
     Instead of using prefix trees as the `original paper
     <http://ilpubs.stanford.edu:8090/678/1/2005-14.pdf>`_,
@@ -44,8 +43,7 @@ class MinHashLSHForest:
         self.sorted_hashtables = [[] for _ in range(self.l)]
 
     def add(self, key: Hashable, minhash: MinHash) -> None:
-        """
-        Add a unique key, together
+        """Add a unique key, together
         with a MinHash (or weighted MinHash) of the set referenced by the key.
 
         Note:
@@ -66,8 +64,7 @@ class MinHashLSHForest:
             hashtable[H].append(key)
 
     def index(self) -> None:
-        """
-        Index all the keys added so far and make them searchable.
+        """Index all the keys added so far and make them searchable.
         """
         for i, hashtable in enumerate(self.hashtables):
             self.sorted_hashtables[i] = [H for H in hashtable.keys()]
@@ -90,8 +87,7 @@ class MinHashLSHForest:
                     j += 1
 
     def query(self, minhash: MinHash, k: int) -> list[Hashable]:
-        """
-        Return the approximate top-k keys that have the
+        """Return the approximate top-k keys that have the
         (approximately) highest Jaccard similarities to the query set.
 
         Args:
@@ -129,8 +125,7 @@ class MinHashLSHForest:
         return list(results)
 
     def get_minhash_hashvalues(self, key: Hashable) -> np.ndarray:
-        """
-        Returns the hashvalues from the MinHash object that corresponds to the given key in the LSHForest,
+        """Returns the hashvalues from the MinHash object that corresponds to the given key in the LSHForest,
         if it exists. This is useful for when we want to reconstruct the original MinHash
         object to manually check the Jaccard Similarity for the top-k results from a query.
 
@@ -154,8 +149,7 @@ class MinHashLSHForest:
         return hashvalues
 
     def _binary_search(self, n, func):
-        """
-        https://golang.org/src/sort/search.go?s=2247:2287#L49
+        """https://golang.org/src/sort/search.go?s=2247:2287#L49
         """
         i, j = 0, n
         while i < j:
@@ -167,8 +161,7 @@ class MinHashLSHForest:
         return i
 
     def is_empty(self) -> bool:
-        """
-        Check whether there is any searchable keys in the index.
+        """Check whether there is any searchable keys in the index.
         Note that keys won't be searchable until `index` is called.
 
         Returns:
@@ -181,8 +174,7 @@ class MinHashLSHForest:
         return bytes(hs.byteswap().data)
 
     def __contains__(self, key: Hashable) -> bool:
-        """
-        Returns:
+        """Returns:
             bool: True only if the key has been added to the index.
 
         """

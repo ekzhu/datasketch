@@ -28,8 +28,7 @@ else:
 
 @unittest.skipIf(sys.version_info < (3, 6), "Skipping TestAsyncMinHashLSH. Supported Python version >= 3.6")
 class TestAsyncMinHashLSH(aiounittest.AsyncTestCase):
-    """
-    For tests Mongo should be installed on local machine or set right host.
+    """For tests Mongo should be installed on local machine or set right host.
     """
 
     def setUp(self):
@@ -53,8 +52,7 @@ class TestAsyncMinHashLSH(aiounittest.AsyncTestCase):
 
     @unittest.skipIf(not DO_TEST_MONGO, "Skipping test__H_mongo")
     async def test__H_mongo(self):
-        """
-        Check _H output consistent bytes length given
+        """Check _H output consistent bytes length given
         the same concatenated hash value size
         """
         for l in range(2, 128 + 1, 16):
@@ -321,8 +319,7 @@ class TestWeightedMinHashLSH(aiounittest.AsyncTestCase):
 
     @unittest.skipIf(not DO_TEST_MONGO, "Skipping test__H_mongo")
     async def test__H_mongo(self):
-        """
-        Check _H output consistent bytes length given
+        """Check _H output consistent bytes length given
         the same concatenated hash value size
         """
         mg = WeightedMinHashGenerator(100, sample_size=128)

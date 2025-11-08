@@ -13,8 +13,7 @@ from datasketch.storage import _random_name, unordered_storage
 
 
 class AsyncMinHashLSH:
-    """
-    Asynchronous MinHashLSH index.
+    """Asynchronous MinHashLSH index.
 
     :param float threshold: see :class:`datasketch.MinHashLSH`.
     :param int num_perm: see :class:`datasketch.MinHashLSH`.
@@ -168,8 +167,7 @@ class AsyncMinHashLSH:
         await asyncio.gather(*fs)
 
     async def close(self):
-        """
-        Cleanup client resources and disconnect from AsyncMinHashLSH storage.
+        """Cleanup client resources and disconnect from AsyncMinHashLSH storage.
         """
         async with self._lock:
             for t in self.hashtables:
@@ -181,14 +179,12 @@ class AsyncMinHashLSH:
             self._initialized = False
 
     async def insert(self, key, minhash, check_duplication=True):
-        """
-        see :class:`datasketch.MinHashLSH`.
+        """see :class:`datasketch.MinHashLSH`.
         """
         await self._insert(key, minhash, check_duplication=check_duplication, buffer=False)
 
     def insertion_session(self, batch_size=10000):
-        """
-        Create a asynchronous context manager for fast insertion in index.
+        """Create a asynchronous context manager for fast insertion in index.
 
         :param int batch_size: the size of chunks to use in insert_session mode (default=10000).
 
@@ -223,8 +219,7 @@ class AsyncMinHashLSH:
         return AsyncMinHashLSHInsertionSession(self, batch_size=batch_size)
 
     def delete_session(self, batch_size=10000):
-        """
-        Create a asynchronous context manager for fast removal of keys
+        """Create a asynchronous context manager for fast removal of keys
         from index.
 
         :param int batch_size: the size of chunks to use in insert_session mode (default=10000).
@@ -280,8 +275,7 @@ class AsyncMinHashLSH:
         await asyncio.gather(*fs)
 
     async def query(self, minhash):
-        """
-        see :class:`datasketch.MinHashLSH`.
+        """see :class:`datasketch.MinHashLSH`.
         """
         if len(minhash) != self.h:
             raise ValueError("Expecting minhash with length %d, got %d" % (self.h, len(minhash)))
@@ -297,14 +291,12 @@ class AsyncMinHashLSH:
             return list(candidates)
 
     async def has_key(self, key):
-        """
-        see :class:`datasketch.MinHashLSH`.
+        """see :class:`datasketch.MinHashLSH`.
         """
         return await self.keys.has_key(key)
 
     async def remove(self, key):
-        """
-        see :class:`datasketch.MinHashLSH`.
+        """see :class:`datasketch.MinHashLSH`.
         """
         await self._remove(key, buffer=False)
 
@@ -320,8 +312,7 @@ class AsyncMinHashLSH:
         await self.keys.remove(key, buffer=buffer)
 
     async def is_empty(self):
-        """
-        see :class:`datasketch.MinHashLSH`.
+        """see :class:`datasketch.MinHashLSH`.
         """
         for t in self.hashtables:
             if await t.size() == 0:
@@ -347,15 +338,13 @@ class AsyncMinHashLSH:
         return candidates
 
     async def get_counts(self):
-        """
-        see :class:`datasketch.MinHashLSH`.
+        """see :class:`datasketch.MinHashLSH`.
         """
         fs = (hashtable.itemcounts() for hashtable in self.hashtables)
         return await asyncio.gather(*fs)
 
     async def get_subset_counts(self, *keys):
-        """
-        see :class:`datasketch.MinHashLSH`.
+        """see :class:`datasketch.MinHashLSH`.
         """
         key_set = list(set(keys))
         hashtables = [unordered_storage({"type": "dict"}) for _ in range(self.b)]
@@ -367,8 +356,7 @@ class AsyncMinHashLSH:
 
 
 class AsyncMinHashLSHInsertionSession:
-    """
-    Context manager for batch insertion.
+    """Context manager for batch insertion.
     """
 
     def __init__(self, lsh: AsyncMinHashLSH, batch_size: int):
@@ -386,15 +374,13 @@ class AsyncMinHashLSHInsertionSession:
         await asyncio.gather(*fs)
 
     async def insert(self, key, minhash, check_duplication=True):
-        """
-        see :class:`datasketch.MinHashLSH`.
+        """see :class:`datasketch.MinHashLSH`.
         """
         await self.lsh._insert(key, minhash, check_duplication=check_duplication, buffer=True)
 
 
 class AsyncMinHashLSHDeleteSession:
-    """
-    Context manager for batch removal of keys.
+    """Context manager for batch removal of keys.
     """
 
     def __init__(self, lsh: AsyncMinHashLSH, batch_size: int):
@@ -412,7 +398,6 @@ class AsyncMinHashLSHDeleteSession:
         await asyncio.gather(*fs)
 
     async def remove(self, key):
-        """
-        Remove key from LSH index
+        """Remove key from LSH index
         """
         await self.lsh._remove(key, buffer=True)

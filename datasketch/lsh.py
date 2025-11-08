@@ -25,8 +25,7 @@ def _false_negative_probability(threshold, b, r):
 
 
 def _optimal_param(threshold, num_perm, false_positive_weight, false_negative_weight):
-    """
-    Compute the optimal `MinHashLSH` parameter that minimizes the weighted sum
+    """Compute the optimal `MinHashLSH` parameter that minimizes the weighted sum
     of probabilities of false positive and false negative.
     """
     min_error = float("inf")
@@ -44,8 +43,7 @@ def _optimal_param(threshold, num_perm, false_positive_weight, false_negative_we
 
 
 class MinHashLSH:
-    """
-    The :ref:`minhash_lsh` index.
+    """The :ref:`minhash_lsh` index.
     It supports query with `Jaccard similarity`_ threshold.
     Reference: `Chapter 3, Mining of Massive Datasets
     <http://www.mmds.org/>`_.
@@ -208,8 +206,7 @@ class MinHashLSH:
         minhash: Union[MinHash, WeightedMinHash],
         check_duplication: bool = True,
     ):
-        """
-        Insert a key to the index, together with a MinHash or Weighted MinHash
+        """Insert a key to the index, together with a MinHash or Weighted MinHash
         of the set referenced by the key.
 
         Args:
@@ -244,8 +241,7 @@ class MinHashLSH:
         self._merge(other, check_overlap=check_overlap, buffer=False)
 
     def insertion_session(self, buffer_size: int = 50000) -> MinHashLSHInsertionSession:
-        """
-        Create a context manager for fast insertion into this index.
+        """Create a context manager for fast insertion into this index.
 
         Args:
             buffer_size (int): The buffer size for insert_session mode (default=50000).
@@ -280,8 +276,7 @@ class MinHashLSH:
         return MinHashLSHInsertionSession(self, buffer_size=buffer_size)
 
     def deletion_session(self, buffer_size: int = 50000) -> MinHashLSHDeletionSession:
-        """
-        Create a context manager for fast deletion from this index.
+        """Create a context manager for fast deletion from this index.
 
         Args:
             buffer_size (int): The buffer size for deletion operations (default=50000).
@@ -331,8 +326,7 @@ class MinHashLSH:
             hashtable.insert(H, key, buffer=buffer)
 
     def __equivalent(self, other: MinHashLSH) -> bool:
-        """
-        Returns:
+        """Returns:
             bool: If the two MinHashLSH have equal num_perm, number of bands, size of each band then two are equivalent.
 
         """
@@ -353,8 +347,7 @@ class MinHashLSH:
             raise ValueError("Cannot merge MinHashLSH with different initialization parameters.")
 
     def query(self, minhash) -> list[Hashable]:
-        """
-        Giving the MinHash of the query set, retrieve
+        """Giving the MinHash of the query set, retrieve
         the keys that reference sets with Jaccard
         similarities likely greater than the threshold.
 
@@ -422,8 +415,7 @@ class MinHashLSH:
             return list(candidates)
 
     def add_to_query_buffer(self, minhash: Union[MinHash, WeightedMinHash]) -> None:
-        """
-        Giving the MinHash of the query set, buffer
+        """Giving the MinHash of the query set, buffer
         queries to retrieve the keys that references
         sets with Jaccard similarities greater than
         the threshold.
@@ -444,8 +436,7 @@ class MinHashLSH:
             hashtable.add_to_select_buffer([H])
 
     def collect_query_buffer(self) -> list[Hashable]:
-        """
-        Execute and return buffered queries given
+        """Execute and return buffered queries given
         by :meth:`add_to_query_buffer`.
 
         If multiple query MinHash were added to the query buffer,
@@ -467,8 +458,7 @@ class MinHashLSH:
         return list(set.intersection(*collected_result_sets))
 
     def __contains__(self, key: Hashable) -> bool:
-        """
-        Args:
+        """Args:
             key (Hashable): The unique identifier of a set.
 
         Returns:
@@ -480,8 +470,7 @@ class MinHashLSH:
         return key in self.keys
 
     def remove(self, key: Hashable) -> None:
-        """
-        Remove the key from the index.
+        """Remove the key from the index.
 
         Args:
             key (Hashable): The unique identifier of a set.
@@ -493,8 +482,7 @@ class MinHashLSH:
         self._remove(key, buffer=False)
 
     def _remove(self, key: Hashable, buffer: bool = False) -> None:
-        """
-        Internal remove method with optional buffering support.
+        """Internal remove method with optional buffering support.
 
         Args:
             key (Hashable): The unique identifier of a set.
@@ -515,8 +503,7 @@ class MinHashLSH:
         self.keys.remove(key, buffer=buffer)
 
     def is_empty(self) -> bool:
-        """
-        Returns:
+        """Returns:
             bool: `True` only if the index is empty.
 
         """
@@ -545,8 +532,7 @@ class MinHashLSH:
             return candidates
 
     def get_counts(self) -> list[dict[Hashable, int]]:
-        """
-        Returns a list of length :attr:`b` (i.e., number of hash tables) with
+        """Returns a list of length :attr:`b` (i.e., number of hash tables) with
         each element a dictionary mapping hash table bucket key to the number
         of indexed keys stored under each bucket.
 
@@ -557,8 +543,7 @@ class MinHashLSH:
         return [hashtable.itemcounts() for hashtable in self.hashtables]
 
     def get_subset_counts(self, *keys: Hashable) -> list[dict[Hashable, int]]:
-        """
-        Returns the bucket allocation counts (see :meth:`get_counts` above)
+        """Returns the bucket allocation counts (see :meth:`get_counts` above)
         restricted to the list of keys given.
 
         Args:
@@ -608,8 +593,7 @@ class MinHashLSHInsertionSession:
         minhash: Union[MinHash, WeightedMinHash],
         check_duplication=True,
     ) -> None:
-        """
-        Insert a unique key to the index, together
+        """Insert a unique key to the index, together
         with a MinHash (or weighted MinHash) of the set referenced by
         the key.
 
@@ -646,8 +630,7 @@ class MinHashLSHDeletionSession:
             hashtable.empty_buffer()
 
     def remove(self, key: Hashable) -> None:
-        """
-        Remove a key from the index.
+        """Remove a key from the index.
 
         Args:
             key (Hashable): The unique identifier to remove.

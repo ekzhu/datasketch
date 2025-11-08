@@ -368,8 +368,7 @@ if cassandra is not None:
         QUERY_INSERT = "INSERT INTO {} (key, value, ts) VALUES (?, ?, ?)"
 
         def __init__(self, cassandra_params, name, buffer_size):
-            """
-            Constructor.
+            """Constructor.
 
             :param dict[str, any] cassandra_params: Cassandra parameters
             :param bytes name: the suffix to be used for the table name
@@ -425,8 +424,7 @@ if cassandra is not None:
 
         @property
         def buffer_size(self):
-            """
-            Get the buffer size.
+            """Get the buffer size.
 
             :rtype: int
             :return: the buffer size
@@ -435,8 +433,7 @@ if cassandra is not None:
 
         @buffer_size.setter
         def buffer_size(self, value):
-            """
-            Set the buffer size and propagate it to the underlying client.
+            """Set the buffer size and propagate it to the underlying client.
 
             :param int value: buffer size
             """
@@ -444,8 +441,7 @@ if cassandra is not None:
 
         @staticmethod
         def split_sequence(iterable, size):
-            """
-            Generator to split an iterable in chunks of given size.
+            """Generator to split an iterable in chunks of given size.
 
             :param iterable iterable: the iterable to split
             :param int size: the size of a chunk
@@ -459,8 +455,7 @@ if cassandra is not None:
                 item = list(itertools.islice(iterator, size))
 
         def _select(self, statements_and_parameters):
-            """
-            Execute a list of statements and parameters returning data.
+            """Execute a list of statements and parameters returning data.
 
             :param iterable[tuple] statements_and_parameters: list of statements and parameters
             :rtype: list[Row]
@@ -483,8 +478,7 @@ if cassandra is not None:
             return ret
 
         def _execute(self, statements_and_parameters):
-            """
-            Execute a list of statements and parameters NOT returning data.
+            """Execute a list of statements and parameters NOT returning data.
 
             :param iterable[tuple] statements_and_parameters: list of statements and parameters
             """
@@ -497,8 +491,7 @@ if cassandra is not None:
                 )
 
         def _buffer(self, statements_and_parameters):
-            """
-            Buffer (and execute) statements and parameters NOT returning data.
+            """Buffer (and execute) statements and parameters NOT returning data.
 
             :param iterable[tuple] statements_and_parameters: list of statements and parameters
             """
@@ -507,8 +500,7 @@ if cassandra is not None:
                 self.empty_buffer()
 
         def empty_buffer(self):
-            """
-            Empty the buffer of statements and parameters.
+            """Empty the buffer of statements and parameters.
             """
             # copy the underlying list in a python2/3 compatible way
             buffer = list(self._statements_and_parameters)
@@ -517,8 +509,7 @@ if cassandra is not None:
             self._execute(buffer)
 
         def insert(self, key, vals, buffer=False):
-            """
-            Insert an iterable of values with the same key.
+            """Insert an iterable of values with the same key.
 
             :param byte|str key: the key
             :param iterable[byte|str] vals: the iterable of values
@@ -533,8 +524,7 @@ if cassandra is not None:
                 self._execute(statements_and_parameters)
 
         def upsert(self, key, vals, buffer=False):
-            """
-            Upsert an iterable of values with the same key.
+            """Upsert an iterable of values with the same key.
 
             Note: this is used when treating a Cassandra partition as a set. Since we upsert data
                 we never store duplicates. In this case the timestamp loses its meaning as we
@@ -554,8 +544,7 @@ if cassandra is not None:
                 self._execute(statements_and_parameters)
 
         def delete_keys(self, keys, buffer=False):
-            """
-            Delete a key (and all its values).
+            """Delete a key (and all its values).
 
             :param iterable[byte|str] keys: the key
             :param boolean buffer: whether the delete statements should be buffered
@@ -567,8 +556,7 @@ if cassandra is not None:
                 self._execute(statements_and_parameters)
 
         def delete(self, key, val, buffer=False):
-            """
-            Delete a value from a key.
+            """Delete a value from a key.
 
             :param byte|str key: the key
             :param byte|str val: the value
@@ -581,8 +569,7 @@ if cassandra is not None:
                 self._execute(statements_and_parameters)
 
         def get_keys(self):
-            """
-            Get all the keys.
+            """Get all the keys.
 
             Note: selecting all keys in Cassandra via "SELECT DISTINCT key FROM table" is bound to
                 time out since all nodes need to be contacted. To avoid this, we paginate through
@@ -604,8 +591,7 @@ if cassandra is not None:
             return keys
 
         def add_to_select_buffer(self, keys):
-            """
-            Buffer query statements and parameters with decoders to be used on returned data.
+            """Buffer query statements and parameters with decoders to be used on returned data.
 
             :param iterable[byte|str] keys: the keys
             """
@@ -615,8 +601,7 @@ if cassandra is not None:
             self._select_statements_and_parameters_with_decoders.extend(statements_and_parameters_with_decoders)
 
         def collect_select_buffer(self):
-            """
-            Perform buffered select queries
+            """Perform buffered select queries
 
             :return: list of list of query results
             """
@@ -636,8 +621,7 @@ if cassandra is not None:
             return [[x[0] for x in sorted(v, key=operator.itemgetter(1))] for v in ret.values()]
 
         def select(self, keys):
-            """
-            Select all values for the given keys.
+            """Select all values for the given keys.
 
             :param iterable[byte|str] keys: the keys
             :rtype: dict[byte|str,list[byte|str]
@@ -651,8 +635,7 @@ if cassandra is not None:
             return {k: [x[0] for x in sorted(v, key=operator.itemgetter(1))] for k, v in ret.items()}
 
         def select_count(self, keys):
-            """
-            Count the values for each of the provided keys.
+            """Count the values for each of the provided keys.
 
             :param iterable[byte|str] keys: list of keys
             :rtype: dict[byte|str,int]
@@ -666,8 +649,7 @@ if cassandra is not None:
             }
 
         def one(self, key):
-            """
-            Select one single value of the given key.
+            """Select one single value of the given key.
 
             :param byte|str key: the key
             :rtype: byte|str|None
@@ -680,8 +662,7 @@ if cassandra is not None:
             return None
 
     class CassandraStorage:
-        """
-        Storage implementation using Cassandra.
+        """Storage implementation using Cassandra.
 
         Note: like other implementations, each storage has its own client. Unlike other
             implementations, all storage instances share one session and can potentially share the
@@ -691,8 +672,7 @@ if cassandra is not None:
         DEFAULT_BUFFER_SIZE = 5000
 
         def __init__(self, config, name=None, buffer_size=None):
-            """
-            Constructor.
+            """Constructor.
 
             :param dict[str, any] config: configuration following the following format:
                 {
@@ -723,8 +703,7 @@ if cassandra is not None:
 
         @staticmethod
         def _parse_config(config):
-            """
-            Parse a configuration dictionary, optionally fetching data from env variables.
+            """Parse a configuration dictionary, optionally fetching data from env variables.
 
             :param dict[str, any] config: the configuration
             :rtype: dict[str, str]
@@ -740,8 +719,7 @@ if cassandra is not None:
 
         @property
         def buffer_size(self):
-            """
-            Get the buffer size.
+            """Get the buffer size.
 
             :rtype: int
             :return: the buffer size
@@ -750,8 +728,7 @@ if cassandra is not None:
 
         @buffer_size.setter
         def buffer_size(self, value):
-            """
-            Set the buffer size and propagate it to the underlying client.
+            """Set the buffer size and propagate it to the underlying client.
 
             :param int value: buffer size
             """
@@ -759,8 +736,7 @@ if cassandra is not None:
             self._client.buffer_size = value
 
         def __getstate__(self):
-            """
-            Get a pickable state by removing unpickable objects.
+            """Get a pickable state by removing unpickable objects.
 
             :rtype: dict[str, any]
             :return: the state
@@ -770,8 +746,7 @@ if cassandra is not None:
             return state
 
         def __setstate__(self, state):
-            """
-            Set the state by reconnecting ephemeral objects.
+            """Set the state by reconnecting ephemeral objects.
 
             :param dict[str, any] state: the state to restore
             """
@@ -779,8 +754,7 @@ if cassandra is not None:
             self.__init__(self._config, name=self._name, buffer_size=self._buffer_size)
 
     class CassandraListStorage(OrderedStorage, CassandraStorage):
-        """
-        OrderedStorage storage implementation using Cassandra as backend.
+        """OrderedStorage storage implementation using Cassandra as backend.
 
         Note: Since we need to (i) select and delete values by both 'key' and by 'key and value',
             and (ii) allow duplicate values, we store a monotonically increasing timestamp as
@@ -839,8 +813,7 @@ if cassandra is not None:
             self._client.empty_buffer()
 
     class CassandraSetStorage(UnorderedStorage, CassandraListStorage):
-        """
-        OrderedStorage storage implementation using Cassandra as backend.
+        """OrderedStorage storage implementation using Cassandra as backend.
 
         Note: since we are interested in keeping duplicates or ordered data, we upsert the data
             ignoring what the timestamp actually means.

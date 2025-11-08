@@ -30,8 +30,7 @@ def _false_negative_probability(threshold, b, r):
 
 
 def _optimal_param(threshold, num_perm, false_positive_weight, false_negative_weight):
-    """
-    Compute the optimal `MinHashLSH` parameter that minimizes the weighted sum
+    """Compute the optimal `MinHashLSH` parameter that minimizes the weighted sum
     of probabilities of false positive and false negative.
     """
     min_error = float("inf")
@@ -51,8 +50,7 @@ def _optimal_param(threshold, num_perm, false_positive_weight, false_negative_we
 if pybloomfilter is not None:
 
     class BloomTable:
-        """
-        Interface to a Bloom Filter meant to model a single band of the MinHash signature matrix
+        """Interface to a Bloom Filter meant to model a single band of the MinHash signature matrix
 
         Args:
                 item_count (int): Number of items expected to be inserted (size of dataset). Used to create Bloom filter.
@@ -85,8 +83,7 @@ if pybloomfilter is not None:
                 )
 
         def insert(self, hashvalues: list[int]) -> None:
-            """
-            Takes as input the indices for a single band and inserts them into the corresponding bit arrays
+            """Takes as input the indices for a single band and inserts them into the corresponding bit arrays
 
             Args:
                     hashvalues (list[int]): The hashvalues from a single band of a MinHash object.
@@ -99,8 +96,7 @@ if pybloomfilter is not None:
             self.bloom_filter.add(x)
 
         def query(self, hashvalues: list[int]) -> bool:
-            """
-            Takes as input the indices for a single band and queries them against the corresponding arrays
+            """Takes as input the indices for a single band and queries them against the corresponding arrays
             returns True if the each query returns True, otherwise returns False
 
             Args:
@@ -118,8 +114,7 @@ else:
 
 
 class MinHashLSHBloom:
-    """
-    The :ref:`lsh_bloom` index.
+    """The :ref:`lsh_bloom` index.
     It supports query with `Jaccard similarity`_ threshold.
     Reference: `LSHBloom paper
     <https://arxiv.org/abs/2411.04257>`_.
@@ -249,8 +244,7 @@ class MinHashLSHBloom:
         self.hashranges = [(i * self.r, (i + 1) * self.r) for i in range(self.b)]
 
     def insert(self, minhash: MinHash):
-        """
-        Insert the MinHash or Weighted MinHash
+        """Insert the MinHash or Weighted MinHash
         of a set to the index.
 
         Args:
@@ -269,8 +263,7 @@ class MinHashLSHBloom:
             hashtable.insert(H)
 
     def query(self, minhash) -> bool:
-        """
-        Given the MinHash of the query set, determine
+        """Given the MinHash of the query set, determine
         whether any previously inserted sets have
         Jaccard similarity with the query that is
         likely greater than the threshold.

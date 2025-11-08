@@ -1,5 +1,4 @@
-"""
-This module implements the b-bit MinHash.
+"""This module implements the b-bit MinHash.
 http://research.microsoft.com/pubs/120078/wfc0398-liPS.pdf
 
 b-bit MinHash reduces storage space by storing only the b lowest bits
@@ -12,8 +11,7 @@ import numpy as np
 
 
 class bBitMinHash:
-    """
-    The b-bit MinHash object
+    """The b-bit MinHash object
     """
 
     __slots__ = ("seed", "b", "r", "hashvalues")
@@ -27,8 +25,7 @@ class bBitMinHash:
     _serial_fmt_block = "Q"
 
     def __init__(self, minhash, b=1, r=0.0):
-        """
-        Initialize a b-bit MinHash given an existing full MinHash
+        """Initialize a b-bit MinHash given an existing full MinHash
         object and parameter b - the number of bits to store for
         each minimum hashed values in the MinHash object.
         """
@@ -45,8 +42,7 @@ class bBitMinHash:
         self.r = r
 
     def __eq__(self, other):
-        """
-        Check for full equality of two b-bit MinHash objects.
+        """Check for full equality of two b-bit MinHash objects.
         """
         return (
             type(self) is type(other)
@@ -57,8 +53,7 @@ class bBitMinHash:
         )
 
     def jaccard(self, other):
-        """
-        Estimate the Jaccard similarity (resemblance) between this b-bit
+        """Estimate the Jaccard similarity (resemblance) between this b-bit
         MinHash and the other.
         """
         if self.b != other.b:
@@ -79,14 +74,12 @@ class bBitMinHash:
         return (raw_est - c1) / (1 - c2)
 
     def bytesize(self):
-        """
-        Get the serialized size of this b-bit MinHash in number of bytes.
+        """Get the serialized size of this b-bit MinHash in number of bytes.
         """
         return self._bytesize()[-1]
 
     def __getstate__(self):
-        """
-        This function is called when pickling the b-bit MinHash object.
+        """This function is called when pickling the b-bit MinHash object.
         Returns a bytearray which will then be pickled.
         """
         slot_size, n, num_blocks, total = self._bytesize()
@@ -111,8 +104,7 @@ class bBitMinHash:
         return buffer
 
     def __setstate__(self, buf):
-        """
-        This function is called when unpickling the b-bit MinHash object.
+        """This function is called when unpickling the b-bit MinHash object.
         Initialize the object with data in the buffer.
         """
         try:
@@ -136,8 +128,7 @@ class bBitMinHash:
                 self.hashvalues[start + j] = np.uint32(hv)
 
     def _calc_a(self, r, b):
-        """
-        Compute the function A(r, b)
+        """Compute the function A(r, b)
         """
         if r == 0.0:
             # Find the limit of A(r, b) as r -> 0.
@@ -145,8 +136,7 @@ class bBitMinHash:
         return r * (1 - r) ** (2**b - 1) / (1 - (1 - r) ** (2 * b))
 
     def _calc_c(self, a1, a2, r1, r2):
-        """
-        Compute the functions C1 and C2
+        """Compute the functions C1 and C2
         """
         if r1 == 0.0 and r2 == 0.0:
             # Find the limits of C1 and C2 as r1 -> 0 and r2 -> 0

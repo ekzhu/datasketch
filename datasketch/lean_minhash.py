@@ -126,8 +126,7 @@ class LeanMinHash(MinHash):
         return seed_size + length_size + len(self) * hashvalue_size
 
     def serialize(self, buf, byteorder="@") -> None:
-        """
-        Serialize this lean MinHash and store the result in an allocated buffer.
+        """Serialize this lean MinHash and store the result in an allocated buffer.
 
         Args:
             buf (buffer): `buf` must implement the `buffer`_ interface.
@@ -179,8 +178,7 @@ class LeanMinHash(MinHash):
 
     @classmethod
     def deserialize(cls, buf, byteorder="@") -> LeanMinHash:
-        """
-        Deserialize a lean MinHash from a buffer.
+        """Deserialize a lean MinHash from a buffer.
 
         Args:
             buf (buffer): `buf` must implement the `buffer`_ interface.

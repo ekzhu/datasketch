@@ -1,5 +1,4 @@
-"""
-Test utilities.
+"""Test utilities.
 """
 
 

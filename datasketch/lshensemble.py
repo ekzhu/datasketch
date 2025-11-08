@@ -12,8 +12,7 @@ from datasketch.storage import _random_name
 
 
 def _false_positive_probability(threshold, b, r, xq):
-    """
-    Compute the false positive probability given the containment threshold.
+    """Compute the false positive probability given the containment threshold.
     xq is the ratio of x/q.
     """
     _probability = lambda t: 1 - (1 - (t / (1 + xq - t)) ** float(r)) ** float(b)
@@ -25,8 +24,7 @@ def _false_positive_probability(threshold, b, r, xq):
 
 
 def _false_negative_probability(threshold, b, r, xq):
-    """
-    Compute the false negative probability given the containment threshold
+    """Compute the false negative probability given the containment threshold
     """
     _probability = lambda t: 1 - (1 - (1 - (t / (1 + xq - t)) ** float(r)) ** float(b))
     if xq >= 1.0:
@@ -39,8 +37,7 @@ def _false_negative_probability(threshold, b, r, xq):
 
 
 def _optimal_param(threshold, num_perm, max_r, xq, false_positive_weight, false_negative_weight):
-    """
-    Compute the optimal parameters that minimizes the weighted sum
+    """Compute the optimal parameters that minimizes the weighted sum
     of probabilities of false positive and false negative.
     xq is the ratio of x/q.
     """
@@ -60,8 +57,7 @@ def _optimal_param(threshold, num_perm, max_r, xq, false_positive_weight, false_
 
 
 class MinHashLSHEnsemble:
-    """
-    The :ref:`minhash_lsh_ensemble` index. It supports
+    """The :ref:`minhash_lsh_ensemble` index. It supports
     :ref:`containment` queries.
     The implementation is based on
     `E. Zhu et al. <http://www.vldb.org/pvldb/vol9/p1185-zhu.pdf>`_.
@@ -189,8 +185,7 @@ class MinHashLSHEnsemble:
         return config
 
     def index(self, entries: Iterable[tuple[Hashable, MinHash, int]]) -> None:
-        """
-        Index all sets given their keys, MinHashes, and sizes.
+        """Index all sets given their keys, MinHashes, and sizes.
         It can be called only once after the index is created.
 
         Args:
@@ -230,8 +225,7 @@ class MinHashLSHEnsemble:
                 self.indexes[curr_part][r].insert(key, minhash)
 
     def query(self, minhash: MinHash, size: int) -> Generator[Hashable, None, None]:
-        """
-        Giving the MinHash and size of the query set, retrieve
+        """Giving the MinHash and size of the query set, retrieve
         keys that references sets with containment with respect to
         the query set greater than the threshold.
 
@@ -252,8 +246,7 @@ class MinHashLSHEnsemble:
                 yield key
 
     def __contains__(self, key: Hashable) -> bool:
-        """
-        Args:
+        """Args:
             key (hashable): The unique identifier of a set.
 
         Returns:
@@ -263,8 +256,7 @@ class MinHashLSHEnsemble:
         return any(any(key in index[r] for r in index) for index in self.indexes)
 
     def is_empty(self) -> bool:
-        """
-        Returns:
+        """Returns:
             bool: Check if the index is empty.
 
         """
