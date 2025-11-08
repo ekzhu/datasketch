@@ -1,6 +1,7 @@
 set shell := ["bash", "-lc"]
-export CACHE_ROOT := "$HOME/.cache/datasketch/benchmark_v2"
+export CACHE_ROOT := `echo ~/.cache/datasketch/benchmark_v2`
 
+# Default target: list available recipes.
 default:
 	@just --list
 
@@ -30,11 +31,11 @@ list-datasets:
 #          just sync my-dataset with_ground_truth=""   (to omit the flag)
 #          just sync my-dataset extra_flags="--limit 100"
 sync dataset with_ground_truth="--with-ground-truth" memmap="--memmap" extra_flags="":
-	uv run python -m benchmark_v2 datasets sync {{dataset}} --cache-root "$CACHE_ROOT" {{with_ground_truth}} {{memmap}} {{extra_flags}}
+	uv run python -m benchmark_v2 datasets sync {{dataset}} --cache-root {{CACHE_ROOT}} {{with_ground_truth}} {{memmap}} {{extra_flags}}
 
 # Example: just sync-all
 #          just sync-all workers="--workers 8"
 #          just sync-all with_ground_truth="" memmap=""
 sync-all workers="" with_ground_truth="--with-ground-truth" memmap="--memmap" extra_flags="":
-	uv run python -m benchmark_v2 datasets sync-all --cache-root "$CACHE_ROOT" {{with_ground_truth}} {{memmap}} {{workers}} {{extra_flags}}
+	uv run python -m benchmark_v2 datasets sync-all --cache-root {{CACHE_ROOT}} {{with_ground_truth}} {{memmap}} {{workers}} {{extra_flags}}
 
