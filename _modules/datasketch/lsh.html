@@ -377,6 +377,42 @@
         <span class="k">return</span> <span class="n">MinHashLSHInsertionSession</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">buffer_size</span><span class="o">=</span><span class="n">buffer_size</span><span class="p">)</span></div>
 
 
+<div class="viewcode-block" id="MinHashLSH.deletion_session">
+<a class="viewcode-back" href="../../documentation.html#datasketch.MinHashLSH.deletion_session">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">deletion_session</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">buffer_size</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">50000</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">&quot;MinHashLSHDeletionSession&quot;</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Create a context manager for fast deletion from this index.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            buffer_size (int): The buffer size for deletion operations (default=50000).</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            MinHashLSHDeletionSession: The context manager.</span>
+
+<span class="sd">        Example:</span>
+
+<span class="sd">            Delete keys from a Redis-backed index using a session:</span>
+
+<span class="sd">            .. code-block:: python</span>
+
+<span class="sd">                from datasketch import MinHashLSH</span>
+
+<span class="sd">                lsh = MinHashLSH(threshold=0.5, num_perm=128, storage_config={</span>
+<span class="sd">                    &#39;type&#39;: &#39;redis&#39;,</span>
+<span class="sd">                    &#39;redis&#39;: {&#39;host&#39;: &#39;localhost&#39;, &#39;port&#39;: 6379},</span>
+<span class="sd">                })</span>
+
+<span class="sd">                # ... insert some data ...</span>
+
+<span class="sd">                keys_to_delete = [&quot;key1&quot;, &quot;key2&quot;, &quot;key3&quot;]</span>
+<span class="sd">                with lsh.deletion_session() as session:</span>
+<span class="sd">                    for key in keys_to_delete:</span>
+<span class="sd">                        session.remove(key)</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">MinHashLSHDeletionSession</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">buffer_size</span><span class="o">=</span><span class="n">buffer_size</span><span class="p">)</span></div>
+
+
     <span class="k">def</span><span class="w"> </span><span class="nf">_insert</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">key</span><span class="p">:</span> <span class="n">Hashable</span><span class="p">,</span>
@@ -584,16 +620,29 @@
 <span class="sd">            ValueError: If the key does not exist.</span>
 
 <span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_remove</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="n">buffer</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span></div>
+
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_remove</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">:</span> <span class="n">Hashable</span><span class="p">,</span> <span class="n">buffer</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Internal remove method with optional buffering support.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            key (Hashable): The unique identifier of a set.</span>
+<span class="sd">            buffer (bool): If True, buffer the removal operations.</span>
+
+<span class="sd">        Raises:</span>
+<span class="sd">            ValueError: If the key does not exist.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">prepickle</span><span class="p">:</span>
             <span class="n">key</span> <span class="o">=</span> <span class="n">pickle</span><span class="o">.</span><span class="n">dumps</span><span class="p">(</span><span class="n">key</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">key</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">keys</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;The given key does not exist&quot;</span><span class="p">)</span>
         <span class="k">for</span> <span class="n">H</span><span class="p">,</span> <span class="n">hashtable</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">keys</span><span class="p">[</span><span class="n">key</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">hashtables</span><span class="p">):</span>
-            <span class="n">hashtable</span><span class="o">.</span><span class="n">remove_val</span><span class="p">(</span><span class="n">H</span><span class="p">,</span> <span class="n">key</span><span class="p">)</span>
+            <span class="n">hashtable</span><span class="o">.</span><span class="n">remove_val</span><span class="p">(</span><span class="n">H</span><span class="p">,</span> <span class="n">key</span><span class="p">,</span> <span class="n">buffer</span><span class="o">=</span><span class="n">buffer</span><span class="p">)</span>
             <span class="k">if</span> <span class="ow">not</span> <span class="n">hashtable</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">H</span><span class="p">):</span>
-                <span class="n">hashtable</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="n">H</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">keys</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="n">key</span><span class="p">)</span></div>
-
+                <span class="n">hashtable</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="n">H</span><span class="p">,</span> <span class="n">buffer</span><span class="o">=</span><span class="n">buffer</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">keys</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="n">buffer</span><span class="o">=</span><span class="n">buffer</span><span class="p">)</span>
 
 <div class="viewcode-block" id="MinHashLSH.is_empty">
 <a class="viewcode-back" href="../../documentation.html#datasketch.MinHashLSH.is_empty">[docs]</a>
@@ -710,6 +759,42 @@
 <span class="sd">            minhash (Union[MinHash, WeightedMinhash]): The MinHash of the set.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">lsh</span><span class="o">.</span><span class="n">_insert</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="n">minhash</span><span class="p">,</span> <span class="n">check_duplication</span><span class="o">=</span><span class="n">check_duplication</span><span class="p">,</span> <span class="n">buffer</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+
+<span class="k">class</span><span class="w"> </span><span class="nc">MinHashLSHDeletionSession</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Context manager for batch deletion of documents from a MinHashLSH.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        lsh (MinHashLSH): The MinHashLSH to delete from.</span>
+<span class="sd">        buffer_size (int): The buffer size for deletion operations.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">lsh</span><span class="p">:</span> <span class="n">MinHashLSH</span><span class="p">,</span> <span class="n">buffer_size</span><span class="p">:</span> <span class="nb">int</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">lsh</span> <span class="o">=</span> <span class="n">lsh</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">lsh</span><span class="o">.</span><span class="n">buffer_size</span> <span class="o">=</span> <span class="n">buffer_size</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__enter__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">&quot;MinHashLSHDeletionSession&quot;</span><span class="p">:</span>
+        <span class="k">return</span> <span class="bp">self</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__exit__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">exc_type</span><span class="p">,</span> <span class="n">exc_val</span><span class="p">,</span> <span class="n">exc_tb</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">close</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">lsh</span><span class="o">.</span><span class="n">keys</span><span class="o">.</span><span class="n">empty_buffer</span><span class="p">()</span>
+        <span class="k">for</span> <span class="n">hashtable</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">lsh</span><span class="o">.</span><span class="n">hashtables</span><span class="p">:</span>
+            <span class="n">hashtable</span><span class="o">.</span><span class="n">empty_buffer</span><span class="p">()</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">remove</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">:</span> <span class="n">Hashable</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Remove a key from the index.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            key (Hashable): The unique identifier to remove.</span>
+
+<span class="sd">        Raises:</span>
+<span class="sd">            ValueError: If the key does not exist.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">lsh</span><span class="o">.</span><span class="n">_remove</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="n">buffer</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 </pre></div>
 
            </div>

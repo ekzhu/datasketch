@@ -107,6 +107,7 @@
 <li class="toctree-l4"><a class="reference internal" href="#datasketch.MinHashLSH.insert"><code class="docutils literal notranslate"><span class="pre">MinHashLSH.insert()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="#datasketch.MinHashLSH.merge"><code class="docutils literal notranslate"><span class="pre">MinHashLSH.merge()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="#datasketch.MinHashLSH.insertion_session"><code class="docutils literal notranslate"><span class="pre">MinHashLSH.insertion_session()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#datasketch.MinHashLSH.deletion_session"><code class="docutils literal notranslate"><span class="pre">MinHashLSH.deletion_session()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="#datasketch.MinHashLSH.query"><code class="docutils literal notranslate"><span class="pre">MinHashLSH.query()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="#datasketch.MinHashLSH.add_to_query_buffer"><code class="docutils literal notranslate"><span class="pre">MinHashLSH.add_to_query_buffer()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="#datasketch.MinHashLSH.collect_query_buffer"><code class="docutils literal notranslate"><span class="pre">MinHashLSH.collect_query_buffer()</span></code></a></li>
@@ -1154,6 +1155,40 @@ Other initialization parameters threshold, weights, storage_config, prepickle an
 <span class="k">with</span> <span class="n">lsh</span><span class="o">.</span><span class="n">insertion_session</span><span class="p">()</span> <span class="k">as</span> <span class="n">session</span><span class="p">:</span>
     <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">m</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">minhashes</span><span class="p">):</span>
         <span class="n">session</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="n">m</span><span class="p">)</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="datasketch.MinHashLSH.deletion_session">
+<span class="sig-name descname"><span class="pre">deletion_session</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">buffer_size</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">50000</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">MinHashLSHDeletionSession</span></span></span><a class="reference internal" href="_modules/datasketch/lsh.html#MinHashLSH.deletion_session"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#datasketch.MinHashLSH.deletion_session" title="Link to this definition"></a></dt>
+<dd><p>Create a context manager for fast deletion from this index.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>buffer_size</strong> (<em>int</em>) – The buffer size for deletion operations (default=50000).</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>The context manager.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>MinHashLSHDeletionSession</p>
+</dd>
+</dl>
+<p class="rubric">Example</p>
+<p>Delete keys from a Redis-backed index using a session:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">datasketch</span><span class="w"> </span><span class="kn">import</span> <span class="n">MinHashLSH</span>
+
+<span class="n">lsh</span> <span class="o">=</span> <span class="n">MinHashLSH</span><span class="p">(</span><span class="n">threshold</span><span class="o">=</span><span class="mf">0.5</span><span class="p">,</span> <span class="n">num_perm</span><span class="o">=</span><span class="mi">128</span><span class="p">,</span> <span class="n">storage_config</span><span class="o">=</span><span class="p">{</span>
+    <span class="s1">&#39;type&#39;</span><span class="p">:</span> <span class="s1">&#39;redis&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;redis&#39;</span><span class="p">:</span> <span class="p">{</span><span class="s1">&#39;host&#39;</span><span class="p">:</span> <span class="s1">&#39;localhost&#39;</span><span class="p">,</span> <span class="s1">&#39;port&#39;</span><span class="p">:</span> <span class="mi">6379</span><span class="p">},</span>
+<span class="p">})</span>
+
+<span class="c1"># ... insert some data ...</span>
+
+<span class="n">keys_to_delete</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;key1&quot;</span><span class="p">,</span> <span class="s2">&quot;key2&quot;</span><span class="p">,</span> <span class="s2">&quot;key3&quot;</span><span class="p">]</span>
+<span class="k">with</span> <span class="n">lsh</span><span class="o">.</span><span class="n">deletion_session</span><span class="p">()</span> <span class="k">as</span> <span class="n">session</span><span class="p">:</span>
+    <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">keys_to_delete</span><span class="p">:</span>
+        <span class="n">session</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="n">key</span><span class="p">)</span>
 </pre></div>
 </div>
 </dd></dl>
