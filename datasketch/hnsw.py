@@ -194,8 +194,7 @@ class HNSW(MutableMapping):
             # Deduplication is handled by the distance function.
             data = np.random.randint(0, 100, size=(1000, 10))
             jaccard_distance = lambda x, y: (
-                1.0 - float(len(np.intersect1d(x, y, assume_unique=False)))
-                / float(len(np.union1d(x, y)))
+                1.0 - float(len(np.intersect1d(x, y, assume_unique=False))) / float(len(np.union1d(x, y)))
             )
             index = HNSW(distance_func=jaccard_distance)
             for i, d in enumerate(data):
@@ -826,18 +825,20 @@ class HNSW(MutableMapping):
         ef: Optional[int] = None,
     ) -> None:
         """Remove a point from the index. This removal algorithm is based on
-        the discussion on `hnswlib issue #4`_. There are two versions:
+        the discussion on `hnswlib issue #4`_.
+
+        There are two versions:
 
         * *soft remove*: the point is marked as removed from the index, but its
-          data and out-going edges are kept. Future queries will not return
-          the point and no new edge will direct to this point,
-          but the point will still be used for graph traversal.
-          This is the default behavior.
+        data and out-going edges are kept. Future queries will not return
+        the point and no new edge will direct to this point,
+        but the point will still be used for graph traversal.
+        This is the default behavior.
         * *hard remove*: the point is removed from the index and its data and
-          out-going edges are also removed. Points with out-going edges pointing
-          to the deleted point will have their out-going edges
-          re-assigned using the same pruning algorithm as :meth:`insert` during
-          point update.
+        out-going edges are also removed. Points with out-going edges pointing
+        to the deleted point will have their out-going edges
+        re-assigned using the same pruning algorithm as :meth:`insert` during
+        point update.
 
         In both versions, if the deleted point is the current entry point,
         the entry point will be re-assigned to the next point in the highest

@@ -1,4 +1,4 @@
-"""This module is for creating optimal partition intervals for LSH Ensemble:
+"""Create optimal partition intervals for LSH Ensemble.
 
     [l1, u1], [l2, u2], ...
 

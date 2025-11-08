@@ -155,7 +155,7 @@ class HyperLogLog:
         if abs(e - small_range_threshold) / small_range_threshold < 0.15:
             warnings.warn(
                 "Warning: estimate is close to error correction threshold. "
-                 "Output may not satisfy HyperLogLog accuracy guarantee."
+                "Output may not satisfy HyperLogLog accuracy guarantee."
             )
         if e <= small_range_threshold:
             num_zero = self.m - np.count_nonzero(self.reg)
@@ -320,7 +320,8 @@ class HyperLogLog:
 
 
 class HyperLogLogPlusPlus(HyperLogLog):
-    """HyperLogLog++ is an enhanced HyperLogLog `from Google
+    """HyperLogLog++ is an enhanced HyperLogLog `from Google.
+
     <http://research.google.com/pubs/pub40671.html>`_.
     Main changes from the original HyperLogLog:
 
