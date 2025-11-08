@@ -258,9 +258,7 @@ class MinHash:
             bool: If the current MinHash is empty - at the state of just
                 initialized.
         """
-        if np.any(self.hashvalues != _max_hash):
-            return False
-        return True
+        return not np.any(self.hashvalues != _max_hash)
 
     def clear(self) -> None:
         """

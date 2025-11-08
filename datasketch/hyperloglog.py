@@ -203,9 +203,7 @@ class HyperLogLog:
             bool: True if the current HyperLogLog is empty - at the state of just
             initialized.
         """
-        if np.any(self.reg):
-            return False
-        return True
+        return not np.any(self.reg)
 
     def clear(self) -> None:
         """
