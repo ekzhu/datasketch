@@ -257,7 +257,7 @@ class MinHashLSHEnsemble:
 
     def is_empty(self) -> bool:
         """Returns:
-            bool: Check if the index is empty.
+        bool: Check if the index is empty.
 
         """
         return all(all(index[r].is_empty() for r in index) for index in self.indexes)

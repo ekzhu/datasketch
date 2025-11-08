@@ -175,7 +175,7 @@ class MinHashLSHForest:
 
     def __contains__(self, key: Hashable) -> bool:
         """Returns:
-            bool: True only if the key has been added to the index.
+        bool: True only if the key has been added to the index.
 
         """
         return key in self.keys

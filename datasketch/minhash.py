@@ -261,8 +261,8 @@ class MinHash:
 
     def is_empty(self) -> bool:
         """Returns:
-            bool: If the current MinHash is empty - at the state of just
-                initialized.
+        bool: If the current MinHash is empty - at the state of just
+            initialized.
 
         """
         return not np.any(self.hashvalues != _max_hash)
@@ -275,7 +275,7 @@ class MinHash:
 
     def copy(self) -> MinHash:
         """Returns:
-            MinHash: a copy of this MinHash by exporting its state.
+        MinHash: a copy of this MinHash by exporting its state.
 
         """
         return MinHash(
@@ -287,14 +287,14 @@ class MinHash:
 
     def __len__(self) -> int:
         """Returns:
-            int: The number of hash values.
+        int: The number of hash values.
 
         """
         return len(self.hashvalues)
 
     def __eq__(self, other: MinHash) -> bool:
         """Returns:
-            bool: If their seeds and hash values are both equal then two are equivalent.
+        bool: If their seeds and hash values are both equal then two are equivalent.
 
         """
         return (

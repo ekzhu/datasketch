@@ -327,7 +327,7 @@ class MinHashLSH:
 
     def __equivalent(self, other: MinHashLSH) -> bool:
         """Returns:
-            bool: If the two MinHashLSH have equal num_perm, number of bands, size of each band then two are equivalent.
+        bool: If the two MinHashLSH have equal num_perm, number of bands, size of each band then two are equivalent.
 
         """
         return type(self) is type(other) and self.h == other.h and self.b == other.b and self.r == other.r
@@ -504,7 +504,7 @@ class MinHashLSH:
 
     def is_empty(self) -> bool:
         """Returns:
-            bool: `True` only if the index is empty.
+        bool: `True` only if the index is empty.
 
         """
         return any(t.size() == 0 for t in self.hashtables)

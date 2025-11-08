@@ -71,23 +71,23 @@ class WeightedMinHash:
 
     def copy(self) -> WeightedMinHash:
         """Returns:
-            WeightedMinHash: A copy of this weighted MinHash by exporting
-            its state.
+        WeightedMinHash: A copy of this weighted MinHash by exporting
+        its state.
 
         """
         return WeightedMinHash(self.seed, self.digest())
 
     def __len__(self) -> int:
         """Returns:
-            int: The number of hash values.
+        int: The number of hash values.
 
         """
         return len(self.hashvalues)
 
     def __eq__(self, other) -> bool:
         """Returns:
-            bool: If their seeds and hash values are both equal then two
-            are equivalent.
+        bool: If their seeds and hash values are both equal then two
+        are equivalent.
 
         """
         return (

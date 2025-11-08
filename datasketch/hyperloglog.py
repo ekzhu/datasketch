@@ -183,7 +183,7 @@ class HyperLogLog:
 
     def digest(self) -> np.ndarray:
         """Returns:
-            numpy.array: The current internal state.
+        numpy.array: The current internal state.
 
         """
         return copy.copy(self.reg)
@@ -199,8 +199,8 @@ class HyperLogLog:
 
     def is_empty(self) -> bool:
         """Returns:
-            bool: True if the current HyperLogLog is empty - at the state of just
-            initialized.
+        bool: True if the current HyperLogLog is empty - at the state of just
+        initialized.
 
         """
         return not np.any(self.reg)
@@ -212,8 +212,8 @@ class HyperLogLog:
 
     def __len__(self) -> int:
         """Returns:
-            int: Get the size of the HyperLogLog as the size of
-                `reg`.
+        int: Get the size of the HyperLogLog as the size of
+            `reg`.
 
         """
         return len(self.reg)
