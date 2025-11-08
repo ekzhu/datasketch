@@ -37,20 +37,17 @@ class LeanMinHash(MinHash):
 
         .. code-block:: python
 
-            lean_minhash = LeanMinHash(seed=minhash.seed,
-                                       hashvalues=minhash.hashvalues)
+            lean_minhash = LeanMinHash(seed=minhash.seed, hashvalues=minhash.hashvalues)
 
         To create a MinHash from a lean MinHash:
 
         .. code-block:: python
 
-            minhash = MinHash(seed=lean_minhash.seed,
-                              hashvalues=lean_minhash.hashvalues)
+            minhash = MinHash(seed=lean_minhash.seed, hashvalues=lean_minhash.hashvalues)
 
             # Or if you want to prevent further updates on minhash
             # from affecting the state of lean_minhash
-            minhash = MinHash(seed=lean_minhash.seed,
-                              hashvalues=lean_minhash.digest())
+            minhash = MinHash(seed=lean_minhash.seed, hashvalues=lean_minhash.digest())
 
     Note:
         Lean MinHash can also be used in :class:`datasketch.MinHashLSH`,
@@ -160,9 +157,9 @@ class LeanMinHash(MinHash):
 
                 # assuming lean_minhashs is a list of LeanMinHash with the same size
                 size = lean_minhashs[0].bytesize()
-                buf = bytearray(size*len(lean_minhashs))
+                buf = bytearray(size * len(lean_minhashs))
                 for i, lean_minhash in enumerate(lean_minhashs):
-                    lean_minhash.serialize(buf[i*size:])
+                    lean_minhash.serialize(buf[i * size :])
 
         .. _`buffer`: https://docs.python.org/3/c-api/buffer.html
         .. _`bytearray`: https://docs.python.org/3.6/library/functions.html#bytearray

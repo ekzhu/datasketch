@@ -5,7 +5,6 @@
 with all boundaries inclusive, using set size distribution.
 """
 
-
 import numpy as np
 
 
@@ -191,7 +190,7 @@ def optimal_partitions(sizes, counts, num_part):
     if num_part < 2:
         return [(sizes[0], sizes[-1])]
     if num_part >= len(sizes):
-        return [(x, x) for x in sizes] # partitions
+        return [(x, x) for x in sizes]  # partitions
     nfps = _compute_nfps_real(counts, sizes)
     partitions, _, _ = _compute_best_partitions(num_part, sizes, nfps)
     return partitions

@@ -146,15 +146,19 @@ class MinHash:
             .. code-block:: python
 
                 minhash = Minhash()
-                minhash.update("new value".encode('utf-8'))
+                minhash.update("new value".encode("utf-8"))
 
             We can also use a different hash function, for example, `pyfarmhash`:
 
             .. code-block:: python
 
                 import farmhash
+
+
                 def _hash_32(b):
                     return farmhash.hash32(b)
+
+
                 minhash = MinHash(hashfunc=_hash_32)
                 minhash.update("new value")
 
@@ -179,7 +183,7 @@ class MinHash:
             .. code-block:: python
 
                 minhash = Minhash()
-                minhash.update_batch([s.encode('utf-8') for s in ["token1", "token2"]])
+                minhash.update_batch([s.encode("utf-8") for s in ["token1", "token2"]])
 
         """
         hv = np.array([self.hashfunc(_b) for _b in b], dtype=np.uint64, ndmin=2).T
@@ -372,8 +376,8 @@ class MinHash:
             .. code-block:: python
 
                 from datasketch import MinHash
-                data = [[b'token1', b'token2', b'token3'],
-                        [b'token4', b'token5', b'token6']]
+
+                data = [[b"token1", b"token2", b"token3"], [b"token4", b"token5", b"token6"]]
                 minhashes = MinHash.bulk(data, num_perm=64)
 
         """
@@ -399,8 +403,8 @@ class MinHash:
             .. code-block:: python
 
                 from datasketch import MinHash
-                data = [[b'token1', b'token2', b'token3'],
-                        [b'token4', b'token5', b'token6']]
+
+                data = [[b"token1", b"token2", b"token3"], [b"token4", b"token5", b"token6"]]
                 for minhash in MinHash.generator(data, num_perm=64):
                     # do something useful
                     minhash

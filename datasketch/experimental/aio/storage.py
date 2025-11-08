@@ -112,10 +112,7 @@ if motor is not None and ReturnDocument is not None:
         :param dict config: MongoDB storage units require a configuration
             of the form::
 
-                storage_config={
-                    'type': 'aiomongo',
-                    'mongo': {'host': 'localhost', 'port': 27017}
-                }
+                storage_config = {"type": "aiomongo", "mongo": {"host": "localhost", "port": 27017}}
 
             one can refer to system environment variables via::
 

@@ -31,7 +31,7 @@ class AsyncMinHashLSH:
 
     .. code-block:: python
 
-        MONGO = {'type': 'aiomongo', 'basename': 'base_name_1', 'mongo': {'host': 'localhost', 'port': 27017}}
+        MONGO = {"type": "aiomongo", "basename": "base_name_1", "mongo": {"host": "localhost", "port": 27017}}
 
     .. note::
         * The module supports Python version >=3.6, and is currently experimental.
@@ -194,22 +194,28 @@ class AsyncMinHashLSH:
                 from datasketch.experimental.aio.lsh import AsyncMinHashLSH
                 from datasketch import MinHash
 
+
                 def chunk(it, size):
                     it = iter(it)
                     return iter(lambda: tuple(islice(it, size)), ())
 
+
                 _chunked_str = chunk((random.choice(string.ascii_lowercase) for _ in range(10000)), 4)
-                seq = frozenset(chain(
-                    (''.join(s) for s in _chunked_str),
-                    ('aahhb', 'aahh', 'aahhc', 'aac', 'kld', 'bhg', 'kkd', 'yow', 'ppi', 'eer')
-                ))
+                seq = frozenset(
+                    chain(
+                        ("".join(s) for s in _chunked_str),
+                        ("aahhb", "aahh", "aahhc", "aac", "kld", "bhg", "kkd", "yow", "ppi", "eer"),
+                    )
+                )
                 objs = [MinHash(16) for _ in range(len(seq))]
                 for e, obj in zip(seq, objs):
                     for i in e:
-                        obj.update(i.encode('utf-8'))
+                        obj.update(i.encode("utf-8"))
                 data = [(e, m) for e, m in zip(seq, objs)]
 
-                _storage_config_redis = {'type': 'aiomongo', 'mongo': {'host': 'localhost', 'port': 27017}}
+                _storage_config_redis = {"type": "aiomongo", "mongo": {"host": "localhost", "port": 27017}}
+
+
                 async def func():
                     async with AsyncMinHashLSH(storage_config=_storage_config_redis, threshold=0.5, num_perm=16) as lsh:
                         async with lsh.insertion_session(batch_size=1000) as session:
@@ -233,22 +239,28 @@ class AsyncMinHashLSH:
                 from datasketch.experimental.aio.lsh import AsyncMinHashLSH
                 from datasketch import MinHash
 
+
                 def chunk(it, size):
                     it = iter(it)
                     return iter(lambda: tuple(islice(it, size)), ())
 
+
                 _chunked_str = chunk((random.choice(string.ascii_lowercase) for _ in range(10000)), 4)
-                seq = frozenset(chain(
-                    (''.join(s) for s in _chunked_str),
-                    ('aahhb', 'aahh', 'aahhc', 'aac', 'kld', 'bhg', 'kkd', 'yow', 'ppi', 'eer')
-                ))
+                seq = frozenset(
+                    chain(
+                        ("".join(s) for s in _chunked_str),
+                        ("aahhb", "aahh", "aahhc", "aac", "kld", "bhg", "kkd", "yow", "ppi", "eer"),
+                    )
+                )
                 objs = [MinHash(16) for _ in range(len(seq))]
                 for e, obj in zip(seq, objs):
                     for i in e:
-                        obj.update(i.encode('utf-8'))
+                        obj.update(i.encode("utf-8"))
                 data = [(e, m) for e, m in zip(seq, objs)]
 
-                _storage_config_redis = {'type': 'aiomongo', 'mongo': {'host': 'localhost', 'port': 27017}}
+                _storage_config_redis = {"type": "aiomongo", "mongo": {"host": "localhost", "port": 27017}}
+
+
                 async def func():
                     async with AsyncMinHashLSH(storage_config=_storage_config_redis, threshold=0.5, num_perm=16) as lsh:
                         async with lsh.insertion_session(batch_size=1000) as session:
@@ -332,8 +344,7 @@ class AsyncMinHashLSH:
             H = self._H(minhash.hashvalues[start:end])
             if await hashtable.has_key(H):
                 fs.append(hashtable.get(H))
-        return set(chain.from_iterable(await asyncio.gather(*fs))) # candidates
-
+        return set(chain.from_iterable(await asyncio.gather(*fs)))  # candidates
 
     async def get_counts(self):
         """See :class:`datasketch.MinHashLSH`."""

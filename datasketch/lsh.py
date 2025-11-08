@@ -119,11 +119,15 @@ class MinHashLSH:
 
         .. code-block:: python
 
-            lsh = MinHashLSH(threshold=0.9, num_perm=128, storage_config={
-                'type': 'redis',
-                'basename': b'mylsh', # optional, defaults to a random string.
-                'redis': {'host': 'localhost', 'port': 6379},
-            })
+            lsh = MinHashLSH(
+                threshold=0.9,
+                num_perm=128,
+                storage_config={
+                    "type": "redis",
+                    "basename": b"mylsh",  # optional, defaults to a random string.
+                    "redis": {"host": "localhost", "port": 6379},
+                },
+            )
 
         The `basename` property is optional. It is used to generate key prefixes
         in the storage layer to uniquely identify data associated with this LSH.
@@ -262,10 +266,14 @@ class MinHashLSH:
                     m.update_batch(np.random.randint(low=0, high=30, size=10))
                     minhashes.append(m)
 
-                lsh = MinHashLSH(threshold=0.5, num_perm=128, storage_config={
-                    'type': 'redis',
-                    'redis': {'host': 'localhost', 'port': 6379},
-                })
+                lsh = MinHashLSH(
+                    threshold=0.5,
+                    num_perm=128,
+                    storage_config={
+                        "type": "redis",
+                        "redis": {"host": "localhost", "port": 6379},
+                    },
+                )
                 with lsh.insertion_session() as session:
                     for i, m in enumerate(minhashes):
                         session.insert(i, m)
@@ -289,10 +297,14 @@ class MinHashLSH:
 
                 from datasketch import MinHashLSH
 
-                lsh = MinHashLSH(threshold=0.5, num_perm=128, storage_config={
-                    'type': 'redis',
-                    'redis': {'host': 'localhost', 'port': 6379},
-                })
+                lsh = MinHashLSH(
+                    threshold=0.5,
+                    num_perm=128,
+                    storage_config={
+                        "type": "redis",
+                        "redis": {"host": "localhost", "port": 6379},
+                    },
+                )
 
                 # ... insert some data ...
 
@@ -368,10 +380,7 @@ class MinHashLSH:
                 import numpy as np
 
                 # Generate 100 random MinHashes.
-                minhashes = MinHash.bulk(
-                    np.random.randint(low=0, high=30, size=(100, 10)),
-                    num_perm=128
-                )
+                minhashes = MinHash.bulk(np.random.randint(low=0, high=30, size=(100, 10)), num_perm=128)
 
                 # Create LSH index.
                 lsh = MinHashLSH(threshold=0.5, num_perm=128)

@@ -157,7 +157,8 @@ class TestHNSW(unittest.TestCase):
                     f"Issue encountered at i={i} during soft remove unit test: "
                     f"expected {expected_result_size} results, "
                     f"got {len(results)} results. "
-                    "Potential graph connectivity issue.", stacklevel=2
+                    "Potential graph connectivity issue.",
+                    stacklevel=2,
                 )
                 # NOTE: we are not getting the expected number of results.
                 # Try hard remove all previous soft removed points.

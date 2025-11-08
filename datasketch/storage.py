@@ -45,8 +45,7 @@ def ordered_storage(config, name=None):
             literal configuration values should be replaced by dicts of
             the form::
 
-                {'env': 'REDIS_HOSTNAME',
-                 'default': 'localhost'}
+                {"env": "REDIS_HOSTNAME", "default": "localhost"}
 
             For a full example, see :ref:`minhash_lsh_at_scale`
 
@@ -84,8 +83,7 @@ def unordered_storage(config, name=None):
             literal configuration values should be replaced by dicts of
             the form::
 
-                {'env': 'REDIS_HOSTNAME',
-                 'default': 'localhost'}
+                {"env": "REDIS_HOSTNAME", "default": "localhost"}
 
             For a full example, see :ref:`minhash_lsh_at_scale`
 
@@ -862,10 +860,10 @@ if redis is not None:
             config (dict): Redis storage units require a configuration
                 of the form::
 
-                    storage_config={
-                        'type': 'redis',
-                        'redis': {'host': 'localhost', 'port': 6379},
-                        'redis_buffer': {'transaction': True}
+                    storage_config = {
+                        "type": "redis",
+                        "redis": {"host": "localhost", "port": 6379},
+                        "redis_buffer": {"transaction": True},
                     }
 
                 one can refer to system environment variables via::
