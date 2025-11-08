@@ -141,7 +141,8 @@ ignore = [
   "E731",   # TODO: allow lambda assignment
   "E741",   # TODO: ambiguous-variable-name
   "F821",   # TODO: Undefined name `buffer`
-  "S301",   # TODO: suspicious-pickle-usage
+  "S301",   # TODO: suspicious pickle usage
+  "S311",   # TODO: suspicious non-cryptographic random usage
 ]
 
 [tool.ruff.format]
