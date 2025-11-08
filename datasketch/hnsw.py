@@ -542,11 +542,11 @@ class HNSW(MutableMapping):
             layer_m = self._m if layer is not self._graphs[0] else self._m0
             # Create a set of points in the 2nd-degree neighborhood of the key.
             neighborhood_keys = set([key])
-            for p in layer[key].keys():
+            for p in layer[key]:
                 neighborhood_keys.add(p)
-                for p2 in layer[p].keys():
+                for p2 in layer[p]:
                     neighborhood_keys.add(p2)
-            for p in layer[key].keys():
+            for p in layer[key]:
                 # For each neighbor of the key, we connects it with the top ef
                 # neighbors in the 2nd-degree neighborhood of the key.
                 cands = []

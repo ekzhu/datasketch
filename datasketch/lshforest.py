@@ -66,7 +66,7 @@ class MinHashLSHForest:
     def index(self) -> None:
         """Index all the keys added so far and make them searchable."""
         for i, hashtable in enumerate(self.hashtables):
-            self.sorted_hashtables[i] = [H for H in hashtable.keys()]
+            self.sorted_hashtables[i] = [H for H in hashtable]
             self.sorted_hashtables[i].sort()
 
     def _query(self, minhash, r, b):
