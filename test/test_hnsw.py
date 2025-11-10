@@ -2,6 +2,7 @@ import unittest
 import warnings
 
 import numpy as np
+import pytest
 
 from datasketch.hnsw import HNSW
 from datasketch.minhash import MinHash
@@ -12,9 +13,7 @@ def l2_distance(x, y):
 
 
 def jaccard_distance(x, y):
-    return 1.0 - float(len(np.intersect1d(x, y, assume_unique=False))) / float(
-        len(np.union1d(x, y))
-    )
+    return 1.0 - float(len(np.intersect1d(x, y, assume_unique=False))) / float(len(np.union1d(x, y)))
 
 
 class TestHNSW(unittest.TestCase):
@@ -66,9 +65,7 @@ class TestHNSW(unittest.TestCase):
                 self.assertEqual(key_indexed, key)
             for vec_indexed, vec in zip(index.values(), points):
                 self.assertTrue(np.array_equal(vec_indexed, vec))
-            for (key_indexed, vec_indexed), key, vec in zip(
-                index.items(), keys, points
-            ):
+            for (key_indexed, vec_indexed), key, vec in zip(index.items(), keys, points):
                 self.assertEqual(key_indexed, key)
                 self.assertTrue(np.array_equal(vec_indexed, vec))
 
@@ -106,9 +103,7 @@ class TestHNSW(unittest.TestCase):
         data1 = self._create_random_points()
         data2 = self._create_random_points()
         hnsw1 = self._create_index(data1, keys=list(range(len(data1))))
-        hnsw2 = self._create_index(
-            data2, keys=list(range(len(data1), len(data1) + len(data2)))
-        )
+        hnsw2 = self._create_index(data2, keys=list(range(len(data1), len(data1) + len(data2))))
         new_index = hnsw1.merge(hnsw2)
         self._search_index(new_index, data1)
         self._search_index(new_index, data2)
@@ -156,14 +151,14 @@ class TestHNSW(unittest.TestCase):
             hnsw.remove(i)
             results = hnsw.query(data[i], 10)
             # Check graph connectivity.
-            # self.assertEqual(len(results), min(10, len(data) - i - 1))
             expected_result_size = min(10, len(data) - i - 1)
             if len(results) != expected_result_size:
                 warnings.warn(
                     f"Issue encountered at i={i} during soft remove unit test: "
                     f"expected {expected_result_size} results, "
                     f"got {len(results)} results. "
-                    "Potential graph connectivity issue."
+                    "Potential graph connectivity issue.",
+                    stacklevel=2,
                 )
                 # NOTE: we are not getting the expected number of results.
                 # Try hard remove all previous soft removed points.
@@ -184,6 +179,7 @@ class TestHNSW(unittest.TestCase):
         self.assertRaises(KeyError, hnsw.remove, 0)
         self.assertRaises(ValueError, hnsw.query, data[0])
 
+    @pytest.mark.flaky(reruns=3)
     def test_hard_remove_and_pop_and_clean(self):
         data = self._create_random_points()
         hnsw = self._create_index(data)

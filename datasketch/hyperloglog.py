@@ -1,14 +1,17 @@
 from __future__ import annotations
-import struct, copy
-from typing import Callable, Optional
-import numpy as np
+
+import copy
+import struct
 import warnings
+from typing import Callable, Optional
+
+import numpy as np
 
 try:
-    from .hyperloglog_const import _thresholds, _raw_estimate, _bias
+    from .hyperloglog_const import _bias, _raw_estimate, _thresholds
 except ImportError:
     # For Python 2
-    from hyperloglog_const import _thresholds, _raw_estimate, _bias
+    from hyperloglog_const import _bias, _raw_estimate, _thresholds
 
 from datasketch.hashfunc import sha1_hash32, sha1_hash64
 
@@ -19,9 +22,8 @@ if not hasattr(int, "bit_length"):
     _bit_length = lambda bits: len(bin(bits)) - 2 if bits > 0 else 0
 
 
-class HyperLogLog(object):
-    """
-    The HyperLogLog data sketch for estimating
+class HyperLogLog:
+    """The HyperLogLog data sketch for estimating
     cardinality of very large dataset in a single pass.
     The original HyperLogLog is described `here
     <http://algo.inria.fr/flajolet/Publications/FlFuGaMe07.pdf>`_.
@@ -41,9 +43,10 @@ class HyperLogLog(object):
             The default hash function is based on SHA1 from hashlib_.
         hashobj (**deprecated**): This argument is deprecated since version
             1.4.0. It is a no-op and has been replaced by `hashfunc`.
+
     """
 
-    __slots__ = ("p", "m", "reg", "alpha", "max_rank", "hashfunc")
+    __slots__ = ("alpha", "hashfunc", "m", "max_rank", "p", "reg")
 
     # The range of the hash values used for HyperLogLog
     _hash_range_bit = 32
@@ -91,17 +94,14 @@ class HyperLogLog(object):
             raise ValueError("The hashfunc must be a callable.")
         # Check for use of hashobj and issue warning.
         if hashobj is not None:
-            warnings.warn(
-                "hashobj is deprecated, use hashfunc instead.", DeprecationWarning
-            )
+            warnings.warn("hashobj is deprecated, use hashfunc instead.", DeprecationWarning, stacklevel=2)
         self.hashfunc = hashfunc
         # Common settings
         self.alpha = self._get_alpha(self.p)
         self.max_rank = self._hash_range_bit - self.p
 
     def update(self, b) -> None:
-        """
-        Update the HyperLogLog with a new data value in bytes.
+        """Update the HyperLogLog with a new data value in bytes.
         The value will be hashed using the hash function specified by
         the `hashfunc` argument in the constructor.
 
@@ -115,17 +115,22 @@ class HyperLogLog(object):
             .. code-block:: python
 
                 hll = HyperLogLog()
-                hll.update("new value".encode('utf-8'))
+                hll.update("new value".encode("utf-8"))
 
             We can also use a different hash function, for example, `pyfarmhash`:
 
             .. code-block:: python
 
                 import farmhash
+
+
                 def _hash_32(b):
                     return farmhash.hash32(b)
+
+
                 hll = HyperLogLog(hashfunc=_hash_32)
                 hll.update("new value")
+
         """
         # Digest the hash object to get the hash value
         hv = self.hashfunc(b)
@@ -137,11 +142,11 @@ class HyperLogLog(object):
         self.reg[reg_index] = max(self.reg[reg_index], self._get_rank(bits))
 
     def count(self) -> float:
-        """
-        Estimate the cardinality of the data values seen so far.
+        """Estimate the cardinality of the data values seen so far.
 
         Returns:
             float: The estimated cardinality.
+
         """
         # Use HyperLogLog estimation function
         e = self.alpha * float(self.m**2) / np.sum(2.0 ** (-self.reg))
@@ -149,10 +154,9 @@ class HyperLogLog(object):
         small_range_threshold = (5.0 / 2.0) * self.m
         if abs(e - small_range_threshold) / small_range_threshold < 0.15:
             warnings.warn(
-                (
-                    "Warning: estimate is close to error correction threshold. "
-                    + "Output may not satisfy HyperLogLog accuracy guarantee."
-                )
+                "Warning: estimate is close to error correction threshold. "
+                "Output may not satisfy HyperLogLog accuracy guarantee.",
+                stacklevel=2,
             )
         if e <= small_range_threshold:
             num_zero = self.m - np.count_nonzero(self.reg)
@@ -164,12 +168,12 @@ class HyperLogLog(object):
         return self._largerange_correction(e)
 
     def merge(self, other: HyperLogLog) -> None:
-        """
-        Merge the other HyperLogLog with this one, making this the union of the
+        """Merge the other HyperLogLog with this one, making this the union of the
         two.
 
         Args:
             other (HyperLogLog): The other HyperLogLog to be merged.
+
         """
         if self.m != other.m or self.p != other.p:
             raise ValueError(
@@ -179,54 +183,50 @@ class HyperLogLog(object):
         self.reg = np.maximum(self.reg, other.reg)
 
     def digest(self) -> np.ndarray:
-        """
-        Returns:
-            numpy.array: The current internal state.
+        """Returns:
+        numpy.array: The current internal state.
+
         """
         return copy.copy(self.reg)
 
     def copy(self) -> HyperLogLog:
-        """
-        Create a copy of the current HyperLogLog by exporting its state.
+        """Create a copy of the current HyperLogLog by exporting its state.
 
         Returns:
             HyperLogLog: A copy of the current HyperLogLog.
+
         """
         return self.__class__(reg=self.digest(), hashfunc=self.hashfunc)
 
     def is_empty(self) -> bool:
+        """Returns:
+        bool: True if the current HyperLogLog is empty - at the state of just
+        initialized.
+
         """
-        Returns:
-            bool: True if the current HyperLogLog is empty - at the state of just
-            initialized.
-        """
-        if np.any(self.reg):
-            return False
-        return True
+        return not np.any(self.reg)
 
     def clear(self) -> None:
-        """
-        Reset the current HyperLogLog to empty.
-        """
+        """Reset the current HyperLogLog to empty."""
         self.reg = np.zeros((self.m,), dtype=np.int8)
 
     def __len__(self) -> int:
-        """
-        Returns:
-            int: Get the size of the HyperLogLog as the size of
-                `reg`.
+        """Returns:
+        int: Get the size of the HyperLogLog as the size of
+            `reg`.
+
         """
         return len(self.reg)
 
     def __eq__(self, other: HyperLogLog) -> bool:
-        """
-        Check equivalence between two HyperLogLogs
+        """Check equivalence between two HyperLogLogs.
 
         Args:
             other (HyperLogLog):
 
         Returns:
             bool: True if both have the same internal state.
+
         """
         return (
             type(self) is type(other)
@@ -265,8 +265,7 @@ class HyperLogLog(object):
                     different precisions"
             )
         reg = np.maximum.reduce([h.reg for h in hyperloglogs])
-        h = cls(reg=reg)
-        return h
+        return cls(reg=reg)
 
     def bytesize(self) -> int:
         """Get the size of the HyperLogLog in bytes."""
@@ -297,13 +296,9 @@ class HyperLogLog(object):
         h = cls(p)
         offset = size
         try:
-            h.reg = np.array(
-                struct.unpack_from("%dB" % h.m, buf, offset), dtype=np.int8
-            )
+            h.reg = np.array(struct.unpack_from("%dB" % h.m, buf, offset), dtype=np.int8)
         except TypeError:
-            h.reg = np.array(
-                struct.unpack_from("%dB" % h.m, buffer(buf), offset), dtype=np.int8
-            )
+            h.reg = np.array(struct.unpack_from("%dB" % h.m, buffer(buf), offset), dtype=np.int8)
         return h
 
     def __getstate__(self):
@@ -320,18 +315,14 @@ class HyperLogLog(object):
         self.__init__(p=p)
         offset = size
         try:
-            self.reg = np.array(
-                struct.unpack_from("%dB" % self.m, buf, offset), dtype=np.int8
-            )
+            self.reg = np.array(struct.unpack_from("%dB" % self.m, buf, offset), dtype=np.int8)
         except TypeError:
-            self.reg = np.array(
-                struct.unpack_from("%dB" % self.m, buffer(buf), offset), dtype=np.int8
-            )
+            self.reg = np.array(struct.unpack_from("%dB" % self.m, buffer(buf), offset), dtype=np.int8)
 
 
 class HyperLogLogPlusPlus(HyperLogLog):
-    """
-    HyperLogLog++ is an enhanced HyperLogLog `from Google
+    """HyperLogLog++ is an enhanced HyperLogLog `from Google.
+
     <http://research.google.com/pubs/pub40671.html>`_.
     Main changes from the original HyperLogLog:
 
@@ -351,6 +342,7 @@ class HyperLogLogPlusPlus(HyperLogLog):
             The default hash function is based on SHA1 from hashlib_.
         hashobj (**deprecated**): This argument is deprecated since version
             1.4.0. It is a no-op and has been replaced by `hashfunc`.
+
     """
 
     _hash_range_bit = 64
@@ -363,9 +355,7 @@ class HyperLogLogPlusPlus(HyperLogLog):
         hashfunc: Callable = sha1_hash64,
         hashobj: Optional[object] = None,
     ):
-        super(HyperLogLogPlusPlus, self).__init__(
-            p=p, reg=reg, hashfunc=hashfunc, hashobj=hashobj
-        )
+        super(HyperLogLogPlusPlus, self).__init__(p=p, reg=reg, hashfunc=hashfunc, hashobj=hashobj)
 
     def _get_threshold(self, p):
         return _thresholds[p - 4]
@@ -388,5 +378,4 @@ class HyperLogLogPlusPlus(HyperLogLog):
         e = self.alpha * float(self.m**2) / np.sum(2.0 ** (-self.reg))
         if e <= 5 * self.m:
             return e - self._estimate_bias(e, self.p)
-        else:
-            return e
+        return e

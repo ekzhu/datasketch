@@ -1,14 +1,14 @@
-import unittest
-import struct
 import pickle
+import unittest
+
 import numpy as np
+
 from datasketch import minhash
 from datasketch.b_bit_minhash import bBitMinHash
 from test.utils import fake_hash_func
 
 
 class TestMinHash(unittest.TestCase):
-
     def test_init(self):
         m1 = minhash.MinHash(4, 1, hashfunc=fake_hash_func)
         m2 = minhash.MinHash(4, 1, hashfunc=fake_hash_func)
@@ -105,7 +105,7 @@ class TestMinHash(unittest.TestCase):
 
     def test_byte_tokens(self):
         m = minhash.MinHash(4, 1)
-        m.update(b'Hello')
+        m.update(b"Hello")
         self.assertListEqual(
             m.hashvalues.tolist(),
             [734825475, 960773806, 359816889, 342714745],
@@ -113,7 +113,7 @@ class TestMinHash(unittest.TestCase):
 
     def test_bulk(self):
         kwargs = dict(num_perm=4, seed=1, hashfunc=fake_hash_func)
-        b = [[n*4 for n in range(4)]]*2
+        b = [[n * 4 for n in range(4)]] * 2
         m1 = minhash.MinHash(**kwargs)
         m1.update_batch(b[0])
         m2, m3 = minhash.MinHash.bulk(b, **kwargs)
@@ -122,7 +122,6 @@ class TestMinHash(unittest.TestCase):
 
 
 class TestbBitMinHash(unittest.TestCase):
-
     def setUp(self):
         self.m = minhash.MinHash(hashfunc=fake_hash_func)
         self.m.update(11)
@@ -133,16 +132,16 @@ class TestbBitMinHash(unittest.TestCase):
         self.m.update(32)
 
     def test_init(self):
-        bm = bBitMinHash(self.m, 1)
-        bm = bBitMinHash(self.m, 2)
-        bm = bBitMinHash(self.m, 3)
-        bm = bBitMinHash(self.m, 4)
-        bm = bBitMinHash(self.m, 5)
-        bm = bBitMinHash(self.m, 8)
-        bm = bBitMinHash(self.m, 12)
-        bm = bBitMinHash(self.m, 16)
-        bm = bBitMinHash(self.m, 27)
-        bm = bBitMinHash(self.m, 32)
+        bBitMinHash(self.m, 1)
+        bBitMinHash(self.m, 2)
+        bBitMinHash(self.m, 3)
+        bBitMinHash(self.m, 4)
+        bBitMinHash(self.m, 5)
+        bBitMinHash(self.m, 8)
+        bBitMinHash(self.m, 12)
+        bBitMinHash(self.m, 16)
+        bBitMinHash(self.m, 27)
+        bBitMinHash(self.m, 32)
 
     def test_eq(self):
         m1 = minhash.MinHash(4, 1, hashfunc=fake_hash_func)
@@ -182,7 +181,7 @@ class TestbBitMinHash(unittest.TestCase):
 
     def test_bytesize(self):
         s = bBitMinHash(self.m).bytesize()
-        self.assertGreaterEqual(s, 8*2+4+1+self.m.hashvalues.size/64)
+        self.assertGreaterEqual(s, 8 * 2 + 4 + 1 + self.m.hashvalues.size / 64)
 
     def test_pickle(self):
         for num_perm in [1 << i for i in range(4, 10)]:

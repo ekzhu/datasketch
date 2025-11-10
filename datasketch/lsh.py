@@ -1,29 +1,31 @@
 from __future__ import annotations
+
 import pickle
 import struct
-from typing import Callable, Dict, Hashable, List, Optional, Tuple, Union
-from datasketch.minhash import MinHash
-from datasketch.weighted_minhash import WeightedMinHash
-from datasketch.storage import ordered_storage, unordered_storage, _random_name
+from collections.abc import Hashable
+from typing import Callable, Optional, Union
 
 from scipy.integrate import quad as integrate
+
+from datasketch.minhash import MinHash
+from datasketch.storage import _random_name, ordered_storage, unordered_storage
+from datasketch.weighted_minhash import WeightedMinHash
 
 
 def _false_positive_probability(threshold, b, r):
     _probability = lambda s: 1 - (1 - s ** float(r)) ** float(b)
-    a, err = integrate(_probability, 0.0, threshold)
+    a, _err = integrate(_probability, 0.0, threshold)
     return a
 
 
 def _false_negative_probability(threshold, b, r):
     _probability = lambda s: 1 - (1 - (1 - s ** float(r)) ** float(b))
-    a, err = integrate(_probability, threshold, 1.0)
+    a, _err = integrate(_probability, threshold, 1.0)
     return a
 
 
 def _optimal_param(threshold, num_perm, false_positive_weight, false_negative_weight):
-    """
-    Compute the optimal `MinHashLSH` parameter that minimizes the weighted sum
+    """Compute the optimal `MinHashLSH` parameter that minimizes the weighted sum
     of probabilities of false positive and false negative.
     """
     min_error = float("inf")
@@ -40,9 +42,8 @@ def _optimal_param(threshold, num_perm, false_positive_weight, false_negative_we
     return opt
 
 
-class MinHashLSH(object):
-    """
-    The :ref:`minhash_lsh` index.
+class MinHashLSH:
+    """The :ref:`minhash_lsh` index.
     It supports query with `Jaccard similarity`_ threshold.
     Reference: `Chapter 3, Mining of Massive Datasets
     <http://www.mmds.org/>`_.
@@ -83,7 +84,6 @@ class MinHashLSH(object):
         Try to live with a small difference between weights (i.e. < 0.5).
 
     Examples:
-
         Create an index with 128 permutation functions optimized for Jaccard
         threshold 0.9:
 
@@ -119,11 +119,15 @@ class MinHashLSH(object):
 
         .. code-block:: python
 
-            lsh = MinHashLSH(threshold=0.9, num_perm=128, storage_config={
-                'type': 'redis',
-                'basename': b'mylsh', # optional, defaults to a random string.
-                'redis': {'host': 'localhost', 'port': 6379},
-            })
+            lsh = MinHashLSH(
+                threshold=0.9,
+                num_perm=128,
+                storage_config={
+                    "type": "redis",
+                    "basename": b"mylsh",  # optional, defaults to a random string.
+                    "redis": {"host": "localhost", "port": 6379},
+                },
+            )
 
         The `basename` property is optional. It is used to generate key prefixes
         in the storage layer to uniquely identify data associated with this LSH.
@@ -138,13 +142,13 @@ class MinHashLSH(object):
         self,
         threshold: float = 0.9,
         num_perm: int = 128,
-        weights: Tuple[float, float] = (0.5, 0.5),
-        params: Optional[Tuple[int, int]] = None,
-        storage_config: Optional[Dict] = None,
+        weights: tuple[float, float] = (0.5, 0.5),
+        params: Optional[tuple[int, int]] = None,
+        storage_config: Optional[dict] = None,
         prepickle: Optional[bool] = None,
         hashfunc: Optional[Callable[[bytes], bytes]] = None,
     ) -> None:
-        storage_config = {"type": "dict"} if not storage_config else storage_config
+        storage_config = storage_config if storage_config else {"type": "dict"}
         self._buffer_size = 50000
         if threshold > 1.0 or threshold < 0.0:
             raise ValueError("threshold must be in [0.0, 1.0]")
@@ -160,16 +164,12 @@ class MinHashLSH(object):
             if self.b * self.r > num_perm:
                 raise ValueError(
                     "The product of b and r in params is "
-                    "{} * {} = {} -- it must be less than num_perm {}. "
-                    "Did you forget to specify num_perm?".format(
-                        self.b, self.r, self.b * self.r, num_perm
-                    )
+                    f"{self.b} * {self.r} = {self.b * self.r} -- it must be less than num_perm {num_perm}. "
+                    "Did you forget to specify num_perm?"
                 )
         else:
             false_positive_weight, false_negative_weight = weights
-            self.b, self.r = _optimal_param(
-                threshold, num_perm, false_positive_weight, false_negative_weight
-            )
+            self.b, self.r = _optimal_param(threshold, num_perm, false_positive_weight, false_negative_weight)
         if self.b < 2:
             raise ValueError("The number of bands are too small (b < 2)")
 
@@ -211,8 +211,7 @@ class MinHashLSH(object):
         minhash: Union[MinHash, WeightedMinHash],
         check_duplication: bool = True,
     ):
-        """
-        Insert a key to the index, together with a MinHash or Weighted MinHash
+        """Insert a key to the index, together with a MinHash or Weighted MinHash
         of the set referenced by the key.
 
         Args:
@@ -226,14 +225,10 @@ class MinHashLSH(object):
         """
         self._insert(key, minhash, check_duplication=check_duplication, buffer=False)
 
-    def merge(
-            self,
-            other: MinHashLSH,
-            check_overlap: bool = False      
-    ):
+    def merge(self, other: MinHashLSH, check_overlap: bool = False):
         """Merge the other MinHashLSH with this one, making this one the union
         of both.
-        
+
         Note:
             Only num_perm, number of bands and sizes of each band is checked for equivalency of two MinHashLSH indexes.
             Other initialization parameters threshold, weights, storage_config, prepickle and hash_func are not checked.
@@ -246,12 +241,12 @@ class MinHashLSH(object):
         Raises:
             ValueError: If the two MinHashLSH have different initialization
                 parameters, or if `check_overlap` is `True` and there are overlapping keys.
+
         """
         self._merge(other, check_overlap=check_overlap, buffer=False)
 
     def insertion_session(self, buffer_size: int = 50000) -> MinHashLSHInsertionSession:
-        """
-        Create a context manager for fast insertion into this index.
+        """Create a context manager for fast insertion into this index.
 
         Args:
             buffer_size (int): The buffer size for insert_session mode (default=50000).
@@ -260,7 +255,6 @@ class MinHashLSH(object):
             MinHashLSHInsertionSession: The context manager.
 
         Example:
-
             Insert 100 MinHashes into an Redis-backed index using a session:
 
             .. code-block:: python
@@ -274,10 +268,14 @@ class MinHashLSH(object):
                     m.update_batch(np.random.randint(low=0, high=30, size=10))
                     minhashes.append(m)
 
-                lsh = MinHashLSH(threshold=0.5, num_perm=128, storage_config={
-                    'type': 'redis',
-                    'redis': {'host': 'localhost', 'port': 6379},
-                })
+                lsh = MinHashLSH(
+                    threshold=0.5,
+                    num_perm=128,
+                    storage_config={
+                        "type": "redis",
+                        "redis": {"host": "localhost", "port": 6379},
+                    },
+                )
                 with lsh.insertion_session() as session:
                     for i, m in enumerate(minhashes):
                         session.insert(i, m)
@@ -285,9 +283,8 @@ class MinHashLSH(object):
         """
         return MinHashLSHInsertionSession(self, buffer_size=buffer_size)
 
-    def deletion_session(self, buffer_size: int = 50000) -> "MinHashLSHDeletionSession":
-        """
-        Create a context manager for fast deletion from this index.
+    def deletion_session(self, buffer_size: int = 50000) -> MinHashLSHDeletionSession:
+        """Create a context manager for fast deletion from this index.
 
         Args:
             buffer_size (int): The buffer size for deletion operations (default=50000).
@@ -296,17 +293,20 @@ class MinHashLSH(object):
             MinHashLSHDeletionSession: The context manager.
 
         Example:
-
             Delete keys from a Redis-backed index using a session:
 
             .. code-block:: python
 
                 from datasketch import MinHashLSH
 
-                lsh = MinHashLSH(threshold=0.5, num_perm=128, storage_config={
-                    'type': 'redis',
-                    'redis': {'host': 'localhost', 'port': 6379},
-                })
+                lsh = MinHashLSH(
+                    threshold=0.5,
+                    num_perm=128,
+                    storage_config={
+                        "type": "redis",
+                        "redis": {"host": "localhost", "port": 6379},
+                    },
+                )
 
                 # ... insert some data ...
 
@@ -326,9 +326,7 @@ class MinHashLSH(object):
         buffer: bool = False,
     ):
         if len(minhash) != self.h:
-            raise ValueError(
-                "Expecting minhash with length %d, got %d" % (self.h, len(minhash))
-            )
+            raise ValueError("Expecting minhash with length %d, got %d" % (self.h, len(minhash)))
         if self.prepickle:
             key = pickle.dumps(key)
         if check_duplication and key in self.keys:
@@ -338,24 +336,14 @@ class MinHashLSH(object):
         for H, hashtable in zip(Hs, self.hashtables):
             hashtable.insert(H, key, buffer=buffer)
 
-    def __equivalent(self, other:MinHashLSH) -> bool:
-        """
-        Returns:
-            bool: If the two MinHashLSH have equal num_perm, number of bands, size of each band then two are equivalent.
-        """
-        return (
-            type(self) is type(other) and
-            self.h == other.h and
-            self.b == other.b and
-            self.r == other.r
-        )
+    def __equivalent(self, other: MinHashLSH) -> bool:
+        """Returns:
+        bool: If the two MinHashLSH have equal num_perm, number of bands, size of each band then two are equivalent.
 
-    def _merge(
-        self,
-        other: MinHashLSH,
-        check_overlap: bool = False,
-        buffer: bool = False
-    ) -> MinHashLSH:
+        """
+        return type(self) is type(other) and self.h == other.h and self.b == other.b and self.r == other.r
+
+    def _merge(self, other: MinHashLSH, check_overlap: bool = False, buffer: bool = False) -> MinHashLSH:
         if self.__equivalent(other):
             if check_overlap and set(self.keys).intersection(set(other.keys)):
                 raise ValueError("The keys are overlapping, duplicate key exists.")
@@ -367,12 +355,10 @@ class MinHashLSH(object):
         else:
             if type(self) is not type(other):
                 raise ValueError(f"Cannot merge type MinHashLSH and type {type(other).__name__}.")
-            raise ValueError(
-                "Cannot merge MinHashLSH with different initialization parameters.")
+            raise ValueError("Cannot merge MinHashLSH with different initialization parameters.")
 
-    def query(self, minhash) -> List[Hashable]:
-        """
-        Giving the MinHash of the query set, retrieve
+    def query(self, minhash) -> list[Hashable]:
+        """Giving the MinHash of the query set, retrieve
         the keys that reference sets with Jaccard
         similarities likely greater than the threshold.
 
@@ -388,7 +374,6 @@ class MinHashLSH(object):
             list: a list of unique keys.
 
         Example:
-
             Query and rank results using :meth:`MinHash.jaccard`.
 
             .. code-block:: python
@@ -397,10 +382,7 @@ class MinHashLSH(object):
                 import numpy as np
 
                 # Generate 100 random MinHashes.
-                minhashes = MinHash.bulk(
-                    np.random.randint(low=0, high=30, size=(100, 10)),
-                    num_perm=128
-                )
+                minhashes = MinHash.bulk(np.random.randint(low=0, high=30, size=(100, 10)), num_perm=128)
 
                 # Create LSH index.
                 lsh = MinHashLSH(threshold=0.5, num_perm=128)
@@ -420,7 +402,8 @@ class MinHashLSH(object):
 
             .. code-block::
 
-                [(1.0, 0), (0.421875, 4), (0.4140625, 19), (0.359375, 58), (0.3359375, 78), (0.265625, 62), (0.2578125, 11), (0.25, 98), (0.171875, 21)]
+                [(1.0, 0), (0.421875, 4), (0.4140625, 19), (0.359375, 58),
+                 (0.3359375, 78), (0.265625, 62), (0.2578125, 11), (0.25, 98), (0.171875, 21)]
 
             Note that although the threshold is set to 0.5, the results are not
             guaranteed to be above 0.5 because the LSH index is approximate and
@@ -428,9 +411,7 @@ class MinHashLSH(object):
 
         """
         if len(minhash) != self.h:
-            raise ValueError(
-                "Expecting minhash with length %d, got %d" % (self.h, len(minhash))
-            )
+            raise ValueError("Expecting minhash with length %d, got %d" % (self.h, len(minhash)))
         candidates = set()
         for (start, end), hashtable in zip(self.hashranges, self.hashtables):
             H = self._H(minhash.hashvalues[start:end])
@@ -438,12 +419,10 @@ class MinHashLSH(object):
                 candidates.add(key)
         if self.prepickle:
             return [pickle.loads(key) for key in candidates]
-        else:
-            return list(candidates)
+        return list(candidates)
 
     def add_to_query_buffer(self, minhash: Union[MinHash, WeightedMinHash]) -> None:
-        """
-        Giving the MinHash of the query set, buffer
+        """Giving the MinHash of the query set, buffer
         queries to retrieve the keys that references
         sets with Jaccard similarities greater than
         the threshold.
@@ -455,18 +434,16 @@ class MinHashLSH(object):
 
         Args:
             minhash (MinHash): The MinHash of the query set.
+
         """
         if len(minhash) != self.h:
-            raise ValueError(
-                "Expecting minhash with length %d, got %d" % (self.h, len(minhash))
-            )
+            raise ValueError("Expecting minhash with length %d, got %d" % (self.h, len(minhash)))
         for (start, end), hashtable in zip(self.hashranges, self.hashtables):
             H = self._H(minhash.hashvalues[start:end])
             hashtable.add_to_select_buffer([H])
 
-    def collect_query_buffer(self) -> List[Hashable]:
-        """
-        Execute and return buffered queries given
+    def collect_query_buffer(self) -> list[Hashable]:
+        """Execute and return buffered queries given
         by :meth:`add_to_query_buffer`.
 
         If multiple query MinHash were added to the query buffer,
@@ -474,6 +451,7 @@ class MinHashLSH(object):
 
         Returns:
             list: a list of unique keys.
+
         """
         collected_result_sets = [
             set(collected_result_lists)
@@ -483,26 +461,23 @@ class MinHashLSH(object):
         if not collected_result_sets:
             return []
         if self.prepickle:
-            return [
-                pickle.loads(key) for key in set.intersection(*collected_result_sets)
-            ]
+            return [pickle.loads(key) for key in set.intersection(*collected_result_sets)]
         return list(set.intersection(*collected_result_sets))
 
     def __contains__(self, key: Hashable) -> bool:
-        """
-        Args:
+        """Args:
             key (Hashable): The unique identifier of a set.
 
         Returns:
             bool: True only if the key exists in the index.
+
         """
         if self.prepickle:
             key = pickle.dumps(key)
         return key in self.keys
 
     def remove(self, key: Hashable) -> None:
-        """
-        Remove the key from the index.
+        """Remove the key from the index.
 
         Args:
             key (Hashable): The unique identifier of a set.
@@ -514,8 +489,7 @@ class MinHashLSH(object):
         self._remove(key, buffer=False)
 
     def _remove(self, key: Hashable, buffer: bool = False) -> None:
-        """
-        Internal remove method with optional buffering support.
+        """Internal remove method with optional buffering support.
 
         Args:
             key (Hashable): The unique identifier of a set.
@@ -523,6 +497,7 @@ class MinHashLSH(object):
 
         Raises:
             ValueError: If the key does not exist.
+
         """
         if self.prepickle:
             key = pickle.dumps(key)
@@ -535,9 +510,9 @@ class MinHashLSH(object):
         self.keys.remove(key, buffer=buffer)
 
     def is_empty(self) -> bool:
-        """
-        Returns:
-            bool: `True` only if the index is empty.
+        """Returns:
+        bool: `True` only if the index is empty.
+
         """
         return any(t.size() == 0 for t in self.hashtables)
 
@@ -549,9 +524,7 @@ class MinHashLSH(object):
 
     def _query_b(self, minhash, b):
         if len(minhash) != self.h:
-            raise ValueError(
-                "Expecting minhash with length %d, got %d" % (self.h, len(minhash))
-            )
+            raise ValueError("Expecting minhash with length %d, got %d" % (self.h, len(minhash)))
         if b > len(self.hashtables):
             raise ValueError("b must be less or equal to the number of hash tables")
         candidates = set()
@@ -562,23 +535,21 @@ class MinHashLSH(object):
                     candidates.add(key)
         if self.prepickle:
             return {pickle.loads(key) for key in candidates}
-        else:
-            return candidates
+        return candidates
 
-    def get_counts(self) -> List[Dict[Hashable, int]]:
-        """
-        Returns a list of length :attr:`b` (i.e., number of hash tables) with
+    def get_counts(self) -> list[dict[Hashable, int]]:
+        """Returns a list of length :attr:`b` (i.e., number of hash tables) with
         each element a dictionary mapping hash table bucket key to the number
         of indexed keys stored under each bucket.
 
         Returns:
             list: a list of dictionaries.
+
         """
         return [hashtable.itemcounts() for hashtable in self.hashtables]
 
-    def get_subset_counts(self, *keys: Hashable) -> List[Dict[Hashable, int]]:
-        """
-        Returns the bucket allocation counts (see :meth:`get_counts` above)
+    def get_subset_counts(self, *keys: Hashable) -> list[dict[Hashable, int]]:
+        """Returns the bucket allocation counts (see :meth:`get_counts` above)
         restricted to the list of keys given.
 
         Args:
@@ -587,11 +558,9 @@ class MinHashLSH(object):
 
         Returns:
             list: a list of dictionaries.
+
         """
-        if self.prepickle:
-            key_set = [pickle.dumps(key) for key in set(keys)]
-        else:
-            key_set = list(set(keys))
+        key_set = [pickle.dumps(key) for key in set(keys)] if self.prepickle else list(set(keys))
         hashtables = [unordered_storage({"type": "dict"}) for _ in range(self.b)]
         Hss = self.keys.getmany(*key_set)
         for key, Hs in zip(key_set, Hss):
@@ -606,6 +575,7 @@ class MinHashLSHInsertionSession:
     Args:
         lsh (MinHashLSH): The MinHashLSH to insert into.
         buffer_size (int): The buffer size for insert_session mode.
+
     """
 
     def __init__(self, lsh: MinHashLSH, buffer_size: int):
@@ -629,14 +599,14 @@ class MinHashLSHInsertionSession:
         minhash: Union[MinHash, WeightedMinHash],
         check_duplication=True,
     ) -> None:
-        """
-        Insert a unique key to the index, together
+        """Insert a unique key to the index, together
         with a MinHash (or weighted MinHash) of the set referenced by
         the key.
 
         Args:
             key (Hashable): The unique identifier of the set.
             minhash (Union[MinHash, WeightedMinhash]): The MinHash of the set.
+
         """
         self.lsh._insert(key, minhash, check_duplication=check_duplication, buffer=True)
 
@@ -647,13 +617,14 @@ class MinHashLSHDeletionSession:
     Args:
         lsh (MinHashLSH): The MinHashLSH to delete from.
         buffer_size (int): The buffer size for deletion operations.
+
     """
 
     def __init__(self, lsh: MinHashLSH, buffer_size: int):
         self.lsh = lsh
         self.lsh.buffer_size = buffer_size
 
-    def __enter__(self) -> "MinHashLSHDeletionSession":
+    def __enter__(self) -> MinHashLSHDeletionSession:
         return self
 
     def __exit__(self, exc_type, exc_val, exc_tb) -> None:
@@ -665,13 +636,13 @@ class MinHashLSHDeletionSession:
             hashtable.empty_buffer()
 
     def remove(self, key: Hashable) -> None:
-        """
-        Remove a key from the index.
+        """Remove a key from the index.
 
         Args:
             key (Hashable): The unique identifier to remove.
 
         Raises:
             ValueError: If the key does not exist.
+
         """
         self.lsh._remove(key, buffer=True)

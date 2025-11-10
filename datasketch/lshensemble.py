@@ -1,46 +1,45 @@
-from collections import deque, Counter
+import logging
 import struct
-from typing import Dict, Generator, Hashable, Iterable, Optional, Tuple
+from collections import Counter, deque
+from collections.abc import Generator, Hashable, Iterable
+from typing import Optional
 
 import numpy as np
+
+from datasketch.lsh import MinHashLSH, integrate
+from datasketch.lshensemble_partition import optimal_partitions
 from datasketch.minhash import MinHash
 from datasketch.storage import _random_name
-from datasketch.lsh import integrate, MinHashLSH
-from datasketch.lshensemble_partition import optimal_partitions
+
+logger = logging.getLogger(__name__)
 
 
 def _false_positive_probability(threshold, b, r, xq):
-    """
-    Compute the false positive probability given the containment threshold.
+    """Compute the false positive probability given the containment threshold.
     xq is the ratio of x/q.
     """
     _probability = lambda t: 1 - (1 - (t / (1 + xq - t)) ** float(r)) ** float(b)
     if xq >= threshold:
-        a, err = integrate(_probability, 0.0, threshold)
+        a, _err = integrate(_probability, 0.0, threshold)
         return a
-    a, err = integrate(_probability, 0.0, xq)
+    a, _err = integrate(_probability, 0.0, xq)
     return a
 
 
 def _false_negative_probability(threshold, b, r, xq):
-    """
-    Compute the false negative probability given the containment threshold
-    """
+    """Compute the false negative probability given the containment threshold."""
     _probability = lambda t: 1 - (1 - (1 - (t / (1 + xq - t)) ** float(r)) ** float(b))
     if xq >= 1.0:
-        a, err = integrate(_probability, threshold, 1.0)
+        a, _err = integrate(_probability, threshold, 1.0)
         return a
     if xq >= threshold:
-        a, err = integrate(_probability, threshold, xq)
+        a, _err = integrate(_probability, threshold, xq)
         return a
     return 0.0
 
 
-def _optimal_param(
-    threshold, num_perm, max_r, xq, false_positive_weight, false_negative_weight
-):
-    """
-    Compute the optimal parameters that minimizes the weighted sum
+def _optimal_param(threshold, num_perm, max_r, xq, false_positive_weight, false_negative_weight):
+    """Compute the optimal parameters that minimizes the weighted sum
     of probabilities of false positive and false negative.
     xq is the ratio of x/q.
     """
@@ -59,9 +58,8 @@ def _optimal_param(
     return opt
 
 
-class MinHashLSHEnsemble(object):
-    """
-    The :ref:`minhash_lsh_ensemble` index. It supports
+class MinHashLSHEnsemble:
+    """The :ref:`minhash_lsh_ensemble` index. It supports
     :ref:`containment` queries.
     The implementation is based on
     `E. Zhu et al. <http://www.vldb.org/pvldb/vol9/p1185-zhu.pdf>`_.
@@ -104,6 +102,7 @@ class MinHashLSHEnsemble(object):
 
     .. _`Go implementation`: https://github.com/ekzhu/lshensemble
     .. _`the paper`: http://www.vldb.org/pvldb/vol9/p1185-zhu.pdf
+
     """
 
     def __init__(
@@ -112,8 +111,8 @@ class MinHashLSHEnsemble(object):
         num_perm: int = 128,
         num_part: int = 16,
         m: int = 8,
-        weights: Tuple[float, float] = (0.5, 0.5),
-        storage_config: Optional[Dict] = None,
+        weights: tuple[float, float] = (0.5, 0.5),
+        storage_config: Optional[dict] = None,
         prepickle: Optional[bool] = None,
     ) -> None:
         if threshold > 1.0 or threshold < 0.0:
@@ -133,7 +132,7 @@ class MinHashLSHEnsemble(object):
         self.m = m
         rs = self._init_optimal_params(weights)
         # Initialize multiple LSH indexes for each partition
-        storage_config = {"type": "dict"} if not storage_config else storage_config
+        storage_config = storage_config if storage_config else {"type": "dict"}
         basename = storage_config.get("basename", _random_name(11))
         self.indexes = [
             dict(
@@ -142,9 +141,7 @@ class MinHashLSHEnsemble(object):
                     MinHashLSH(
                         num_perm=self.h,
                         params=(int(self.h / r), r),
-                        storage_config=self._get_storage_config(
-                            basename, storage_config, partition, r
-                        ),
+                        storage_config=self._get_storage_config(basename, storage_config, partition, r),
                         prepickle=prepickle,
                     ),
                 )
@@ -186,18 +183,15 @@ class MinHashLSHEnsemble(object):
 
     def _get_storage_config(self, basename, base_config, partition, r):
         config = dict(base_config)
-        config["basename"] = b"-".join(
-            [basename, struct.pack(">H", partition), struct.pack(">H", r)]
-        )
+        config["basename"] = b"-".join([basename, struct.pack(">H", partition), struct.pack(">H", r)])
         return config
 
-    def index(self, entries: Iterable[Tuple[Hashable, MinHash, int]]) -> None:
-        """
-        Index all sets given their keys, MinHashes, and sizes.
+    def index(self, entries: Iterable[tuple[Hashable, MinHash, int]]) -> None:
+        """Index all sets given their keys, MinHashes, and sizes.
         It can be called only once after the index is created.
 
         Args:
-            entries (Iterable[Tuple[Hashable, MinHash, int]]): An iterable of
+            entries (Iterable[tuple[Hashable, MinHash, int]]): An iterable of
                 tuples, each must be in the form of ``(key, minhash, size)``,
                 where ``key`` is the unique
                 identifier of a set, ``minhash`` is the MinHash of the set,
@@ -233,8 +227,7 @@ class MinHashLSHEnsemble(object):
                 self.indexes[curr_part][r].insert(key, minhash)
 
     def query(self, minhash: MinHash, size: int) -> Generator[Hashable, None, None]:
-        """
-        Giving the MinHash and size of the query set, retrieve
+        """Giving the MinHash and size of the query set, retrieve
         keys that references sets with containment with respect to
         the query set greater than the threshold.
 
@@ -244,6 +237,7 @@ class MinHashLSHEnsemble(object):
 
         Returns:
             Generator[Hashable, None, None]: an iterator of keys.
+
         """
         for i, index in enumerate(self.indexes):
             u = self.uppers[i]
@@ -254,19 +248,19 @@ class MinHashLSHEnsemble(object):
                 yield key
 
     def __contains__(self, key: Hashable) -> bool:
-        """
-        Args:
+        """Args:
             key (hashable): The unique identifier of a set.
 
         Returns:
             bool: True only if the key exists in the index.
+
         """
         return any(any(key in index[r] for r in index) for index in self.indexes)
 
     def is_empty(self) -> bool:
-        """
-        Returns:
-            bool: Check if the index is empty.
+        """Returns:
+        bool: Check if the index is empty.
+
         """
         return all(all(index[r].is_empty() for r in index) for index in self.indexes)
 
@@ -280,7 +274,5 @@ if __name__ == "__main__":
     num_perm = 256
     false_negative_weight, false_positive_weight = 0.5, 0.5
     for xq in xqs:
-        b, r = _optimal_param(
-            threshold, num_perm, max_r, xq, false_positive_weight, false_negative_weight
-        )
-        print("threshold: %.2f, xq: %.3f, b: %d, r: %d" % (threshold, xq, b, r))
+        b, r = _optimal_param(threshold, num_perm, max_r, xq, false_positive_weight, false_negative_weight)
+        logger.info("threshold: %.2f, xq: %.3f, b: %d, r: %d", threshold, xq, b, r)

@@ -1,7 +1,10 @@
 from __future__ import annotations
+
 import copy
-from typing import Callable, Generator, Iterable, List, Optional, Tuple
 import warnings
+from collections.abc import Generator, Iterable
+from typing import Callable, Optional
+
 import numpy as np
 
 from datasketch.hashfunc import sha1_hash32
@@ -15,7 +18,7 @@ _max_hash = np.uint64((1 << 32) - 1)
 _hash_range = 1 << 32
 
 
-class MinHash(object):
+class MinHash:
     """MinHash is a probabilistic data structure for computing
     `Jaccard similarity`_ between sets.
 
@@ -62,6 +65,7 @@ class MinHash(object):
     .. _`Jaccard similarity`: https://en.wikipedia.org/wiki/Jaccard_index
     .. _hashlib: https://docs.python.org/3.5/library/hashlib.html
     .. _`pickle`: https://docs.python.org/3/library/pickle.html
+
     """
 
     def __init__(
@@ -71,7 +75,7 @@ class MinHash(object):
         hashfunc: Callable = sha1_hash32,
         hashobj: Optional[object] = None,  # Deprecated.
         hashvalues: Optional[Iterable] = None,
-        permutations: Optional[Tuple[Iterable, Iterable]] = None,
+        permutations: Optional[tuple[Iterable, Iterable]] = None,
     ) -> None:
         if hashvalues is not None:
             num_perm = len(hashvalues)
@@ -91,9 +95,7 @@ class MinHash(object):
         self.hashfunc = hashfunc
         # Check for use of hashobj and issue warning.
         if hashobj is not None:
-            warnings.warn(
-                "hashobj is deprecated, use hashfunc instead.", DeprecationWarning
-            )
+            warnings.warn("hashobj is deprecated, use hashfunc instead.", DeprecationWarning, stacklevel=2)
         # Initialize hash values
         if hashvalues is not None:
             self.hashvalues = self._parse_hashvalues(hashvalues)
@@ -144,17 +146,22 @@ class MinHash(object):
             .. code-block:: python
 
                 minhash = Minhash()
-                minhash.update("new value".encode('utf-8'))
+                minhash.update("new value".encode("utf-8"))
 
             We can also use a different hash function, for example, `pyfarmhash`:
 
             .. code-block:: python
 
                 import farmhash
+
+
                 def _hash_32(b):
                     return farmhash.hash32(b)
+
+
                 minhash = MinHash(hashfunc=_hash_32)
                 minhash.update("new value")
+
         """
         hv = self.hashfunc(b)
         a, b = self.permutations
@@ -176,7 +183,8 @@ class MinHash(object):
             .. code-block:: python
 
                 minhash = Minhash()
-                minhash.update_batch([s.encode('utf-8') for s in ["token1", "token2"]])
+                minhash.update_batch([s.encode("utf-8") for s in ["token1", "token2"]])
+
         """
         hv = np.array([self.hashfunc(_b) for _b in b], dtype=np.uint64, ndmin=2).T
         a, b = self.permutations
@@ -196,6 +204,7 @@ class MinHash(object):
         Raises:
             ValueError: If the two MinHashes have different numbers of
                 permutation functions or different seeds.
+
         """
         if other.seed != self.seed:
             raise ValueError(
@@ -207,9 +216,7 @@ class MinHash(object):
                 "Cannot compute Jaccard given MinHash with\
                     different numbers of permutation functions"
             )
-        return float(np.count_nonzero(self.hashvalues == other.hashvalues)) / float(
-            len(self)
-        )
+        return float(np.count_nonzero(self.hashvalues == other.hashvalues)) / float(len(self))
 
     def count(self) -> float:
         """Estimate the cardinality count based on the technique described in
@@ -217,6 +224,7 @@ class MinHash(object):
 
         Returns:
             int: The estimated cardinality of the set represented by this MinHash.
+
         """
         k = len(self)
         return float(k) / np.sum(self.hashvalues / float(_max_hash)) - 1.0
@@ -231,6 +239,7 @@ class MinHash(object):
         Raises:
             ValueError: If the two MinHashes have different numbers of
                 permutation functions or different seeds.
+
         """
         if other.seed != self.seed:
             raise ValueError(
@@ -250,30 +259,28 @@ class MinHash(object):
 
         Returns:
             numpy.ndarray: The hash values which is a Numpy array.
+
         """
         return copy.copy(self.hashvalues)
 
     def is_empty(self) -> bool:
+        """Returns:
+        bool: If the current MinHash is empty - at the state of just
+            initialized.
+
         """
-        Returns:
-            bool: If the current MinHash is empty - at the state of just
-                initialized.
-        """
-        if np.any(self.hashvalues != _max_hash):
-            return False
-        return True
+        return not np.any(self.hashvalues != _max_hash)
 
     def clear(self) -> None:
-        """
-        Clear the current state of the MinHash.
+        """Clear the current state of the MinHash.
         All hash values are reset.
         """
         self.hashvalues = self._init_hashvalues(len(self))
 
     def copy(self) -> MinHash:
-        """
-        Returns:
-            MinHash: a copy of this MinHash by exporting its state.
+        """Returns:
+        MinHash: a copy of this MinHash by exporting its state.
+
         """
         return MinHash(
             seed=self.seed,
@@ -283,21 +290,19 @@ class MinHash(object):
         )
 
     def __len__(self) -> int:
-        """
-        Returns:
-            int: The number of hash values.
+        """Returns:
+        int: The number of hash values.
+
         """
         return len(self.hashvalues)
 
     def __eq__(self, other: MinHash) -> bool:
-        """
-        Returns:
-            bool: If their seeds and hash values are both equal then two are equivalent.
+        """Returns:
+        bool: If their seeds and hash values are both equal then two are equivalent.
+
         """
         return (
-            type(self) is type(other)
-            and self.seed == other.seed
-            and np.array_equal(self.hashvalues, other.hashvalues)
+            type(self) is type(other) and self.seed == other.seed and np.array_equal(self.hashvalues, other.hashvalues)
         )
 
     @classmethod
@@ -331,6 +336,7 @@ class MinHash(object):
 
                 # Union m1 and m2.
                 m = MinHash.union(m1, m2)
+
         """
         if len(mhs) < 2:
             raise ValueError("Cannot union less than 2 MinHash")
@@ -351,7 +357,7 @@ class MinHash(object):
         )
 
     @classmethod
-    def bulk(cls, b: Iterable, **minhash_kwargs) -> List[MinHash]:
+    def bulk(cls, b: Iterable, **minhash_kwargs) -> list[MinHash]:
         """Compute MinHashes in bulk. This method avoids unnecessary
         overhead when initializing many minhashes by reusing the initialized
         state.
@@ -363,15 +369,15 @@ class MinHash(object):
                 will be used for all minhashes.
 
         Returns:
-            List[datasketch.MinHash]: A list of computed MinHashes.
+            list[datasketch.MinHash]: A list of computed MinHashes.
 
         Example:
 
             .. code-block:: python
 
                 from datasketch import MinHash
-                data = [[b'token1', b'token2', b'token3'],
-                        [b'token4', b'token5', b'token6']]
+
+                data = [[b"token1", b"token2", b"token3"], [b"token4", b"token5", b"token6"]]
                 minhashes = MinHash.bulk(data, num_perm=64)
 
         """
@@ -397,8 +403,8 @@ class MinHash(object):
             .. code-block:: python
 
                 from datasketch import MinHash
-                data = [[b'token1', b'token2', b'token3'],
-                        [b'token4', b'token5', b'token6']]
+
+                data = [[b"token1", b"token2", b"token3"], [b"token4", b"token5", b"token6"]]
                 for minhash in MinHash.generator(data, num_perm=64):
                     # do something useful
                     minhash

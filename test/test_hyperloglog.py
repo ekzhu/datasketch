@@ -1,21 +1,22 @@
-import unittest
-import struct
 import pickle
-from mock import patch
+import struct
+import unittest
+from unittest.mock import patch
+
 import numpy as np
+
 from datasketch.hyperloglog import HyperLogLog, HyperLogLogPlusPlus
 from test.utils import fake_hash_func
 
 
 class TestHyperLogLog(unittest.TestCase):
-
     _class = HyperLogLog
 
     def test_init(self):
         h = self._class(4, hashfunc=fake_hash_func)
         self.assertEqual(h.m, 1 << 4)
         self.assertEqual(len(h.reg), h.m)
-        self.assertTrue(all(0 == i for i in h.reg))
+        self.assertTrue(all(i == 0 for i in h.reg))
 
     def test_init_from_reg(self):
         reg = np.array([1 for _ in range(1 << 4)], dtype=np.int8)
@@ -32,16 +33,16 @@ class TestHyperLogLog(unittest.TestCase):
         h = self._class(4, hashfunc=fake_hash_func)
         h.update(0b00011111)
         self.assertEqual(h.reg[0b1111], self._class._hash_range_bit - 4)
-        h.update(0xfffffff1)
+        h.update(0xFFFFFFF1)
         self.assertEqual(h.reg[1], 1)
-        h.update(0x000000f5)
+        h.update(0x000000F5)
         self.assertEqual(h.reg[5], self._class._hash_range_bit - 4 - 3)
 
     def test_merge(self):
         h1 = self._class(4, hashfunc=fake_hash_func)
         h2 = self._class(4, hashfunc=fake_hash_func)
         h1.update(0b00011111)
-        h2.update(0xfffffff1)
+        h2.update(0xFFFFFFF1)
         h1.merge(h2)
         self.assertEqual(h1.reg[0b1111], self._class._hash_range_bit - 4)
         self.assertEqual(h1.reg[1], 1)
@@ -49,8 +50,8 @@ class TestHyperLogLog(unittest.TestCase):
     def test_count(self):
         h = self._class(4, hashfunc=fake_hash_func)
         h.update(0b00011111)
-        h.update(0xfffffff1)
-        h.update(0xfffffff5)
+        h.update(0xFFFFFFF1)
+        h.update(0xFFFFFFF5)
         # We can't really verify the correctness here, just to make sure
         # no syntax error
         # See benchmarks for the accuracy of the cardinality estimation.
@@ -60,14 +61,14 @@ class TestHyperLogLog(unittest.TestCase):
         h = self._class(4, hashfunc=fake_hash_func)
         buf = bytearray(h.bytesize())
         h.serialize(buf)
-        self.assertEqual(h.p, struct.unpack_from('B', bytes(buf), 0)[0])
+        self.assertEqual(h.p, struct.unpack_from("B", bytes(buf), 0)[0])
 
     def test_deserialize(self):
         h = self._class(4, hashfunc=fake_hash_func)
         h.update(123)
         h.update(33)
         h.update(12)
-        h.update(0xfffffff1)
+        h.update(0xFFFFFFF1)
         buf = bytearray(h.bytesize())
         h.serialize(buf)
         hd = self._class.deserialize(buf)
@@ -80,7 +81,7 @@ class TestHyperLogLog(unittest.TestCase):
         h.update(123)
         h.update(33)
         h.update(12)
-        h.update(0xffffff1)
+        h.update(0xFFFFFF1)
         p = pickle.loads(pickle.dumps(h))
         self.assertEqual(p.m, h.m)
         self.assertEqual(p.p, h.p)
@@ -91,8 +92,8 @@ class TestHyperLogLog(unittest.TestCase):
         h2 = self._class(4, hashfunc=fake_hash_func)
         h3 = self._class(4, hashfunc=fake_hash_func)
         h1.update(0b00011111)
-        h2.update(0xfffffff1)
-        h3.update(0x000000f5)
+        h2.update(0xFFFFFFF1)
+        h3.update(0x000000F5)
         h = self._class.union(h1, h2, h3)
         self.assertEqual(h.reg[0b1111], self._class._hash_range_bit - 4)
         self.assertEqual(h.reg[1], 1)
@@ -104,7 +105,7 @@ class TestHyperLogLog(unittest.TestCase):
         h3 = self._class(4, hashfunc=fake_hash_func)
         h4 = self._class(8, hashfunc=fake_hash_func)
         h1.update(0b00011111)
-        h2.update(0xfffffff1)
+        h2.update(0xFFFFFFF1)
         h3.update(0b00011111)
         h4.update(0b00011111)
         self.assertNotEqual(h1, h2)
@@ -120,10 +121,9 @@ class TestHyperLogLog(unittest.TestCase):
 
 
 class TestHyperLogLogSpecific(unittest.TestCase):
-
     def test_hyperloglog_large_card_est(self):
         reg = np.array([27 for i in range(1 << 4)], dtype=np.int8)
-        with patch.object(HyperLogLog, '_largerange_correction') as mock_method:
+        with patch.object(HyperLogLog, "_largerange_correction") as mock_method:
             mock_method.return_value = 0
             h = HyperLogLog(reg=reg)
             h.count()
@@ -131,7 +131,7 @@ class TestHyperLogLogSpecific(unittest.TestCase):
 
     def test_hyperloglog_small_card_est(self):
         reg = np.array([1 for i in range(1 << 4)], dtype=np.int8)
-        with patch.object(HyperLogLog, '_linearcounting') as mock_method:
+        with patch.object(HyperLogLog, "_linearcounting") as mock_method:
             mock_method.return_value = 0
             h = HyperLogLog(reg=reg)
             h.count()
@@ -139,23 +139,22 @@ class TestHyperLogLogSpecific(unittest.TestCase):
 
 
 class TestHyperLogLogPlusPlus(TestHyperLogLog):
-
     _class = HyperLogLogPlusPlus
 
     def test_update(self):
         h = self._class(4, hashfunc=fake_hash_func)
         h.update(0b00011111)
         self.assertEqual(h.reg[0b1111], self._class._hash_range_bit - 4)
-        h.update(0xfffffffffffffff1)
+        h.update(0xFFFFFFFFFFFFFFF1)
         self.assertEqual(h.reg[1], 1)
-        h.update(0x000000f5)
+        h.update(0x000000F5)
         self.assertEqual(h.reg[5], self._class._hash_range_bit - 4 - 3)
 
     def test_merge(self):
         h1 = self._class(4, hashfunc=fake_hash_func)
         h2 = self._class(4, hashfunc=fake_hash_func)
         h1.update(0b00011111)
-        h2.update(0xfffffffffffffff1)
+        h2.update(0xFFFFFFFFFFFFFFF1)
         h1.merge(h2)
         self.assertEqual(h1.reg[0b1111], self._class._hash_range_bit - 4)
         self.assertEqual(h1.reg[1], 1)
@@ -165,8 +164,8 @@ class TestHyperLogLogPlusPlus(TestHyperLogLog):
         h2 = self._class(4, hashfunc=fake_hash_func)
         h3 = self._class(4, hashfunc=fake_hash_func)
         h1.update(0b00011111)
-        h2.update(0xfffffffffffffff1)
-        h3.update(0x000000f5)
+        h2.update(0xFFFFFFFFFFFFFFF1)
+        h3.update(0x000000F5)
         h = self._class.union(h1, h2, h3)
         self.assertEqual(h.reg[0b1111], self._class._hash_range_bit - 4)
         self.assertEqual(h.reg[1], 1)

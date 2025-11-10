@@ -1,4 +1,3 @@
-from collections import defaultdict
 import binascii
 import collections
 import itertools
@@ -6,17 +5,20 @@ import operator
 import os
 import random
 import string
-from abc import ABCMeta, abstractmethod
-ABC = ABCMeta('ABC', (object,), {}) # compatible with Python 2 *and* 3
+from abc import ABC, abstractmethod
+from collections import defaultdict
+
 try:
     import redis
 except ImportError:
     redis = None
 try:
+    import logging
+
     import cassandra
     from cassandra import cluster as c_cluster
     from cassandra import concurrent as c_concurrent
-    import logging
+
     logging.getLogger("cassandra").setLevel(logging.ERROR)
 except ImportError:
     cassandra = None
@@ -25,7 +27,7 @@ except ImportError:
 
 
 def ordered_storage(config, name=None):
-    '''Return ordered storage system based on the specified config.
+    """Return ordered storage system based on the specified config.
 
     The canonical example of such a storage container is
     ``defaultdict(list)``. Thus, the return value of this method contains
@@ -43,8 +45,7 @@ def ordered_storage(config, name=None):
             literal configuration values should be replaced by dicts of
             the form::
 
-                {'env': 'REDIS_HOSTNAME',
-                 'default': 'localhost'}
+                {"env": "REDIS_HOSTNAME", "default": "localhost"}
 
             For a full example, see :ref:`minhash_lsh_at_scale`
 
@@ -52,18 +53,20 @@ def ordered_storage(config, name=None):
             For dict-type containers, this is ignored. For Redis containers,
             this name is used to prefix keys pertaining to this storage
             container within the database.
-    '''
-    tp = config['type']
-    if tp == 'dict':
+
+    """
+    tp = config["type"]
+    if tp == "dict":
         return DictListStorage(config)
-    if tp == 'redis':
+    if tp == "redis":
         return RedisListStorage(config, name=name)
-    if tp == 'cassandra':
+    if tp == "cassandra":
         return CassandraListStorage(config, name=name)
+    return None
 
 
 def unordered_storage(config, name=None):
-    '''Return an unordered storage system based on the specified config.
+    """Return an unordered storage system based on the specified config.
 
     The canonical example of such a storage container is
     ``defaultdict(set)``. Thus, the return value of this method contains
@@ -80,8 +83,7 @@ def unordered_storage(config, name=None):
             literal configuration values should be replaced by dicts of
             the form::
 
-                {'env': 'REDIS_HOSTNAME',
-                 'default': 'localhost'}
+                {"env": "REDIS_HOSTNAME", "default": "localhost"}
 
             For a full example, see :ref:`minhash_lsh_at_scale`
 
@@ -89,18 +91,21 @@ def unordered_storage(config, name=None):
             For dict-type containers, this is ignored. For Redis containers,
             this name is used to prefix keys pertaining to this storage
             container within the database.
-    '''
-    tp = config['type']
-    if tp == 'dict':
+
+    """
+    tp = config["type"]
+    if tp == "dict":
         return DictSetStorage(config)
-    if tp == 'redis':
+    if tp == "redis":
         return RedisSetStorage(config, name=name)
-    if tp == 'cassandra':
+    if tp == "cassandra":
         return CassandraSetStorage(config, name=name)
+    return None
 
 
 class Storage(ABC):
-    '''Base class for key, value containers where the values are sequences.'''
+    """Base class for key, value containers where the values are sequences."""
+
     def __getitem__(self, key):
         return self.get(key)
 
@@ -119,15 +124,15 @@ class Storage(ABC):
 
     @abstractmethod
     def keys(self):
-        '''Return an iterator on keys in storage'''
+        """Return an iterator on keys in storage."""
         return []
 
     @abstractmethod
     def get(self, key):
-        '''Get list of values associated with a key
-        
+        """Get list of values associated with a key.
+
         Returns empty list ([]) if `key` is not found
-        '''
+        """
         pass
 
     def getmany(self, *keys):
@@ -135,50 +140,50 @@ class Storage(ABC):
 
     @abstractmethod
     def insert(self, key, *vals, **kwargs):
-        '''Add `val` to storage against `key`'''
+        """Add `val` to storage against `key`."""
         pass
 
     @abstractmethod
     def remove(self, *keys):
-        '''Remove `keys` from storage'''
+        """Remove `keys` from storage."""
         pass
 
     @abstractmethod
     def remove_val(self, key, val):
-        '''Remove `val` from list of values under `key`'''
+        """Remove `val` from list of values under `key`."""
         pass
 
     @abstractmethod
     def size(self):
-        '''Return size of storage with respect to number of keys'''
+        """Return size of storage with respect to number of keys."""
         pass
 
     @abstractmethod
     def itemcounts(self, **kwargs):
-        '''Returns the number of items stored under each key'''
+        """Returns the number of items stored under each key."""
         pass
 
     @abstractmethod
     def has_key(self, key):
-        '''Determines whether the key is in the storage or not'''
+        """Determines whether the key is in the storage or not."""
         pass
 
     def status(self):
-        return {'keyspace_size': len(self)}
+        return {"keyspace_size": len(self)}
 
     def empty_buffer(self):
         pass
 
     def add_to_select_buffer(self, keys):
-        '''Query keys and add them to internal buffer'''
-        if not hasattr(self, '_select_buffer'):
+        """Query keys and add them to internal buffer."""
+        if not hasattr(self, "_select_buffer"):
             self._select_buffer = self.getmany(*keys)
         else:
             self._select_buffer.extend(self.getmany(*keys))
 
     def collect_select_buffer(self):
-        '''Return buffered query results'''
-        if not hasattr(self, '_select_buffer'):
+        """Return buffered query results."""
+        if not hasattr(self, "_select_buffer"):
             return []
         buffer = list(self._select_buffer)
         del self._select_buffer[:]
@@ -186,19 +191,18 @@ class Storage(ABC):
 
 
 class OrderedStorage(Storage):
-
     pass
 
 
 class UnorderedStorage(Storage):
-
     pass
 
 
 class DictListStorage(OrderedStorage):
-    '''This is a wrapper class around ``defaultdict(list)`` enabling
-    it to support an API consistent with `Storage`
-    '''
+    """A wrapper class around ``defaultdict(list)`` enabling
+    it to support an API consistent with `Storage`.
+    """
+
     def __init__(self, config):
         self._dict = defaultdict(list)
 
@@ -222,10 +226,10 @@ class DictListStorage(OrderedStorage):
         return len(self._dict)
 
     def itemcounts(self, **kwargs):
-        '''Returns a dict where the keys are the keys of the container.
+        """Returns a dict where the keys are the keys of the container.
         The values are the *lengths* of the value sequences stored
         in this container.
-        '''
+        """
         return {k: len(v) for k, v in self._dict.items()}
 
     def has_key(self, key):
@@ -233,9 +237,10 @@ class DictListStorage(OrderedStorage):
 
 
 class DictSetStorage(UnorderedStorage, DictListStorage):
-    '''This is a wrapper class around ``defaultdict(set)`` enabling
-    it to support an API consistent with `Storage`
-    '''
+    """A wrapper class around ``defaultdict(set)`` enabling
+    it to support an API consistent with `Storage`.
+    """
+
     def __init__(self, config):
         self._dict = defaultdict(set)
 
@@ -248,7 +253,7 @@ class DictSetStorage(UnorderedStorage, DictListStorage):
 
 if cassandra is not None:
 
-    class CassandraSharedSession(object):
+    class CassandraSharedSession:
         """Cassandra session shared across all storage instances."""
 
         __session = None
@@ -278,10 +283,12 @@ if cassandra is not None:
             if cls.__session.keyspace != keyspace:
                 if kwargs.get("drop_keyspace", False):
                     cls.__session.execute(cls.QUERY_DROP_KEYSPACE.format(keyspace))
-                cls.__session.execute(cls.QUERY_CREATE_KEYSPACE.format(
-                    keyspace=keyspace,
-                    replication=str(replication),
-                ))
+                cls.__session.execute(
+                    cls.QUERY_CREATE_KEYSPACE.format(
+                        keyspace=keyspace,
+                        replication=str(replication),
+                    )
+                )
                 cls.__session.set_keyspace(keyspace)
             return cls.__session
 
@@ -297,11 +304,10 @@ if cassandra is not None:
                 cls.__session_select_buffer = []
             return cls.__session_select_buffer
 
-
-    class CassandraClient(object):
+    class CassandraClient:
         """Cassandra Client."""
 
-        MIN_TOKEN = -(2 ** 63)
+        MIN_TOKEN = -(2**63)
 
         PAGE_SIZE = 1024
 
@@ -361,8 +367,7 @@ if cassandra is not None:
         QUERY_INSERT = "INSERT INTO {} (key, value, ts) VALUES (?, ?, ?)"
 
         def __init__(self, cassandra_params, name, buffer_size):
-            """
-            Constructor.
+            """Constructor.
 
             :param dict[str, any] cassandra_params: Cassandra parameters
             :param bytes name: the suffix to be used for the table name
@@ -387,19 +392,19 @@ if cassandra is not None:
             # Since both data types can be reduced to byte strings without loss of data, we use
             # only one Cassandra table for both table types (so we can keep one single storage) and
             # we specify different encoders/decoders based on the table type.
-            if b'bucket' in name:
-                basename, _, ret = name.split(b'_', 2)
-                name = basename + b'_bucket_' + binascii.hexlify(ret)
+            if b"bucket" in name:
+                basename, _, ret = name.split(b"_", 2)
+                name = basename + b"_bucket_" + binascii.hexlify(ret)
                 self._key_decoder = lambda x: x
                 self._key_encoder = lambda x: x
-                self._val_decoder = lambda x: x.decode('utf-8')
-                self._val_encoder = lambda x: x.encode('utf-8')
+                self._val_decoder = lambda x: x.decode("utf-8")
+                self._val_encoder = lambda x: x.encode("utf-8")
             else:
-                self._key_decoder = lambda x: x.decode('utf-8')
-                self._key_encoder = lambda x: x.encode('utf-8')
+                self._key_decoder = lambda x: x.decode("utf-8")
+                self._key_encoder = lambda x: x.encode("utf-8")
                 self._val_decoder = lambda x: x
                 self._val_encoder = lambda x: x
-            table_name = 'lsh_' + name.decode('ascii')
+            table_name = "lsh_" + name.decode("ascii")
 
             # Drop the table if are instructed to do so
             if cassandra_params.get("drop_tables", False):
@@ -418,8 +423,7 @@ if cassandra is not None:
 
         @property
         def buffer_size(self):
-            """
-            Get the buffer size.
+            """Get the buffer size.
 
             :rtype: int
             :return: the buffer size
@@ -428,8 +432,7 @@ if cassandra is not None:
 
         @buffer_size.setter
         def buffer_size(self, value):
-            """
-            Set the buffer size and propagate it to the underlying client.
+            """Set the buffer size and propagate it to the underlying client.
 
             :param int value: buffer size
             """
@@ -437,8 +440,7 @@ if cassandra is not None:
 
         @staticmethod
         def split_sequence(iterable, size):
-            """
-            Generator to split an iterable in chunks of given size.
+            """Generator to split an iterable in chunks of given size.
 
             :param iterable iterable: the iterable to split
             :param int size: the size of a chunk
@@ -452,8 +454,7 @@ if cassandra is not None:
                 item = list(itertools.islice(iterator, size))
 
         def _select(self, statements_and_parameters):
-            """
-            Execute a list of statements and parameters returning data.
+            """Execute a list of statements and parameters returning data.
 
             :param iterable[tuple] statements_and_parameters: list of statements and parameters
             :rtype: list[Row]
@@ -476,8 +477,7 @@ if cassandra is not None:
             return ret
 
         def _execute(self, statements_and_parameters):
-            """
-            Execute a list of statements and parameters NOT returning data.
+            """Execute a list of statements and parameters NOT returning data.
 
             :param iterable[tuple] statements_and_parameters: list of statements and parameters
             """
@@ -490,8 +490,7 @@ if cassandra is not None:
                 )
 
         def _buffer(self, statements_and_parameters):
-            """
-            Buffer (and execute) statements and parameters NOT returning data.
+            """Buffer (and execute) statements and parameters NOT returning data.
 
             :param iterable[tuple] statements_and_parameters: list of statements and parameters
             """
@@ -500,9 +499,7 @@ if cassandra is not None:
                 self.empty_buffer()
 
         def empty_buffer(self):
-            """
-            Empty the buffer of statements and parameters.
-            """
+            """Empty the buffer of statements and parameters."""
             # copy the underlying list in a python2/3 compatible way
             buffer = list(self._statements_and_parameters)
             # delete the actual elements in a python2/3 compatible way
@@ -510,16 +507,14 @@ if cassandra is not None:
             self._execute(buffer)
 
         def insert(self, key, vals, buffer=False):
-            """
-            Insert an iterable of values with the same key.
+            """Insert an iterable of values with the same key.
 
             :param byte|str key: the key
             :param iterable[byte|str] vals: the iterable of values
             :param boolean buffer: whether the insert statements should be buffered
             """
             statements_and_parameters = [
-                (self._stmt_insert, (self._key_encoder(key), self._val_encoder(val), self._ts()))
-                for val in vals
+                (self._stmt_insert, (self._key_encoder(key), self._val_encoder(val), self._ts())) for val in vals
             ]
             if buffer:
                 self._buffer(statements_and_parameters)
@@ -527,8 +522,7 @@ if cassandra is not None:
                 self._execute(statements_and_parameters)
 
         def upsert(self, key, vals, buffer=False):
-            """
-            Upsert an iterable of values with the same key.
+            """Upsert an iterable of values with the same key.
 
             Note: this is used when treating a Cassandra partition as a set. Since we upsert data
                 we never store duplicates. In this case the timestamp loses its meaning as we
@@ -540,8 +534,7 @@ if cassandra is not None:
             :param boolean buffer: whether the upsert statements should be buffered
             """
             statements_and_parameters = [
-                (self._stmt_upsert, (self._ts(), self._key_encoder(key), self._val_encoder(val)))
-                for val in vals
+                (self._stmt_upsert, (self._ts(), self._key_encoder(key), self._val_encoder(val))) for val in vals
             ]
             if buffer:
                 self._buffer(statements_and_parameters)
@@ -549,40 +542,32 @@ if cassandra is not None:
                 self._execute(statements_and_parameters)
 
         def delete_keys(self, keys, buffer=False):
-            """
-            Delete a key (and all its values).
+            """Delete a key (and all its values).
 
             :param iterable[byte|str] keys: the key
             :param boolean buffer: whether the delete statements should be buffered
             """
-            statements_and_parameters = [
-                (self._stmt_delete_key, (self._key_encoder(key), ))
-                for key in keys
-            ]
+            statements_and_parameters = [(self._stmt_delete_key, (self._key_encoder(key),)) for key in keys]
             if buffer:
                 self._buffer(statements_and_parameters)
             else:
                 self._execute(statements_and_parameters)
 
         def delete(self, key, val, buffer=False):
-            """
-            Delete a value from a key.
+            """Delete a value from a key.
 
             :param byte|str key: the key
             :param byte|str val: the value
             :param boolean buffer: whether the delete statement should be buffered
             """
-            statements_and_parameters = [
-                (self._stmt_delete_val, (self._key_encoder(key), self._val_encoder(val)))
-            ]
+            statements_and_parameters = [(self._stmt_delete_val, (self._key_encoder(key), self._val_encoder(val)))]
             if buffer:
                 self._buffer(statements_and_parameters)
             else:
                 self._execute(statements_and_parameters)
 
         def get_keys(self):
-            """
-            Get all the keys.
+            """Get all the keys.
 
             Note: selecting all keys in Cassandra via "SELECT DISTINCT key FROM table" is bound to
                 time out since all nodes need to be contacted. To avoid this, we paginate through
@@ -604,20 +589,17 @@ if cassandra is not None:
             return keys
 
         def add_to_select_buffer(self, keys):
-            """
-            Buffer query statements and parameters with decoders to be used on returned data.
+            """Buffer query statements and parameters with decoders to be used on returned data.
 
             :param iterable[byte|str] keys: the keys
             """
             statements_and_parameters_with_decoders = [
-                ((self._stmt_get, (self._key_encoder(key),)), (self._key_decoder, self._val_decoder))
-                for key in keys
+                ((self._stmt_get, (self._key_encoder(key),)), (self._key_decoder, self._val_decoder)) for key in keys
             ]
             self._select_statements_and_parameters_with_decoders.extend(statements_and_parameters_with_decoders)
 
         def collect_select_buffer(self):
-            """
-            Perform buffered select queries
+            """Perform buffered select queries.
 
             :return: list of list of query results
             """
@@ -634,43 +616,30 @@ if cassandra is not None:
             for rows, (key_decoder, val_decoder) in zip(query_results, decoders):
                 for row in rows:
                     ret[key_decoder(row.key)].append((val_decoder(row.value), row.ts))
-            return [
-                [x[0] for x in sorted(v, key=operator.itemgetter(1))] for v in ret.values()
-            ]
+            return [[x[0] for x in sorted(v, key=operator.itemgetter(1))] for v in ret.values()]
 
         def select(self, keys):
-            """
-            Select all values for the given keys.
+            """Select all values for the given keys.
 
             :param iterable[byte|str] keys: the keys
             :rtype: dict[byte|str,list[byte|str]
             :return: a dictionary of lists
             """
-            statements_and_parameters = [
-                (self._stmt_get, (self._key_encoder(key), ))
-                for key in keys
-            ]
+            statements_and_parameters = [(self._stmt_get, (self._key_encoder(key),)) for key in keys]
             ret = collections.defaultdict(list)
             for rows in self._select(statements_and_parameters):
                 for row in rows:
                     ret[self._key_decoder(row.key)].append((self._val_decoder(row.value), row.ts))
-            return {
-                k: [x[0] for x in sorted(v, key=operator.itemgetter(1))]
-                for k, v in ret.items()
-            }
+            return {k: [x[0] for x in sorted(v, key=operator.itemgetter(1))] for k, v in ret.items()}
 
         def select_count(self, keys):
-            """
-            Count the values for each of the provided keys.
+            """Count the values for each of the provided keys.
 
             :param iterable[byte|str] keys: list of keys
             :rtype: dict[byte|str,int]
             :return: the number of values per key
             """
-            statements_and_parameters = [
-                (self._stmt_get_count, (self._key_encoder(key), ))
-                for key in keys
-            ]
+            statements_and_parameters = [(self._stmt_get_count, (self._key_encoder(key),)) for key in keys]
             return {
                 self._key_decoder(row.key): row.count
                 for rows in self._select(statements_and_parameters)
@@ -678,8 +647,7 @@ if cassandra is not None:
             }
 
         def one(self, key):
-            """
-            Select one single value of the given key.
+            """Select one single value of the given key.
 
             :param byte|str key: the key
             :rtype: byte|str|None
@@ -691,10 +659,8 @@ if cassandra is not None:
                 return self._val_decoder(row.value)
             return None
 
-
-    class CassandraStorage(object):
-        """
-        Storage implementation using Cassandra.
+    class CassandraStorage:
+        """Storage implementation using Cassandra.
 
         Note: like other implementations, each storage has its own client. Unlike other
             implementations, all storage instances share one session and can potentially share the
@@ -704,8 +670,7 @@ if cassandra is not None:
         DEFAULT_BUFFER_SIZE = 5000
 
         def __init__(self, config, name=None, buffer_size=None):
-            """
-            Constructor.
+            """Constructor.
 
             :param dict[str, any] config: configuration following the following format:
                 {
@@ -729,15 +694,14 @@ if cassandra is not None:
             self._config = config
             if buffer_size is None:
                 buffer_size = CassandraStorage.DEFAULT_BUFFER_SIZE
-            cassandra_param = self._parse_config(self._config['cassandra'])
-            self._name = name if name else _random_name(11).decode('utf-8')
+            cassandra_param = self._parse_config(self._config["cassandra"])
+            self._name = name if name else _random_name(11).decode("utf-8")
             self._buffer_size = buffer_size
             self._client = CassandraClient(cassandra_param, name, self._buffer_size)
 
         @staticmethod
         def _parse_config(config):
-            """
-            Parse a configuration dictionary, optionally fetching data from env variables.
+            """Parse a configuration dictionary, optionally fetching data from env variables.
 
             :param dict[str, any] config: the configuration
             :rtype: dict[str, str]
@@ -745,16 +709,14 @@ if cassandra is not None:
             """
             cfg = {}
             for key, value in config.items():
-                if isinstance(value, dict):
-                    if 'env' in value:
-                        value = os.getenv(value['env'], value.get('default', None))
+                if isinstance(value, dict) and "env" in value:
+                    value = os.getenv(value["env"], value.get("default", None))
                 cfg[key] = value
             return cfg
 
         @property
         def buffer_size(self):
-            """
-            Get the buffer size.
+            """Get the buffer size.
 
             :rtype: int
             :return: the buffer size
@@ -763,8 +725,7 @@ if cassandra is not None:
 
         @buffer_size.setter
         def buffer_size(self, value):
-            """
-            Set the buffer size and propagate it to the underlying client.
+            """Set the buffer size and propagate it to the underlying client.
 
             :param int value: buffer size
             """
@@ -772,29 +733,25 @@ if cassandra is not None:
             self._client.buffer_size = value
 
         def __getstate__(self):
-            """
-            Get a pickable state by removing unpickable objects.
+            """Get a pickable state by removing unpickable objects.
 
             :rtype: dict[str, any]
             :return: the state
             """
             state = self.__dict__.copy()
-            state.pop('_client')
+            state.pop("_client")
             return state
 
         def __setstate__(self, state):
-            """
-            Set the state by reconnecting ephemeral objects.
+            """Set the state by reconnecting ephemeral objects.
 
             :param dict[str, any] state: the state to restore
             """
             self.__dict__ = state
             self.__init__(self._config, name=self._name, buffer_size=self._buffer_size)
 
-
     class CassandraListStorage(OrderedStorage, CassandraStorage):
-        """
-        OrderedStorage storage implementation using Cassandra as backend.
+        """OrderedStorage storage implementation using Cassandra as backend.
 
         Note: Since we need to (i) select and delete values by both 'key' and by 'key and value',
             and (ii) allow duplicate values, we store a monotonically increasing timestamp as
@@ -823,17 +780,17 @@ if cassandra is not None:
 
         def insert(self, key, *vals, **kwargs):
             """Implement interface."""
-            buffer = kwargs.pop('buffer', False)
+            buffer = kwargs.pop("buffer", False)
             self._client.insert(key, vals, buffer)
 
         def remove(self, *keys, **kwargs):
             """Implement interface."""
-            buffer = kwargs.pop('buffer', False)
+            buffer = kwargs.pop("buffer", False)
             self._client.delete_keys(keys, buffer)
 
         def remove_val(self, key, val, **kwargs):
             """Implement interface."""
-            buffer = kwargs.pop('buffer', False)
+            buffer = kwargs.pop("buffer", False)
             self._client.delete(key, val, buffer)
 
         def size(self):
@@ -852,10 +809,8 @@ if cassandra is not None:
             """Implement interface."""
             self._client.empty_buffer()
 
-
     class CassandraSetStorage(UnorderedStorage, CassandraListStorage):
-        """
-        OrderedStorage storage implementation using Cassandra as backend.
+        """OrderedStorage storage implementation using Cassandra as backend.
 
         Note: since we are interested in keeping duplicates or ordered data, we upsert the data
             ignoring what the timestamp actually means.
@@ -867,25 +822,23 @@ if cassandra is not None:
 
         def insert(self, key, *vals, **kwargs):
             """Implement interface and override super-class."""
-            buffer = kwargs.pop('buffer', False)
+            buffer = kwargs.pop("buffer", False)
             self._client.upsert(key, vals, buffer)
 
 
 if redis is not None:
+
     class RedisBuffer(redis.client.Pipeline):
-        '''A bufferized version of `redis.pipeline.Pipeline`.
+        """A bufferized version of `redis.pipeline.Pipeline`.
 
         The only difference from the conventional pipeline object is the
         ``_buffer_size``. Once the buffer is longer than the buffer size,
         the pipeline is automatically executed, and the buffer cleared.
-        '''
+        """
 
-        def __init__(self, connection_pool, response_callbacks, transaction, buffer_size,
-                     shard_hint=None):
+        def __init__(self, connection_pool, response_callbacks, transaction, buffer_size, shard_hint=None):
             self._buffer_size = buffer_size
-            super(RedisBuffer, self).__init__(
-                connection_pool, response_callbacks, transaction,
-                shard_hint=shard_hint)
+            super(RedisBuffer, self).__init__(connection_pool, response_callbacks, transaction, shard_hint=shard_hint)
 
         @property
         def buffer_size(self):
@@ -900,18 +853,17 @@ if redis is not None:
                 self.execute()
             super(RedisBuffer, self).execute_command(*args, **kwargs)
 
-
     class RedisStorage:
-        '''Base class for Redis-based storage containers.
+        """Base class for Redis-based storage containers.
 
         Args:
             config (dict): Redis storage units require a configuration
                 of the form::
 
-                    storage_config={
-                        'type': 'redis',
-                        'redis': {'host': 'localhost', 'port': 6379},
-                        'redis_buffer': {'transaction': True}
+                    storage_config = {
+                        "type": "redis",
+                        "redis": {"host": "localhost", "port": 6379},
+                        "redis_buffer": {"transaction": True},
                     }
 
                 one can refer to system environment variables via::
@@ -929,18 +881,21 @@ if redis is not None:
             name (bytes, optional): A prefix to namespace all keys in
                 the database pertaining to this storage container.
                 If None, a random name will be chosen.
-        '''
+
+        """
 
         def __init__(self, config, name=None):
             self.config = config
             self._buffer_size = 50000
-            redis_param = self._parse_config(self.config['redis'])
+            redis_param = self._parse_config(self.config["redis"])
             self._redis = redis.Redis(**redis_param)
-            redis_buffer_param = self._parse_config(self.config.get('redis_buffer', {}))
-            self._buffer = RedisBuffer(self._redis.connection_pool,
-                                       self._redis.response_callbacks,
-                                       transaction=redis_buffer_param.get('transaction', True),
-                                       buffer_size=self._buffer_size)
+            redis_buffer_param = self._parse_config(self.config.get("redis_buffer", {}))
+            self._buffer = RedisBuffer(
+                self._redis.connection_pool,
+                self._redis.response_callbacks,
+                transaction=redis_buffer_param.get("transaction", True),
+                buffer_size=self._buffer_size,
+            )
             if name is None:
                 name = _random_name(11)
             self._name = name
@@ -968,9 +923,8 @@ if redis is not None:
                 # 'default'.
                 # (This is useful if the database relocates to a different host
                 # during the lifetime of the LSH object)
-                if isinstance(value, dict):
-                    if 'env' in value:
-                        value = os.getenv(value['env'], value.get('default', None))
+                if isinstance(value, dict) and "env" in value:
+                    value = os.getenv(value["env"], value.get("default", None))
                 cfg[key] = value
             return cfg
 
@@ -978,15 +932,14 @@ if redis is not None:
             state = self.__dict__.copy()
             # We cannot pickle the connection objects, they get recreated
             # upon unpickling
-            state.pop('_redis')
-            state.pop('_buffer')
+            state.pop("_redis")
+            state.pop("_buffer")
             return state
 
         def __setstate__(self, state):
             self.__dict__ = state
             # Reconnect here
             self.__init__(self.config, name=self._name)
-
 
     class RedisListStorage(OrderedStorage, RedisStorage):
         def __init__(self, config, name=None):
@@ -999,7 +952,7 @@ if redis is not None:
             return self._redis.hvals(self._name)
 
         def status(self):
-            status = self._parse_config(self.config['redis'])
+            status = self._parse_config(self.config["redis"])
             status.update(Storage.status(self))
             return status
 
@@ -1043,7 +996,7 @@ if redis is not None:
             # could lead to inconsistencies, because those
             # insertion will not be processed until the
             # buffer is cleared
-            buffer = kwargs.pop('buffer', False)
+            buffer = kwargs.pop("buffer", False)
             if buffer:
                 self._insert(self._buffer, key, *vals)
             else:
@@ -1063,8 +1016,7 @@ if redis is not None:
             ks = self.keys()
             for k in ks:
                 self._get_len(pipe, self.redis_key(k))
-            d = dict(zip(ks, pipe.execute()))
-            return d
+            return dict(zip(ks, pipe.execute()))
 
         @staticmethod
         def _get_len(r, k):
@@ -1078,7 +1030,6 @@ if redis is not None:
             # To avoid broken pipes, recreate the connection
             # objects upon emptying the buffer
             self.__init__(self.config, name=self._name)
-
 
     class RedisSetStorage(UnorderedStorage, RedisListStorage):
         def __init__(self, config, name=None):
@@ -1110,5 +1061,4 @@ if redis is not None:
 
 def _random_name(length):
     # For use with Redis, we return bytes
-    return ''.join(random.choice(string.ascii_lowercase)
-                   for _ in range(length)).encode('utf8')
+    return "".join(random.choice(string.ascii_lowercase) for _ in range(length)).encode("utf8")
