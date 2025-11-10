@@ -17,5 +17,5 @@ jobs:
       - name: Link Checker
         uses: lycheeverse/lychee-action@v2
         with:
+          args: --exclude 'https?://ieeexplore\.ieee\.org/.*' "**/**"
           fail: true
-          args: --exclude 'https?://ieeexplore\.ieee\.org/.*' .
