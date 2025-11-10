@@ -1,13 +1,13 @@
-import unittest
-import struct
 import pickle
+import unittest
+
 import numpy as np
-from datasketch import MinHash
-from datasketch import LeanMinHash
+
+from datasketch import LeanMinHash, MinHash
 from test.utils import fake_hash_func
 
-class TestLeanMinHash(unittest.TestCase):
 
+class TestLeanMinHash(unittest.TestCase):
     def test_init(self):
         m1 = MinHash(4, 1, hashfunc=fake_hash_func)
         m2 = MinHash(4, 1, hashfunc=fake_hash_func)
@@ -70,7 +70,7 @@ class TestLeanMinHash(unittest.TestCase):
     def test_bytesize(self):
         m1 = MinHash(4, 1, hashfunc=fake_hash_func)
         lm1 = LeanMinHash(m1)
-        self.assertTrue(lm1.bytesize() == (4*4)+4+8)
+        self.assertTrue(lm1.bytesize() == (4 * 4) + 4 + 8)
 
     def test_serialize(self):
         m1 = MinHash(2, 1, hashfunc=fake_hash_func)
@@ -82,7 +82,7 @@ class TestLeanMinHash(unittest.TestCase):
         m2 = MinHash(2, 1, hashfunc=fake_hash_func)
         lm2 = LeanMinHash(m2)
         size = lm1.bytesize()
-        buf = bytearray(size*2)
+        buf = bytearray(size * 2)
         lm1.serialize(buf)
         lm2.serialize(buf[size:])
 
@@ -98,8 +98,7 @@ class TestLeanMinHash(unittest.TestCase):
         lm1d = LeanMinHash.deserialize(buf)
         self.assertEqual(lm1d.seed, lm1.seed)
         self.assertEqual(len(lm1d.hashvalues), len(lm1.hashvalues))
-        self.assertTrue(all(hvd == hv for hv, hvd in zip(lm1.hashvalues,
-                lm1d.hashvalues)))
+        self.assertTrue(all(hvd == hv for hv, hvd in zip(lm1.hashvalues, lm1d.hashvalues)))
 
     def test_deserialize_byteorder(self):
         for byteorder in "@=<>!":
@@ -114,8 +113,7 @@ class TestLeanMinHash(unittest.TestCase):
             lm1d = LeanMinHash.deserialize(buf, byteorder)
             self.assertEqual(lm1d.seed, lm1.seed)
             self.assertEqual(len(lm1d.hashvalues), len(lm1.hashvalues))
-            self.assertTrue(all(hvd == hv for hv, hvd in zip(lm1.hashvalues,
-                    lm1d.hashvalues)))
+            self.assertTrue(all(hvd == hv for hv, hvd in zip(lm1.hashvalues, lm1d.hashvalues)))
 
     def test_pickle(self):
         m = MinHash(4, 1, hashfunc=fake_hash_func)
@@ -187,4 +185,3 @@ class TestLeanMinHash(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
-

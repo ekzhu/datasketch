@@ -1,9 +1,11 @@
-import unittest
 import pickle
+import unittest
+
 import numpy as np
+
+from datasketch import WeightedMinHashGenerator
 from datasketch.lshforest import MinHashLSHForest
 from datasketch.minhash import MinHash
-from datasketch import WeightedMinHashGenerator
 
 
 class TestMinHashLSHForest(unittest.TestCase):
@@ -39,15 +41,14 @@ class TestMinHashLSHForest(unittest.TestCase):
         return forest, data
 
     def test__H(self):
-        """
-        Check _H output consistent bytes length given
-        the same concatenated hash value size
+        """Check _H output consistent bytes length given
+        the same concatenated hash value size.
         """
         for l in range(2, 128 + 1, 16):
             forest = MinHashLSHForest(num_perm=128, l=l)
             m = MinHash()
-            m.update("abcdefg".encode("utf8"))
-            m.update("1234567".encode("utf8"))
+            m.update(b"abcdefg")
+            m.update(b"1234567")
             forest.add("m", m)
             sizes = [len(H) for ht in forest.hashtables for H in ht]
             self.assertTrue(all(sizes[0] == s for s in sizes))
@@ -117,9 +118,8 @@ class TestWeightedMinHashLSHForest(unittest.TestCase):
         return forest, data
 
     def test__H(self):
-        """
-        Check _H output consistent bytes length given
-        the same concatenated hash value size
+        """Check _H output consistent bytes length given
+        the same concatenated hash value size.
         """
         mg = WeightedMinHashGenerator(100, sample_size=128)
         for l in range(2, mg.sample_size + 1, 16):

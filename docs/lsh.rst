@@ -65,7 +65,7 @@ Similar to MinHash, more permutation functions improves the accuracy,
 but also increases query cost, since more processing is required as the
 MinHash gets bigger. 
 I experimented with the `20 News Group
-Dataset <http://scikit-learn.org/stable/datasets/twenty_newsgroups.html>`__,
+Dataset <https://scikit-learn.org/stable/datasets/real_world.html#the-20-newsgroups-text-dataset>`__,
 which has an average cardinality of 193 (3-shingles). The average
 recall, average precision, and 90 percentile query time vs. number of permutation 
 functions
@@ -293,7 +293,7 @@ The Asynchronous MongoDB storage option can be configured using:
                 print(await lsh.query(m1))
                 print(await lsh.query(m2))
 
-To configure Asynchronous MongoDB storage that will connect to a `replica set <http://api.mongodb.com/python/current/examples/high_availability.html#id1>`__ of three nodes, use:
+To configure Asynchronous MongoDB storage that will connect to a `replica set <https://www.mongodb.com/docs/languages/python/pymongo-driver/current/connect/connection-targets/#replica-sets>`__ of three nodes, use:
 
 .. code:: python
 
@@ -305,7 +305,7 @@ To connect to a cloud Mongo Atlas cluster (or any other arbitrary ``mongodb`` UR
 
     _storage = {'type': 'aiomongo', 'mongo': {'url': 'mongodb+srv://user:pass@server-ybq4y.mongodb.net/db'}}
 
-If you want to pass additional params to the `Mongo client <http://api.mongodb.com/python/current/api/pymongo/mongo_client.html>` constructor, just put them in the ``mongo.args`` object in the storage config (example usage to configure X509 authentication):
+If you want to pass additional params to the `Mongo client <https://pymongo.readthedocs.io/en/stable/api/pymongo/mongo_client.html>` constructor, just put them in the ``mongo.args`` object in the storage config (example usage to configure X509 authentication):
 
 .. code:: python
 

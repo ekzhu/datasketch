@@ -1,0 +1,160 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "datasketch"
+version = "1.7.0"
+description = "Probabilistic data structures for processing and searching very large datasets"
+readme = "README.rst"
+requires-python = ">=3.9"
+license = { text = "MIT" }
+authors = [{ name = "ekzhu", email = "ekzhu@cs.toronto.edu" }]
+keywords = ["database", "datamining"]
+classifiers = [
+  "License :: OSI Approved :: MIT License",
+  "Development Status :: 5 - Production/Stable",
+  "Intended Audience :: Developers",
+  "Topic :: Database",
+  "Topic :: Scientific/Engineering :: Information Analysis",
+  "Programming Language :: Python :: 3.9",
+  "Programming Language :: Python :: 3.10",
+  "Programming Language :: Python :: 3.11",
+  "Programming Language :: Python :: 3.12",
+]
+dependencies = ["numpy>=1.11", "scipy>=1.0.0"]
+
+[project.optional-dependencies]
+cassandra = ["cassandra-driver>=3.20"]
+redis = ["redis>=2.10.0"]
+bloom = ["pybloomfilter3>=0.7.2"]
+benchmark = [
+  "pyhash>=0.9.3",              # TODO: fix installation
+  "matplotlib>=3.1.2",
+  "scikit-learn>=0.21.3",
+  "scipy>=1.3.3",
+  "pandas>=0.25.3",
+  "SetSimilaritySearch>=0.1.7",
+  "pyfarmhash>=0.2.2",
+  "nltk>=3.4.5",
+]
+test = [
+  "cassandra-driver>=3.20",
+  "redis>=2.10.0",
+  "mock>=2.0.0",
+  "mockredispy",
+  "coverage",
+  "pymongo>=3.9.0",
+  "nose>=1.3.7",
+  "nose-exclude>=0.5.0",
+  "pytest",
+  "pytest-rerunfailures",
+]
+experimental_aio = ["aiounittest", "motor>3.6.0"]
+
+[project.urls]
+Homepage = "https://ekzhu.github.io/datasketch"
+"Bug Tracker" = "https://github.com/ekzhu/datasketch/issues"
+Documentation = "https://ekzhu.github.io/datasketch"
+Source = "https://github.com/ekzhu/datasketch"
+
+[tool.codespell]
+# Todo: enable also python files in a next step
+# skip = '*.py'
+quiet-level = 3
+# comma separated list of words; waiting for:
+# https://github.com/codespell-project/codespell/issues/2839#issuecomment-1731601603
+# also adding links until they ignored by its: nature
+# https://github.com/codespell-project/codespell/issues/2243#issuecomment-1732019960
+ignore-words-list = "cancelation"
+
+[tool.docformatter]
+recursive = true
+# this need to be shorter as some docstings are r"""...
+wrap-summaries = 119
+wrap-descriptions = 120
+blank = true
+
+[tool.ruff]
+line-length = 120
+target-version = "py39"
+exclude = [
+  ".eggs",
+  ".git",
+  ".mypy_cache",
+  ".ruff_cache",
+  "__pycache__",
+  "__pypackages__",
+  "_build",
+  "benchmark",
+  "build",
+  "dist",
+  "docs",
+  "examples",
+  "travis",
+  "datasketch/hyperloglog_const.py",
+]
+
+[tool.ruff.lint]
+fixable = ["ALL"]
+unfixable = []
+select = [
+  "ASYNC", # async checks
+  "B",     # bugbear checks
+  "D",     # pydocstyle checks
+  "E",     # pycodestyle error checks
+  "ERA",   # remove connected out code
+  "F",     # pyflakes checks
+  "FIX",   # fixme checks
+  "I",     # isort
+  "INP",   # implicit namespace package
+  "ISC",   # implicit string concat
+  "Q",     # flake8-quotes checks
+  "RET",   # flake8-return check
+  "RSE",   # raise exception parantheses check
+  "RUF",   # RUF specific rules
+  "SIM",   # flake8-simplify check
+  "T20",   # typing checks
+  "W",     # pycodestyle warning checks
+  "T100",  # Debugger,
+  "S",     # Bandit checks
+]
+ignore = [
+  "D100",   # allow missing docstring in public module
+  "D104",   # allow missing docstring in public package
+  "D203",   # incompatible with D211
+  "D213",   # incompatible with D212
+  "D418",   # allow overload to have a docstring
+  "TD003",  # allow missing link to todo issue
+  "FIX002", # allow todo comments
+  "B027",   # allow empty non-abstract method in ABC
+  "S324",   # TODO: hashlib-insecure-hash-function
+  "D101",   # TODO: missing docstring in public class
+  "D102",   # TODO: missing docstring in public method
+  "D103",   # TODO: missing docstring in public function
+  "D105",   # TODO: missing docstring in magic method
+  "D107",   # TODO: missing docstring in public init
+  "D205",   # TODO: missing blank line after summary
+  "D400",   # TODO: missing trailing period
+  "D401",   # TODO: non imperative mood
+  "D417",   # TODO: undocumented-param
+  "E731",   # TODO: allow lambda assignment
+  "E741",   # TODO: ambiguous-variable-name
+  "F821",   # TODO: Undefined name `buffer`
+  "S301",   # TODO: suspicious pickle usage
+  "S311",   # TODO: suspicious non-cryptographic random usage
+]
+
+[tool.ruff.format]
+docstring-code-format = true
+
+[tool.hatch.build.targets.wheel]
+packages = ["datasketch"]
+
+[tool.hatch.build.targets.sdist]
+include = ["pyproject.toml", "README.rst", "LICENSE", "datasketch/**"]
+
+[tool.pytest.ini_options]
+minversion = "6.0"
+addopts = ["--strict-markers", "--color=yes"]
+testpaths = ["test"]

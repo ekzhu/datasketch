@@ -1,5 +1,4 @@
-"""
-WARNING:
+"""Warning.
 
 datasketch.experimental is dedicated to new modules that are to be merged into
 the stable interface of datasketch. So their interfaces may change in future
@@ -8,11 +7,9 @@ versions.
 To add a new class or function, register it here in this file. For example:
 
 from new_module import NewModuleClass
+
 """
 
-import sys
+from datasketch.experimental.aio.lsh import AsyncMinHashLSH
 
-if sys.version_info < (3, 6):
-    AsyncMinHashLSH = None
-else:
-    from datasketch.experimental.aio.lsh import AsyncMinHashLSH
+__all__ = ["AsyncMinHashLSH"]

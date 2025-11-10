@@ -1,9 +1,12 @@
 from __future__ import annotations
+
 import struct
-from typing import Iterable
+from collections.abc import Iterable
+from typing import Optional
+
 import numpy as np
 
-from datasketch import MinHash
+from datasketch.minhash import MinHash
 
 
 class LeanMinHash(MinHash):
@@ -34,20 +37,17 @@ class LeanMinHash(MinHash):
 
         .. code-block:: python
 
-            lean_minhash = LeanMinHash(seed=minhash.seed,
-                                       hashvalues=minhash.hashvalues)
+            lean_minhash = LeanMinHash(seed=minhash.seed, hashvalues=minhash.hashvalues)
 
         To create a MinHash from a lean MinHash:
 
         .. code-block:: python
 
-            minhash = MinHash(seed=lean_minhash.seed,
-                              hashvalues=lean_minhash.hashvalues)
+            minhash = MinHash(seed=lean_minhash.seed, hashvalues=lean_minhash.hashvalues)
 
             # Or if you want to prevent further updates on minhash
             # from affecting the state of lean_minhash
-            minhash = MinHash(seed=lean_minhash.seed,
-                              hashvalues=lean_minhash.digest())
+            minhash = MinHash(seed=lean_minhash.seed, hashvalues=lean_minhash.digest())
 
     Note:
         Lean MinHash can also be used in :class:`datasketch.MinHashLSH`,
@@ -63,9 +63,10 @@ class LeanMinHash(MinHash):
         hashvalues (optional): The hash values used to inititialize the state
             of the LeanMinHash. This parameter must be used together with
             `seed`.
+
     """
 
-    __slots__ = ("seed", "hashvalues")
+    __slots__ = ("hashvalues", "seed")
 
     def _initialize_slots(self, seed, hashvalues):
         """Initialize the slots of the LeanMinHash.
@@ -74,25 +75,23 @@ class LeanMinHash(MinHash):
             seed (int): The random seed controls the set of random
                 permutation functions generated for this LeanMinHash.
             hashvalues (Iterable): The hash values is the internal state of the LeanMinHash.
+
         """
         self.seed = seed
         self.hashvalues = self._parse_hashvalues(hashvalues)
 
-    def __init__(
-        self, minhash: MinHash = None, seed: int = None, hashvalues: Iterable = None
-    ):
+    def __init__(self, minhash: MinHash = None, seed: Optional[int] = None, hashvalues: Optional[Iterable] = None):
         if minhash is not None:
             self._initialize_slots(minhash.seed, minhash.hashvalues)
         elif hashvalues is not None and seed is not None:
             self._initialize_slots(seed, hashvalues)
         else:
             raise ValueError(
-                "Init parameters cannot be None: make sure "
-                "to set either minhash or both of hash values and seed"
+                "Init parameters cannot be None: make sure to set either minhash or both of hash values and seed"
             )
 
     def update(self, b) -> None:
-        """This method is not available on a LeanMinHash.
+        """Not available on a LeanMinHash.
         Calling it raises a TypeError.
         """
         raise TypeError("Cannot update a LeanMinHash")
@@ -114,6 +113,7 @@ class LeanMinHash(MinHash):
 
         Returns:
             int: Size in number of bytes after serialization.
+
         """
         # Use 8 bytes to store the seed integer
         seed_size = struct.calcsize(byteorder + "q")
@@ -124,8 +124,7 @@ class LeanMinHash(MinHash):
         return seed_size + length_size + len(self) * hashvalue_size
 
     def serialize(self, buf, byteorder="@") -> None:
-        """
-        Serialize this lean MinHash and store the result in an allocated buffer.
+        """Serialize this lean MinHash and store the result in an allocated buffer.
 
         Args:
             buf (buffer): `buf` must implement the `buffer`_ interface.
@@ -158,13 +157,14 @@ class LeanMinHash(MinHash):
 
                 # assuming lean_minhashs is a list of LeanMinHash with the same size
                 size = lean_minhashs[0].bytesize()
-                buf = bytearray(size*len(lean_minhashs))
+                buf = bytearray(size * len(lean_minhashs))
                 for i, lean_minhash in enumerate(lean_minhashs):
-                    lean_minhash.serialize(buf[i*size:])
+                    lean_minhash.serialize(buf[i * size :])
 
         .. _`buffer`: https://docs.python.org/3/c-api/buffer.html
         .. _`bytearray`: https://docs.python.org/3.6/library/functions.html#bytearray
         .. _`byteorder`: https://docs.python.org/3/library/struct.html
+
         """
         if len(buf) < self.bytesize():
             raise ValueError(
@@ -176,8 +176,7 @@ class LeanMinHash(MinHash):
 
     @classmethod
     def deserialize(cls, buf, byteorder="@") -> LeanMinHash:
-        """
-        Deserialize a lean MinHash from a buffer.
+        """Deserialize a lean MinHash from a buffer.
 
         Args:
             buf (buffer): `buf` must implement the `buffer`_ interface.
@@ -197,6 +196,7 @@ class LeanMinHash(MinHash):
             .. code-block:: python
 
                 lean_minhash = LeanMinHash.deserialize(buf)
+
         """
         fmt_seed_size = "%sqi" % byteorder
         fmt_hash = byteorder + "%dI"
