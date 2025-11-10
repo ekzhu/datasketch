@@ -911,7 +911,7 @@ if redis is not None:
 
         def redis_key(self, key):
             if isinstance(key, str):
-                key = key.encode('utf8')
+                key = key.encode("utf8")
             return self._name + key
 
         def _parse_config(self, config):
