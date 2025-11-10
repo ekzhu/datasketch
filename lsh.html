@@ -145,7 +145,7 @@ cannot be changed. So does the number of permutation functions (<code class="doc
 Similar to MinHash, more permutation functions improves the accuracy,
 but also increases query cost, since more processing is required as the
 MinHash gets bigger.
-I experimented with the <a class="reference external" href="http://scikit-learn.org/stable/datasets/twenty_newsgroups.html">20 News Group
+I experimented with the <a class="reference external" href="https://scikit-learn.org/stable/datasets/real_world.html#the-20-newsgroups-text-dataset">20 News Group
 Dataset</a>,
 which has an average cardinality of 193 (3-shingles). The average
 recall, average precision, and 90 percentile query time vs. number of permutation
@@ -343,7 +343,7 @@ processes see <a class="reference internal" href="#minhash-lsh-at-scale"><span c
         <span class="nb">print</span><span class="p">(</span><span class="k">await</span> <span class="n">lsh</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">m2</span><span class="p">))</span>
 </pre></div>
 </div>
-<p>To configure Asynchronous MongoDB storage that will connect to a <a class="reference external" href="http://api.mongodb.com/python/current/examples/high_availability.html#id1">replica set</a> of three nodes, use:</p>
+<p>To configure Asynchronous MongoDB storage that will connect to a <a class="reference external" href="https://www.mongodb.com/docs/languages/python/pymongo-driver/current/connect/connection-targets/#replica-sets">replica set</a> of three nodes, use:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">_storage</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;type&#39;</span><span class="p">:</span> <span class="s1">&#39;aiomongo&#39;</span><span class="p">,</span> <span class="s1">&#39;mongo&#39;</span><span class="p">:</span> <span class="p">{</span><span class="s1">&#39;replica_set&#39;</span><span class="p">:</span> <span class="s1">&#39;rs0&#39;</span><span class="p">,</span> <span class="s1">&#39;replica_set_nodes&#39;</span><span class="p">:</span> <span class="s1">&#39;node1:port1,node2:port2,node3:port3&#39;</span><span class="p">}}</span>
 </pre></div>
 </div>
@@ -351,7 +351,7 @@ processes see <a class="reference internal" href="#minhash-lsh-at-scale"><span c
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">_storage</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;type&#39;</span><span class="p">:</span> <span class="s1">&#39;aiomongo&#39;</span><span class="p">,</span> <span class="s1">&#39;mongo&#39;</span><span class="p">:</span> <span class="p">{</span><span class="s1">&#39;url&#39;</span><span class="p">:</span> <span class="s1">&#39;mongodb+srv://user:pass@server-ybq4y.mongodb.net/db&#39;</span><span class="p">}}</span>
 </pre></div>
 </div>
-<p>If you want to pass additional params to the <cite>Mongo client &lt;http://api.mongodb.com/python/current/api/pymongo/mongo_client.html&gt;</cite> constructor, just put them in the <code class="docutils literal notranslate"><span class="pre">mongo.args</span></code> object in the storage config (example usage to configure X509 authentication):</p>
+<p>If you want to pass additional params to the <cite>Mongo client &lt;https://pymongo.readthedocs.io/en/stable/api/pymongo/mongo_client.html&gt;</cite> constructor, just put them in the <code class="docutils literal notranslate"><span class="pre">mongo.args</span></code> object in the storage config (example usage to configure X509 authentication):</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">_storage</span> <span class="o">=</span> <span class="p">{</span>
     <span class="s1">&#39;type&#39;</span><span class="p">:</span> <span class="s1">&#39;aiomongo&#39;</span><span class="p">,</span>
     <span class="s1">&#39;mongo&#39;</span><span class="p">:</span>

@@ -61,9 +61,9 @@ searchable.
     print("Top 2 candidates", result)
 
 The plot below shows the `mean average precision
-(MAP) <https://www.kaggle.com/wiki/MeanAveragePrecision>`__ of linear
+(MAP) <https://en.wikipedia.org/wiki/Evaluation_measures_(information_retrieval)#Mean_average_precision>`__ of linear
 scan with MinHash and MinHash LSH Forest. Synthetic data was used. See
-`benchmark <https://github.com/ekzhu/datasketch/blob/master/benchmark/lshforest_benchmark.py>`_ 
+`benchmark <https://github.com/ekzhu/datasketch/tree/master/benchmark>`_ 
 for details.
 
 .. figure:: /_static/lshforest_benchmark.png

@@ -77,11 +77,14 @@
              
   <h1>Source code for datasketch.lean_minhash</h1><div class="highlight"><pre>
 <span></span><span class="kn">from</span><span class="w"> </span><span class="nn">__future__</span><span class="w"> </span><span class="kn">import</span> <span class="n">annotations</span>
+
 <span class="kn">import</span><span class="w"> </span><span class="nn">struct</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Iterable</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">collections.abc</span><span class="w"> </span><span class="kn">import</span> <span class="n">Iterable</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Optional</span>
+
 <span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
 
-<span class="kn">from</span><span class="w"> </span><span class="nn">datasketch</span><span class="w"> </span><span class="kn">import</span> <span class="n">MinHash</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">datasketch.minhash</span><span class="w"> </span><span class="kn">import</span> <span class="n">MinHash</span>
 
 
 <div class="viewcode-block" id="LeanMinHash">
@@ -114,20 +117,17 @@
 
 <span class="sd">        .. code-block:: python</span>
 
-<span class="sd">            lean_minhash = LeanMinHash(seed=minhash.seed,</span>
-<span class="sd">                                       hashvalues=minhash.hashvalues)</span>
+<span class="sd">            lean_minhash = LeanMinHash(seed=minhash.seed, hashvalues=minhash.hashvalues)</span>
 
 <span class="sd">        To create a MinHash from a lean MinHash:</span>
 
 <span class="sd">        .. code-block:: python</span>
 
-<span class="sd">            minhash = MinHash(seed=lean_minhash.seed,</span>
-<span class="sd">                              hashvalues=lean_minhash.hashvalues)</span>
+<span class="sd">            minhash = MinHash(seed=lean_minhash.seed, hashvalues=lean_minhash.hashvalues)</span>
 
 <span class="sd">            # Or if you want to prevent further updates on minhash</span>
 <span class="sd">            # from affecting the state of lean_minhash</span>
-<span class="sd">            minhash = MinHash(seed=lean_minhash.seed,</span>
-<span class="sd">                              hashvalues=lean_minhash.digest())</span>
+<span class="sd">            minhash = MinHash(seed=lean_minhash.seed, hashvalues=lean_minhash.digest())</span>
 
 <span class="sd">    Note:</span>
 <span class="sd">        Lean MinHash can also be used in :class:`datasketch.MinHashLSH`,</span>
@@ -143,9 +143,10 @@
 <span class="sd">        hashvalues (optional): The hash values used to inititialize the state</span>
 <span class="sd">            of the LeanMinHash. This parameter must be used together with</span>
 <span class="sd">            `seed`.</span>
+
 <span class="sd">    &quot;&quot;&quot;</span>
 
-    <span class="vm">__slots__</span> <span class="o">=</span> <span class="p">(</span><span class="s2">&quot;seed&quot;</span><span class="p">,</span> <span class="s2">&quot;hashvalues&quot;</span><span class="p">)</span>
+    <span class="vm">__slots__</span> <span class="o">=</span> <span class="p">(</span><span class="s2">&quot;hashvalues&quot;</span><span class="p">,</span> <span class="s2">&quot;seed&quot;</span><span class="p">)</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">_initialize_slots</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">seed</span><span class="p">,</span> <span class="n">hashvalues</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Initialize the slots of the LeanMinHash.</span>
@@ -154,30 +155,28 @@
 <span class="sd">            seed (int): The random seed controls the set of random</span>
 <span class="sd">                permutation functions generated for this LeanMinHash.</span>
 <span class="sd">            hashvalues (Iterable): The hash values is the internal state of the LeanMinHash.</span>
+
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">seed</span> <span class="o">=</span> <span class="n">seed</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">hashvalues</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_parse_hashvalues</span><span class="p">(</span><span class="n">hashvalues</span><span class="p">)</span>
 
 <div class="viewcode-block" id="LeanMinHash.__init__">
 <a class="viewcode-back" href="../../documentation.html#datasketch.LeanMinHash.__init__">[docs]</a>
-    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
-        <span class="bp">self</span><span class="p">,</span> <span class="n">minhash</span><span class="p">:</span> <span class="n">MinHash</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">seed</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">hashvalues</span><span class="p">:</span> <span class="n">Iterable</span> <span class="o">=</span> <span class="kc">None</span>
-    <span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">minhash</span><span class="p">:</span> <span class="n">MinHash</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">seed</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">hashvalues</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Iterable</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
         <span class="k">if</span> <span class="n">minhash</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_initialize_slots</span><span class="p">(</span><span class="n">minhash</span><span class="o">.</span><span class="n">seed</span><span class="p">,</span> <span class="n">minhash</span><span class="o">.</span><span class="n">hashvalues</span><span class="p">)</span>
         <span class="k">elif</span> <span class="n">hashvalues</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">seed</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_initialize_slots</span><span class="p">(</span><span class="n">seed</span><span class="p">,</span> <span class="n">hashvalues</span><span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
-                <span class="s2">&quot;Init parameters cannot be None: make sure &quot;</span>
-                <span class="s2">&quot;to set either minhash or both of hash values and seed&quot;</span>
+                <span class="s2">&quot;Init parameters cannot be None: make sure to set either minhash or both of hash values and seed&quot;</span>
             <span class="p">)</span></div>
 
 
 <div class="viewcode-block" id="LeanMinHash.update">
 <a class="viewcode-back" href="../../documentation.html#datasketch.LeanMinHash.update">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">update</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">b</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;This method is not available on a LeanMinHash.</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Not available on a LeanMinHash.</span>
 <span class="sd">        Calling it raises a TypeError.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;Cannot update a LeanMinHash&quot;</span><span class="p">)</span></div>
@@ -205,6 +204,7 @@
 
 <span class="sd">        Returns:</span>
 <span class="sd">            int: Size in number of bytes after serialization.</span>
+
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="c1"># Use 8 bytes to store the seed integer</span>
         <span class="n">seed_size</span> <span class="o">=</span> <span class="n">struct</span><span class="o">.</span><span class="n">calcsize</span><span class="p">(</span><span class="n">byteorder</span> <span class="o">+</span> <span class="s2">&quot;q&quot;</span><span class="p">)</span>
@@ -218,8 +218,7 @@
 <div class="viewcode-block" id="LeanMinHash.serialize">
 <a class="viewcode-back" href="../../documentation.html#datasketch.LeanMinHash.serialize">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">serialize</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">buf</span><span class="p">,</span> <span class="n">byteorder</span><span class="o">=</span><span class="s2">&quot;@&quot;</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Serialize this lean MinHash and store the result in an allocated buffer.</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Serialize this lean MinHash and store the result in an allocated buffer.</span>
 
 <span class="sd">        Args:</span>
 <span class="sd">            buf (buffer): `buf` must implement the `buffer`_ interface.</span>
@@ -252,13 +251,14 @@
 
 <span class="sd">                # assuming lean_minhashs is a list of LeanMinHash with the same size</span>
 <span class="sd">                size = lean_minhashs[0].bytesize()</span>
-<span class="sd">                buf = bytearray(size*len(lean_minhashs))</span>
+<span class="sd">                buf = bytearray(size * len(lean_minhashs))</span>
 <span class="sd">                for i, lean_minhash in enumerate(lean_minhashs):</span>
-<span class="sd">                    lean_minhash.serialize(buf[i*size:])</span>
+<span class="sd">                    lean_minhash.serialize(buf[i * size :])</span>
 
 <span class="sd">        .. _`buffer`: https://docs.python.org/3/c-api/buffer.html</span>
 <span class="sd">        .. _`bytearray`: https://docs.python.org/3.6/library/functions.html#bytearray</span>
 <span class="sd">        .. _`byteorder`: https://docs.python.org/3/library/struct.html</span>
+
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">buf</span><span class="p">)</span> <span class="o">&lt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">bytesize</span><span class="p">():</span>
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
@@ -273,8 +273,7 @@
 <a class="viewcode-back" href="../../documentation.html#datasketch.LeanMinHash.deserialize">[docs]</a>
     <span class="nd">@classmethod</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">deserialize</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">buf</span><span class="p">,</span> <span class="n">byteorder</span><span class="o">=</span><span class="s2">&quot;@&quot;</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">LeanMinHash</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Deserialize a lean MinHash from a buffer.</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Deserialize a lean MinHash from a buffer.</span>
 
 <span class="sd">        Args:</span>
 <span class="sd">            buf (buffer): `buf` must implement the `buffer`_ interface.</span>
@@ -294,6 +293,7 @@
 <span class="sd">            .. code-block:: python</span>
 
 <span class="sd">                lean_minhash = LeanMinHash.deserialize(buf)</span>
+
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">fmt_seed_size</span> <span class="o">=</span> <span class="s2">&quot;</span><span class="si">%s</span><span class="s2">qi&quot;</span> <span class="o">%</span> <span class="n">byteorder</span>
         <span class="n">fmt_hash</span> <span class="o">=</span> <span class="n">byteorder</span> <span class="o">+</span> <span class="s2">&quot;</span><span class="si">%d</span><span class="s2">I&quot;</span>
@@ -311,14 +311,11 @@
         <span class="k">return</span> <span class="n">lmh</span></div>
 
 
-<div class="viewcode-block" id="LeanMinHash.__getstate__">
-<a class="viewcode-back" href="../../documentation.html#datasketch.LeanMinHash.__getstate__">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">__getstate__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="n">buf</span> <span class="o">=</span> <span class="nb">bytearray</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">bytesize</span><span class="p">())</span>
         <span class="n">fmt</span> <span class="o">=</span> <span class="s2">&quot;qi</span><span class="si">%d</span><span class="s2">I&quot;</span> <span class="o">%</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
         <span class="n">struct</span><span class="o">.</span><span class="n">pack_into</span><span class="p">(</span><span class="n">fmt</span><span class="p">,</span> <span class="n">buf</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">seed</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="p">),</span> <span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">hashvalues</span><span class="p">)</span>
-        <span class="k">return</span> <span class="n">buf</span></div>
-
+        <span class="k">return</span> <span class="n">buf</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">__setstate__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">buf</span><span class="p">):</span>
         <span class="k">try</span><span class="p">:</span>

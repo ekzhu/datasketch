@@ -77,7 +77,8 @@
              
   <h1>Source code for datasketch.lshforest</h1><div class="highlight"><pre>
 <span></span><span class="kn">from</span><span class="w"> </span><span class="nn">collections</span><span class="w"> </span><span class="kn">import</span> <span class="n">defaultdict</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Hashable</span><span class="p">,</span> <span class="n">List</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">collections.abc</span><span class="w"> </span><span class="kn">import</span> <span class="n">Hashable</span>
+
 <span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
 
 <span class="kn">from</span><span class="w"> </span><span class="nn">datasketch.minhash</span><span class="w"> </span><span class="kn">import</span> <span class="n">MinHash</span>
@@ -85,9 +86,8 @@
 
 <div class="viewcode-block" id="MinHashLSHForest">
 <a class="viewcode-back" href="../../documentation.html#datasketch.MinHashLSHForest">[docs]</a>
-<span class="k">class</span><span class="w"> </span><span class="nc">MinHashLSHForest</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    The LSH Forest for MinHash. It supports top-k query in Jaccard</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">MinHashLSHForest</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;The LSH Forest for MinHash. It supports top-k query in Jaccard</span>
 <span class="sd">    similarity.</span>
 <span class="sd">    Instead of using prefix trees as the `original paper</span>
 <span class="sd">    &lt;http://ilpubs.stanford.edu:8090/678/1/2005-14.pdf&gt;`_,</span>
@@ -104,6 +104,7 @@
 <span class="sd">    Note:</span>
 <span class="sd">        The MinHash LSH Forest also works with weighted Jaccard similarity</span>
 <span class="sd">        and weighted MinHash without modification.</span>
+
 <span class="sd">    &quot;&quot;&quot;</span>
 
 <div class="viewcode-block" id="MinHashLSHForest.__init__">
@@ -127,8 +128,7 @@
 <div class="viewcode-block" id="MinHashLSHForest.add">
 <a class="viewcode-back" href="../../documentation.html#datasketch.MinHashLSHForest.add">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">add</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">:</span> <span class="n">Hashable</span><span class="p">,</span> <span class="n">minhash</span><span class="p">:</span> <span class="n">MinHash</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Add a unique key, together</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Add a unique key, together</span>
 <span class="sd">        with a MinHash (or weighted MinHash) of the set referenced by the key.</span>
 
 <span class="sd">        Note:</span>
@@ -138,14 +138,13 @@
 <span class="sd">        Args:</span>
 <span class="sd">            key (Hashable): The unique identifier of the set.</span>
 <span class="sd">            minhash (MinHash): The MinHash of the set.</span>
+
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">minhash</span><span class="p">)</span> <span class="o">&lt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">k</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">l</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;The num_perm of MinHash out of range&quot;</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">key</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">keys</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;The given key has already been added&quot;</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">keys</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_H</span><span class="p">(</span><span class="n">minhash</span><span class="o">.</span><span class="n">hashvalues</span><span class="p">[</span><span class="n">start</span><span class="p">:</span><span class="n">end</span><span class="p">])</span> <span class="k">for</span> <span class="n">start</span><span class="p">,</span> <span class="n">end</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">hashranges</span>
-        <span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">keys</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">_H</span><span class="p">(</span><span class="n">minhash</span><span class="o">.</span><span class="n">hashvalues</span><span class="p">[</span><span class="n">start</span><span class="p">:</span><span class="n">end</span><span class="p">])</span> <span class="k">for</span> <span class="n">start</span><span class="p">,</span> <span class="n">end</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">hashranges</span><span class="p">]</span>
         <span class="k">for</span> <span class="n">H</span><span class="p">,</span> <span class="n">hashtable</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">keys</span><span class="p">[</span><span class="n">key</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">hashtables</span><span class="p">):</span>
             <span class="n">hashtable</span><span class="p">[</span><span class="n">H</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">key</span><span class="p">)</span></div>
 
@@ -153,11 +152,9 @@
 <div class="viewcode-block" id="MinHashLSHForest.index">
 <a class="viewcode-back" href="../../documentation.html#datasketch.MinHashLSHForest.index">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">index</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Index all the keys added so far and make them searchable.</span>
-<span class="sd">        &quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Index all the keys added so far and make them searchable.&quot;&quot;&quot;</span>
         <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">hashtable</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">hashtables</span><span class="p">):</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">sorted_hashtables</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="n">H</span> <span class="k">for</span> <span class="n">H</span> <span class="ow">in</span> <span class="n">hashtable</span><span class="o">.</span><span class="n">keys</span><span class="p">()]</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">sorted_hashtables</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="n">H</span> <span class="k">for</span> <span class="n">H</span> <span class="ow">in</span> <span class="n">hashtable</span><span class="p">]</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">sorted_hashtables</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">sort</span><span class="p">()</span></div>
 
 
@@ -165,14 +162,11 @@
         <span class="k">if</span> <span class="n">r</span> <span class="o">&gt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">k</span> <span class="ow">or</span> <span class="n">r</span> <span class="o">&lt;=</span> <span class="mi">0</span> <span class="ow">or</span> <span class="n">b</span> <span class="o">&gt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">l</span> <span class="ow">or</span> <span class="n">b</span> <span class="o">&lt;=</span> <span class="mi">0</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;parameter outside range&quot;</span><span class="p">)</span>
         <span class="c1"># Generate prefixes of concatenated hash values</span>
-        <span class="n">hps</span> <span class="o">=</span> <span class="p">[</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_H</span><span class="p">(</span><span class="n">minhash</span><span class="o">.</span><span class="n">hashvalues</span><span class="p">[</span><span class="n">start</span> <span class="p">:</span> <span class="n">start</span> <span class="o">+</span> <span class="n">r</span><span class="p">])</span>
-            <span class="k">for</span> <span class="n">start</span><span class="p">,</span> <span class="n">_</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">hashranges</span>
-        <span class="p">]</span>
+        <span class="n">hps</span> <span class="o">=</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">_H</span><span class="p">(</span><span class="n">minhash</span><span class="o">.</span><span class="n">hashvalues</span><span class="p">[</span><span class="n">start</span> <span class="p">:</span> <span class="n">start</span> <span class="o">+</span> <span class="n">r</span><span class="p">])</span> <span class="k">for</span> <span class="n">start</span><span class="p">,</span> <span class="n">_</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">hashranges</span><span class="p">]</span>
         <span class="c1"># Set the prefix length for look-ups in the sorted hash values list</span>
         <span class="n">prefix_size</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">hps</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
         <span class="k">for</span> <span class="n">ht</span><span class="p">,</span> <span class="n">hp</span><span class="p">,</span> <span class="n">hashtable</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">sorted_hashtables</span><span class="p">,</span> <span class="n">hps</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">hashtables</span><span class="p">):</span>
-            <span class="n">i</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_binary_search</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">ht</span><span class="p">),</span> <span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">ht</span><span class="p">[</span><span class="n">x</span><span class="p">][:</span><span class="n">prefix_size</span><span class="p">]</span> <span class="o">&gt;=</span> <span class="n">hp</span><span class="p">)</span>
+            <span class="n">i</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_binary_search</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">ht</span><span class="p">),</span> <span class="k">lambda</span> <span class="n">x</span><span class="p">,</span> <span class="n">ht</span><span class="o">=</span><span class="n">ht</span><span class="p">,</span> <span class="n">hp</span><span class="o">=</span><span class="n">hp</span><span class="p">:</span> <span class="n">ht</span><span class="p">[</span><span class="n">x</span><span class="p">][:</span><span class="n">prefix_size</span><span class="p">]</span> <span class="o">&gt;=</span> <span class="n">hp</span><span class="p">)</span>
             <span class="k">if</span> <span class="n">i</span> <span class="o">&lt;</span> <span class="nb">len</span><span class="p">(</span><span class="n">ht</span><span class="p">)</span> <span class="ow">and</span> <span class="n">ht</span><span class="p">[</span><span class="n">i</span><span class="p">][:</span><span class="n">prefix_size</span><span class="p">]</span> <span class="o">==</span> <span class="n">hp</span><span class="p">:</span>
                 <span class="n">j</span> <span class="o">=</span> <span class="n">i</span>
                 <span class="k">while</span> <span class="n">j</span> <span class="o">&lt;</span> <span class="nb">len</span><span class="p">(</span><span class="n">ht</span><span class="p">)</span> <span class="ow">and</span> <span class="n">ht</span><span class="p">[</span><span class="n">j</span><span class="p">][:</span><span class="n">prefix_size</span><span class="p">]</span> <span class="o">==</span> <span class="n">hp</span><span class="p">:</span>
@@ -182,9 +176,8 @@
 
 <div class="viewcode-block" id="MinHashLSHForest.query">
 <a class="viewcode-back" href="../../documentation.html#datasketch.MinHashLSHForest.query">[docs]</a>
-    <span class="k">def</span><span class="w"> </span><span class="nf">query</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">minhash</span><span class="p">:</span> <span class="n">MinHash</span><span class="p">,</span> <span class="n">k</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">Hashable</span><span class="p">]:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Return the approximate top-k keys that have the</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">query</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">minhash</span><span class="p">:</span> <span class="n">MinHash</span><span class="p">,</span> <span class="n">k</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="n">Hashable</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return the approximate top-k keys that have the</span>
 <span class="sd">        (approximately) highest Jaccard similarities to the query set.</span>
 
 <span class="sd">        Args:</span>
@@ -192,7 +185,7 @@
 <span class="sd">            k (int): The maximum number of keys to return.</span>
 
 <span class="sd">        Returns:</span>
-<span class="sd">            List[Hashable]: list of at most k keys.</span>
+<span class="sd">            list[Hashable]: list of at most k keys.</span>
 
 <span class="sd">        Note:</span>
 <span class="sd">            Tip for improving accuracy:</span>
@@ -205,6 +198,7 @@
 <span class="sd">            performance won&#39;t degrade too much -- however you do have to keep</span>
 <span class="sd">            the original sets (or MinHashes) around some where so that you</span>
 <span class="sd">            can make references to them.</span>
+
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="n">k</span> <span class="o">&lt;=</span> <span class="mi">0</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;k must be positive&quot;</span><span class="p">)</span>
@@ -224,8 +218,7 @@
 <div class="viewcode-block" id="MinHashLSHForest.get_minhash_hashvalues">
 <a class="viewcode-back" href="../../documentation.html#datasketch.MinHashLSHForest.get_minhash_hashvalues">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">get_minhash_hashvalues</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">:</span> <span class="n">Hashable</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Returns the hashvalues from the MinHash object that corresponds to the given key in the LSHForest,</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Returns the hashvalues from the MinHash object that corresponds to the given key in the LSHForest,</span>
 <span class="sd">        if it exists. This is useful for when we want to reconstruct the original MinHash</span>
 <span class="sd">        object to manually check the Jaccard Similarity for the top-k results from a query.</span>
 
@@ -234,24 +227,23 @@
 
 <span class="sd">        Returns:</span>
 <span class="sd">            hashvalues: The hashvalues for the MinHash object corresponding to the given key.</span>
+
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">byteslist</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">keys</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">byteslist</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">KeyError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;The provided key does not exist in the LSHForest: </span><span class="si">{</span><span class="n">key</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
-        <span class="n">hashvalue_byte_size</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">byteslist</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span><span class="o">//</span><span class="mi">8</span>
-        <span class="n">hashvalues</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">empty</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">byteslist</span><span class="p">)</span><span class="o">*</span><span class="n">hashvalue_byte_size</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">uint64</span><span class="p">)</span>
+        <span class="n">hashvalue_byte_size</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">byteslist</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span> <span class="o">//</span> <span class="mi">8</span>
+        <span class="n">hashvalues</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">empty</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">byteslist</span><span class="p">)</span> <span class="o">*</span> <span class="n">hashvalue_byte_size</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">uint64</span><span class="p">)</span>
         <span class="k">for</span> <span class="n">index</span><span class="p">,</span> <span class="n">item</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">byteslist</span><span class="p">):</span>
             <span class="c1"># unswap the bytes, as their representation is flipped during storage</span>
             <span class="n">hv_segment</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">frombuffer</span><span class="p">(</span><span class="n">item</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">uint64</span><span class="p">)</span><span class="o">.</span><span class="n">byteswap</span><span class="p">()</span>
-            <span class="n">curr_index</span> <span class="o">=</span> <span class="n">index</span><span class="o">*</span><span class="n">hashvalue_byte_size</span>
-            <span class="n">hashvalues</span><span class="p">[</span><span class="n">curr_index</span><span class="p">:</span><span class="n">curr_index</span><span class="o">+</span><span class="n">hashvalue_byte_size</span><span class="p">]</span> <span class="o">=</span> <span class="n">hv_segment</span>
+            <span class="n">curr_index</span> <span class="o">=</span> <span class="n">index</span> <span class="o">*</span> <span class="n">hashvalue_byte_size</span>
+            <span class="n">hashvalues</span><span class="p">[</span><span class="n">curr_index</span> <span class="p">:</span> <span class="n">curr_index</span> <span class="o">+</span> <span class="n">hashvalue_byte_size</span><span class="p">]</span> <span class="o">=</span> <span class="n">hv_segment</span>
         <span class="k">return</span> <span class="n">hashvalues</span></div>
 
 
     <span class="k">def</span><span class="w"> </span><span class="nf">_binary_search</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">n</span><span class="p">,</span> <span class="n">func</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        https://golang.org/src/sort/search.go?s=2247:2287#L49</span>
-<span class="sd">        &quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;https://golang.org/src/sort/search.go?s=2247:2287#L49.&quot;&quot;&quot;</span>
         <span class="n">i</span><span class="p">,</span> <span class="n">j</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span> <span class="n">n</span>
         <span class="k">while</span> <span class="n">i</span> <span class="o">&lt;</span> <span class="n">j</span><span class="p">:</span>
             <span class="n">h</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">i</span> <span class="o">+</span> <span class="p">(</span><span class="n">j</span> <span class="o">-</span> <span class="n">i</span><span class="p">)</span> <span class="o">/</span> <span class="mi">2</span><span class="p">)</span>
@@ -264,12 +256,12 @@
 <div class="viewcode-block" id="MinHashLSHForest.is_empty">
 <a class="viewcode-back" href="../../documentation.html#datasketch.MinHashLSHForest.is_empty">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">is_empty</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Check whether there is any searchable keys in the index.</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Check whether there is any searchable keys in the index.</span>
 <span class="sd">        Note that keys won&#39;t be searchable until `index` is called.</span>
 
 <span class="sd">        Returns:</span>
 <span class="sd">            bool: True if there is no searchable key in the index.</span>
+
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="nb">any</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">t</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span> <span class="k">for</span> <span class="n">t</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">sorted_hashtables</span><span class="p">)</span></div>
 
@@ -280,9 +272,9 @@
 <div class="viewcode-block" id="MinHashLSHForest.__contains__">
 <a class="viewcode-back" href="../../documentation.html#datasketch.MinHashLSHForest.__contains__">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="fm">__contains__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">:</span> <span class="n">Hashable</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Returns:</span>
-<span class="sd">            bool: True only if the key has been added to the index.</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Returns:</span>
+<span class="sd">        bool: True only if the key has been added to the index.</span>
+
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="n">key</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">keys</span></div>
 </div>

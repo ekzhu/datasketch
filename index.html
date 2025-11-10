@@ -16,6 +16,7 @@
       <script src="_static/documentation_options.js?v=030dc6f6"></script>
       <script src="_static/doctools.js?v=9bcbadda"></script>
       <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script async="async" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
     <script src="_static/js/theme.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
@@ -146,24 +147,122 @@ storage layer (see <a class="reference external" href="http://ekzhu.github.io/da
 <section id="install">
 <h2>Install<a class="headerlink" href="#install" title="Link to this heading"></a></h2>
 <p>To install datasketch using <code class="docutils literal notranslate"><span class="pre">pip</span></code>:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">pip</span> <span class="n">install</span> <span class="n">datasketch</span>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>pip<span class="w"> </span>install<span class="w"> </span>datasketch
 </pre></div>
 </div>
 <p>This will also install NumPy as dependency.</p>
 <p>To install with Redis dependency:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">pip</span> <span class="n">install</span> <span class="n">datasketch</span><span class="p">[</span><span class="n">redis</span><span class="p">]</span>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>pip<span class="w"> </span>install<span class="w"> </span>datasketch<span class="o">[</span>redis<span class="o">]</span>
 </pre></div>
 </div>
 <p>To install with Cassandra dependency:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">pip</span> <span class="n">install</span> <span class="n">datasketch</span><span class="p">[</span><span class="n">cassandra</span><span class="p">]</span>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>pip<span class="w"> </span>install<span class="w"> </span>datasketch<span class="o">[</span>cassandra<span class="o">]</span>
 </pre></div>
 </div>
 <p>To install with Bloom filter dependency:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">pip</span> <span class="n">install</span> <span class="n">datasketch</span><span class="p">[</span><span class="n">bloom</span><span class="p">]</span>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>pip<span class="w"> </span>install<span class="w"> </span>datasketch<span class="o">[</span>bloom<span class="o">]</span>
 </pre></div>
 </div>
+</section>
+<section id="contributing">
+<h2>Contributing<a class="headerlink" href="#contributing" title="Link to this heading"></a></h2>
+<p>We welcome contributions from everyone. Whether you’re fixing bugs, adding features, improving documentation, or helping with tests, your contributions are valuable.</p>
+<section id="development-setup">
+<h3>Development Setup<a class="headerlink" href="#development-setup" title="Link to this heading"></a></h3>
+<p>The project uses <cite>uv</cite> for fast and reliable Python package management. Follow these steps to set up your development environment:</p>
+<ol class="arabic">
+<li><p><strong>Install uv</strong>: Follow the official installation guide at <a class="reference external" href="https://docs.astral.sh/uv/getting-started/installation/">https://docs.astral.sh/uv/getting-started/installation/</a></p></li>
+<li><p><strong>Clone the repository</strong>:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>git<span class="w"> </span>clone<span class="w"> </span>https://github.com/ekzhu/datasketch.git
+<span class="nb">cd</span><span class="w"> </span>datasketch
+</pre></div>
+</div>
+</li>
+<li><p><strong>Set up the environment</strong>:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="c1"># Install all dependencies</span>
+uv<span class="w"> </span>sync
+
+<span class="c1"># Activate the virtual environment (optional, uv run commands work without it)</span>
+<span class="nb">source</span><span class="w"> </span>.venv/bin/activate
+</pre></div>
+</div>
+</li>
+<li><p><strong>Verify installation</strong>:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="c1"># Run tests to ensure everything works</span>
+uv<span class="w"> </span>run<span class="w"> </span>pytest
+</pre></div>
+</div>
+</li>
+<li><p><strong>Optional dependencies</strong> (for specific development needs):</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="c1"># For testing</span>
+uv<span class="w"> </span>sync<span class="w"> </span>--extra<span class="w"> </span><span class="nb">test</span>
+
+<span class="c1"># For Cassandra support</span>
+uv<span class="w"> </span>sync<span class="w"> </span>--extra<span class="w"> </span>cassandra
+
+<span class="c1"># For Redis support</span>
+uv<span class="w"> </span>sync<span class="w"> </span>--extra<span class="w"> </span>redis
+
+<span class="c1"># For all extras</span>
+uv<span class="w"> </span>sync<span class="w"> </span>--all-extras
+</pre></div>
+</div>
+</li>
+</ol>
+<p>Learn more about <cite>uv</cite> at <a class="reference external" href="https://docs.astral.sh/uv/">https://docs.astral.sh/uv/</a></p>
+</section>
+<section id="development-workflow">
+<h3>Development Workflow<a class="headerlink" href="#development-workflow" title="Link to this heading"></a></h3>
+<ol class="arabic">
+<li><p><strong>Fork the repository</strong> on GitHub if you haven’t already.</p></li>
+<li><p><strong>Create a feature branch</strong> for your changes:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>git<span class="w"> </span>checkout<span class="w"> </span>-b<span class="w"> </span>feature/your-feature-name
+<span class="c1"># Or for bug fixes:</span>
+git<span class="w"> </span>checkout<span class="w"> </span>-b<span class="w"> </span>fix/issue-description
+</pre></div>
+</div>
+</li>
+<li><p><strong>Make your changes</strong> following the project’s coding standards.</p></li>
+<li><p><strong>Run the tests</strong> to ensure nothing is broken:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>uv<span class="w"> </span>run<span class="w"> </span>pytest
+</pre></div>
+</div>
+</li>
+<li><p><strong>Check code quality</strong> with ruff:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="c1"># Check for issues</span>
+uvx<span class="w"> </span>ruff<span class="w"> </span>check<span class="w"> </span>.
+
+<span class="c1"># Auto-fix formatting issues</span>
+uvx<span class="w"> </span>ruff<span class="w"> </span>format<span class="w"> </span>.
+</pre></div>
+</div>
+</li>
+<li><p><strong>Commit your changes</strong> with a clear, descriptive commit message:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>git<span class="w"> </span>commit<span class="w"> </span>-m<span class="w"> </span><span class="s2">&quot;Add feature: brief description of what was changed&quot;</span>
+</pre></div>
+</div>
+</li>
+<li><p><strong>Push to your fork</strong> and create a pull request on GitHub:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>git<span class="w"> </span>push<span class="w"> </span>origin<span class="w"> </span>your-branch-name
+</pre></div>
+</div>
+</li>
+<li><p><strong>Respond to feedback</strong> from maintainers and iterate on your changes.</p></li>
+</ol>
+</section>
+<section id="guidelines">
+<h3>Guidelines<a class="headerlink" href="#guidelines" title="Link to this heading"></a></h3>
+<ul class="simple">
+<li><p>Follow PEP 8 style guidelines</p></li>
+<li><p>Write tests for new features</p></li>
+<li><p>Update documentation as needed</p></li>
+<li><p>Keep commits focused and atomic</p></li>
+<li><p>Be respectful in discussions</p></li>
+</ul>
+<p>For more information, check the <a class="reference external" href="https://github.com/ekzhu/datasketch/issues">GitHub issues</a> for current priorities or areas needing help. You can also join the discussion on <a class="reference external" href="https://github.com/ekzhu/datasketch/discussions/252">project roadmap and priorities</a>.</p>
 <div class="toctree-wrapper compound">
 </div>
+</section>
 </section>
 </section>
 

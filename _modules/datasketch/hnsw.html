@@ -77,46 +77,40 @@
              
   <h1>Source code for datasketch.hnsw</h1><div class="highlight"><pre>
 <span></span><span class="kn">from</span><span class="w"> </span><span class="nn">__future__</span><span class="w"> </span><span class="kn">import</span> <span class="n">annotations</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">collections</span><span class="w"> </span><span class="kn">import</span> <span class="n">OrderedDict</span>
+
 <span class="kn">import</span><span class="w"> </span><span class="nn">heapq</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">collections</span><span class="w"> </span><span class="kn">import</span> <span class="n">OrderedDict</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">collections.abc</span><span class="w"> </span><span class="kn">import</span> <span class="n">Hashable</span><span class="p">,</span> <span class="n">Iterable</span><span class="p">,</span> <span class="n">Iterator</span><span class="p">,</span> <span class="n">Mapping</span><span class="p">,</span> <span class="n">MutableMapping</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
-    <span class="n">Hashable</span><span class="p">,</span>
     <span class="n">Callable</span><span class="p">,</span>
-    <span class="n">Dict</span><span class="p">,</span>
-    <span class="n">Iterable</span><span class="p">,</span>
-    <span class="n">Iterator</span><span class="p">,</span>
-    <span class="n">List</span><span class="p">,</span>
-    <span class="n">Mapping</span><span class="p">,</span>
-    <span class="n">MutableMapping</span><span class="p">,</span>
     <span class="n">Optional</span><span class="p">,</span>
-    <span class="n">Set</span><span class="p">,</span>
-    <span class="n">Tuple</span><span class="p">,</span>
     <span class="n">Union</span><span class="p">,</span>
 <span class="p">)</span>
 
 <span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
 
 
-<span class="k">class</span><span class="w"> </span><span class="nc">_Layer</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">_Layer</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;A graph layer in the HNSW index. This is a dictionary-like object</span>
 <span class="sd">    that maps a key to a dictionary of neighbors.</span>
 
 <span class="sd">    Args:</span>
 <span class="sd">        key (Hashable): The first key to insert into the graph.</span>
+
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">:</span> <span class="n">Hashable</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
         <span class="c1"># self._graph[key] contains a {j: dist} dictionary,</span>
         <span class="c1"># where j is a neighbor of key and dist is distance.</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_graph</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="n">Hashable</span><span class="p">,</span> <span class="n">Dict</span><span class="p">[</span><span class="n">Hashable</span><span class="p">,</span> <span class="nb">float</span><span class="p">]]</span> <span class="o">=</span> <span class="p">{</span><span class="n">key</span><span class="p">:</span> <span class="p">{}}</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_graph</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="n">Hashable</span><span class="p">,</span> <span class="nb">dict</span><span class="p">[</span><span class="n">Hashable</span><span class="p">,</span> <span class="nb">float</span><span class="p">]]</span> <span class="o">=</span> <span class="p">{</span><span class="n">key</span><span class="p">:</span> <span class="p">{}}</span>
 
     <span class="k">def</span><span class="w"> </span><span class="fm">__contains__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">:</span> <span class="n">Hashable</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
         <span class="k">return</span> <span class="n">key</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_graph</span>
 
-    <span class="k">def</span><span class="w"> </span><span class="fm">__getitem__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">:</span> <span class="n">Hashable</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="n">Hashable</span><span class="p">,</span> <span class="nb">float</span><span class="p">]:</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__getitem__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">:</span> <span class="n">Hashable</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="n">Hashable</span><span class="p">,</span> <span class="nb">float</span><span class="p">]:</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_graph</span><span class="p">[</span><span class="n">key</span><span class="p">]</span>
 
-    <span class="k">def</span><span class="w"> </span><span class="fm">__setitem__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">:</span> <span class="n">Hashable</span><span class="p">,</span> <span class="n">value</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="n">Hashable</span><span class="p">,</span> <span class="nb">float</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__setitem__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">:</span> <span class="n">Hashable</span><span class="p">,</span> <span class="n">value</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="n">Hashable</span><span class="p">,</span> <span class="nb">float</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_graph</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">value</span>
 
     <span class="k">def</span><span class="w"> </span><span class="fm">__delitem__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">:</span> <span class="n">Hashable</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
@@ -139,7 +133,7 @@
         <span class="n">new_layer</span><span class="o">.</span><span class="n">_graph</span> <span class="o">=</span> <span class="p">{</span><span class="n">k</span><span class="p">:</span> <span class="nb">dict</span><span class="p">(</span><span class="n">v</span><span class="p">)</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_graph</span><span class="o">.</span><span class="n">items</span><span class="p">()}</span>
         <span class="k">return</span> <span class="n">new_layer</span>
 
-    <span class="k">def</span><span class="w"> </span><span class="nf">get_reverse_edges</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">:</span> <span class="n">Hashable</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Set</span><span class="p">[</span><span class="n">Hashable</span><span class="p">]:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_reverse_edges</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">:</span> <span class="n">Hashable</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">set</span><span class="p">[</span><span class="n">Hashable</span><span class="p">]:</span>
         <span class="n">reverse_edges</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
         <span class="k">for</span> <span class="n">neighbor</span><span class="p">,</span> <span class="n">neighbors</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_graph</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
             <span class="k">if</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">neighbors</span><span class="p">:</span>
@@ -152,16 +146,17 @@
 
 <span class="sd">    Args:</span>
 <span class="sd">        key (Hashable): The first key to insert into the graph.</span>
+
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">:</span> <span class="n">Hashable</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
         <span class="c1"># self._graph[key] contains a {j: dist} dictionary,</span>
         <span class="c1"># where j is a neighbor of key and dist is distance.</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_graph</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="n">Hashable</span><span class="p">,</span> <span class="n">Dict</span><span class="p">[</span><span class="n">Hashable</span><span class="p">,</span> <span class="nb">float</span><span class="p">]]</span> <span class="o">=</span> <span class="p">{</span><span class="n">key</span><span class="p">:</span> <span class="p">{}}</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_graph</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="n">Hashable</span><span class="p">,</span> <span class="nb">dict</span><span class="p">[</span><span class="n">Hashable</span><span class="p">,</span> <span class="nb">float</span><span class="p">]]</span> <span class="o">=</span> <span class="p">{</span><span class="n">key</span><span class="p">:</span> <span class="p">{}}</span>
         <span class="c1"># self._reverse_edges[key] contains a set of neighbors of key.</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_reverse_edges</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="n">Hashable</span><span class="p">,</span> <span class="n">Set</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_reverse_edges</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="n">Hashable</span><span class="p">,</span> <span class="nb">set</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
 
-    <span class="k">def</span><span class="w"> </span><span class="fm">__setitem__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">:</span> <span class="n">Hashable</span><span class="p">,</span> <span class="n">value</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="n">Hashable</span><span class="p">,</span> <span class="nb">float</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__setitem__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">:</span> <span class="n">Hashable</span><span class="p">,</span> <span class="n">value</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="n">Hashable</span><span class="p">,</span> <span class="nb">float</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
         <span class="n">old_neighbors</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_graph</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="p">{})</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_graph</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">value</span>
         <span class="k">for</span> <span class="n">neighbor</span> <span class="ow">in</span> <span class="n">old_neighbors</span><span class="p">:</span>
@@ -180,10 +175,7 @@
     <span class="k">def</span><span class="w"> </span><span class="fm">__eq__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">__value</span><span class="p">:</span> <span class="nb">object</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">__value</span><span class="p">,</span> <span class="n">_LayerWithReversedEdges</span><span class="p">):</span>
             <span class="k">return</span> <span class="kc">False</span>
-        <span class="k">return</span> <span class="p">(</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_graph</span> <span class="o">==</span> <span class="n">__value</span><span class="o">.</span><span class="n">_graph</span>
-            <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">_reverse_edges</span> <span class="o">==</span> <span class="n">__value</span><span class="o">.</span><span class="n">_reverse_edges</span>
-        <span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_graph</span> <span class="o">==</span> <span class="n">__value</span><span class="o">.</span><span class="n">_graph</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">_reverse_edges</span> <span class="o">==</span> <span class="n">__value</span><span class="o">.</span><span class="n">_reverse_edges</span>
 
     <span class="k">def</span><span class="w"> </span><span class="fm">__len__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
         <span class="k">return</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_graph</span><span class="p">)</span>
@@ -198,11 +190,11 @@
         <span class="n">new_layer</span><span class="o">.</span><span class="n">_reverse_edges</span> <span class="o">=</span> <span class="p">{</span><span class="n">k</span><span class="p">:</span> <span class="nb">set</span><span class="p">(</span><span class="n">v</span><span class="p">)</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_reverse_edges</span><span class="o">.</span><span class="n">items</span><span class="p">()}</span>
         <span class="k">return</span> <span class="n">new_layer</span>
 
-    <span class="k">def</span><span class="w"> </span><span class="nf">get_reverse_edges</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">:</span> <span class="n">Hashable</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Set</span><span class="p">[</span><span class="n">Hashable</span><span class="p">]:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_reverse_edges</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">:</span> <span class="n">Hashable</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">set</span><span class="p">[</span><span class="n">Hashable</span><span class="p">]:</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_reverse_edges</span><span class="p">[</span><span class="n">key</span><span class="p">]</span>
 
 
-<span class="k">class</span><span class="w"> </span><span class="nc">_Node</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">_Node</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;A node in the HNSW graph.&quot;&quot;&quot;</span>
 
     <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">:</span> <span class="n">Hashable</span><span class="p">,</span> <span class="n">point</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">is_deleted</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
@@ -223,9 +215,7 @@
         <span class="k">return</span> <span class="nb">hash</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">key</span><span class="p">)</span>
 
     <span class="k">def</span><span class="w"> </span><span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
-        <span class="k">return</span> <span class="p">(</span>
-            <span class="sa">f</span><span class="s2">&quot;_Node(key=</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">key</span><span class="si">}</span><span class="s2">, point=</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">point</span><span class="si">}</span><span class="s2">, is_deleted=</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">is_deleted</span><span class="si">}</span><span class="s2">)&quot;</span>
-        <span class="p">)</span>
+        <span class="k">return</span> <span class="sa">f</span><span class="s2">&quot;_Node(key=</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">key</span><span class="si">}</span><span class="s2">, point=</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">point</span><span class="si">}</span><span class="s2">, is_deleted=</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">is_deleted</span><span class="si">}</span><span class="s2">)&quot;</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">copy</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">_Node</span><span class="p">:</span>
         <span class="k">return</span> <span class="n">_Node</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">key</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">point</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">is_deleted</span><span class="p">)</span>
@@ -255,7 +245,6 @@
 <span class="sd">            usage and slows down :meth:`insert`.</span>
 
 <span class="sd">    Examples:</span>
-
 <span class="sd">        Create an HNSW index with Euclidean distance and insert 1000 random</span>
 <span class="sd">        vectors of dimension 10.</span>
 
@@ -285,8 +274,7 @@
 <span class="sd">            # Deduplication is handled by the distance function.</span>
 <span class="sd">            data = np.random.randint(0, 100, size=(1000, 10))</span>
 <span class="sd">            jaccard_distance = lambda x, y: (</span>
-<span class="sd">                1.0 - float(len(np.intersect1d(x, y, assume_unique=False)))</span>
-<span class="sd">                / float(len(np.union1d(x, y)))</span>
+<span class="sd">                1.0 - float(len(np.intersect1d(x, y, assume_unique=False))) / float(len(np.union1d(x, y)))</span>
 <span class="sd">            )</span>
 <span class="sd">            index = HNSW(distance_func=jaccard_distance)</span>
 <span class="sd">            for i, d in enumerate(data):</span>
@@ -314,7 +302,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">_ef_construction</span> <span class="o">=</span> <span class="n">ef_construction</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_m0</span> <span class="o">=</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">m</span> <span class="k">if</span> <span class="n">m0</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">m0</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_level_mult</span> <span class="o">=</span> <span class="mi">1</span> <span class="o">/</span> <span class="n">np</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">m</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_graphs</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">_Layer</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_graphs</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">_Layer</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_entry_point</span> <span class="o">=</span> <span class="kc">None</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_random</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">RandomState</span><span class="p">(</span><span class="n">seed</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_layer_class</span> <span class="o">=</span> <span class="n">_LayerWithReversedEdges</span> <span class="k">if</span> <span class="n">reversed_edges</span> <span class="k">else</span> <span class="n">_Layer</span></div>
@@ -324,7 +312,8 @@
 <a class="viewcode-back" href="../../documentation.html#datasketch.HNSW.__len__">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="fm">__len__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Return the number of points in the index excluding those</span>
-<span class="sd">        that were soft-removed.&quot;&quot;&quot;</span>
+<span class="sd">        that were soft-removed.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="nb">sum</span><span class="p">(</span><span class="ow">not</span> <span class="n">node</span><span class="o">.</span><span class="n">is_deleted</span> <span class="k">for</span> <span class="n">node</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_nodes</span><span class="o">.</span><span class="n">values</span><span class="p">())</span></div>
 
 
@@ -332,7 +321,8 @@
 <a class="viewcode-back" href="../../documentation.html#datasketch.HNSW.__contains__">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="fm">__contains__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">:</span> <span class="n">Hashable</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Return ``True`` if the index contains the key and it was</span>
-<span class="sd">        not soft-removed, else ``False``.&quot;&quot;&quot;</span>
+<span class="sd">        not soft-removed, else ``False``.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="n">key</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_nodes</span> <span class="ow">and</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_nodes</span><span class="p">[</span><span class="n">key</span><span class="p">]</span><span class="o">.</span><span class="n">is_deleted</span></div>
 
 
@@ -340,7 +330,8 @@
 <a class="viewcode-back" href="../../documentation.html#datasketch.HNSW.__getitem__">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="fm">__getitem__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">:</span> <span class="n">Hashable</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Get the point associated with the key. Raises KeyError if the key</span>
-<span class="sd">        does not exist in the index or it was soft-removed.&quot;&quot;&quot;</span>
+<span class="sd">        does not exist in the index or it was soft-removed.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="n">key</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">KeyError</span><span class="p">(</span><span class="n">key</span><span class="p">)</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_nodes</span><span class="p">[</span><span class="n">key</span><span class="p">]</span><span class="o">.</span><span class="n">point</span></div>
@@ -350,7 +341,8 @@
 <a class="viewcode-back" href="../../documentation.html#datasketch.HNSW.__setitem__">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="fm">__setitem__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">:</span> <span class="n">Hashable</span><span class="p">,</span> <span class="n">value</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Set the point associated with the key and update the index.</span>
-<span class="sd">        This is equivalent to calling :meth:`insert` with the key and point.&quot;&quot;&quot;</span>
+<span class="sd">        This is equivalent to calling :meth:`insert` with the key and point.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="n">value</span><span class="p">)</span></div>
 
 
@@ -368,7 +360,8 @@
 <a class="viewcode-back" href="../../documentation.html#datasketch.HNSW.__iter__">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="fm">__iter__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Iterator</span><span class="p">[</span><span class="n">Hashable</span><span class="p">]:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Return an iterator over the keys of the index that were not</span>
-<span class="sd">        soft-removed.&quot;&quot;&quot;</span>
+<span class="sd">        soft-removed.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="p">(</span><span class="n">key</span> <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_nodes</span> <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_nodes</span><span class="p">[</span><span class="n">key</span><span class="p">]</span><span class="o">.</span><span class="n">is_deleted</span><span class="p">)</span></div>
 
 
@@ -376,7 +369,8 @@
 <a class="viewcode-back" href="../../documentation.html#datasketch.HNSW.reversed">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">reversed</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Iterator</span><span class="p">[</span><span class="n">Hashable</span><span class="p">]:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Return a reverse iterator over the keys of the index that were not</span>
-<span class="sd">        soft-removed.&quot;&quot;&quot;</span>
+<span class="sd">        soft-removed.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="p">(</span><span class="n">key</span> <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="nb">reversed</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_nodes</span><span class="p">)</span> <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_nodes</span><span class="p">[</span><span class="n">key</span><span class="p">]</span><span class="o">.</span><span class="n">is_deleted</span><span class="p">)</span></div>
 
 
@@ -384,7 +378,8 @@
 <a class="viewcode-back" href="../../documentation.html#datasketch.HNSW.__eq__">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="fm">__eq__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">__value</span><span class="p">:</span> <span class="nb">object</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Return True only if the index parameters, random states, keys, points</span>
-<span class="sd">        points, and index structures are equal, including deleted points.&quot;&quot;&quot;</span>
+<span class="sd">        points, and index structures are equal, including deleted points.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">__value</span><span class="p">,</span> <span class="n">HNSW</span><span class="p">):</span>
             <span class="k">return</span> <span class="kc">False</span>
         <span class="c1"># Check if the index parameters are equal.</span>
@@ -419,11 +414,10 @@
 
 <div class="viewcode-block" id="HNSW.get">
 <a class="viewcode-back" href="../../documentation.html#datasketch.HNSW.get">[docs]</a>
-    <span class="k">def</span><span class="w"> </span><span class="nf">get</span><span class="p">(</span>
-        <span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">:</span> <span class="n">Hashable</span><span class="p">,</span> <span class="n">default</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
-    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Union</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="kc">None</span><span class="p">]:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">get</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">:</span> <span class="n">Hashable</span><span class="p">,</span> <span class="n">default</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Union</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="kc">None</span><span class="p">]:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Return the point for key in the index, else default. If default is not</span>
-<span class="sd">        given and key is not in the index or it was soft-removed, return None.&quot;&quot;&quot;</span>
+<span class="sd">        given and key is not in the index or it was soft-removed, return None.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="n">key</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="p">:</span>
             <span class="k">return</span> <span class="n">default</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_nodes</span><span class="p">[</span><span class="n">key</span><span class="p">]</span><span class="o">.</span><span class="n">point</span></div>
@@ -431,21 +425,19 @@
 
 <div class="viewcode-block" id="HNSW.items">
 <a class="viewcode-back" href="../../documentation.html#datasketch.HNSW.items">[docs]</a>
-    <span class="k">def</span><span class="w"> </span><span class="nf">items</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Iterator</span><span class="p">[</span><span class="n">Tuple</span><span class="p">[</span><span class="n">Hashable</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">]]:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">items</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Iterator</span><span class="p">[</span><span class="nb">tuple</span><span class="p">[</span><span class="n">Hashable</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">]]:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Return an iterator of the indexed points that were not soft-removed</span>
-<span class="sd">        as (key, point) pairs.&quot;&quot;&quot;</span>
-        <span class="k">return</span> <span class="p">(</span>
-            <span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="n">node</span><span class="o">.</span><span class="n">point</span><span class="p">)</span>
-            <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">node</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_nodes</span><span class="o">.</span><span class="n">items</span><span class="p">()</span>
-            <span class="k">if</span> <span class="ow">not</span> <span class="n">node</span><span class="o">.</span><span class="n">is_deleted</span>
-        <span class="p">)</span></div>
+<span class="sd">        as (key, point) pairs.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="p">((</span><span class="n">key</span><span class="p">,</span> <span class="n">node</span><span class="o">.</span><span class="n">point</span><span class="p">)</span> <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">node</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_nodes</span><span class="o">.</span><span class="n">items</span><span class="p">()</span> <span class="k">if</span> <span class="ow">not</span> <span class="n">node</span><span class="o">.</span><span class="n">is_deleted</span><span class="p">)</span></div>
 
 
 <div class="viewcode-block" id="HNSW.keys">
 <a class="viewcode-back" href="../../documentation.html#datasketch.HNSW.keys">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">keys</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Iterator</span><span class="p">[</span><span class="n">Hashable</span><span class="p">]:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Return an iterator of the keys of the index points that were not</span>
-<span class="sd">        soft-removed.&quot;&quot;&quot;</span>
+<span class="sd">        soft-removed.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="p">(</span><span class="n">key</span> <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_nodes</span> <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_nodes</span><span class="p">[</span><span class="n">key</span><span class="p">]</span><span class="o">.</span><span class="n">is_deleted</span><span class="p">)</span></div>
 
 
@@ -458,9 +450,7 @@
 
 <div class="viewcode-block" id="HNSW.pop">
 <a class="viewcode-back" href="../../documentation.html#datasketch.HNSW.pop">[docs]</a>
-    <span class="k">def</span><span class="w"> </span><span class="nf">pop</span><span class="p">(</span>
-        <span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">:</span> <span class="n">Hashable</span><span class="p">,</span> <span class="n">default</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">hard</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span>
-    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">pop</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">:</span> <span class="n">Hashable</span><span class="p">,</span> <span class="n">default</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">hard</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;If key is in the index, remove it and return its associated point,</span>
 <span class="sd">        else return default. If default is not given and key is not in the index</span>
 <span class="sd">        or it was soft-removed, raise KeyError.</span>
@@ -476,9 +466,7 @@
 
 <div class="viewcode-block" id="HNSW.popitem">
 <a class="viewcode-back" href="../../documentation.html#datasketch.HNSW.popitem">[docs]</a>
-    <span class="k">def</span><span class="w"> </span><span class="nf">popitem</span><span class="p">(</span>
-        <span class="bp">self</span><span class="p">,</span> <span class="n">last</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span> <span class="n">hard</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span>
-    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">Hashable</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">]:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">popitem</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">last</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span> <span class="n">hard</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">Hashable</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">]:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Remove and return a (key, point) pair from the index. Pairs are</span>
 <span class="sd">        returned in LIFO order if `last` is true or FIFO order if false.</span>
 <span class="sd">        If the index is empty or all points are soft-removed, raise KeyError.</span>
@@ -487,22 +475,17 @@
 <span class="sd">            In versions of Python before 3.7, the order of items in the index</span>
 <span class="sd">            is not guaranteed. This method will remove and return an arbitrary</span>
 <span class="sd">            (key, point) pair.</span>
+
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_nodes</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">KeyError</span><span class="p">(</span><span class="s2">&quot;popitem(): index is empty&quot;</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">last</span><span class="p">:</span>
             <span class="n">key</span> <span class="o">=</span> <span class="nb">next</span><span class="p">(</span>
-                <span class="p">(</span>
-                    <span class="n">key</span>
-                    <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="nb">reversed</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_nodes</span><span class="p">)</span>
-                    <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_nodes</span><span class="p">[</span><span class="n">key</span><span class="p">]</span><span class="o">.</span><span class="n">is_deleted</span>
-                <span class="p">),</span>
+                <span class="p">(</span><span class="n">key</span> <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="nb">reversed</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_nodes</span><span class="p">)</span> <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_nodes</span><span class="p">[</span><span class="n">key</span><span class="p">]</span><span class="o">.</span><span class="n">is_deleted</span><span class="p">),</span>
                 <span class="kc">None</span><span class="p">,</span>
             <span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>
-            <span class="n">key</span> <span class="o">=</span> <span class="nb">next</span><span class="p">(</span>
-                <span class="p">(</span><span class="n">key</span> <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_nodes</span> <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_nodes</span><span class="p">[</span><span class="n">key</span><span class="p">]</span><span class="o">.</span><span class="n">is_deleted</span><span class="p">),</span> <span class="kc">None</span>
-            <span class="p">)</span>
+            <span class="n">key</span> <span class="o">=</span> <span class="nb">next</span><span class="p">((</span><span class="n">key</span> <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_nodes</span> <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_nodes</span><span class="p">[</span><span class="n">key</span><span class="p">]</span><span class="o">.</span><span class="n">is_deleted</span><span class="p">),</span> <span class="kc">None</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">key</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">KeyError</span><span class="p">(</span><span class="s2">&quot;popitem(): index is empty&quot;</span><span class="p">)</span>
         <span class="n">point</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_nodes</span><span class="p">[</span><span class="n">key</span><span class="p">]</span><span class="o">.</span><span class="n">point</span>
@@ -514,7 +497,8 @@
 <a class="viewcode-back" href="../../documentation.html#datasketch.HNSW.clear">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">clear</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Clear the index of all data points. This will not reset the random</span>
-<span class="sd">        number generator.&quot;&quot;&quot;</span>
+<span class="sd">        number generator.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_nodes</span> <span class="o">=</span> <span class="p">{}</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_graphs</span> <span class="o">=</span> <span class="p">[]</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_entry_point</span> <span class="o">=</span> <span class="kc">None</span></div>
@@ -527,16 +511,15 @@
 <span class="sd">        as the original index and the same keys and points, but will not share</span>
 <span class="sd">        any index data structures (i.e., graphs) with the original index.</span>
 <span class="sd">        The new index&#39;s random state will start from a copy of the original</span>
-<span class="sd">        index&#39;s.&quot;&quot;&quot;</span>
+<span class="sd">        index&#39;s.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">new_index</span> <span class="o">=</span> <span class="n">HNSW</span><span class="p">(</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_distance_func</span><span class="p">,</span>
             <span class="n">m</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_m</span><span class="p">,</span>
             <span class="n">ef_construction</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_ef_construction</span><span class="p">,</span>
             <span class="n">m0</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_m0</span><span class="p">,</span>
         <span class="p">)</span>
-        <span class="n">new_index</span><span class="o">.</span><span class="n">_nodes</span> <span class="o">=</span> <span class="n">OrderedDict</span><span class="p">(</span>
-            <span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="n">node</span><span class="o">.</span><span class="n">copy</span><span class="p">())</span> <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">node</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_nodes</span><span class="o">.</span><span class="n">items</span><span class="p">()</span>
-        <span class="p">)</span>
+        <span class="n">new_index</span><span class="o">.</span><span class="n">_nodes</span> <span class="o">=</span> <span class="n">OrderedDict</span><span class="p">((</span><span class="n">key</span><span class="p">,</span> <span class="n">node</span><span class="o">.</span><span class="n">copy</span><span class="p">())</span> <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">node</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_nodes</span><span class="o">.</span><span class="n">items</span><span class="p">())</span>
         <span class="n">new_index</span><span class="o">.</span><span class="n">_graphs</span> <span class="o">=</span> <span class="p">[</span><span class="n">layer</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span> <span class="k">for</span> <span class="n">layer</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_graphs</span><span class="p">]</span>
         <span class="n">new_index</span><span class="o">.</span><span class="n">_entry_point</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_entry_point</span>
         <span class="n">new_index</span><span class="o">.</span><span class="n">_random</span><span class="o">.</span><span class="n">set_state</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_random</span><span class="o">.</span><span class="n">get_state</span><span class="p">())</span>
@@ -553,7 +536,6 @@
 <span class="sd">            other (Union[Mapping, HNSW]): The other Mapping or HNSW object.</span>
 
 <span class="sd">        Examples:</span>
-
 <span class="sd">            Create an HNSW index with a dictionary of points.</span>
 
 <span class="sd">            .. code-block:: python</span>
@@ -594,7 +576,8 @@
     <span class="k">def</span><span class="w"> </span><span class="nf">setdefault</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">:</span> <span class="n">Hashable</span><span class="p">,</span> <span class="n">default</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;If key is in the index and it was not soft-removed, return</span>
 <span class="sd">        its associated point. If not, insert</span>
-<span class="sd">        key with a value of default and return default. default cannot be None.&quot;&quot;&quot;</span>
+<span class="sd">        key with a value of default and return default. default cannot be None.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="n">default</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Default value cannot be None.&quot;</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">key</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_nodes</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">_nodes</span><span class="p">[</span><span class="n">key</span><span class="p">]</span><span class="o">.</span><span class="n">is_deleted</span><span class="p">:</span>
@@ -634,17 +617,13 @@
         <span class="k">if</span> <span class="n">level</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="n">level</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="o">-</span><span class="n">np</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_random</span><span class="o">.</span><span class="n">random_sample</span><span class="p">())</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">_level_mult</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_nodes</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">_Node</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="n">new_point</span><span class="p">)</span>
-        <span class="k">if</span> <span class="p">(</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_entry_point</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
-        <span class="p">):</span>  <span class="c1"># The HNSW is not empty, we have an entry point</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_entry_point</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>  <span class="c1"># The HNSW is not empty, we have an entry point</span>
             <span class="n">dist</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_distance_func</span><span class="p">(</span><span class="n">new_point</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_nodes</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">_entry_point</span><span class="p">]</span><span class="o">.</span><span class="n">point</span><span class="p">)</span>
             <span class="n">point</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_entry_point</span>
             <span class="c1"># For all levels in which we dont have to insert elem,</span>
             <span class="c1"># we search for the closest neighbor using greedy search.</span>
             <span class="k">for</span> <span class="n">layer</span> <span class="ow">in</span> <span class="nb">reversed</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_graphs</span><span class="p">[</span><span class="n">level</span> <span class="o">+</span> <span class="mi">1</span> <span class="p">:]):</span>
-                <span class="n">point</span><span class="p">,</span> <span class="n">dist</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_search_ef1</span><span class="p">(</span>
-                    <span class="n">new_point</span><span class="p">,</span> <span class="n">point</span><span class="p">,</span> <span class="n">dist</span><span class="p">,</span> <span class="n">layer</span><span class="p">,</span> <span class="n">allow_soft_deleted</span><span class="o">=</span><span class="kc">True</span>
-                <span class="p">)</span>
+                <span class="n">point</span><span class="p">,</span> <span class="n">dist</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_search_ef1</span><span class="p">(</span><span class="n">new_point</span><span class="p">,</span> <span class="n">point</span><span class="p">,</span> <span class="n">dist</span><span class="p">,</span> <span class="n">layer</span><span class="p">,</span> <span class="n">allow_soft_deleted</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
             <span class="c1"># Entry points for search at each level to insert.</span>
             <span class="n">entry_points</span> <span class="o">=</span> <span class="p">[(</span><span class="o">-</span><span class="n">dist</span><span class="p">,</span> <span class="n">point</span><span class="p">)]</span>
             <span class="k">for</span> <span class="n">layer</span> <span class="ow">in</span> <span class="nb">reversed</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_graphs</span><span class="p">[:</span> <span class="n">level</span> <span class="o">+</span> <span class="mi">1</span><span class="p">]):</span>
@@ -652,16 +631,11 @@
                 <span class="n">level_m</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_m</span> <span class="k">if</span> <span class="n">layer</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_graphs</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="k">else</span> <span class="bp">self</span><span class="o">.</span><span class="n">_m0</span>
                 <span class="c1"># Search this layer for neighbors to insert, and update entry points</span>
                 <span class="c1"># for the next level.</span>
-                <span class="n">entry_points</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_search_base_layer</span><span class="p">(</span>
-                    <span class="n">new_point</span><span class="p">,</span> <span class="n">entry_points</span><span class="p">,</span> <span class="n">layer</span><span class="p">,</span> <span class="n">ef</span><span class="p">,</span> <span class="n">allow_soft_deleted</span><span class="o">=</span><span class="kc">True</span>
-                <span class="p">)</span>
+                <span class="n">entry_points</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_search_base_layer</span><span class="p">(</span><span class="n">new_point</span><span class="p">,</span> <span class="n">entry_points</span><span class="p">,</span> <span class="n">layer</span><span class="p">,</span> <span class="n">ef</span><span class="p">,</span> <span class="n">allow_soft_deleted</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
                 <span class="c1"># Insert the new node into the graph with out-going edges.</span>
                 <span class="c1"># We prune the out-going edges to keep only the top level_m neighbors.</span>
                 <span class="n">layer</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span>
-                    <span class="n">p</span><span class="p">:</span> <span class="n">d</span>
-                    <span class="k">for</span> <span class="n">d</span><span class="p">,</span> <span class="n">p</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_heuristic_prune</span><span class="p">(</span>
-                        <span class="p">[(</span><span class="o">-</span><span class="n">mdist</span><span class="p">,</span> <span class="n">p</span><span class="p">)</span> <span class="k">for</span> <span class="n">mdist</span><span class="p">,</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">entry_points</span><span class="p">],</span> <span class="n">level_m</span>
-                    <span class="p">)</span>
+                    <span class="n">p</span><span class="p">:</span> <span class="n">d</span> <span class="k">for</span> <span class="n">d</span><span class="p">,</span> <span class="n">p</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_heuristic_prune</span><span class="p">([(</span><span class="o">-</span><span class="n">mdist</span><span class="p">,</span> <span class="n">p</span><span class="p">)</span> <span class="k">for</span> <span class="n">mdist</span><span class="p">,</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">entry_points</span><span class="p">],</span> <span class="n">level_m</span><span class="p">)</span>
                 <span class="p">}</span>
                 <span class="c1"># For each neighbor of the new node, we insert the new node as a neighbor.</span>
                 <span class="k">for</span> <span class="n">neighbor_key</span><span class="p">,</span> <span class="n">dist</span> <span class="ow">in</span> <span class="n">layer</span><span class="p">[</span><span class="n">key</span><span class="p">]</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
@@ -670,8 +644,7 @@
                         <span class="c1"># We prune the edges to keep only the top level_m neighbors</span>
                         <span class="c1"># based on heuristic.</span>
                         <span class="k">for</span> <span class="n">d</span><span class="p">,</span> <span class="n">p</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_heuristic_prune</span><span class="p">(</span>
-                            <span class="p">[(</span><span class="n">d</span><span class="p">,</span> <span class="n">p</span><span class="p">)</span> <span class="k">for</span> <span class="n">p</span><span class="p">,</span> <span class="n">d</span> <span class="ow">in</span> <span class="n">layer</span><span class="p">[</span><span class="n">neighbor_key</span><span class="p">]</span><span class="o">.</span><span class="n">items</span><span class="p">()]</span>
-                            <span class="o">+</span> <span class="p">[(</span><span class="n">dist</span><span class="p">,</span> <span class="n">key</span><span class="p">)],</span>
+                            <span class="p">[(</span><span class="n">d</span><span class="p">,</span> <span class="n">p</span><span class="p">)</span> <span class="k">for</span> <span class="n">p</span><span class="p">,</span> <span class="n">d</span> <span class="ow">in</span> <span class="n">layer</span><span class="p">[</span><span class="n">neighbor_key</span><span class="p">]</span><span class="o">.</span><span class="n">items</span><span class="p">()]</span> <span class="o">+</span> <span class="p">[(</span><span class="n">dist</span><span class="p">,</span> <span class="n">key</span><span class="p">)],</span>
                             <span class="n">level_m</span><span class="p">,</span>
                         <span class="p">)</span>
                     <span class="p">}</span>
@@ -692,6 +665,7 @@
 
 <span class="sd">        Raises:</span>
 <span class="sd">            KeyError: If the key does not exist in the index.</span>
+
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="n">key</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_nodes</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">KeyError</span><span class="p">(</span><span class="n">key</span><span class="p">)</span>
@@ -707,11 +681,11 @@
             <span class="n">layer_m</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_m</span> <span class="k">if</span> <span class="n">layer</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_graphs</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="k">else</span> <span class="bp">self</span><span class="o">.</span><span class="n">_m0</span>
             <span class="c1"># Create a set of points in the 2nd-degree neighborhood of the key.</span>
             <span class="n">neighborhood_keys</span> <span class="o">=</span> <span class="nb">set</span><span class="p">([</span><span class="n">key</span><span class="p">])</span>
-            <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">layer</span><span class="p">[</span><span class="n">key</span><span class="p">]</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+            <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">layer</span><span class="p">[</span><span class="n">key</span><span class="p">]:</span>
                 <span class="n">neighborhood_keys</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">p</span><span class="p">)</span>
-                <span class="k">for</span> <span class="n">p2</span> <span class="ow">in</span> <span class="n">layer</span><span class="p">[</span><span class="n">p</span><span class="p">]</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+                <span class="k">for</span> <span class="n">p2</span> <span class="ow">in</span> <span class="n">layer</span><span class="p">[</span><span class="n">p</span><span class="p">]:</span>
                     <span class="n">neighborhood_keys</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">p2</span><span class="p">)</span>
-            <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">layer</span><span class="p">[</span><span class="n">key</span><span class="p">]</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+            <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">layer</span><span class="p">[</span><span class="n">key</span><span class="p">]:</span>
                 <span class="c1"># For each neighbor of the key, we connects it with the top ef</span>
                 <span class="c1"># neighbors in the 2nd-degree neighborhood of the key.</span>
                 <span class="n">cands</span> <span class="o">=</span> <span class="p">[]</span>
@@ -719,19 +693,12 @@
                 <span class="k">for</span> <span class="n">candidate_key</span> <span class="ow">in</span> <span class="n">neighborhood_keys</span><span class="p">:</span>
                     <span class="k">if</span> <span class="n">candidate_key</span> <span class="o">==</span> <span class="n">p</span><span class="p">:</span>
                         <span class="k">continue</span>
-                    <span class="n">dist</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_distance_func</span><span class="p">(</span>
-                        <span class="bp">self</span><span class="o">.</span><span class="n">_nodes</span><span class="p">[</span><span class="n">candidate_key</span><span class="p">]</span><span class="o">.</span><span class="n">point</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_nodes</span><span class="p">[</span><span class="n">p</span><span class="p">]</span><span class="o">.</span><span class="n">point</span>
-                    <span class="p">)</span>
+                    <span class="n">dist</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_distance_func</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_nodes</span><span class="p">[</span><span class="n">candidate_key</span><span class="p">]</span><span class="o">.</span><span class="n">point</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_nodes</span><span class="p">[</span><span class="n">p</span><span class="p">]</span><span class="o">.</span><span class="n">point</span><span class="p">)</span>
                     <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">cands</span><span class="p">)</span> <span class="o">&lt;</span> <span class="n">elem_to_keep</span><span class="p">:</span>
                         <span class="n">heapq</span><span class="o">.</span><span class="n">heappush</span><span class="p">(</span><span class="n">cands</span><span class="p">,</span> <span class="p">(</span><span class="o">-</span><span class="n">dist</span><span class="p">,</span> <span class="n">candidate_key</span><span class="p">))</span>
                     <span class="k">elif</span> <span class="n">dist</span> <span class="o">&lt;</span> <span class="o">-</span><span class="n">cands</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">0</span><span class="p">]:</span>
                         <span class="n">heapq</span><span class="o">.</span><span class="n">heappushpop</span><span class="p">(</span><span class="n">cands</span><span class="p">,</span> <span class="p">(</span><span class="o">-</span><span class="n">dist</span><span class="p">,</span> <span class="n">candidate_key</span><span class="p">))</span>
-                <span class="n">layer</span><span class="p">[</span><span class="n">p</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span>
-                    <span class="n">p2</span><span class="p">:</span> <span class="n">d2</span>
-                    <span class="k">for</span> <span class="n">d2</span><span class="p">,</span> <span class="n">p2</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_heuristic_prune</span><span class="p">(</span>
-                        <span class="p">[(</span><span class="o">-</span><span class="n">md</span><span class="p">,</span> <span class="n">p</span><span class="p">)</span> <span class="k">for</span> <span class="n">md</span><span class="p">,</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">cands</span><span class="p">],</span> <span class="n">layer_m</span>
-                    <span class="p">)</span>
-                <span class="p">}</span>
+                <span class="n">layer</span><span class="p">[</span><span class="n">p</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span><span class="n">p2</span><span class="p">:</span> <span class="n">d2</span> <span class="k">for</span> <span class="n">d2</span><span class="p">,</span> <span class="n">p2</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_heuristic_prune</span><span class="p">([(</span><span class="o">-</span><span class="n">md</span><span class="p">,</span> <span class="n">p</span><span class="p">)</span> <span class="k">for</span> <span class="n">md</span><span class="p">,</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">cands</span><span class="p">],</span> <span class="n">layer_m</span><span class="p">)}</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_repair_connections</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="n">new_point</span><span class="p">,</span> <span class="n">ef</span><span class="p">)</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">_repair_connections</span><span class="p">(</span>
@@ -742,9 +709,7 @@
         <span class="n">key_to_delete</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Hashable</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
         <span class="n">entry_point</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_entry_point</span>
-        <span class="n">entry_point_dist</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_distance_func</span><span class="p">(</span>
-            <span class="n">new_point</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_nodes</span><span class="p">[</span><span class="n">entry_point</span><span class="p">]</span><span class="o">.</span><span class="n">point</span>
-        <span class="p">)</span>
+        <span class="n">entry_point_dist</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_distance_func</span><span class="p">(</span><span class="n">new_point</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_nodes</span><span class="p">[</span><span class="n">entry_point</span><span class="p">]</span><span class="o">.</span><span class="n">point</span><span class="p">)</span>
         <span class="n">entry_points</span> <span class="o">=</span> <span class="p">[(</span><span class="o">-</span><span class="n">entry_point_dist</span><span class="p">,</span> <span class="n">entry_point</span><span class="p">)]</span>
         <span class="k">for</span> <span class="n">layer</span> <span class="ow">in</span> <span class="nb">reversed</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_graphs</span><span class="p">):</span>
             <span class="k">if</span> <span class="n">key</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">layer</span><span class="p">:</span>
@@ -775,9 +740,7 @@
                 <span class="c1"># Filter out the updated node itself.</span>
                 <span class="n">filtered_candidates</span> <span class="o">=</span> <span class="p">[(</span><span class="o">-</span><span class="n">md</span><span class="p">,</span> <span class="n">p</span><span class="p">)</span> <span class="k">for</span> <span class="n">md</span><span class="p">,</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">entry_points</span> <span class="k">if</span> <span class="n">p</span> <span class="o">!=</span> <span class="n">key</span><span class="p">]</span>
                 <span class="c1"># Update the out-going edges of the updated node at this level.</span>
-                <span class="n">layer</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span>
-                    <span class="n">p</span><span class="p">:</span> <span class="n">d</span> <span class="k">for</span> <span class="n">d</span><span class="p">,</span> <span class="n">p</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_heuristic_prune</span><span class="p">(</span><span class="n">filtered_candidates</span><span class="p">,</span> <span class="n">level_m</span><span class="p">)</span>
-                <span class="p">}</span>
+                <span class="n">layer</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span><span class="n">p</span><span class="p">:</span> <span class="n">d</span> <span class="k">for</span> <span class="n">d</span><span class="p">,</span> <span class="n">p</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_heuristic_prune</span><span class="p">(</span><span class="n">filtered_candidates</span><span class="p">,</span> <span class="n">level_m</span><span class="p">)}</span>
 
 <div class="viewcode-block" id="HNSW.query">
 <a class="viewcode-back" href="../../documentation.html#datasketch.HNSW.query">[docs]</a>
@@ -786,7 +749,7 @@
         <span class="n">query_point</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>
         <span class="n">k</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">ef</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">Tuple</span><span class="p">[</span><span class="n">Hashable</span><span class="p">,</span> <span class="nb">float</span><span class="p">]]:</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="nb">tuple</span><span class="p">[</span><span class="n">Hashable</span><span class="p">,</span> <span class="nb">float</span><span class="p">]]:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Search for the k nearest neighbors of the query point.</span>
 
 <span class="sd">        Args:</span>
@@ -797,30 +760,25 @@
 <span class="sd">                If None, use the construction ef.</span>
 
 <span class="sd">        Returns:</span>
-<span class="sd">            List[Tuple[Hashable, float]]: A list of (key, distance) pairs for the k</span>
+<span class="sd">            list[Tuple[Hashable, float]]: A list of (key, distance) pairs for the k</span>
 <span class="sd">                nearest neighbors of the query point.</span>
 
 <span class="sd">        Raises:</span>
 <span class="sd">            ValueError: If the entry point is not found.</span>
+
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="n">ef</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="n">ef</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_ef_construction</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_entry_point</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Entry point not found.&quot;</span><span class="p">)</span>
-        <span class="n">entry_point_dist</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_distance_func</span><span class="p">(</span>
-            <span class="n">query_point</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_nodes</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">_entry_point</span><span class="p">]</span><span class="o">.</span><span class="n">point</span>
-        <span class="p">)</span>
+        <span class="n">entry_point_dist</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_distance_func</span><span class="p">(</span><span class="n">query_point</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_nodes</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">_entry_point</span><span class="p">]</span><span class="o">.</span><span class="n">point</span><span class="p">)</span>
         <span class="n">entry_point</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_entry_point</span>
         <span class="c1"># Search for the closest neighbor from the highest level to the 2nd</span>
         <span class="c1"># level using greedy search.</span>
         <span class="k">for</span> <span class="n">layer</span> <span class="ow">in</span> <span class="nb">reversed</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_graphs</span><span class="p">[</span><span class="mi">1</span><span class="p">:]):</span>
-            <span class="n">entry_point</span><span class="p">,</span> <span class="n">entry_point_dist</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_search_ef1</span><span class="p">(</span>
-                <span class="n">query_point</span><span class="p">,</span> <span class="n">entry_point</span><span class="p">,</span> <span class="n">entry_point_dist</span><span class="p">,</span> <span class="n">layer</span>
-            <span class="p">)</span>
+            <span class="n">entry_point</span><span class="p">,</span> <span class="n">entry_point_dist</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_search_ef1</span><span class="p">(</span><span class="n">query_point</span><span class="p">,</span> <span class="n">entry_point</span><span class="p">,</span> <span class="n">entry_point_dist</span><span class="p">,</span> <span class="n">layer</span><span class="p">)</span>
         <span class="c1"># Search for the neighbors at the base layer using ef search.</span>
-        <span class="n">candidates</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_search_base_layer</span><span class="p">(</span>
-            <span class="n">query_point</span><span class="p">,</span> <span class="p">[(</span><span class="o">-</span><span class="n">entry_point_dist</span><span class="p">,</span> <span class="n">entry_point</span><span class="p">)],</span> <span class="bp">self</span><span class="o">.</span><span class="n">_graphs</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">ef</span>
-        <span class="p">)</span>
+        <span class="n">candidates</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_search_base_layer</span><span class="p">(</span><span class="n">query_point</span><span class="p">,</span> <span class="p">[(</span><span class="o">-</span><span class="n">entry_point_dist</span><span class="p">,</span> <span class="n">entry_point</span><span class="p">)],</span> <span class="bp">self</span><span class="o">.</span><span class="n">_graphs</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">ef</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">k</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
             <span class="c1"># If k is specified, we return the k nearest neighbors.</span>
             <span class="n">candidates</span> <span class="o">=</span> <span class="n">heapq</span><span class="o">.</span><span class="n">nlargest</span><span class="p">(</span><span class="n">k</span><span class="p">,</span> <span class="n">candidates</span><span class="p">)</span>
@@ -839,7 +797,7 @@
         <span class="n">layer</span><span class="p">:</span> <span class="n">_Layer</span><span class="p">,</span>
         <span class="n">allow_soft_deleted</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
         <span class="n">key_to_hard_delete</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Hashable</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">Hashable</span><span class="p">,</span> <span class="nb">float</span><span class="p">]:</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">Hashable</span><span class="p">,</span> <span class="nb">float</span><span class="p">]:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;The greedy search algorithm for finding the closest neighbor only.</span>
 
 <span class="sd">        Args:</span>
@@ -856,6 +814,7 @@
 <span class="sd">        Returns:</span>
 <span class="sd">            Tuple[Hashable, float]: A tuple of (key, distance) representing the closest</span>
 <span class="sd">                neighbor found.</span>
+
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">candidates</span> <span class="o">=</span> <span class="p">[(</span><span class="n">entry_point_dist</span><span class="p">,</span> <span class="n">entry_point</span><span class="p">)]</span>
         <span class="n">visited</span> <span class="o">=</span> <span class="nb">set</span><span class="p">([</span><span class="n">entry_point</span><span class="p">])</span>
@@ -871,16 +830,11 @@
             <span class="c1"># Find the neighbors of the current node</span>
             <span class="n">neighbors</span> <span class="o">=</span> <span class="p">[</span><span class="n">p</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">layer</span><span class="p">[</span><span class="n">curr</span><span class="p">]</span> <span class="k">if</span> <span class="n">p</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">visited</span><span class="p">]</span>
             <span class="n">visited</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">neighbors</span><span class="p">)</span>
-            <span class="n">dists</span> <span class="o">=</span> <span class="p">[</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">_distance_func</span><span class="p">(</span><span class="n">query_point</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_nodes</span><span class="p">[</span><span class="n">p</span><span class="p">]</span><span class="o">.</span><span class="n">point</span><span class="p">)</span>
-                <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">neighbors</span>
-            <span class="p">]</span>
+            <span class="n">dists</span> <span class="o">=</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">_distance_func</span><span class="p">(</span><span class="n">query_point</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_nodes</span><span class="p">[</span><span class="n">p</span><span class="p">]</span><span class="o">.</span><span class="n">point</span><span class="p">)</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">neighbors</span><span class="p">]</span>
             <span class="k">for</span> <span class="n">p</span><span class="p">,</span> <span class="n">d</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">neighbors</span><span class="p">,</span> <span class="n">dists</span><span class="p">):</span>
                 <span class="c1"># Update the best node if we find a closer node.</span>
                 <span class="k">if</span> <span class="n">d</span> <span class="o">&lt;</span> <span class="n">best_dist</span><span class="p">:</span>
-                    <span class="k">if</span> <span class="p">(</span><span class="ow">not</span> <span class="n">allow_soft_deleted</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">_nodes</span><span class="p">[</span><span class="n">p</span><span class="p">]</span><span class="o">.</span><span class="n">is_deleted</span><span class="p">)</span> <span class="ow">or</span> <span class="p">(</span>
-                        <span class="n">p</span> <span class="o">==</span> <span class="n">key_to_hard_delete</span>
-                    <span class="p">):</span>
+                    <span class="k">if</span> <span class="p">(</span><span class="ow">not</span> <span class="n">allow_soft_deleted</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">_nodes</span><span class="p">[</span><span class="n">p</span><span class="p">]</span><span class="o">.</span><span class="n">is_deleted</span><span class="p">)</span> <span class="ow">or</span> <span class="p">(</span><span class="n">p</span> <span class="o">==</span> <span class="n">key_to_hard_delete</span><span class="p">):</span>
                         <span class="c1"># If the neighbor has been deleted or to be hard-deleted,</span>
                         <span class="c1"># we don&#39;t update the best node but we continue to</span>
                         <span class="c1"># explore the neighbor&#39;s neighbors.</span>
@@ -894,17 +848,17 @@
     <span class="k">def</span><span class="w"> </span><span class="nf">_search_base_layer</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">query_point</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>
-        <span class="n">entry_points</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Tuple</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="n">Hashable</span><span class="p">]],</span>
+        <span class="n">entry_points</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">tuple</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="n">Hashable</span><span class="p">]],</span>
         <span class="n">layer</span><span class="p">:</span> <span class="n">_Layer</span><span class="p">,</span>
         <span class="n">ef</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
         <span class="n">allow_soft_deleted</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
         <span class="n">key_to_hard_delete</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Hashable</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">Tuple</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="n">Hashable</span><span class="p">]]:</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="nb">tuple</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="n">Hashable</span><span class="p">]]:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;The ef search algorithm for finding neighbors in a given layer.</span>
 
 <span class="sd">        Args:</span>
 <span class="sd">            query (np.ndarray): The query point.</span>
-<span class="sd">            entry_points (List[Tuple[float, Hashable]]): A list of (-distance, key) pairs</span>
+<span class="sd">            entry_points (list[Tuple[float, Hashable]]): A list of (-distance, key) pairs</span>
 <span class="sd">                representing the entry points for the search.</span>
 <span class="sd">            layer (_Layer): The graph for the layer.</span>
 <span class="sd">            ef (int): The number of neighbors to consider during search.</span>
@@ -914,7 +868,7 @@
 <span class="sd">                hard-deleted, if any. This point should never be returned.</span>
 
 <span class="sd">        Returns:</span>
-<span class="sd">            List[Tuple[float, Hashable]]: A heap of (-distance, key) pairs representing</span>
+<span class="sd">            list[Tuple[float, Hashable]]: A heap of (-distance, key) pairs representing</span>
 <span class="sd">                the neighbors found.</span>
 
 <span class="sd">        Note:</span>
@@ -924,6 +878,7 @@
 <span class="sd">            soft-deleted points even if allow_soft_deleted is False. Therefore,</span>
 <span class="sd">            the caller should check input entry_points for soft-deleted</span>
 <span class="sd">            points if necessary.</span>
+
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="c1"># candidates is a heap of (distance, key) pairs.</span>
         <span class="n">candidates</span> <span class="o">=</span> <span class="p">[(</span><span class="o">-</span><span class="n">mdist</span><span class="p">,</span> <span class="n">p</span><span class="p">)</span> <span class="k">for</span> <span class="n">mdist</span><span class="p">,</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">entry_points</span><span class="p">]</span>
@@ -944,14 +899,9 @@
             <span class="c1"># Find the neighbors of the current node</span>
             <span class="n">neighbors</span> <span class="o">=</span> <span class="p">[</span><span class="n">p</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">layer</span><span class="p">[</span><span class="n">curr_key</span><span class="p">]</span> <span class="k">if</span> <span class="n">p</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">visited</span><span class="p">]</span>
             <span class="n">visited</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">neighbors</span><span class="p">)</span>
-            <span class="n">dists</span> <span class="o">=</span> <span class="p">[</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">_distance_func</span><span class="p">(</span><span class="n">query_point</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_nodes</span><span class="p">[</span><span class="n">p</span><span class="p">]</span><span class="o">.</span><span class="n">point</span><span class="p">)</span>
-                <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">neighbors</span>
-            <span class="p">]</span>
+            <span class="n">dists</span> <span class="o">=</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">_distance_func</span><span class="p">(</span><span class="n">query_point</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_nodes</span><span class="p">[</span><span class="n">p</span><span class="p">]</span><span class="o">.</span><span class="n">point</span><span class="p">)</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">neighbors</span><span class="p">]</span>
             <span class="k">for</span> <span class="n">p</span><span class="p">,</span> <span class="n">dist</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">neighbors</span><span class="p">,</span> <span class="n">dists</span><span class="p">):</span>
-                <span class="k">if</span> <span class="p">(</span><span class="ow">not</span> <span class="n">allow_soft_deleted</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">_nodes</span><span class="p">[</span><span class="n">p</span><span class="p">]</span><span class="o">.</span><span class="n">is_deleted</span><span class="p">)</span> <span class="ow">or</span> <span class="p">(</span>
-                    <span class="n">p</span> <span class="o">==</span> <span class="n">key_to_hard_delete</span>
-                <span class="p">):</span>
+                <span class="k">if</span> <span class="p">(</span><span class="ow">not</span> <span class="n">allow_soft_deleted</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">_nodes</span><span class="p">[</span><span class="n">p</span><span class="p">]</span><span class="o">.</span><span class="n">is_deleted</span><span class="p">)</span> <span class="ow">or</span> <span class="p">(</span><span class="n">p</span> <span class="o">==</span> <span class="n">key_to_hard_delete</span><span class="p">):</span>
                     <span class="k">if</span> <span class="n">dist</span> <span class="o">&lt;=</span> <span class="n">closet_dist</span><span class="p">:</span>
                         <span class="c1"># If the neighbor has been deleted or to be deleted,</span>
                         <span class="c1"># we add it to the heap to explore its neighbors but</span>
@@ -972,21 +922,20 @@
 
         <span class="k">return</span> <span class="n">entry_points</span>
 
-    <span class="k">def</span><span class="w"> </span><span class="nf">_heuristic_prune</span><span class="p">(</span>
-        <span class="bp">self</span><span class="p">,</span> <span class="n">candidates</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Tuple</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="n">Hashable</span><span class="p">]],</span> <span class="n">max_size</span><span class="p">:</span> <span class="nb">int</span>
-    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">Tuple</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="n">Hashable</span><span class="p">]]:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_heuristic_prune</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">candidates</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">tuple</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="n">Hashable</span><span class="p">]],</span> <span class="n">max_size</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="nb">tuple</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="n">Hashable</span><span class="p">]]:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Prune the potential neigbors to keep only the top max_size neighbors.</span>
 <span class="sd">        This algorithm is based on hnswlib&#39;s heuristic pruning algorithm:</span>
 <span class="sd">        &lt;https://github.com/nmslib/hnswlib/blob/978f7137bc9555a1b61920f05d9d0d8252ca9169/hnswlib/hnswalg.h#L382&gt;`_.</span>
 
 <span class="sd">        Args:</span>
-<span class="sd">            candidates (List[Tuple[float, Hashable]]): A list of (distance, key) pairs</span>
+<span class="sd">            candidates (list[tuple[float, Hashable]]): A list of (distance, key) pairs</span>
 <span class="sd">                representing the potential neighbors.</span>
 <span class="sd">            max_size (int): The maximum number of neighbors to keep.</span>
 
 <span class="sd">        Returns:</span>
-<span class="sd">            List[Tuple[float, Hashable]]: A list of (distance, key) pairs representing</span>
+<span class="sd">            list[Tuple[float, Hashable]]: A list of (distance, key) pairs representing</span>
 <span class="sd">                the pruned neighbors.</span>
+
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">candidates</span><span class="p">)</span> <span class="o">&lt;</span> <span class="n">max_size</span><span class="p">:</span>
             <span class="c1"># If the number of entry points is smaller than max_size, we return</span>
@@ -1021,18 +970,20 @@
         <span class="n">ef</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Remove a point from the index. This removal algorithm is based on</span>
-<span class="sd">        the discussion on `hnswlib issue #4`_. There are two versions:</span>
+<span class="sd">        the discussion on `hnswlib issue #4`_.</span>
+
+<span class="sd">        There are two versions:</span>
 
 <span class="sd">        * *soft remove*: the point is marked as removed from the index, but its</span>
-<span class="sd">          data and out-going edges are kept. Future queries will not return</span>
-<span class="sd">          the point and no new edge will direct to this point,</span>
-<span class="sd">          but the point will still be used for graph traversal.</span>
-<span class="sd">          This is the default behavior.</span>
+<span class="sd">        data and out-going edges are kept. Future queries will not return</span>
+<span class="sd">        the point and no new edge will direct to this point,</span>
+<span class="sd">        but the point will still be used for graph traversal.</span>
+<span class="sd">        This is the default behavior.</span>
 <span class="sd">        * *hard remove*: the point is removed from the index and its data and</span>
-<span class="sd">          out-going edges are also removed. Points with out-going edges pointing</span>
-<span class="sd">          to the deleted point will have their out-going edges</span>
-<span class="sd">          re-assigned using the same pruning algorithm as :meth:`insert` during</span>
-<span class="sd">          point update.</span>
+<span class="sd">        out-going edges are also removed. Points with out-going edges pointing</span>
+<span class="sd">        to the deleted point will have their out-going edges</span>
+<span class="sd">        re-assigned using the same pruning algorithm as :meth:`insert` during</span>
+<span class="sd">        point update.</span>
 
 <span class="sd">        In both versions, if the deleted point is the current entry point,</span>
 <span class="sd">        the entry point will be re-assigned to the next point in the highest</span>
@@ -1096,6 +1047,7 @@
 <span class="sd">                index.clean()</span>
 
 <span class="sd">        .. _hnswlib issue #4: https://github.com/nmslib/hnswlib/issues/4</span>
+
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_nodes</span> <span class="ow">or</span> <span class="n">key</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_nodes</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">KeyError</span><span class="p">(</span><span class="n">key</span><span class="p">)</span>
@@ -1111,9 +1063,8 @@
                 <span class="p">)</span>
                 <span class="k">if</span> <span class="n">new_entry_point</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
                     <span class="k">break</span>
-                <span class="k">else</span><span class="p">:</span>
-                    <span class="c1"># As the layer is going to be empty after deletion, we remove it.</span>
-                    <span class="bp">self</span><span class="o">.</span><span class="n">_graphs</span><span class="o">.</span><span class="n">pop</span><span class="p">()</span>
+                <span class="c1"># As the layer is going to be empty after deletion, we remove it.</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_graphs</span><span class="o">.</span><span class="n">pop</span><span class="p">()</span>
             <span class="k">if</span> <span class="n">new_entry_point</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
                 <span class="c1"># If the point to be deleted is the only point in the index,</span>
                 <span class="c1"># we clear the index.</span>
@@ -1161,6 +1112,7 @@
 <span class="sd">        Args:</span>
 <span class="sd">            ef (Optional[int]): The number of neighbors to consider during</span>
 <span class="sd">                re-assignment. If None, use the construction ef.</span>
+
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">keys_to_remove</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">key</span> <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_nodes</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_nodes</span><span class="p">[</span><span class="n">key</span><span class="p">]</span><span class="o">.</span><span class="n">is_deleted</span><span class="p">)</span>
         <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">keys_to_remove</span><span class="p">:</span>

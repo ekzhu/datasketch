@@ -76,49 +76,48 @@
            <div itemprop="articleBody">
              
   <h1>Source code for datasketch.lshensemble</h1><div class="highlight"><pre>
-<span></span><span class="kn">from</span><span class="w"> </span><span class="nn">collections</span><span class="w"> </span><span class="kn">import</span> <span class="n">deque</span><span class="p">,</span> <span class="n">Counter</span>
+<span></span><span class="kn">import</span><span class="w"> </span><span class="nn">logging</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">struct</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">Generator</span><span class="p">,</span> <span class="n">Hashable</span><span class="p">,</span> <span class="n">Iterable</span><span class="p">,</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Tuple</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">collections</span><span class="w"> </span><span class="kn">import</span> <span class="n">Counter</span><span class="p">,</span> <span class="n">deque</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">collections.abc</span><span class="w"> </span><span class="kn">import</span> <span class="n">Generator</span><span class="p">,</span> <span class="n">Hashable</span><span class="p">,</span> <span class="n">Iterable</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Optional</span>
 
 <span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">datasketch.lsh</span><span class="w"> </span><span class="kn">import</span> <span class="n">MinHashLSH</span><span class="p">,</span> <span class="n">integrate</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">datasketch.lshensemble_partition</span><span class="w"> </span><span class="kn">import</span> <span class="n">optimal_partitions</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">datasketch.minhash</span><span class="w"> </span><span class="kn">import</span> <span class="n">MinHash</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">datasketch.storage</span><span class="w"> </span><span class="kn">import</span> <span class="n">_random_name</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">datasketch.lsh</span><span class="w"> </span><span class="kn">import</span> <span class="n">integrate</span><span class="p">,</span> <span class="n">MinHashLSH</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">datasketch.lshensemble_partition</span><span class="w"> </span><span class="kn">import</span> <span class="n">optimal_partitions</span>
+
+<span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
 
 
 <span class="k">def</span><span class="w"> </span><span class="nf">_false_positive_probability</span><span class="p">(</span><span class="n">threshold</span><span class="p">,</span> <span class="n">b</span><span class="p">,</span> <span class="n">r</span><span class="p">,</span> <span class="n">xq</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Compute the false positive probability given the containment threshold.</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Compute the false positive probability given the containment threshold.</span>
 <span class="sd">    xq is the ratio of x/q.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">_probability</span> <span class="o">=</span> <span class="k">lambda</span> <span class="n">t</span><span class="p">:</span> <span class="mi">1</span> <span class="o">-</span> <span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="p">(</span><span class="n">t</span> <span class="o">/</span> <span class="p">(</span><span class="mi">1</span> <span class="o">+</span> <span class="n">xq</span> <span class="o">-</span> <span class="n">t</span><span class="p">))</span> <span class="o">**</span> <span class="nb">float</span><span class="p">(</span><span class="n">r</span><span class="p">))</span> <span class="o">**</span> <span class="nb">float</span><span class="p">(</span><span class="n">b</span><span class="p">)</span>
     <span class="k">if</span> <span class="n">xq</span> <span class="o">&gt;=</span> <span class="n">threshold</span><span class="p">:</span>
-        <span class="n">a</span><span class="p">,</span> <span class="n">err</span> <span class="o">=</span> <span class="n">integrate</span><span class="p">(</span><span class="n">_probability</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="n">threshold</span><span class="p">)</span>
+        <span class="n">a</span><span class="p">,</span> <span class="n">_err</span> <span class="o">=</span> <span class="n">integrate</span><span class="p">(</span><span class="n">_probability</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="n">threshold</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">a</span>
-    <span class="n">a</span><span class="p">,</span> <span class="n">err</span> <span class="o">=</span> <span class="n">integrate</span><span class="p">(</span><span class="n">_probability</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="n">xq</span><span class="p">)</span>
+    <span class="n">a</span><span class="p">,</span> <span class="n">_err</span> <span class="o">=</span> <span class="n">integrate</span><span class="p">(</span><span class="n">_probability</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="n">xq</span><span class="p">)</span>
     <span class="k">return</span> <span class="n">a</span>
 
 
 <span class="k">def</span><span class="w"> </span><span class="nf">_false_negative_probability</span><span class="p">(</span><span class="n">threshold</span><span class="p">,</span> <span class="n">b</span><span class="p">,</span> <span class="n">r</span><span class="p">,</span> <span class="n">xq</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Compute the false negative probability given the containment threshold</span>
-<span class="sd">    &quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Compute the false negative probability given the containment threshold.&quot;&quot;&quot;</span>
     <span class="n">_probability</span> <span class="o">=</span> <span class="k">lambda</span> <span class="n">t</span><span class="p">:</span> <span class="mi">1</span> <span class="o">-</span> <span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="p">(</span><span class="n">t</span> <span class="o">/</span> <span class="p">(</span><span class="mi">1</span> <span class="o">+</span> <span class="n">xq</span> <span class="o">-</span> <span class="n">t</span><span class="p">))</span> <span class="o">**</span> <span class="nb">float</span><span class="p">(</span><span class="n">r</span><span class="p">))</span> <span class="o">**</span> <span class="nb">float</span><span class="p">(</span><span class="n">b</span><span class="p">))</span>
     <span class="k">if</span> <span class="n">xq</span> <span class="o">&gt;=</span> <span class="mf">1.0</span><span class="p">:</span>
-        <span class="n">a</span><span class="p">,</span> <span class="n">err</span> <span class="o">=</span> <span class="n">integrate</span><span class="p">(</span><span class="n">_probability</span><span class="p">,</span> <span class="n">threshold</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">)</span>
+        <span class="n">a</span><span class="p">,</span> <span class="n">_err</span> <span class="o">=</span> <span class="n">integrate</span><span class="p">(</span><span class="n">_probability</span><span class="p">,</span> <span class="n">threshold</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">a</span>
     <span class="k">if</span> <span class="n">xq</span> <span class="o">&gt;=</span> <span class="n">threshold</span><span class="p">:</span>
-        <span class="n">a</span><span class="p">,</span> <span class="n">err</span> <span class="o">=</span> <span class="n">integrate</span><span class="p">(</span><span class="n">_probability</span><span class="p">,</span> <span class="n">threshold</span><span class="p">,</span> <span class="n">xq</span><span class="p">)</span>
+        <span class="n">a</span><span class="p">,</span> <span class="n">_err</span> <span class="o">=</span> <span class="n">integrate</span><span class="p">(</span><span class="n">_probability</span><span class="p">,</span> <span class="n">threshold</span><span class="p">,</span> <span class="n">xq</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">a</span>
     <span class="k">return</span> <span class="mf">0.0</span>
 
 
-<span class="k">def</span><span class="w"> </span><span class="nf">_optimal_param</span><span class="p">(</span>
-    <span class="n">threshold</span><span class="p">,</span> <span class="n">num_perm</span><span class="p">,</span> <span class="n">max_r</span><span class="p">,</span> <span class="n">xq</span><span class="p">,</span> <span class="n">false_positive_weight</span><span class="p">,</span> <span class="n">false_negative_weight</span>
-<span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Compute the optimal parameters that minimizes the weighted sum</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">_optimal_param</span><span class="p">(</span><span class="n">threshold</span><span class="p">,</span> <span class="n">num_perm</span><span class="p">,</span> <span class="n">max_r</span><span class="p">,</span> <span class="n">xq</span><span class="p">,</span> <span class="n">false_positive_weight</span><span class="p">,</span> <span class="n">false_negative_weight</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Compute the optimal parameters that minimizes the weighted sum</span>
 <span class="sd">    of probabilities of false positive and false negative.</span>
 <span class="sd">    xq is the ratio of x/q.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
@@ -139,9 +138,8 @@
 
 <div class="viewcode-block" id="MinHashLSHEnsemble">
 <a class="viewcode-back" href="../../documentation.html#datasketch.MinHashLSHEnsemble">[docs]</a>
-<span class="k">class</span><span class="w"> </span><span class="nc">MinHashLSHEnsemble</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    The :ref:`minhash_lsh_ensemble` index. It supports</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">MinHashLSHEnsemble</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;The :ref:`minhash_lsh_ensemble` index. It supports</span>
 <span class="sd">    :ref:`containment` queries.</span>
 <span class="sd">    The implementation is based on</span>
 <span class="sd">    `E. Zhu et al. &lt;http://www.vldb.org/pvldb/vol9/p1185-zhu.pdf&gt;`_.</span>
@@ -184,6 +182,7 @@
 
 <span class="sd">    .. _`Go implementation`: https://github.com/ekzhu/lshensemble</span>
 <span class="sd">    .. _`the paper`: http://www.vldb.org/pvldb/vol9/p1185-zhu.pdf</span>
+
 <span class="sd">    &quot;&quot;&quot;</span>
 
 <div class="viewcode-block" id="MinHashLSHEnsemble.__init__">
@@ -194,8 +193,8 @@
         <span class="n">num_perm</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">128</span><span class="p">,</span>
         <span class="n">num_part</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">16</span><span class="p">,</span>
         <span class="n">m</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">8</span><span class="p">,</span>
-        <span class="n">weights</span><span class="p">:</span> <span class="n">Tuple</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="mf">0.5</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">),</span>
-        <span class="n">storage_config</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Dict</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">weights</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="mf">0.5</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">),</span>
+        <span class="n">storage_config</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">dict</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">prepickle</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">bool</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
         <span class="k">if</span> <span class="n">threshold</span> <span class="o">&gt;</span> <span class="mf">1.0</span> <span class="ow">or</span> <span class="n">threshold</span> <span class="o">&lt;</span> <span class="mf">0.0</span><span class="p">:</span>
@@ -215,7 +214,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">m</span> <span class="o">=</span> <span class="n">m</span>
         <span class="n">rs</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_init_optimal_params</span><span class="p">(</span><span class="n">weights</span><span class="p">)</span>
         <span class="c1"># Initialize multiple LSH indexes for each partition</span>
-        <span class="n">storage_config</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;dict&quot;</span><span class="p">}</span> <span class="k">if</span> <span class="ow">not</span> <span class="n">storage_config</span> <span class="k">else</span> <span class="n">storage_config</span>
+        <span class="n">storage_config</span> <span class="o">=</span> <span class="n">storage_config</span> <span class="k">if</span> <span class="n">storage_config</span> <span class="k">else</span> <span class="p">{</span><span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;dict&quot;</span><span class="p">}</span>
         <span class="n">basename</span> <span class="o">=</span> <span class="n">storage_config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;basename&quot;</span><span class="p">,</span> <span class="n">_random_name</span><span class="p">(</span><span class="mi">11</span><span class="p">))</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">indexes</span> <span class="o">=</span> <span class="p">[</span>
             <span class="nb">dict</span><span class="p">(</span>
@@ -224,9 +223,7 @@
                     <span class="n">MinHashLSH</span><span class="p">(</span>
                         <span class="n">num_perm</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">h</span><span class="p">,</span>
                         <span class="n">params</span><span class="o">=</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">h</span> <span class="o">/</span> <span class="n">r</span><span class="p">),</span> <span class="n">r</span><span class="p">),</span>
-                        <span class="n">storage_config</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_get_storage_config</span><span class="p">(</span>
-                            <span class="n">basename</span><span class="p">,</span> <span class="n">storage_config</span><span class="p">,</span> <span class="n">partition</span><span class="p">,</span> <span class="n">r</span>
-                        <span class="p">),</span>
+                        <span class="n">storage_config</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_get_storage_config</span><span class="p">(</span><span class="n">basename</span><span class="p">,</span> <span class="n">storage_config</span><span class="p">,</span> <span class="n">partition</span><span class="p">,</span> <span class="n">r</span><span class="p">),</span>
                         <span class="n">prepickle</span><span class="o">=</span><span class="n">prepickle</span><span class="p">,</span>
                     <span class="p">),</span>
                 <span class="p">)</span>
@@ -269,20 +266,17 @@
 
     <span class="k">def</span><span class="w"> </span><span class="nf">_get_storage_config</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">basename</span><span class="p">,</span> <span class="n">base_config</span><span class="p">,</span> <span class="n">partition</span><span class="p">,</span> <span class="n">r</span><span class="p">):</span>
         <span class="n">config</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="n">base_config</span><span class="p">)</span>
-        <span class="n">config</span><span class="p">[</span><span class="s2">&quot;basename&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="sa">b</span><span class="s2">&quot;-&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span>
-            <span class="p">[</span><span class="n">basename</span><span class="p">,</span> <span class="n">struct</span><span class="o">.</span><span class="n">pack</span><span class="p">(</span><span class="s2">&quot;&gt;H&quot;</span><span class="p">,</span> <span class="n">partition</span><span class="p">),</span> <span class="n">struct</span><span class="o">.</span><span class="n">pack</span><span class="p">(</span><span class="s2">&quot;&gt;H&quot;</span><span class="p">,</span> <span class="n">r</span><span class="p">)]</span>
-        <span class="p">)</span>
+        <span class="n">config</span><span class="p">[</span><span class="s2">&quot;basename&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="sa">b</span><span class="s2">&quot;-&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="n">basename</span><span class="p">,</span> <span class="n">struct</span><span class="o">.</span><span class="n">pack</span><span class="p">(</span><span class="s2">&quot;&gt;H&quot;</span><span class="p">,</span> <span class="n">partition</span><span class="p">),</span> <span class="n">struct</span><span class="o">.</span><span class="n">pack</span><span class="p">(</span><span class="s2">&quot;&gt;H&quot;</span><span class="p">,</span> <span class="n">r</span><span class="p">)])</span>
         <span class="k">return</span> <span class="n">config</span>
 
 <div class="viewcode-block" id="MinHashLSHEnsemble.index">
 <a class="viewcode-back" href="../../documentation.html#datasketch.MinHashLSHEnsemble.index">[docs]</a>
-    <span class="k">def</span><span class="w"> </span><span class="nf">index</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">entries</span><span class="p">:</span> <span class="n">Iterable</span><span class="p">[</span><span class="n">Tuple</span><span class="p">[</span><span class="n">Hashable</span><span class="p">,</span> <span class="n">MinHash</span><span class="p">,</span> <span class="nb">int</span><span class="p">]])</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Index all sets given their keys, MinHashes, and sizes.</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">index</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">entries</span><span class="p">:</span> <span class="n">Iterable</span><span class="p">[</span><span class="nb">tuple</span><span class="p">[</span><span class="n">Hashable</span><span class="p">,</span> <span class="n">MinHash</span><span class="p">,</span> <span class="nb">int</span><span class="p">]])</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Index all sets given their keys, MinHashes, and sizes.</span>
 <span class="sd">        It can be called only once after the index is created.</span>
 
 <span class="sd">        Args:</span>
-<span class="sd">            entries (Iterable[Tuple[Hashable, MinHash, int]]): An iterable of</span>
+<span class="sd">            entries (Iterable[tuple[Hashable, MinHash, int]]): An iterable of</span>
 <span class="sd">                tuples, each must be in the form of ``(key, minhash, size)``,</span>
 <span class="sd">                where ``key`` is the unique</span>
 <span class="sd">                identifier of a set, ``minhash`` is the MinHash of the set,</span>
@@ -321,8 +315,7 @@
 <div class="viewcode-block" id="MinHashLSHEnsemble.query">
 <a class="viewcode-back" href="../../documentation.html#datasketch.MinHashLSHEnsemble.query">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">query</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">minhash</span><span class="p">:</span> <span class="n">MinHash</span><span class="p">,</span> <span class="n">size</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Generator</span><span class="p">[</span><span class="n">Hashable</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">]:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Giving the MinHash and size of the query set, retrieve</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Giving the MinHash and size of the query set, retrieve</span>
 <span class="sd">        keys that references sets with containment with respect to</span>
 <span class="sd">        the query set greater than the threshold.</span>
 
@@ -332,6 +325,7 @@
 
 <span class="sd">        Returns:</span>
 <span class="sd">            Generator[Hashable, None, None]: an iterator of keys.</span>
+
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">index</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">indexes</span><span class="p">):</span>
             <span class="n">u</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">uppers</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
@@ -345,12 +339,12 @@
 <div class="viewcode-block" id="MinHashLSHEnsemble.__contains__">
 <a class="viewcode-back" href="../../documentation.html#datasketch.MinHashLSHEnsemble.__contains__">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="fm">__contains__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">:</span> <span class="n">Hashable</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Args:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Args:</span>
 <span class="sd">            key (hashable): The unique identifier of a set.</span>
 
 <span class="sd">        Returns:</span>
 <span class="sd">            bool: True only if the key exists in the index.</span>
+
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="nb">any</span><span class="p">(</span><span class="nb">any</span><span class="p">(</span><span class="n">key</span> <span class="ow">in</span> <span class="n">index</span><span class="p">[</span><span class="n">r</span><span class="p">]</span> <span class="k">for</span> <span class="n">r</span> <span class="ow">in</span> <span class="n">index</span><span class="p">)</span> <span class="k">for</span> <span class="n">index</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">indexes</span><span class="p">)</span></div>
 
@@ -358,9 +352,9 @@
 <div class="viewcode-block" id="MinHashLSHEnsemble.is_empty">
 <a class="viewcode-back" href="../../documentation.html#datasketch.MinHashLSHEnsemble.is_empty">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">is_empty</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Returns:</span>
-<span class="sd">            bool: Check if the index is empty.</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Returns:</span>
+<span class="sd">        bool: Check if the index is empty.</span>
+
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="nb">all</span><span class="p">(</span><span class="nb">all</span><span class="p">(</span><span class="n">index</span><span class="p">[</span><span class="n">r</span><span class="p">]</span><span class="o">.</span><span class="n">is_empty</span><span class="p">()</span> <span class="k">for</span> <span class="n">r</span> <span class="ow">in</span> <span class="n">index</span><span class="p">)</span> <span class="k">for</span> <span class="n">index</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">indexes</span><span class="p">)</span></div>
 </div>
@@ -376,10 +370,8 @@
     <span class="n">num_perm</span> <span class="o">=</span> <span class="mi">256</span>
     <span class="n">false_negative_weight</span><span class="p">,</span> <span class="n">false_positive_weight</span> <span class="o">=</span> <span class="mf">0.5</span><span class="p">,</span> <span class="mf">0.5</span>
     <span class="k">for</span> <span class="n">xq</span> <span class="ow">in</span> <span class="n">xqs</span><span class="p">:</span>
-        <span class="n">b</span><span class="p">,</span> <span class="n">r</span> <span class="o">=</span> <span class="n">_optimal_param</span><span class="p">(</span>
-            <span class="n">threshold</span><span class="p">,</span> <span class="n">num_perm</span><span class="p">,</span> <span class="n">max_r</span><span class="p">,</span> <span class="n">xq</span><span class="p">,</span> <span class="n">false_positive_weight</span><span class="p">,</span> <span class="n">false_negative_weight</span>
-        <span class="p">)</span>
-        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;threshold: </span><span class="si">%.2f</span><span class="s2">, xq: </span><span class="si">%.3f</span><span class="s2">, b: </span><span class="si">%d</span><span class="s2">, r: </span><span class="si">%d</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">threshold</span><span class="p">,</span> <span class="n">xq</span><span class="p">,</span> <span class="n">b</span><span class="p">,</span> <span class="n">r</span><span class="p">))</span>
+        <span class="n">b</span><span class="p">,</span> <span class="n">r</span> <span class="o">=</span> <span class="n">_optimal_param</span><span class="p">(</span><span class="n">threshold</span><span class="p">,</span> <span class="n">num_perm</span><span class="p">,</span> <span class="n">max_r</span><span class="p">,</span> <span class="n">xq</span><span class="p">,</span> <span class="n">false_positive_weight</span><span class="p">,</span> <span class="n">false_negative_weight</span><span class="p">)</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;threshold: </span><span class="si">%.2f</span><span class="s2">, xq: </span><span class="si">%.3f</span><span class="s2">, b: </span><span class="si">%d</span><span class="s2">, r: </span><span class="si">%d</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">threshold</span><span class="p">,</span> <span class="n">xq</span><span class="p">,</span> <span class="n">b</span><span class="p">,</span> <span class="n">r</span><span class="p">)</span>
 </pre></div>
 
            </div>
