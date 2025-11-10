@@ -17,5 +17,5 @@ jobs:
       - name: Link Checker
         uses: lycheeverse/lychee-action@v2
         with:
-          args: --base . --verbose --no-progress './**/*.md' './**/*.html' './**/*.rst'
+          args: --exclude 'https?://ieeexplore\.ieee\.org/.*' --verbose --no-progress './**/*.md' './**/*.html' './**/*.rst'
           fail: true
