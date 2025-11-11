@@ -944,6 +944,15 @@ if redis is not None:
     class RedisListStorage(OrderedStorage, RedisStorage):
         def __init__(self, config, name=None):
             RedisStorage.__init__(self, config, name=name)
+            # Set up encoders/decoders similar to Cassandra
+            # Bucket tables store user keys as values, so decode them to strings
+            # Key tables store hash values as values, so keep them as bytes
+            if b"bucket" in name:
+                self._val_decoder = lambda x: x.decode("utf-8") if isinstance(x, bytes) else x
+                self._val_encoder = lambda x: x.encode("utf-8") if isinstance(x, str) else x
+            else:
+                self._val_decoder = lambda x: x
+                self._val_encoder = lambda x: x
 
         def keys(self):
             return self._redis.hkeys(self._name)
@@ -957,14 +966,16 @@ if redis is not None:
             return status
 
         def get(self, key):
-            return self._get_items(self._redis, self.redis_key(key))
+            items = self._get_items(self._redis, self.redis_key(key))
+            return [self._val_decoder(item) for item in items]
 
         def getmany(self, *keys):
             pipe = self._redis.pipeline()
             pipe.multi()
             for key in keys:
                 self._get_items(pipe, self.redis_key(key))
-            return pipe.execute()
+            results = pipe.execute()
+            return [[self._val_decoder(item) for item in items] for items in results]
 
         @staticmethod
         def _get_items(r, k):
@@ -984,10 +995,11 @@ if redis is not None:
         def remove_val(self, key, val, **kwargs):
             buffer = kwargs.pop("buffer", False)
             redis_key = self.redis_key(key)
+            encoded_val = self._val_encoder(val)
             if buffer:
-                self._buffer.lrem(redis_key, val)
+                self._buffer.lrem(redis_key, encoded_val)
             else:
-                self._redis.lrem(redis_key, val)
+                self._redis.lrem(redis_key, encoded_val)
                 if not self._redis.exists(redis_key):
                     self._redis.hdel(self._name, redis_key)
 
@@ -1005,7 +1017,8 @@ if redis is not None:
         def _insert(self, r, key, *values):
             redis_key = self.redis_key(key)
             r.hset(self._name, key, redis_key)
-            r.rpush(redis_key, *values)
+            encoded_values = [self._val_encoder(val) for val in values]
+            r.rpush(redis_key, *encoded_values)
 
         def size(self):
             return self._redis.hlen(self._name)
@@ -1042,17 +1055,19 @@ if redis is not None:
         def remove_val(self, key, val, **kwargs):
             buffer = kwargs.pop("buffer", False)
             redis_key = self.redis_key(key)
+            encoded_val = self._val_encoder(val)
             if buffer:
-                self._buffer.srem(redis_key, val)
+                self._buffer.srem(redis_key, encoded_val)
             else:
-                self._redis.srem(redis_key, val)
+                self._redis.srem(redis_key, encoded_val)
                 if not self._redis.exists(redis_key):
                     self._redis.hdel(self._name, redis_key)
 
         def _insert(self, r, key, *values):
             redis_key = self.redis_key(key)
             r.hset(self._name, key, redis_key)
-            r.sadd(redis_key, *values)
+            encoded_values = [self._val_encoder(val) for val in values]
+            r.sadd(redis_key, *encoded_values)
 
         @staticmethod
         def _get_len(r, k):
