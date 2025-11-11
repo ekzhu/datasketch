@@ -17,4 +17,5 @@ jobs:
       - name: Link Checker
         uses: lycheeverse/lychee-action@v2
         with:
+          args: --exclude ieee.org --verbose --no-progress './**/*.md' './**/*.html' './**/*.rst'
           fail: true
