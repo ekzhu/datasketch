@@ -514,7 +514,11 @@ if cassandra is not None:
             :param boolean buffer: whether the insert statements should be buffered
             """
             statements_and_parameters = [
-                (self._stmt_insert, (self._key_encoder(key), self._val_encoder(val), self._ts())) for val in vals
+                (
+                    self._stmt_insert,
+                    (self._key_encoder(key), self._val_encoder(val), self._ts()),
+                )
+                for val in vals
             ]
             if buffer:
                 self._buffer(statements_and_parameters)
@@ -534,7 +538,11 @@ if cassandra is not None:
             :param boolean buffer: whether the upsert statements should be buffered
             """
             statements_and_parameters = [
-                (self._stmt_upsert, (self._ts(), self._key_encoder(key), self._val_encoder(val))) for val in vals
+                (
+                    self._stmt_upsert,
+                    (self._ts(), self._key_encoder(key), self._val_encoder(val)),
+                )
+                for val in vals
             ]
             if buffer:
                 self._buffer(statements_and_parameters)
@@ -560,7 +568,12 @@ if cassandra is not None:
             :param byte|str val: the value
             :param boolean buffer: whether the delete statement should be buffered
             """
-            statements_and_parameters = [(self._stmt_delete_val, (self._key_encoder(key), self._val_encoder(val)))]
+            statements_and_parameters = [
+                (
+                    self._stmt_delete_val,
+                    (self._key_encoder(key), self._val_encoder(val)),
+                )
+            ]
             if buffer:
                 self._buffer(statements_and_parameters)
             else:
@@ -594,7 +607,11 @@ if cassandra is not None:
             :param iterable[byte|str] keys: the keys
             """
             statements_and_parameters_with_decoders = [
-                ((self._stmt_get, (self._key_encoder(key),)), (self._key_decoder, self._val_decoder)) for key in keys
+                (
+                    (self._stmt_get, (self._key_encoder(key),)),
+                    (self._key_decoder, self._val_decoder),
+                )
+                for key in keys
             ]
             self._select_statements_and_parameters_with_decoders.extend(statements_and_parameters_with_decoders)
 
@@ -836,7 +853,14 @@ if redis is not None:
         the pipeline is automatically executed, and the buffer cleared.
         """
 
-        def __init__(self, connection_pool, response_callbacks, transaction, buffer_size, shard_hint=None):
+        def __init__(
+            self,
+            connection_pool,
+            response_callbacks,
+            transaction,
+            buffer_size,
+            shard_hint=None,
+        ):
             self._buffer_size = buffer_size
             super(RedisBuffer, self).__init__(connection_pool, response_callbacks, transaction, shard_hint=shard_hint)
 
@@ -945,6 +969,8 @@ if redis is not None:
         def __init__(self, config, name=None):
             RedisStorage.__init__(self, config, name=name)
             if b"bucket" in name:
+                # decode bytes if possible, pickled bytes will throw
+                # UnicodeDecodeError and be returned as-is
                 def decode_val(x):
                     if isinstance(x, bytes):
                         try:
@@ -952,11 +978,11 @@ if redis is not None:
                         except UnicodeDecodeError:
                             return x
                     return x
+
                 self._val_decoder = decode_val
-                self._val_encoder = lambda x: x.encode("utf-8") if isinstance(x, str) else x
             else:
                 self._val_decoder = lambda x: x
-                self._val_encoder = lambda x: x
+            self._val_encoder = lambda x: x
 
         def keys(self):
             return self._redis.hkeys(self._name)
