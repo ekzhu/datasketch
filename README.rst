@@ -109,6 +109,7 @@ The project uses `uv` for fast and reliable Python package management. Follow th
 3. **Set up the environment**:
 
    .. code-block:: bash
+
        # Create a virtual environment
        # (Optional: specify Python version with --python 3.x)
        uv venv
@@ -117,7 +118,6 @@ The project uses `uv` for fast and reliable Python package management. Follow th
 
        # Install all dependencies
        uv sync
-
 
 4. **Verify installation**:
 
