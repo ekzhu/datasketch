@@ -112,7 +112,7 @@ The project uses `uv` for fast and reliable Python package management. Follow th
 
        # Install all dependencies
        uv sync
-
+       
        # Activate the virtual environment (optional, uv run commands work without it)
        source .venv/bin/activate
 
@@ -168,7 +168,7 @@ Development Workflow
 
        # Check for issues
        uvx ruff check .
-
+       
        # Auto-fix formatting issues
        uvx ruff format .
 
