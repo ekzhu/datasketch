@@ -8,7 +8,7 @@ from datasketch.minhash import MinHash
 from datasketch.weighted_minhash import WeightedMinHashGenerator
 
 STORAGE_CONFIG_REDIS = {
-    "basename": b"test",
+    "basename": b"test_lsh",
     "type": "redis",
     "redis": {"host": "localhost", "port": 6379},
 }
@@ -29,7 +29,7 @@ DO_TEST_REDIS = os.environ.get("DO_TEST_REDIS") == "true"
 DO_TEST_CASSANDRA = os.environ.get("DO_TEST_CASSANDRA") == "true"
 
 
-def _clear_redis_keys(pattern="test*"):
+def _clear_redis_keys(pattern="test_lsh*"):
     if not DO_TEST_REDIS:
         return
     try:
