@@ -8,7 +8,7 @@ from datasketch.minhash import MinHash
 from datasketch.weighted_minhash import WeightedMinHashGenerator
 
 STORAGE_CONFIG_REDIS = {
-    "basename": b"test_lsh",
+    "basename": b"lsh_test",
     "type": "redis",
     "redis": {"host": "localhost", "port": 6379},
 }
@@ -29,7 +29,7 @@ DO_TEST_REDIS = os.environ.get("DO_TEST_REDIS") == "true"
 DO_TEST_CASSANDRA = os.environ.get("DO_TEST_CASSANDRA") == "true"
 
 
-def _clear_redis_keys(pattern="test_lsh*"):
+def _clear_redis_keys(pattern="lsh_test*"):
     if not DO_TEST_REDIS:
         return
     try:
@@ -45,28 +45,27 @@ def _clear_redis_keys(pattern="test_lsh*"):
 @pytest.fixture(
     params=[
         pytest.param(
-            ("redis", STORAGE_CONFIG_REDIS),
+            STORAGE_CONFIG_REDIS,
             marks=pytest.mark.skipif(not DO_TEST_REDIS, reason="DO_TEST_REDIS not set"),
             id="redis",
         ),
         pytest.param(
-            ("cassandra", STORAGE_CONFIG_CASSANDRA),
+            STORAGE_CONFIG_CASSANDRA,
             marks=pytest.mark.skipif(not DO_TEST_CASSANDRA, reason="DO_TEST_CASSANDRA not set"),
             id="cassandra",
         ),
     ]
 )
 def storage_config(request):
-    backend_name, config = request.param
-    yield backend_name, config
-    if backend_name == "redis":
-        _clear_redis_keys()
+    return request.param
 
 
 class TestMinHashLSH:
+    def teardown_method(self, method):
+        _clear_redis_keys()
+
     def test_init(self, storage_config):
-        _, config = storage_config
-        lsh = MinHashLSH(threshold=0.8, storage_config=config, prepickle=False)
+        lsh = MinHashLSH(threshold=0.8, storage_config=storage_config, prepickle=False)
         assert lsh.is_empty()
         b1, r1 = lsh.b, lsh.r
         lsh = MinHashLSH(threshold=0.8, weights=(0.2, 0.8))
@@ -78,21 +77,19 @@ class TestMinHashLSH:
         """Check _H output consistent bytes length given
         the same concatenated hash value size.
         """
-        backend, config = storage_config
         for _l in range(2, 128 + 1, 16):
-            lsh = MinHashLSH(num_perm=128, storage_config=config, prepickle=False)
+            lsh = MinHashLSH(num_perm=128, storage_config=storage_config, prepickle=False)
             m = MinHash()
             m.update(b"abcdefg")
             m.update(b"1234567")
             lsh.insert("m", m)
             sizes = [len(H) for ht in lsh.hashtables for H in ht]
             assert all(sizes[0] == s for s in sizes)
-            if backend == "redis":
-                _clear_redis_keys()
+
+            self.teardown_method(None)
 
     def test_insert(self, storage_config):
-        _, config = storage_config
-        lsh = MinHashLSH(threshold=0.5, num_perm=16, storage_config=config, prepickle=False)
+        lsh = MinHashLSH(threshold=0.5, num_perm=16, storage_config=storage_config, prepickle=False)
         m1 = MinHash(16)
         m1.update(b"a")
         m2 = MinHash(16)
@@ -112,8 +109,7 @@ class TestMinHashLSH:
             assert "a" in lsh.hashtables[i][H]
 
     def test_query(self, storage_config):
-        _, config = storage_config
-        lsh = MinHashLSH(threshold=0.5, num_perm=16, storage_config=config, prepickle=False)
+        lsh = MinHashLSH(threshold=0.5, num_perm=16, storage_config=storage_config, prepickle=False)
         m1 = MinHash(16)
         m1.update(b"a")
         m2 = MinHash(16)
@@ -129,8 +125,7 @@ class TestMinHashLSH:
             lsh.query(m3)
 
     def test_query_buffer(self, storage_config):
-        _, config = storage_config
-        lsh = MinHashLSH(threshold=0.5, num_perm=16, storage_config=config, prepickle=False)
+        lsh = MinHashLSH(threshold=0.5, num_perm=16, storage_config=storage_config, prepickle=False)
         m1 = MinHash(16)
         m1.update(b"a")
         m2 = MinHash(16)
@@ -148,8 +143,7 @@ class TestMinHashLSH:
             lsh.add_to_query_buffer(m3)
 
     def test_remove(self, storage_config):
-        _, config = storage_config
-        lsh = MinHashLSH(threshold=0.5, num_perm=16, storage_config=config, prepickle=False)
+        lsh = MinHashLSH(threshold=0.5, num_perm=16, storage_config=storage_config, prepickle=False)
         m1 = MinHash(16)
         m1.update(b"a")
         m2 = MinHash(16)
@@ -168,13 +162,12 @@ class TestMinHashLSH:
             lsh.remove("c")
 
     def test_get_subset_counts(self, storage_config):
-        _, config = storage_config
         m1 = MinHash(16)
         m1.update(b"a")
         m2 = MinHash(16)
         m2.update(b"b")
 
-        lsh_c = MinHashLSH(threshold=0.5, num_perm=16, storage_config=config, prepickle=False)
+        lsh_c = MinHashLSH(threshold=0.5, num_perm=16, storage_config=storage_config, prepickle=False)
         lsh_c.insert("a", m1)
         lsh_c.insert("b", m2)
         lsh_m = MinHashLSH(threshold=0.5, num_perm=16)
@@ -185,8 +178,7 @@ class TestMinHashLSH:
         assert lsh_c.get_subset_counts("b") == lsh_m.get_subset_counts("b")
 
     def test_insertion_session(self, storage_config):
-        _, config = storage_config
-        lsh = MinHashLSH(threshold=0.5, num_perm=16, storage_config=config, prepickle=False)
+        lsh = MinHashLSH(threshold=0.5, num_perm=16, storage_config=storage_config, prepickle=False)
         m1 = MinHash(16)
         m1.update(b"a")
         m2 = MinHash(16)
@@ -208,8 +200,7 @@ class TestMinHashLSH:
             assert "a" in lsh.hashtables[i][H]
 
     def test_deletion_session(self, storage_config):
-        _, config = storage_config
-        lsh = MinHashLSH(threshold=0.5, num_perm=16, storage_config=config, prepickle=False)
+        lsh = MinHashLSH(threshold=0.5, num_perm=16, storage_config=storage_config, prepickle=False)
         m1 = MinHash(16)
         m1.update(b"a")
         m2 = MinHash(16)
@@ -236,8 +227,7 @@ class TestMinHashLSH:
                 assert "b" not in items
 
     def test_get_counts(self, storage_config):
-        _, config = storage_config
-        lsh = MinHashLSH(threshold=0.5, num_perm=16, storage_config=config, prepickle=False)
+        lsh = MinHashLSH(threshold=0.5, num_perm=16, storage_config=storage_config, prepickle=False)
         m1 = MinHash(16)
         m1.update(b"a")
         m2 = MinHash(16)
@@ -251,13 +241,15 @@ class TestMinHashLSH:
 
 
 class TestWeightedMinHashLSH:
+    def teardown_method(self, method):
+        _clear_redis_keys()
+
     def test_init(self, storage_config):
-        _, config = storage_config
-        lsh = MinHashLSH(threshold=0.8, storage_config=config, prepickle=False)
+        lsh = MinHashLSH(threshold=0.8, storage_config=storage_config, prepickle=False)
         assert lsh.is_empty()
         b1, r1 = lsh.b, lsh.r
 
-        lsh = MinHashLSH(threshold=0.8, weights=(0.2, 0.8), storage_config=config, prepickle=False)
+        lsh = MinHashLSH(threshold=0.8, weights=(0.2, 0.8), storage_config=storage_config, prepickle=False)
         b2, r2 = lsh.b, lsh.r
         assert b1 < b2
         assert r1 > r2
@@ -266,20 +258,18 @@ class TestWeightedMinHashLSH:
         """Check _H output consistent bytes length given
         the same concatenated hash value size.
         """
-        backend, config = storage_config
         mg = WeightedMinHashGenerator(100, sample_size=128)
         for _l in range(2, mg.sample_size + 1, 16):
             m = mg.minhash(np.random.randint(1, 99999999, 100))
-            lsh = MinHashLSH(num_perm=128, storage_config=config, prepickle=False)
+            lsh = MinHashLSH(num_perm=128, storage_config=storage_config, prepickle=False)
             lsh.insert("m", m)
             sizes = [len(H) for ht in lsh.hashtables for H in ht]
             assert all(sizes[0] == s for s in sizes)
-            if backend == "redis":
-                _clear_redis_keys()
+
+            self.teardown_method(None)
 
     def test_insert(self, storage_config):
-        _, config = storage_config
-        lsh = MinHashLSH(threshold=0.5, num_perm=4, storage_config=config, prepickle=False)
+        lsh = MinHashLSH(threshold=0.5, num_perm=4, storage_config=storage_config, prepickle=False)
         mg = WeightedMinHashGenerator(10, 4)
         m1 = mg.minhash(np.random.uniform(1, 10, 10))
         m2 = mg.minhash(np.random.uniform(1, 10, 10))
@@ -303,8 +293,7 @@ class TestWeightedMinHashLSH:
             lsh.insert("c", m3)
 
     def test_query(self, storage_config):
-        _, config = storage_config
-        lsh = MinHashLSH(threshold=0.5, num_perm=4, storage_config=config, prepickle=False)
+        lsh = MinHashLSH(threshold=0.5, num_perm=4, storage_config=storage_config, prepickle=False)
         mg = WeightedMinHashGenerator(10, 4)
         m1 = mg.minhash(np.random.uniform(1, 10, 10))
         m2 = mg.minhash(np.random.uniform(1, 10, 10))
@@ -321,8 +310,7 @@ class TestWeightedMinHashLSH:
             lsh.query(m3)
 
     def test_remove(self, storage_config):
-        _, config = storage_config
-        lsh = MinHashLSH(threshold=0.5, num_perm=4, storage_config=config, prepickle=False)
+        lsh = MinHashLSH(threshold=0.5, num_perm=4, storage_config=storage_config, prepickle=False)
         mg = WeightedMinHashGenerator(10, 4)
         m1 = mg.minhash(np.random.uniform(1, 10, 10))
         m2 = mg.minhash(np.random.uniform(1, 10, 10))
