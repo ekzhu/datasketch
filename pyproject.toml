@@ -148,6 +148,9 @@ ignore = [
 [tool.ruff.format]
 docstring-code-format = true
 
+[tool.ruff.lint.per-file-ignores]
+"test/**" = ["S101"]  # Allow asserts in tests
+
 [tool.hatch.build.targets.wheel]
 packages = ["datasketch"]
 

@@ -38,8 +38,8 @@ def _clear_redis_keys(pattern="test*"):
         r = redis.Redis(host="localhost", port=6379)
         for key in r.scan_iter(match=pattern):
             r.delete(key)
-    except Exception:
-        pass
+    except (ImportError, ConnectionError):
+        pass  # Redis not available, skip cleanup
 
 
 @pytest.fixture(
