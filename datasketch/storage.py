@@ -910,6 +910,8 @@ if redis is not None:
             self._buffer.buffer_size = value
 
         def redis_key(self, key):
+            if isinstance(key, str):
+                key = key.encode("utf8")
             return self._name + key
 
         def _parse_config(self, config):

@@ -436,8 +436,8 @@ class TestMinHashLSH(unittest.TestCase):
             for table in lsh.hashtables:
                 for H in table:
                     items = table[H]
-                    self.assertTrue(pickle.dumps("a") not in items)
-                    self.assertTrue(pickle.dumps("b") not in items)
+                    self.assertTrue("a".encode("utf8") not in items)
+                    self.assertTrue("b".encode("utf8") not in items)
 
 
 class TestWeightedMinHashLSH(unittest.TestCase):
