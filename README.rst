@@ -109,12 +109,15 @@ The project uses `uv` for fast and reliable Python package management. Follow th
 3. **Set up the environment**:
 
    .. code-block:: bash
+       # Create a virtual environment
+       # (Optional: specify Python version with --python 3.x)
+       uv venv
+       # Activate the virtual environment (optional, uv run commands work without it)
+       source .venv/bin/activate
 
        # Install all dependencies
        uv sync
 
-       # Activate the virtual environment (optional, uv run commands work without it)
-       source .venv/bin/activate
 
 4. **Verify installation**:
 
