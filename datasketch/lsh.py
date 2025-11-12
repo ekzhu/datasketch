@@ -325,6 +325,11 @@ class MinHashLSH:
     ):
         if len(minhash) != self.h:
             raise ValueError("Expecting minhash with length %d, got %d" % (self.h, len(minhash)))
+        if not self.prepickle and not isinstance(key, bytes):
+            raise TypeError(
+                f"prepickle=False requires bytes keys, got {type(key).__name__}. "
+                "Either pass bytes keys or use prepickle=True for automatic serialization."
+            )
         if self.prepickle:
             key = pickle.dumps(key)
         if check_duplication and key in self.keys:

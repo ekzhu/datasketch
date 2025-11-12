@@ -387,23 +387,13 @@ if cassandra is not None:
                 self._statements_and_parameters = []
                 self._select_statements_and_parameters_with_decoders = []
 
-            # Buckets tables rely on byte strings as keys and normal strings as values.
-            # Keys tables have normal strings as keys and byte strings as values.
-            # Since both data types can be reduced to byte strings without loss of data, we use
-            # only one Cassandra table for both table types (so we can keep one single storage) and
-            # we specify different encoders/decoders based on the table type.
+            # Both bucket tables and keys tables use byte strings as keys and values.
+            # Since prepickle=False requires bytes, we use one Cassandra table for both types.
             if b"bucket" in name:
                 basename, _, ret = name.split(b"_", 2)
                 name = basename + b"_bucket_" + binascii.hexlify(ret)
-                self._key_decoder = lambda x: x
-                self._key_encoder = lambda x: x
-                self._val_decoder = lambda x: x.decode("utf-8")
-                self._val_encoder = lambda x: x.encode("utf-8")
             else:
-                self._key_decoder = lambda x: x.decode("utf-8")
-                self._key_encoder = lambda x: x.encode("utf-8")
-                self._val_decoder = lambda x: x
-                self._val_encoder = lambda x: x
+                pass
             table_name = "lsh_" + name.decode("ascii")
 
             # Drop the table if are instructed to do so
@@ -514,7 +504,7 @@ if cassandra is not None:
             :param boolean buffer: whether the insert statements should be buffered
             """
             statements_and_parameters = [
-                (self._stmt_insert, (self._key_encoder(key), self._val_encoder(val), self._ts())) for val in vals
+                (self._stmt_insert, (key, val, self._ts())) for val in vals
             ]
             if buffer:
                 self._buffer(statements_and_parameters)
@@ -534,7 +524,7 @@ if cassandra is not None:
             :param boolean buffer: whether the upsert statements should be buffered
             """
             statements_and_parameters = [
-                (self._stmt_upsert, (self._ts(), self._key_encoder(key), self._val_encoder(val))) for val in vals
+                (self._stmt_upsert, (self._ts(), key, val)) for val in vals
             ]
             if buffer:
                 self._buffer(statements_and_parameters)
@@ -547,7 +537,7 @@ if cassandra is not None:
             :param iterable[byte|str] keys: the key
             :param boolean buffer: whether the delete statements should be buffered
             """
-            statements_and_parameters = [(self._stmt_delete_key, (self._key_encoder(key),)) for key in keys]
+            statements_and_parameters = [(self._stmt_delete_key, (key,)) for key in keys]
             if buffer:
                 self._buffer(statements_and_parameters)
             else:
@@ -560,7 +550,7 @@ if cassandra is not None:
             :param byte|str val: the value
             :param boolean buffer: whether the delete statement should be buffered
             """
-            statements_and_parameters = [(self._stmt_delete_val, (self._key_encoder(key), self._val_encoder(val)))]
+            statements_and_parameters = [(self._stmt_delete_val, (key, val))]
             if buffer:
                 self._buffer(statements_and_parameters)
             else:
@@ -584,7 +574,7 @@ if cassandra is not None:
                 if not rows:
                     break
                 for r in rows:
-                    keys.add(self._key_decoder(r.key))
+                    keys.add(r.key)
                     min_token = r.f_token + 1
             return keys
 
@@ -594,7 +584,7 @@ if cassandra is not None:
             :param iterable[byte|str] keys: the keys
             """
             statements_and_parameters_with_decoders = [
-                ((self._stmt_get, (self._key_encoder(key),)), (self._key_decoder, self._val_decoder)) for key in keys
+                ((self._stmt_get, (key,)), (lambda x: x, lambda x: x)) for key in keys
             ]
             self._select_statements_and_parameters_with_decoders.extend(statements_and_parameters_with_decoders)
 
@@ -625,11 +615,11 @@ if cassandra is not None:
             :rtype: dict[byte|str,list[byte|str]
             :return: a dictionary of lists
             """
-            statements_and_parameters = [(self._stmt_get, (self._key_encoder(key),)) for key in keys]
+            statements_and_parameters = [(self._stmt_get, (key,)) for key in keys]
             ret = collections.defaultdict(list)
             for rows in self._select(statements_and_parameters):
                 for row in rows:
-                    ret[self._key_decoder(row.key)].append((self._val_decoder(row.value), row.ts))
+                    ret[row.key].append((row.value, row.ts))
             return {k: [x[0] for x in sorted(v, key=operator.itemgetter(1))] for k, v in ret.items()}
 
         def select_count(self, keys):
@@ -639,9 +629,9 @@ if cassandra is not None:
             :rtype: dict[byte|str,int]
             :return: the number of values per key
             """
-            statements_and_parameters = [(self._stmt_get_count, (self._key_encoder(key),)) for key in keys]
+            statements_and_parameters = [(self._stmt_get_count, (key,)) for key in keys]
             return {
-                self._key_decoder(row.key): row.count
+                row.key: row.count
                 for rows in self._select(statements_and_parameters)
                 for row in rows
             }
@@ -653,10 +643,10 @@ if cassandra is not None:
             :rtype: byte|str|None
             :return: a single value for that key or None if the key does not exist
             """
-            rows = self._session.execute(self._stmt_get_one, (self._key_encoder(key),))
+            rows = self._session.execute(self._stmt_get_one, (key,))
             if rows:
                 row = next(iter(rows))
-                return self._val_decoder(row.value)
+                return row.value
             return None
 
     class CassandraStorage:
@@ -944,21 +934,6 @@ if redis is not None:
     class RedisListStorage(OrderedStorage, RedisStorage):
         def __init__(self, config, name=None):
             RedisStorage.__init__(self, config, name=name)
-            if b"bucket" in name:
-                # decode bytes if possible, pickled bytes will throw
-                # UnicodeDecodeError and be returned as-is
-                def decode_val(x):
-                    if isinstance(x, bytes):
-                        try:
-                            return x.decode("utf-8")
-                        except UnicodeDecodeError:
-                            return x
-                    return x
-
-                self._val_decoder = decode_val
-            else:
-                self._val_decoder = lambda x: x
-            self._val_encoder = lambda x: x
 
         def keys(self):
             return self._redis.hkeys(self._name)
@@ -972,16 +947,14 @@ if redis is not None:
             return status
 
         def get(self, key):
-            items = self._get_items(self._redis, self.redis_key(key))
-            return [self._val_decoder(item) for item in items]
+            return self._get_items(self._redis, self.redis_key(key))
 
         def getmany(self, *keys):
             pipe = self._redis.pipeline()
             pipe.multi()
             for key in keys:
                 self._get_items(pipe, self.redis_key(key))
-            results = pipe.execute()
-            return [[self._val_decoder(item) for item in items] for items in results]
+            return pipe.execute()
 
         @staticmethod
         def _get_items(r, k):
@@ -1001,7 +974,6 @@ if redis is not None:
         def remove_val(self, key, val, **kwargs):
             buffer = kwargs.pop("buffer", False)
             redis_key = self.redis_key(key)
-            val = self._val_encoder(val)
             if buffer:
                 self._buffer.lrem(redis_key, val)
             else:
@@ -1023,7 +995,6 @@ if redis is not None:
         def _insert(self, r, key, *values):
             redis_key = self.redis_key(key)
             r.hset(self._name, key, redis_key)
-            values = [self._val_encoder(val) for val in values]
             r.rpush(redis_key, *values)
 
         def size(self):
@@ -1061,7 +1032,6 @@ if redis is not None:
         def remove_val(self, key, val, **kwargs):
             buffer = kwargs.pop("buffer", False)
             redis_key = self.redis_key(key)
-            val = self._val_encoder(val)
             if buffer:
                 self._buffer.srem(redis_key, val)
             else:
@@ -1072,7 +1042,6 @@ if redis is not None:
         def _insert(self, r, key, *values):
             redis_key = self.redis_key(key)
             r.hset(self._name, key, redis_key)
-            values = [self._val_encoder(val) for val in values]
             r.sadd(redis_key, *values)
 
         @staticmethod
