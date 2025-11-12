@@ -158,3 +158,21 @@ include = ["pyproject.toml", "README.rst", "LICENSE", "datasketch/**"]
 minversion = "6.0"
 addopts = ["--strict-markers", "--color=yes"]
 testpaths = ["test"]
+
+[tool.pyright]
+include = ["datasketch"]
+exclude = [
+  "benchmark",
+  "docs",
+  "examples",
+  "test",
+  "travis",
+  "**/.venv/**",
+  "**/__pycache__",
+]
+pythonVersion = "3.9"
+typeCheckingMode = "basic" # todo: change to "strict" in future
+
+reportMissingImports = true
+reportUnusedVariable = "warning"
+
