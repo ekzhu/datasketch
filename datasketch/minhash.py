@@ -7,6 +7,12 @@ from typing import Callable, Optional
 
 import numpy as np
 
+# GPU backend
+try:
+    import cupy as cp
+except ImportError:
+    cp = None
+
 from datasketch.hashfunc import sha1_hash32
 
 # The size of a hash value in number of bytes
@@ -108,6 +114,8 @@ class MinHash:
             self.permutations = self._init_permutations(num_perm)
         if len(self) != len(self.permutations[0]):
             raise ValueError("Numbers of hash values and permutations mismatch")
+        # GPU backend flag (opt-in, False by default)
+        self._use_gpu = False
 
     def _init_hashvalues(self, num_perm: int) -> np.ndarray:
         return np.ones(num_perm, dtype=np.uint64) * _max_hash
@@ -130,6 +138,17 @@ class MinHash:
 
     def _parse_hashvalues(self, hashvalues):
         return np.array(hashvalues, dtype=np.uint64)
+
+    def enable_gpu(self) -> None:
+        """Enable GPU backend for update_batch if CuPy is available.
+
+        This only affects the internal computation of update_batch; hashing and
+        permutation generation remain on CPU. If CuPy is not installed or no
+        CUDA device is available, this method raises RuntimeError.
+        """
+        if cp is None:
+            raise RuntimeError("CuPy is not installed or no CUDA device is available; cannot enable GPU backend.")
+        self._use_gpu = True
 
     def update(self, b) -> None:
         """Update this MinHash with a new value.
@@ -186,10 +205,34 @@ class MinHash:
                 minhash.update_batch([s.encode("utf-8") for s in ["token1", "token2"]])
 
         """
-        hv = np.array([self.hashfunc(_b) for _b in b], dtype=np.uint64, ndmin=2).T
-        a, b = self.permutations
-        phv = (hv * a + b) % _mersenne_prime & _max_hash
-        self.hashvalues = np.vstack([phv, self.hashvalues]).min(axis=0)
+        # Hashing stays on CPU to preserve existing hashfunc semantics
+        hv_list = [self.hashfunc(_b) for _b in b]
+        if len(hv_list) == 0:
+            return
+
+        a, perm_b = self.permutations  # both are np.ndarray[uint64]
+        use_gpu = getattr(self, "_use_gpu", False) and (cp is not None)
+
+        if use_gpu:
+            # GPU path: compute (hv * a + b) % p & max_hash on device, then reduce
+            hv_gpu = cp.asarray(hv_list, dtype=cp.uint64).reshape(-1, 1)
+            a_gpu = cp.asarray(a, dtype=cp.uint64)
+            b_gpu = cp.asarray(perm_b, dtype=cp.uint64)
+            phv_gpu = (hv_gpu * a_gpu + b_gpu) % cp.uint64(_mersenne_prime)
+            phv_gpu = cp.bitwise_and(phv_gpu, cp.uint64(_max_hash))
+
+            # Match original semantics: stack with existing hashvalues and take per-column min. # (num_perm,)
+            base_gpu = cp.asarray(self.hashvalues, dtype=cp.uint64)
+            stacked = cp.vstack([phv_gpu, base_gpu])
+            result = stacked.min(axis=0)
+
+            # Bring result back to CPU as np.uint64
+            self.hashvalues = cp.asnumpy(result).astype(np.uint64, copy=False)
+        else:
+            # CPU path
+            hv = np.array(hv_list, dtype=np.uint64, ndmin=2).T
+            phv = (hv * a + perm_b) % _mersenne_prime & _max_hash
+            self.hashvalues = np.vstack([phv, self.hashvalues]).min(axis=0)
 
     def jaccard(self, other: MinHash) -> float:
         """Estimate the `Jaccard similarity`_ (resemblance) between the sets
