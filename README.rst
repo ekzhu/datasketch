@@ -42,7 +42,7 @@ sub-linear query time:
 | `HNSW`_                   | Any                         | Custom Metric Top-K    |
 +---------------------------+-----------------------------+------------------------+
 
-datasketch must be used with Python 3.8 or above, NumPy 1.11 or above, and Scipy.
+datasketch must be used with Python 3.9 or above, NumPy 1.11 or above, and Scipy.
 
 Note that `MinHash LSH`_ and `MinHash LSH Ensemble`_ also support Redis and Cassandra 
 storage layer (see `MinHash LSH at Scale`_).
@@ -109,6 +109,7 @@ The project uses `uv` for fast and reliable Python package management. Follow th
 3. **Set up the environment**:
 
    .. code-block:: bash
+
        # Create a virtual environment
        # (Optional: specify Python version with --python 3.x)
        uv venv
@@ -117,7 +118,6 @@ The project uses `uv` for fast and reliable Python package management. Follow th
 
        # Install all dependencies
        uv sync
-
 
 4. **Verify installation**:
 
