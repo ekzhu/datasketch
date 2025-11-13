@@ -503,9 +503,7 @@ if cassandra is not None:
             :param iterable[byte|str] vals: the iterable of values
             :param boolean buffer: whether the insert statements should be buffered
             """
-            statements_and_parameters = [
-                (self._stmt_insert, (key, val, self._ts())) for val in vals
-            ]
+            statements_and_parameters = [(self._stmt_insert, (key, val, self._ts())) for val in vals]
             if buffer:
                 self._buffer(statements_and_parameters)
             else:
@@ -523,9 +521,7 @@ if cassandra is not None:
             :param iterable[byte|str] vals: the iterable of values
             :param boolean buffer: whether the upsert statements should be buffered
             """
-            statements_and_parameters = [
-                (self._stmt_upsert, (self._ts(), key, val)) for val in vals
-            ]
+            statements_and_parameters = [(self._stmt_upsert, (self._ts(), key, val)) for val in vals]
             if buffer:
                 self._buffer(statements_and_parameters)
             else:
@@ -630,11 +626,7 @@ if cassandra is not None:
             :return: the number of values per key
             """
             statements_and_parameters = [(self._stmt_get_count, (key,)) for key in keys]
-            return {
-                row.key: row.count
-                for rows in self._select(statements_and_parameters)
-                for row in rows
-            }
+            return {row.key: row.count for rows in self._select(statements_and_parameters) for row in rows}
 
         def one(self, key):
             """Select one single value of the given key.

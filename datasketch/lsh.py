@@ -174,6 +174,7 @@ class MinHashLSH:
             raise ValueError("The number of bands are too small (b < 2)")
 
         self.prepickle = storage_config["type"] == "redis" if prepickle is None else prepickle
+        self.require_bytes_keys = not (storage_config["type"] == "dict" or self.prepickle)
 
         self.hashfunc = hashfunc
         if hashfunc:
@@ -325,9 +326,9 @@ class MinHashLSH:
     ):
         if len(minhash) != self.h:
             raise ValueError("Expecting minhash with length %d, got %d" % (self.h, len(minhash)))
-        if not self.prepickle and not isinstance(key, bytes):
+        if self.require_bytes_keys and not isinstance(key, bytes):
             raise TypeError(
-                f"prepickle=False requires bytes keys, got {type(key).__name__}. "
+                f"prepickle=False requires bytes keys for non-dict storage, got {type(key).__name__}. "
                 "Either pass bytes keys or use prepickle=True for automatic serialization."
             )
         if self.prepickle:
