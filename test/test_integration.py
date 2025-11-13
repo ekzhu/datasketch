@@ -326,7 +326,3 @@ class TestWeightedMinHashLSH:
 
         with pytest.raises(ValueError):
             lsh.remove(b"c")
-
-
-if __name__ == "__main__":
-    unittest.main()
