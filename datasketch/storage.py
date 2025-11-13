@@ -392,8 +392,6 @@ if cassandra is not None:
             if b"bucket" in name:
                 basename, _, ret = name.split(b"_", 2)
                 name = basename + b"_bucket_" + binascii.hexlify(ret)
-            else:
-                pass
             table_name = "lsh_" + name.decode("ascii")
 
             # Drop the table if are instructed to do so
