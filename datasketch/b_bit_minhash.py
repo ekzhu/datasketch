@@ -107,7 +107,7 @@ class bBitMinHash:
         try:
             self.seed, self.b, self.r, num_perm = struct.unpack_from(self._serial_fmt_params, buf, 0)
         except TypeError:
-            self.seed, self.b, self.r, num_perm = struct.unpack_from(self._serial_fmt_params, buffer(buf), 0)
+            self.seed, self.b, self.r, num_perm = struct.unpack_from(self._serial_fmt_params, memoryview(buf), 0)
         offset = struct.calcsize(self._serial_fmt_params)
         self.hashvalues = np.zeros((num_perm,), dtype=np.uint32)
         # Reconstruct the hash values
@@ -116,7 +116,7 @@ class bBitMinHash:
         try:
             blocks = struct.unpack_from(fmt, buf, offset)
         except TypeError:
-            blocks = struct.unpack_from(fmt, buffer(buf), offset)
+            blocks = struct.unpack_from(fmt, memoryview(buf), offset)
         mask = (1 << slot_size) - 1
         for i in range(num_blocks):
             start = i * n
