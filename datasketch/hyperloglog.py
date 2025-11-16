@@ -292,13 +292,13 @@ class HyperLogLog:
         try:
             p = struct.unpack_from("B", buf, 0)[0]
         except TypeError:
-            p = struct.unpack_from("B", buffer(buf), 0)[0]
+            p = struct.unpack_from("B", memoryview(buf), 0)[0]
         h = cls(p)
         offset = size
         try:
             h.reg = np.array(struct.unpack_from("%dB" % h.m, buf, offset), dtype=np.int8)
         except TypeError:
-            h.reg = np.array(struct.unpack_from("%dB" % h.m, buffer(buf), offset), dtype=np.int8)
+            h.reg = np.array(struct.unpack_from("%dB" % h.m, memoryview(buf), offset), dtype=np.int8)
         return h
 
     def __getstate__(self):
@@ -311,13 +311,13 @@ class HyperLogLog:
         try:
             p = struct.unpack_from("B", buf, 0)[0]
         except TypeError:
-            p = struct.unpack_from("B", buffer(buf), 0)[0]
+            p = struct.unpack_from("B", memoryview(buf), 0)[0]
         self.__init__(p=p)
         offset = size
         try:
             self.reg = np.array(struct.unpack_from("%dB" % self.m, buf, offset), dtype=np.int8)
         except TypeError:
-            self.reg = np.array(struct.unpack_from("%dB" % self.m, buffer(buf), offset), dtype=np.int8)
+            self.reg = np.array(struct.unpack_from("%dB" % self.m, memoryview(buf), offset), dtype=np.int8)
 
 
 class HyperLogLogPlusPlus(HyperLogLog):
