@@ -86,7 +86,7 @@ class TestMinHashLSH:
             sizes = [len(H) for ht in lsh.hashtables for H in ht]
             assert all(sizes[0] == s for s in sizes)
 
-            self.teardown_method(None)
+            _clear_redis_keys()
 
     def test_insert(self, storage_config):
         lsh = MinHashLSH(threshold=0.5, num_perm=16, storage_config=storage_config, prepickle=False)
@@ -249,7 +249,12 @@ class TestWeightedMinHashLSH:
         assert lsh.is_empty()
         b1, r1 = lsh.b, lsh.r
 
-        lsh = MinHashLSH(threshold=0.8, weights=(0.2, 0.8), storage_config=storage_config, prepickle=False)
+        lsh = MinHashLSH(
+            threshold=0.8,
+            weights=(0.2, 0.8),
+            storage_config=storage_config,
+            prepickle=False,
+        )
         b2, r2 = lsh.b, lsh.r
         assert b1 < b2
         assert r1 > r2
@@ -266,7 +271,7 @@ class TestWeightedMinHashLSH:
             sizes = [len(H) for ht in lsh.hashtables for H in ht]
             assert all(sizes[0] == s for s in sizes)
 
-            self.teardown_method(None)
+            _clear_redis_keys()
 
     def test_insert(self, storage_config):
         lsh = MinHashLSH(threshold=0.5, num_perm=4, storage_config=storage_config, prepickle=False)
