@@ -247,13 +247,13 @@ class MinHashLSH:
     def insertion_session(self, buffer_size: int = 50000) -> MinHashLSHInsertionSession:
         """Create a context manager for fast insertion into this index.
 
-             Args:
+        Args:
         e         buffer_size (int): The buffer size for insert_session mode (default=50000).
 
-             Returns:
+        Returns:
                  MinHashLSHInsertionSession: The context manager.
 
-             Example:
+        Example:
                  Insert 100 MinHashes into an Redis-backed index using a session:
 
                  .. code-block:: python
@@ -285,10 +285,10 @@ class MinHashLSH:
     def deletion_session(self, buffer_size: int = 50000) -> MinHashLSHDeletionSession:
         """Create a context manager for fast deletion from this index.
 
-            Args:
+        Args:
                 buffer_size (int): The buffer size for deletion operations (default=50000).
 
-            Returns:
+        Returns:
                 MinHashLSHDeletionSession: The context manager.
 
         r    Example:
