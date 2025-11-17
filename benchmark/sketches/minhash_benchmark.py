@@ -16,10 +16,10 @@ int_bytes = lambda x : ("a-%d-%d" % (x, x)).encode('utf-8')
 def run_perf(card, num_perm):
     m = MinHash(num_perm=num_perm)
     logging.info("MinHash using %d permutation functions" % num_perm)
-    start = time.clock()
+    start = time.perf_counter()
     for i in range(card):
         m.update(int_bytes(i))
-    duration = time.clock() - start
+    duration = time.perf_counter() - start
     logging.info("Digested %d hashes in %.4f sec" % (card, duration))
     return duration
 
