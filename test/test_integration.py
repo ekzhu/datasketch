@@ -108,6 +108,20 @@ class TestMinHashLSH:
         for i, H in enumerate(lsh.keys[b"a"]):
             assert b"a" in lsh.hashtables[i][H]
 
+    def test_insert_non_bytes_key_raises_error(self, storage_config):
+        """Test that inserting non-bytes keys with prepickle=False raises TypeError."""
+        lsh = MinHashLSH(threshold=0.5, num_perm=16, storage_config=storage_config, prepickle=False)
+        m1 = MinHash(16)
+        m1.update(b"a")
+
+        # Should raise TypeError when trying to insert with string key
+        with pytest.raises(TypeError):
+            lsh.insert("string_key", m1)
+
+        # Should raise TypeError when trying to insert with int key
+        with pytest.raises(TypeError):
+            lsh.insert(123, m1)
+
     def test_query(self, storage_config):
         lsh = MinHashLSH(threshold=0.5, num_perm=16, storage_config=storage_config, prepickle=False)
         m1 = MinHash(16)
