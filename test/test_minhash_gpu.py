@@ -1,4 +1,3 @@
-import contextlib
 import pickle
 import unittest
 
@@ -52,23 +51,22 @@ class TestMinHashGPU(unittest.TestCase):
 
         self.assertTrue(np.array_equal(m_cpu.hashvalues, m_auto.hashvalues))
 
-    def test_pickle_roundtrip_works_without_gpu(self):
-        """Pickle should drop device state; detect mode should still run on CPU/GPU safely."""
+    def test_pickle_roundtrip_is_portable(self):
+        """Pickle should drop device state so round-tripped objects are portable.
+        After unpickling, update_batch should still work and populate caches
+        only if GPU is available and mode permits it.
+        """
         m = MinHash(num_perm=128, seed=7, gpu_mode="detect")
         m2 = pickle.loads(pickle.dumps(m))
 
         # Should be able to update on any machine
-        with contextlib.ExitStack():
-            m2.update_batch(_make_data(64))
+        m2.update_batch(_make_data(64))
 
-        # Internal GPU-related attributes should exist and be consistent with availability
-        self.assertTrue(hasattr(m2, "_gpu_mode"))
-        if GPU_AVAILABLE and m2._gpu_mode in ("detect", "always"):
-            # Caches may have been populated on GPU
+        # GPU caches presence should reflect availability & mode
+        if "GPU_AVAILABLE" in globals() and GPU_AVAILABLE and m2._gpu_mode in ("detect", "always"):
             self.assertIsNotNone(m2._a_gpu)
             self.assertIsNotNone(m2._b_gpu)
         else:
-            # No GPU or disabled mode -> no device caches
             self.assertIsNone(m2._a_gpu)
             self.assertIsNone(m2._b_gpu)
 

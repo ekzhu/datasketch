@@ -29,13 +29,20 @@ _max_hash = np.uint64((1 << 32) - 1)
 _hash_range = 1 << 32
 
 
+_GPU_OK_CACHE: Optional[bool] = None
+
+
 def _gpu_available() -> bool:
+    global _GPU_OK_CACHE
     if cp is None:
         return False
+    if _GPU_OK_CACHE is not None:
+        return _GPU_OK_CACHE
     try:
-        return cp.cuda.runtime.getDeviceCount() > 0
+        _GPU_OK_CACHE = cp.cuda.runtime.getDeviceCount() > 0
     except Exception:
-        return False
+        _GPU_OK_CACHE = False
+    return _GPU_OK_CACHE
 
 
 class MinHash:
@@ -148,14 +155,7 @@ class MinHash:
         self._b_gpu = None
 
     def _ensure_gpu_caches(self) -> None:
-        """Ensure that permutation arrays are cached on device.
-        Raises RuntimeError if GPU not available but required by mode.
-        """
-        if not _gpu_available():
-            if self._gpu_mode == "always":
-                raise RuntimeError("GPU mode 'always' requested but CuPy/CUDA device is unavailable.")
-            # detect/disable will not call this unless GPU is available
-            return
+        """Cache permutation arrays on device. Call only when GPU is available."""
         if self._a_gpu is None or self._b_gpu is None:
             a, b = self.permutations
             self._a_gpu = cp.asarray(a, dtype=cp.uint64)
@@ -516,6 +516,11 @@ class MinHash:
             _m.update_batch(_b)
             yield _m
 
+    # NOTE:
+    # CuPy device arrays (`_a_gpu`, `_b_gpu`) are not reliably picklable across
+    # environments and can inflate pickle size or fail on machines without CUDA.
+    # We therefore drop device state on pickle so round-tripped MinHash objects
+    # remain portable; callers can still use `gpu_mode="detect"` to re-enable GPU.
     def __getstate__(self):
         state = self.__dict__.copy()
         # Drop device arrays; keep gpu_mode as-is (portable across envs).
