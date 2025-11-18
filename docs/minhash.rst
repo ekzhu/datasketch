@@ -115,33 +115,32 @@ MurmurHash3: `mmh3 <https://pypi.org/project/mmh3/>`__
 .. figure:: /_static/hashfunc/minhash_benchmark_farmhash.png
    :alt: MinHash Benchmark
 
-GPU-accelerated update_batch (experimental)
--------------------------------------------
+GPU usage (experimental)
+------------------------
 
-MinHash supports an *optional* GPU backend via CuPy for the permutation
-application and columnwise minimum reduction inside :meth:`MinHash.update_batch`.
-Hashing and permutation generation remain on CPU to preserve semantics.
+``MinHash`` can optionally run part of :meth:`MinHash.update_batch` on a CUDA GPU
+via `CuPy <https://cupy.dev/>`_. Hashing and permutation *generation* remain on CPU;
+only the permutation application and min-reduction may use the GPU.
 
-Enable either from the constructor or via a method:
+Control behavior with the constructor argument ``gpu_mode``:
+
+- ``'disable'`` (default): always CPU.
+- ``'detect'``: use GPU if available, otherwise fallback to CPU.
+- ``'always'``: require GPU; raises a ``RuntimeError`` if no CUDA device is available.
 
 .. code-block:: python
 
     from datasketch import MinHash
-    m = MinHash(num_perm=256, seed=7, use_gpu=True)
-    m.update_batch([b"t1", b"t2"])
 
-    # or:
-    m = MinHash(num_perm=256, seed=7)
-    m.enable_gpu()
-    m.update_batch(batch)
+    m = MinHash(num_perm=256, gpu_mode='detect')
+    m.update_batch([b"token1", b"token2"])
 
-Notes:
-- Requires CuPy and a CUDA-capable device.
-- Pickling resets to CPU mode (GPU caches are not serialized).
-- Performance gains depend on batch size and num_perm (see benchmark).
+This makes serialized MinHash objects portable: ``'detect'`` will transparently use
+a GPU when present, otherwise CPU. ``'always'`` is useful to enforce GPU execution
+in controlled environments.
 
-Benchmark
----------
+GPU Benchmark
+-------------
 Run:
 
 .. code-block:: bash

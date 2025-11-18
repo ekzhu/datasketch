@@ -1,5 +1,6 @@
+import contextlib
+import pickle
 import unittest
-from contextlib import suppress
 
 import numpy as np
 
@@ -51,11 +52,9 @@ class TestMinHashGPU(unittest.TestCase):
         self.assertTrue(np.array_equal(m_cpu.hashvalues, m_gpu.hashvalues))
 
     def test_pickle_gpu_enabled_reverts_to_cpu(self):
-        import pickle
-
         m = MinHash(num_perm=128, seed=7)
         # Try enabling GPU if present; ignore RuntimeError if no device
-        with suppress(RuntimeError):
+        with contextlib.suppress(RuntimeError):
             m.enable_gpu()
         m2 = pickle.loads(pickle.dumps(m))
         self.assertFalse(getattr(m2, "_use_gpu", False))

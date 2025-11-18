@@ -5,6 +5,11 @@ import warnings
 from collections.abc import Generator, Iterable
 from typing import Callable, Optional
 
+try:
+    from typing import Literal  # py3.8+; if older, you can fallback to typing_extensions
+except Exception:
+    from typing_extensions import Literal
+
 import numpy as np
 
 # GPU backend
@@ -42,6 +47,13 @@ class MinHash:
             It will be ignored if `hashvalues` is not None.
         seed (int): The random seed controls the set of random
             permutation functions generated for this MinHash.
+        gpu_mode : {'disable', 'detect', 'always'}, default 'disable'
+            Controls GPU use in :meth:`update_batch`.
+
+            - ``'disable'`` — always CPU.
+            - ``'detect'`` — use GPU if available, otherwise CPU.
+            - ``'always'`` — require GPU; raise ``RuntimeError`` if CuPy/CUDA
+            is unavailable.
         hashfunc (Callable): The hash function used by
             this MinHash.
             It takes the input passed to the :meth:`update` method and
@@ -58,6 +70,11 @@ class MinHash:
             function parameters as a tuple of two lists. This argument
             can be specified for faster initialization using the existing
             :attr:`permutations` from another MinHash.
+
+    Note:
+        Hashing and permutation *generation* always run on CPU to preserve
+        existing semantics; only the permutation application and the
+        columnwise min-reduction inside :meth:`update_batch` may run on GPU.
 
     Note:
         To save memory usage, consider using :class:`datasketch.LeanMinHash`.
@@ -87,7 +104,7 @@ class MinHash:
         self,
         num_perm: int = 128,
         seed: int = 1,
-        use_gpu: bool = False,
+        gpu_mode: Literal["disable", "detect", "always"] = "disable",
         hashfunc: Callable = sha1_hash32,
         hashobj: Optional[object] = None,  # Deprecated.
         hashvalues: Optional[Iterable] = None,
@@ -124,39 +141,25 @@ class MinHash:
             self.permutations = self._init_permutations(num_perm)
         if len(self) != len(self.permutations[0]):
             raise ValueError("Numbers of hash values and permutations mismatch")
-        # GPU backend flag and caches
-        self._use_gpu: bool = False
+
+        # GPU state
+        self._gpu_mode: Literal["disable", "detect", "always"] = gpu_mode
         self._a_gpu = None
         self._b_gpu = None
-        # honor constructor flag
-        if use_gpu:
-            self.enable_gpu()
 
-    def enable_gpu(self) -> None:
-        """Enable GPU backend (CuPy) for `update_batch`.
-
-        Only the permutation application and min-reduction run on GPU; hashing and
-        permutation generation remain on CPU to preserve semantics.
-
-        Notes:
-          - Idempotent: safe to call multiple times.
-          - `copy()` preserves GPU mode if a device is available.
-          - Pickling intentionally resets to CPU and drops GPU caches.
-
+    def _ensure_gpu_caches(self) -> None:
+        """Ensure that permutation arrays are cached on device.
+        Raises RuntimeError if GPU not available but required by mode.
         """
         if not _gpu_available():
-            raise RuntimeError("GPU backend unavailable: CuPy not installed or no CUDA device.")
-        # cache permutation vectors on device (do this once)
-        a, b = self.permutations
-        self._a_gpu = cp.asarray(a, dtype=cp.uint64)
-        self._b_gpu = cp.asarray(b, dtype=cp.uint64)
-        self._use_gpu = True
-
-    def disable_gpu(self) -> None:
-        """Disable GPU backend and release cached device arrays."""
-        self._use_gpu = False
-        self._a_gpu = None
-        self._b_gpu = None
+            if self._gpu_mode == "always":
+                raise RuntimeError("GPU mode 'always' requested but CuPy/CUDA device is unavailable.")
+            # detect/disable will not call this unless GPU is available
+            return
+        if self._a_gpu is None or self._b_gpu is None:
+            a, b = self.permutations
+            self._a_gpu = cp.asarray(a, dtype=cp.uint64)
+            self._b_gpu = cp.asarray(b, dtype=cp.uint64)
 
     def _init_hashvalues(self, num_perm: int) -> np.ndarray:
         return np.ones(num_perm, dtype=np.uint64) * _max_hash
@@ -217,28 +220,40 @@ class MinHash:
         phv = np.bitwise_and((a * hv + b) % _mersenne_prime, _max_hash)
         self.hashvalues = np.minimum(phv, self.hashvalues)
 
-    def update_batch(self, b: Iterable, *, use_gpu: Optional[bool] = None) -> None:
+    def update_batch(self, b: Iterable) -> None:
         """Update this MinHash with new values.
         The values will be hashed using the hash function specified by
         the `hashfunc` argument in the constructor.
 
-        If GPU is enabled globally (via constructor or enable_gpu()) or per-call
-        with `use_gpu=True`, the permutation application and min-reduction are
-        executed on GPU; hashing stays on CPU.
+        Notes:
+            - Hashing of input values always runs on CPU.
+            - Permutation application + min-reduction may run on GPU
+            depending on `gpu_mode`:
+                'disable' : CPU
+                'detect'  : GPU if available else CPU
+                'always'  : GPU (error if unavailable)
 
         Args:
             b (Iterable): Values to be hashed using the hash function specified.
-            use_gpu (Optional[bool]): Per-call override. If None, use the instance
-                flag. If True/False, force that backend for this call.
 
-        Example:
-            To update with new string values (using the default SHA1 hash
-            function, which requires bytes as input):
+        Examples:
+            Basic usage with string values (default SHA1 hash, requires bytes):
 
             .. code-block:: python
 
-                minhash = Minhash()
-                minhash.update_batch([s.encode("utf-8") for s in ["token1", "token2"]])
+                from datasketch import MinHash
+
+                m = MinHash()
+                m.update_batch([s.encode("utf-8") for s in ["token1", "token2"]])
+
+            Using GPU mode if available:
+
+            .. code-block:: python
+
+                from datasketch import MinHash
+
+                m = MinHash(num_perm=256, gpu_mode="detect")
+                m.update_batch([b"token1", b"token2"])
 
         """
         # Hash on CPU to preserve hashfunc semantics
@@ -247,33 +262,35 @@ class MinHash:
         if not hv_list:
             return
 
-        # Per-call override > instance flag
-        backend_gpu = self._use_gpu if use_gpu is None else bool(use_gpu)
+        a, b = self.permutations  # np.ndarray[uint64]
 
-        a, b = self.permutations  # both are np.ndarray[uint64]
-        if backend_gpu:
+        # Decide backend
+        use_gpu = False
+        if self._gpu_mode == "always":
             if not _gpu_available():
-                raise RuntimeError("GPU backend unavailable at call time (no CuPy/CUDA device).")
+                raise RuntimeError("GPU mode 'always' requested but CuPy/CUDA device is unavailable.")
+            use_gpu = True
+        elif self._gpu_mode == "detect":
+            use_gpu = _gpu_available()
+        else:  # 'disable'
+            use_gpu = False
 
-            # Ensure cached device copies of permutation vectors exist
-            if self._a_gpu is None or self._b_gpu is None:
-                self._a_gpu = cp.asarray(a, dtype=cp.uint64)
-                self._b_gpu = cp.asarray(b, dtype=cp.uint64)
-
-                hv_gpu = cp.asarray(hv_list, dtype=cp.uint64).reshape(-1, 1)
-                phv_gpu = (hv_gpu * self._a_gpu + self._b_gpu) % cp.uint64(_mersenne_prime)
-                phv_gpu = cp.bitwise_and(phv_gpu, cp.uint64(_max_hash))
-
-                base_gpu = cp.asarray(self.hashvalues, dtype=cp.uint64)
-                # Columnwise min against existing hashvalues (equivalent to vstack+min)
-                col_min = cp.minimum(base_gpu, cp.min(phv_gpu, axis=0))
-                self.hashvalues = cp.asnumpy(col_min).astype(np.uint64, copy=False)
-                return
+        if use_gpu:
+            # GPU path (keep indentation minimal as requested)
+            self._ensure_gpu_caches()
+            hv_gpu = cp.asarray(hv_list, dtype=cp.uint64).reshape(-1, 1)
+            phv_gpu = (hv_gpu * self._a_gpu + self._b_gpu) % cp.uint64(_mersenne_prime)
+            phv_gpu = cp.bitwise_and(phv_gpu, cp.uint64(_max_hash))
+            base_gpu = cp.asarray(self.hashvalues, dtype=cp.uint64)
+            # column-wise min without extra vstack
+            col_min = cp.minimum(base_gpu, cp.min(phv_gpu, axis=0))
+            self.hashvalues = cp.asnumpy(col_min).astype(np.uint64, copy=False)
+            return
 
         # CPU path
-        hv = np.array(hv_list, dtype=np.uint64).reshape(-1, 1)  # (num_items, 1)
-        phv = ((hv * a + b) % _mersenne_prime) & _max_hash
-        # Columnwise min against existing hashvalues
+        hv = np.array(hv_list, dtype=np.uint64, ndmin=2).T
+        phv = (hv * a + b) % _mersenne_prime
+        phv = np.bitwise_and(phv, _max_hash)
         self.hashvalues = np.minimum(self.hashvalues, phv.min(axis=0))
 
     def jaccard(self, other: MinHash) -> float:
@@ -363,14 +380,13 @@ class MinHash:
         self.hashvalues = self._init_hashvalues(len(self))
 
     def copy(self) -> MinHash:
-        """Return a copy; preserves GPU mode if available (rehydrates caches)."""
-        use_gpu_copy = bool(getattr(self, "_use_gpu", False)) and _gpu_available()
+        """Return a copy; preserves gpu_mode (rehydrates caches lazily)."""
         return MinHash(
             seed=self.seed,
             hashfunc=self.hashfunc,
             hashvalues=self.digest(),
             permutations=self.permutations,
-            use_gpu=use_gpu_copy,
+            gpu_mode=self._gpu_mode,
         )
 
     def __len__(self) -> int:
@@ -502,12 +518,13 @@ class MinHash:
 
     def __getstate__(self):
         state = self.__dict__.copy()
-        # Drop device arrays and revert flag so pickled objects are portable.
-        state["_use_gpu"] = False
+        # Drop device arrays; keep gpu_mode as-is (portable across envs).
         state["_a_gpu"] = None
         state["_b_gpu"] = None
         return state
 
     def __setstate__(self, state):
         self.__dict__.update(state)
-        # After unpickling we remain on CPU; users can re-enable with enable_gpu().
+        # After unpickling we remain on CPU until update_batch decides backend.
+
+    # Caches will be recreated on first GPU use via _ensure_gpu_caches().

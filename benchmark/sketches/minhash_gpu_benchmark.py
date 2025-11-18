@@ -1,165 +1,160 @@
-import argparse
-import os
-import sys
+import collections
+import math
 import time
-from collections import defaultdict
-
-try:
-    import matplotlib
-    matplotlib.use("Agg")
-    import matplotlib.pyplot as plt
-except Exception:
-    plt = None  # still allow CSV-only runs
-
+import os
+import matplotlib.pyplot as plt
+from networkx import constraint
 from datasketch.minhash import MinHash
+from typing import Dict, Tuple, Optional, List
+import matplotlib
+matplotlib.use("Agg")
 
-# ---- GPU availability helper (mirrors library behavior) ----
-
-
-def _gpu_available() -> bool:
-    try:
-        import cupy as cp  # noqa: F401
-        try:
-            return cp.cuda.runtime.getDeviceCount() > 0
-        except Exception:
-            return False
-    except Exception:
-        return False
+# Map API modes -> human-friendly labels
+MODE_LABEL = {
+    "disable": "CPU (disable)",
+    "always":  "GPU (always)",
+    "detect":  "Auto (detect)",
+}
 
 
-def make_data(n):
-    # bytes are closer to real MinHash usage
+def make_data(n: int) -> List[bytes]:
     return [f"token-{i}".encode("utf-8") for i in range(n)]
 
 
-def bench_once(n, num_perm, use_gpu):
-    m = MinHash(num_perm=num_perm, seed=7, use_gpu=use_gpu)
+def bench_once(n: int, num_perm: int, mode: str) -> float:
+    m = MinHash(num_perm=num_perm, seed=7, gpu_mode=mode)
     data = make_data(n)
     t0 = time.perf_counter()
     m.update_batch(data)
     t1 = time.perf_counter()
-    return (t1 - t0) * 1000.0  # milliseconds
+    return (t1 - t0) * 1000.0  # ms
+
+
+def bench_avg(n: int, num_perm: int, mode: str, repeats: int, warmup: bool) -> Optional[float]:
+    if warmup:
+        try:
+            bench_once(n, num_perm, mode)
+        except Exception:
+            # GPU may be unavailable; ignore warmup failures
+            pass
+    times = []
+    for _ in range(repeats):
+        try:
+            times.append(bench_once(n, num_perm, mode))
+        except Exception:
+            # Treat GPU-unavailable as None (so plots show NaN)
+            return None
+    return sum(times) / len(times)
+
+
+def plot_overview(results: Dict[Tuple[int, int], Dict[str, Optional[float]]],
+                  sizes: List[int], num_perms: List[int], out_path: str) -> None:
+    if not sizes or not num_perms:
+        return
+    os.makedirs(os.path.dirname(out_path) or ".", exist_ok=True)
+
+    n = max(sizes)
+    xs, cpu_ms, det_ms, always_ms, sp_det, sp_alw = [], [], [], [], [], []
+    for k in num_perms:
+        rec = results.get((n, k), {})
+        c, d, a = rec.get("disable"), rec.get("detect"), rec.get("always")
+        if c is None:
+            continue
+        xs.append(k)
+        cpu_ms.append(c)
+        det_ms.append(d if d is not None else math.nan)
+        always_ms.append(a if a is not None else math.nan)
+        sp_det.append((c / d) if (d and d > 0) else math.nan)
+        sp_alw.append((c / a) if (a and a > 0) else math.nan)
+
+    fig, axes = plt.subplots(1, 2, figsize=(11, 4.2), sharex=True, constrained_layout=True)
+
+    ax = axes[0]
+    ax.plot(xs, sp_det, marker="+", label="CPU/Auto speedup")
+    ax.plot(xs, sp_alw, marker="+", label="CPU/GPU speedup")
+    ax.axhline(1.0, ls="--", lw=1, c="grey", alpha=0.6)
+    ax.set_xlabel("num_perm")
+    ax.set_ylabel("Speedup (×)")
+    ax.set_title(f"Speedup at n={n}")
+    ax.grid(True, alpha=0.3)
+    ax.legend()
+
+    ax = axes[1]
+    ax.plot(xs, cpu_ms, marker="+", label=MODE_LABEL["disable"])
+    ax.plot(xs, det_ms, marker="+", label=MODE_LABEL["detect"])
+    ax.plot(xs, always_ms, marker="+", label=MODE_LABEL["always"])
+    ax.set_xlabel("num_perm")
+    ax.set_ylabel("Runtime (ms)")
+    ax.set_title(f"update_batch runtime at n={n} (CPU vs GPU vs Auto)")
+    ax.grid(True, alpha=0.3)
+    ax.legend()
+
+    fig.suptitle(
+        "Modes: CPU (disable), GPU (always), Auto (detect)", fontsize=10)
+    fig.savefig(out_path, dpi=150)
+    plt.close(fig)
+
+
+def plot_per_size(results, sizes, num_perms, out_dir):
+    os.makedirs(out_dir, exist_ok=True)
+    for n in sizes:
+        xs, cpu_ms, det_ms, always_ms = [], [], [], []
+        for k in num_perms:
+            rec = results.get((n, k), {})
+            c, d, a = rec.get("disable"), rec.get("detect"), rec.get("always")
+            if c is None:
+                continue
+            xs.append(k)
+            cpu_ms.append(c)
+            det_ms.append(d if d is not None else math.nan)
+            always_ms.append(a if a is not None else math.nan)
+        fig, ax = plt.subplots(1, 1, figsize=(6.4, 4.4))
+        ax.plot(xs, cpu_ms, marker="+", label=MODE_LABEL["disable"])
+        ax.plot(xs, det_ms, marker="+", label=MODE_LABEL["detect"])
+        ax.plot(xs, always_ms, marker="+", label=MODE_LABEL["always"])
+        ax.set_xlabel("num_perm")
+        ax.set_ylabel("Runtime (ms)")
+        ax.set_title(f"update_batch performance (n={n}) — CPU / GPU / Auto")
+        ax.grid(True, alpha=0.3)
+        ax.legend()
+        fig.savefig(os.path.join(
+            out_dir, f"minhash_gpu_size_{n}.png"), dpi=150)
+        plt.close(fig)
 
 
 def main():
-    p = argparse.ArgumentParser()
+    import argparse
+    p = argparse.ArgumentParser(
+        description="Benchmark MinHash.update_batch CPU vs GPU vs Auto with plotting.")
     p.add_argument("--sizes", type=int, nargs="+",
-                   default=[1_000, 5_000, 10_000, 50_000, 100_000])
-    p.add_argument("--num-perm", type=int, nargs="+",
-                   default=[64, 128, 256, 512])
-    p.add_argument("--repeats", type=int, default=3)
-    p.add_argument("--warmup", action="store_true",
-                   help="Do a warm-up run for each backend/setting.")
-    p.add_argument("--plot", action="store_true",
-                   help="Generate runtime and speedup PNGs in --outdir.")
-    p.add_argument("--outdir", default="benchmark",
-                   help="Directory to write figures if --plot is set.")
+                   default=[1_000, 10_000, 50_000])
+    p.add_argument("--num-perm", type=int, nargs="+", default=[128, 256, 512])
+    p.add_argument("--repeats", type=int, default=5)
+    p.add_argument("--warmup", action="store_true")
+    p.add_argument("--out-dir", default="benchmark_out")
+    p.add_argument("--plot", action="store_true")
     args = p.parse_args()
 
-    gpu_ok = _gpu_available()
+    os.makedirs(args.out_dir, exist_ok=True)
 
-    # results[(n, k)][backend] -> list[ms]
-    results = defaultdict(lambda: {"cpu": [], "gpu": []})
+    modes = ["disable", "detect", "always"]
+    results: Dict[Tuple[int, int], Dict[str, Optional[float]]
+                  ] = collections.OrderedDict()
 
     print("n,num_perm,backend,ms")
     for n in args.sizes:
         for k in args.num_perm:
-            # CPU
-            if args.warmup:
-                try:
-                    bench_once(n, k, use_gpu=False)
-                except Exception:
-                    pass
-            for _ in range(args.repeats):
-                ms = bench_once(n, k, use_gpu=False)
-                results[(n, k)]["cpu"].append(ms)
-                print(f"{n},{k},cpu,{ms:.2f}")
-
-            # GPU (skip gracefully if unavailable)
-            if gpu_ok:
-                if args.warmup:
-                    try:
-                        bench_once(n, k, use_gpu=True)
-                    except Exception:
-                        # if something went wrong mid-run, treat as unavailable
-                        gpu_ok = False
-                if gpu_ok:
-                    for _ in range(args.repeats):
-                        ms = bench_once(n, k, use_gpu=True)
-                        results[(n, k)]["gpu"].append(ms)
-                        print(f"{n},{k},gpu,{ms:.2f}")
-            else:
-                # keep the CSV tidy with a comment
-                print(f"# gpu_unavailable_for_n_{n}_k_{k}")
+            results[(n, k)] = {}
+            for m in modes:
+                ms = bench_avg(n, k, m, args.repeats, args.warmup)
+                results[(n, k)][m] = ms
+                label = MODE_LABEL[m]
+                print(f"{n},{k},{label},{'NaN' if ms is None else f'{ms:.2f}'}")
 
     if args.plot:
-        if plt is None:
-            print("# matplotlib not available; cannot plot.", file=sys.stderr)
-            return
-
-        os.makedirs(args.outdir, exist_ok=True)
-
-        # Aggregate means
-        means = {}
-        for (n, k), vals in results.items():
-            cpu_mean = sum(vals["cpu"]) / len(vals["cpu"]
-                                              ) if vals["cpu"] else None
-            gpu_mean = sum(vals["gpu"]) / len(vals["gpu"]
-                                              ) if vals["gpu"] else None
-            means[(n, k)] = {"cpu": cpu_mean, "gpu": gpu_mean}
-
-        # ---- Figure 1: Runtime (ms) vs num_perm, separate lines per size, CPU vs GPU ----
-        fig, ax = plt.subplots(1, 1, figsize=(8, 4))
-        sizes_sorted = sorted(set(n for (n, _) in means))
-        perms_sorted = sorted(set(k for (_, k) in means))
-
-        for n in sizes_sorted:
-            y_cpu = []
-            y_gpu = []
-            for k in perms_sorted:
-                m = means[(n, k)]
-                y_cpu.append(m["cpu"])
-                y_gpu.append(m["gpu"])
-            ax.plot(perms_sorted, y_cpu, marker="o", label=f"CPU n={n}")
-            if any(v is not None for v in y_gpu):
-                ax.plot(perms_sorted, y_gpu, marker="x",
-                        linestyle="--", label=f"GPU n={n}")
-
-        ax.set_xlabel("num_perm")
-        ax.set_ylabel("Runtime (ms)")
-        ax.set_title("MinHash update_batch runtime (CPU vs GPU)")
-        ax.grid(True, alpha=0.3)
-        ax.legend(fontsize=8, ncol=2)
-        fig.tight_layout()
-        path_runtime = os.path.join(args.outdir, "minhash_gpu_runtime.png")
-        fig.savefig(path_runtime, dpi=150)
-
-        # ---- Figure 2: Speedup (CPU / GPU) vs num_perm, lines per size ----
-        # Only plot points where both cpu and gpu exist
-        fig2, ax2 = plt.subplots(1, 1, figsize=(8, 4))
-        for n in sizes_sorted:
-            x = []
-            y = []
-            for k in perms_sorted:
-                m = means[(n, k)]
-                if m["cpu"] is not None and m["gpu"] is not None and m["gpu"] > 0:
-                    x.append(k)
-                    y.append(m["cpu"] / m["gpu"])
-            if x:
-                ax2.plot(x, y, marker="o", label=f"speedup n={n}")
-
-        ax2.axhline(1.0, color="gray", linewidth=1)
-        ax2.set_xlabel("num_perm")
-        ax2.set_ylabel("Speedup (CPU ms / GPU ms)")
-        ax2.set_title("GPU speedup (>1 = GPU faster)")
-        ax2.grid(True, alpha=0.3)
-        ax2.legend(fontsize=8, ncol=2)
-        fig2.tight_layout()
-        path_speed = os.path.join(args.outdir, "minhash_gpu_speedup.png")
-        fig2.savefig(path_speed, dpi=150)
-
-        print(f"# Wrote {path_runtime}")
-        print(f"# Wrote {path_speed}")
+        plot_overview(results, args.sizes, args.num_perm, os.path.join(
+            args.out_dir, "minhash_gpu_overview.png"))
+        plot_per_size(results, args.sizes, args.num_perm, args.out_dir)
 
 
 if __name__ == "__main__":
