@@ -256,6 +256,7 @@
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;The number of bands are too small (b &lt; 2)&quot;</span><span class="p">)</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">prepickle</span> <span class="o">=</span> <span class="n">storage_config</span><span class="p">[</span><span class="s2">&quot;type&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;redis&quot;</span> <span class="k">if</span> <span class="n">prepickle</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">prepickle</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_require_bytes_keys</span> <span class="o">=</span> <span class="ow">not</span> <span class="p">(</span><span class="n">storage_config</span><span class="p">[</span><span class="s2">&quot;type&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;dict&quot;</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">prepickle</span><span class="p">)</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">hashfunc</span> <span class="o">=</span> <span class="n">hashfunc</span>
         <span class="k">if</span> <span class="n">hashfunc</span><span class="p">:</span>
@@ -338,36 +339,36 @@
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Create a context manager for fast insertion into this index.</span>
 
 <span class="sd">        Args:</span>
-<span class="sd">            buffer_size (int): The buffer size for insert_session mode (default=50000).</span>
+<span class="sd">        e         buffer_size (int): The buffer size for insert_session mode (default=50000).</span>
 
 <span class="sd">        Returns:</span>
-<span class="sd">            MinHashLSHInsertionSession: The context manager.</span>
+<span class="sd">                 MinHashLSHInsertionSession: The context manager.</span>
 
 <span class="sd">        Example:</span>
-<span class="sd">            Insert 100 MinHashes into an Redis-backed index using a session:</span>
+<span class="sd">                 Insert 100 MinHashes into an Redis-backed index using a session:</span>
 
-<span class="sd">            .. code-block:: python</span>
+<span class="sd">                 .. code-block:: python</span>
 
-<span class="sd">                from datasketch import MinHash, MinHashLSH</span>
-<span class="sd">                import numpy as np</span>
+<span class="sd">                     from datasketch import MinHash, MinHashLSH</span>
+<span class="sd">                     import numpy as np</span>
 
-<span class="sd">                minhashes = []</span>
-<span class="sd">                for i in range(100):</span>
-<span class="sd">                    m = MinHash(num_perm=128)</span>
-<span class="sd">                    m.update_batch(np.random.randint(low=0, high=30, size=10))</span>
-<span class="sd">                    minhashes.append(m)</span>
+<span class="sd">                     minhashes = []</span>
+<span class="sd">                     for i in range(100):</span>
+<span class="sd">                         m = MinHash(num_perm=128)</span>
+<span class="sd">                         m.update_batch(np.random.randint(low=0, high=30, size=10))</span>
+<span class="sd">                         minhashes.append(m)</span>
 
-<span class="sd">                lsh = MinHashLSH(</span>
-<span class="sd">                    threshold=0.5,</span>
-<span class="sd">                    num_perm=128,</span>
-<span class="sd">                    storage_config={</span>
-<span class="sd">                        &quot;type&quot;: &quot;redis&quot;,</span>
-<span class="sd">                        &quot;redis&quot;: {&quot;host&quot;: &quot;localhost&quot;, &quot;port&quot;: 6379},</span>
-<span class="sd">                    },</span>
-<span class="sd">                )</span>
-<span class="sd">                with lsh.insertion_session() as session:</span>
-<span class="sd">                    for i, m in enumerate(minhashes):</span>
-<span class="sd">                        session.insert(i, m)</span>
+<span class="sd">                     lsh = MinHashLSH(</span>
+<span class="sd">                         threshold=0.5,</span>
+<span class="sd">                         num_perm=128,</span>
+<span class="sd">                         storage_config={</span>
+<span class="sd">                             &quot;type&quot;: &quot;redis&quot;,</span>
+<span class="sd">                             &quot;redis&quot;: {&quot;host&quot;: &quot;localhost&quot;, &quot;port&quot;: 6379},</span>
+<span class="sd">                         },</span>
+<span class="sd">                     )</span>
+<span class="sd">                     with lsh.insertion_session() as session:</span>
+<span class="sd">                         for i, m in enumerate(minhashes):</span>
+<span class="sd">                             session.insert(i, m)</span>
 
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="n">MinHashLSHInsertionSession</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">buffer_size</span><span class="o">=</span><span class="n">buffer_size</span><span class="p">)</span></div>
@@ -379,33 +380,33 @@
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Create a context manager for fast deletion from this index.</span>
 
 <span class="sd">        Args:</span>
-<span class="sd">            buffer_size (int): The buffer size for deletion operations (default=50000).</span>
+<span class="sd">                buffer_size (int): The buffer size for deletion operations (default=50000).</span>
 
 <span class="sd">        Returns:</span>
-<span class="sd">            MinHashLSHDeletionSession: The context manager.</span>
+<span class="sd">                MinHashLSHDeletionSession: The context manager.</span>
 
-<span class="sd">        Example:</span>
-<span class="sd">            Delete keys from a Redis-backed index using a session:</span>
+<span class="sd">        r    Example:</span>
+<span class="sd">                Delete keys from a Redis-backed index using a session:</span>
 
-<span class="sd">            .. code-block:: python</span>
+<span class="sd">                .. code-block:: python</span>
 
-<span class="sd">                from datasketch import MinHashLSH</span>
+<span class="sd">                    from datasketch import MinHashLSH</span>
 
-<span class="sd">                lsh = MinHashLSH(</span>
-<span class="sd">                    threshold=0.5,</span>
-<span class="sd">                    num_perm=128,</span>
-<span class="sd">                    storage_config={</span>
-<span class="sd">                        &quot;type&quot;: &quot;redis&quot;,</span>
-<span class="sd">                        &quot;redis&quot;: {&quot;host&quot;: &quot;localhost&quot;, &quot;port&quot;: 6379},</span>
-<span class="sd">                    },</span>
-<span class="sd">                )</span>
+<span class="sd">                    lsh = MinHashLSH(</span>
+<span class="sd">                        threshold=0.5,</span>
+<span class="sd">                        num_perm=128,</span>
+<span class="sd">                        storage_config={</span>
+<span class="sd">                            &quot;type&quot;: &quot;redis&quot;,</span>
+<span class="sd">                            &quot;redis&quot;: {&quot;host&quot;: &quot;localhost&quot;, &quot;port&quot;: 6379},</span>
+<span class="sd">                        },</span>
+<span class="sd">                    )</span>
 
-<span class="sd">                # ... insert some data ...</span>
+<span class="sd">                    # ... insert some data ...</span>
 
-<span class="sd">                keys_to_delete = [&quot;key1&quot;, &quot;key2&quot;, &quot;key3&quot;]</span>
-<span class="sd">                with lsh.deletion_session() as session:</span>
-<span class="sd">                    for key in keys_to_delete:</span>
-<span class="sd">                        session.remove(key)</span>
+<span class="sd">                    keys_to_delete = [&quot;key1&quot;, &quot;key2&quot;, &quot;key3&quot;]</span>
+<span class="sd">                    with lsh.deletion_session() as session:</span>
+<span class="sd">                        for key in keys_to_delete:</span>
+<span class="sd">                            session.remove(key)</span>
 
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="n">MinHashLSHDeletionSession</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">buffer_size</span><span class="o">=</span><span class="n">buffer_size</span><span class="p">)</span></div>
@@ -420,6 +421,11 @@
     <span class="p">):</span>
         <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">minhash</span><span class="p">)</span> <span class="o">!=</span> <span class="bp">self</span><span class="o">.</span><span class="n">h</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Expecting minhash with length </span><span class="si">%d</span><span class="s2">, got </span><span class="si">%d</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">h</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">minhash</span><span class="p">)))</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_require_bytes_keys</span> <span class="ow">and</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="nb">bytes</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;prepickle=False requires bytes keys for non-dict storage, got </span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="n">key</span><span class="p">)</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2">. &quot;</span>
+                <span class="s2">&quot;Either pass bytes keys or use prepickle=True for automatic serialization.&quot;</span>
+            <span class="p">)</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">prepickle</span><span class="p">:</span>
             <span class="n">key</span> <span class="o">=</span> <span class="n">pickle</span><span class="o">.</span><span class="n">dumps</span><span class="p">(</span><span class="n">key</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">check_duplication</span> <span class="ow">and</span> <span class="n">key</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">keys</span><span class="p">:</span>
