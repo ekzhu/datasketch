@@ -6,7 +6,7 @@ import numpy as np
 
 from datasketch import MinHash
 
-# Robust availability check
+# Robust GPU availability check
 try:
     import cupy as cp
 
@@ -27,52 +27,55 @@ class TestMinHashGPU(unittest.TestCase):
     def test_update_batch_gpu_matches_cpu(self):
         data = _make_data(1000)
 
-        m_cpu = MinHash(num_perm=256, seed=7)
+        m_cpu = MinHash(num_perm=256, seed=7, gpu_mode="disable")
         m_cpu.update_batch(data)
 
-        m_gpu = MinHash(num_perm=256, seed=7, use_gpu=True)
+        # Force GPU path
+        m_gpu = MinHash(num_perm=256, seed=7, gpu_mode="always")
         m_gpu.update_batch(data)
 
         self.assertTrue(np.array_equal(m_cpu.hashvalues, m_gpu.hashvalues))
 
     @unittest.skipUnless(GPU_AVAILABLE, "CuPy/CUDA not available")
-    def test_enable_gpu_mid_workflow_matches_cpu(self):
+    def test_detect_mode_matches_cpu(self):
+        """Auto-detect should produce identical results as pure CPU."""
         data1 = _make_data(500)
         data2 = _make_data(700)
 
-        m_cpu = MinHash(num_perm=128, seed=7)
+        m_cpu = MinHash(num_perm=128, seed=7, gpu_mode="disable")
         m_cpu.update_batch(data1)
         m_cpu.update_batch(data2)
 
-        m_gpu = MinHash(num_perm=128, seed=7)
-        m_gpu.update_batch(data1)
-        m_gpu.enable_gpu()
-        m_gpu.update_batch(data2)
+        m_auto = MinHash(num_perm=128, seed=7, gpu_mode="detect")
+        m_auto.update_batch(data1)
+        m_auto.update_batch(data2)
 
-        self.assertTrue(np.array_equal(m_cpu.hashvalues, m_gpu.hashvalues))
+        self.assertTrue(np.array_equal(m_cpu.hashvalues, m_auto.hashvalues))
 
-    def test_pickle_gpu_enabled_reverts_to_cpu(self):
-        m = MinHash(num_perm=128, seed=7)
-        # Try enabling GPU if present; ignore RuntimeError if no device
-        with contextlib.suppress(RuntimeError):
-            m.enable_gpu()
+    def test_pickle_roundtrip_works_without_gpu(self):
+        """Pickle should drop device state; detect mode should still run on CPU/GPU safely."""
+        m = MinHash(num_perm=128, seed=7, gpu_mode="detect")
         m2 = pickle.loads(pickle.dumps(m))
-        self.assertFalse(getattr(m2, "_use_gpu", False))
 
-    def test_enable_gpu_raises_when_no_device(self):
+        # Should be able to update on any machine
+        with contextlib.ExitStack():
+            m2.update_batch(_make_data(64))
+
+        # Internal GPU-related attributes should exist and be consistent with availability
+        self.assertTrue(hasattr(m2, "_gpu_mode"))
+        if GPU_AVAILABLE and m2._gpu_mode in ("detect", "always"):
+            # Caches may have been populated on GPU
+            self.assertIsNotNone(m2._a_gpu)
+            self.assertIsNotNone(m2._b_gpu)
+        else:
+            # No GPU or disabled mode -> no device caches
+            self.assertIsNone(m2._a_gpu)
+            self.assertIsNone(m2._b_gpu)
+
+    def test_always_mode_raises_when_no_device(self):
+        """If GPU is unavailable, 'always' must raise at call-time."""
         if GPU_AVAILABLE:
-            self.skipTest("GPU available; cannot force negative path here.")
-        m = MinHash(num_perm=64, seed=1)
+            self.skipTest("GPU available; cannot force negative path.")
+        m = MinHash(num_perm=64, seed=1, gpu_mode="always")
         with self.assertRaises(RuntimeError):
-            m.enable_gpu()
-
-    @unittest.skipUnless(GPU_AVAILABLE, "CuPy/CUDA not available")
-    def test_per_call_override(self):
-        data = _make_data(300)
-        m = MinHash(num_perm=64, seed=3)  # default CPU
-        # force GPU per call
-        m.update_batch(data, use_gpu=True)
-        # then force CPU per call (should still work and be deterministic across backends)
-        m2 = MinHash(num_perm=64, seed=3, use_gpu=True)
-        m2.update_batch(data, use_gpu=False)
-        self.assertTrue(np.array_equal(m.hashvalues, m2.hashvalues))
+            m.update_batch(_make_data(32))
