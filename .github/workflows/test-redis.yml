@@ -1,4 +1,4 @@
-name: Test Cassandra
+name: Test Redis
 
 on:
   workflow_run:
@@ -14,11 +14,11 @@ jobs:
       matrix:
         python-version: ["3.10"]
     services:
-      cassandra:
-        image: cassandra
+      redis:
+        image: redis
         ports:
-          - 9042:9042
-        options: --health-cmd "cqlsh --debug" --health-interval 10s --health-retries 15 --health-start-period 30s
+          - 6379:6379
+        options: --health-cmd "redis-cli ping" --health-interval 10s --health-timeout 5s --health-retries 5
     steps:
       - uses: actions/checkout@v5
       - name: Install uv and setup python ${{ matrix.python-version }}
@@ -38,7 +38,7 @@ jobs:
           uv pip list
       - name: Test with pytest
         run: |
-          export DO_TEST_CASSANDRA=true
+          export DO_TEST_REDIS=true
           uv run pytest
       - name: Minimize uv cache
         run: uv cache prune --ci

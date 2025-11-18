@@ -174,6 +174,7 @@ class MinHashLSH:
             raise ValueError("The number of bands are too small (b < 2)")
 
         self.prepickle = storage_config["type"] == "redis" if prepickle is None else prepickle
+        self._require_bytes_keys = not (storage_config["type"] == "dict" or self.prepickle)
 
         self.hashfunc = hashfunc
         if hashfunc:
@@ -247,36 +248,36 @@ class MinHashLSH:
         """Create a context manager for fast insertion into this index.
 
         Args:
-            buffer_size (int): The buffer size for insert_session mode (default=50000).
+        e         buffer_size (int): The buffer size for insert_session mode (default=50000).
 
         Returns:
-            MinHashLSHInsertionSession: The context manager.
+                 MinHashLSHInsertionSession: The context manager.
 
         Example:
-            Insert 100 MinHashes into an Redis-backed index using a session:
+                 Insert 100 MinHashes into an Redis-backed index using a session:
 
-            .. code-block:: python
+                 .. code-block:: python
 
-                from datasketch import MinHash, MinHashLSH
-                import numpy as np
+                     from datasketch import MinHash, MinHashLSH
+                     import numpy as np
 
-                minhashes = []
-                for i in range(100):
-                    m = MinHash(num_perm=128)
-                    m.update_batch(np.random.randint(low=0, high=30, size=10))
-                    minhashes.append(m)
+                     minhashes = []
+                     for i in range(100):
+                         m = MinHash(num_perm=128)
+                         m.update_batch(np.random.randint(low=0, high=30, size=10))
+                         minhashes.append(m)
 
-                lsh = MinHashLSH(
-                    threshold=0.5,
-                    num_perm=128,
-                    storage_config={
-                        "type": "redis",
-                        "redis": {"host": "localhost", "port": 6379},
-                    },
-                )
-                with lsh.insertion_session() as session:
-                    for i, m in enumerate(minhashes):
-                        session.insert(i, m)
+                     lsh = MinHashLSH(
+                         threshold=0.5,
+                         num_perm=128,
+                         storage_config={
+                             "type": "redis",
+                             "redis": {"host": "localhost", "port": 6379},
+                         },
+                     )
+                     with lsh.insertion_session() as session:
+                         for i, m in enumerate(minhashes):
+                             session.insert(i, m)
 
         """
         return MinHashLSHInsertionSession(self, buffer_size=buffer_size)
@@ -285,33 +286,33 @@ class MinHashLSH:
         """Create a context manager for fast deletion from this index.
 
         Args:
-            buffer_size (int): The buffer size for deletion operations (default=50000).
+                buffer_size (int): The buffer size for deletion operations (default=50000).
 
         Returns:
-            MinHashLSHDeletionSession: The context manager.
+                MinHashLSHDeletionSession: The context manager.
 
-        Example:
-            Delete keys from a Redis-backed index using a session:
+        r    Example:
+                Delete keys from a Redis-backed index using a session:
 
-            .. code-block:: python
+                .. code-block:: python
 
-                from datasketch import MinHashLSH
+                    from datasketch import MinHashLSH
 
-                lsh = MinHashLSH(
-                    threshold=0.5,
-                    num_perm=128,
-                    storage_config={
-                        "type": "redis",
-                        "redis": {"host": "localhost", "port": 6379},
-                    },
-                )
+                    lsh = MinHashLSH(
+                        threshold=0.5,
+                        num_perm=128,
+                        storage_config={
+                            "type": "redis",
+                            "redis": {"host": "localhost", "port": 6379},
+                        },
+                    )
 
-                # ... insert some data ...
+                    # ... insert some data ...
 
-                keys_to_delete = ["key1", "key2", "key3"]
-                with lsh.deletion_session() as session:
-                    for key in keys_to_delete:
-                        session.remove(key)
+                    keys_to_delete = ["key1", "key2", "key3"]
+                    with lsh.deletion_session() as session:
+                        for key in keys_to_delete:
+                            session.remove(key)
 
         """
         return MinHashLSHDeletionSession(self, buffer_size=buffer_size)
@@ -325,6 +326,11 @@ class MinHashLSH:
     ):
         if len(minhash) != self.h:
             raise ValueError("Expecting minhash with length %d, got %d" % (self.h, len(minhash)))
+        if self._require_bytes_keys and not isinstance(key, bytes):
+            raise TypeError(
+                f"prepickle=False requires bytes keys for non-dict storage, got {type(key).__name__}. "
+                "Either pass bytes keys or use prepickle=True for automatic serialization."
+            )
         if self.prepickle:
             key = pickle.dumps(key)
         if check_duplication and key in self.keys:
