@@ -135,6 +135,18 @@ Control behavior with the constructor argument ``gpu_mode``:
 - ``'detect'``: use GPU if available, otherwise fallback to CPU.
 - ``'always'``: require GPU; raises ``RuntimeError`` if no CUDA device is available.
 
+.. code-block:: python
+
+    # Force CPU only
+    m = MinHash(num_perm=256, gpu_mode="disable")
+    m.update_batch(data)
+
+.. code-block:: python
+
+    # Require GPU (raises RuntimeError if no CUDA device)
+    m = MinHash(num_perm=256, gpu_mode="always")
+    m.update_batch(data)
+
 **Install.** CuPy is an optional dependency (not installed by default).
 See CuPy’s docs for wheels matching your CUDA version, e.g.
 ``pip install cupy-cuda12x`` for CUDA 12.
