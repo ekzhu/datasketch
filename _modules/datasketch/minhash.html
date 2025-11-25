@@ -83,7 +83,18 @@
 <span class="kn">from</span><span class="w"> </span><span class="nn">collections.abc</span><span class="w"> </span><span class="kn">import</span> <span class="n">Generator</span><span class="p">,</span> <span class="n">Iterable</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Callable</span><span class="p">,</span> <span class="n">Optional</span>
 
+<span class="k">try</span><span class="p">:</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Literal</span>  <span class="c1"># py3.8+; if older, you can fallback to typing_extensions</span>
+<span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">typing_extensions</span><span class="w"> </span><span class="kn">import</span> <span class="n">Literal</span>
+
 <span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+
+<span class="c1"># GPU backend</span>
+<span class="k">try</span><span class="p">:</span>
+    <span class="kn">import</span><span class="w"> </span><span class="nn">cupy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">cp</span>
+<span class="k">except</span> <span class="ne">ImportError</span><span class="p">:</span>
+    <span class="n">cp</span> <span class="o">=</span> <span class="kc">None</span>
 
 <span class="kn">from</span><span class="w"> </span><span class="nn">datasketch.hashfunc</span><span class="w"> </span><span class="kn">import</span> <span class="n">sha1_hash32</span>
 
@@ -94,6 +105,22 @@
 <span class="n">_mersenne_prime</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">uint64</span><span class="p">((</span><span class="mi">1</span> <span class="o">&lt;&lt;</span> <span class="mi">61</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span>
 <span class="n">_max_hash</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">uint64</span><span class="p">((</span><span class="mi">1</span> <span class="o">&lt;&lt;</span> <span class="mi">32</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span>
 <span class="n">_hash_range</span> <span class="o">=</span> <span class="mi">1</span> <span class="o">&lt;&lt;</span> <span class="mi">32</span>
+
+
+<span class="n">_GPU_OK_CACHE</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">bool</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_gpu_available</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+    <span class="k">global</span> <span class="n">_GPU_OK_CACHE</span>
+    <span class="k">if</span> <span class="n">cp</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">return</span> <span class="kc">False</span>
+    <span class="k">if</span> <span class="n">_GPU_OK_CACHE</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">_GPU_OK_CACHE</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">_GPU_OK_CACHE</span> <span class="o">=</span> <span class="n">cp</span><span class="o">.</span><span class="n">cuda</span><span class="o">.</span><span class="n">runtime</span><span class="o">.</span><span class="n">getDeviceCount</span><span class="p">()</span> <span class="o">&gt;</span> <span class="mi">0</span>
+    <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>
+        <span class="n">_GPU_OK_CACHE</span> <span class="o">=</span> <span class="kc">False</span>
+    <span class="k">return</span> <span class="n">_GPU_OK_CACHE</span>
 
 
 <div class="viewcode-block" id="MinHash">
@@ -107,6 +134,13 @@
 <span class="sd">            It will be ignored if `hashvalues` is not None.</span>
 <span class="sd">        seed (int): The random seed controls the set of random</span>
 <span class="sd">            permutation functions generated for this MinHash.</span>
+<span class="sd">        gpu_mode : {&#39;disable&#39;, &#39;detect&#39;, &#39;always&#39;}, default &#39;disable&#39;</span>
+<span class="sd">            Controls GPU use in :meth:`update_batch`.</span>
+
+<span class="sd">            - ``&#39;disable&#39;`` — always CPU.</span>
+<span class="sd">            - ``&#39;detect&#39;`` — use GPU if available, otherwise CPU.</span>
+<span class="sd">            - ``&#39;always&#39;`` — require GPU; raise ``RuntimeError`` if CuPy/CUDA</span>
+<span class="sd">            is unavailable.</span>
 <span class="sd">        hashfunc (Callable): The hash function used by</span>
 <span class="sd">            this MinHash.</span>
 <span class="sd">            It takes the input passed to the :meth:`update` method and</span>
@@ -123,6 +157,11 @@
 <span class="sd">            function parameters as a tuple of two lists. This argument</span>
 <span class="sd">            can be specified for faster initialization using the existing</span>
 <span class="sd">            :attr:`permutations` from another MinHash.</span>
+
+<span class="sd">    Note:</span>
+<span class="sd">        Hashing and permutation *generation* always run on CPU to preserve</span>
+<span class="sd">        existing semantics; only the permutation application and the</span>
+<span class="sd">        columnwise min-reduction inside :meth:`update_batch` may run on GPU.</span>
 
 <span class="sd">    Note:</span>
 <span class="sd">        To save memory usage, consider using :class:`datasketch.LeanMinHash`.</span>
@@ -154,6 +193,7 @@
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">num_perm</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">128</span><span class="p">,</span>
         <span class="n">seed</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span>
+        <span class="n">gpu_mode</span><span class="p">:</span> <span class="n">Literal</span><span class="p">[</span><span class="s2">&quot;disable&quot;</span><span class="p">,</span> <span class="s2">&quot;detect&quot;</span><span class="p">,</span> <span class="s2">&quot;always&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;disable&quot;</span><span class="p">,</span>
         <span class="n">hashfunc</span><span class="p">:</span> <span class="n">Callable</span> <span class="o">=</span> <span class="n">sha1_hash32</span><span class="p">,</span>
         <span class="n">hashobj</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">object</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>  <span class="c1"># Deprecated.</span>
         <span class="n">hashvalues</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Iterable</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
@@ -189,8 +229,20 @@
         <span class="k">else</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">permutations</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_init_permutations</span><span class="p">(</span><span class="n">num_perm</span><span class="p">)</span>
         <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">!=</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">permutations</span><span class="p">[</span><span class="mi">0</span><span class="p">]):</span>
-            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Numbers of hash values and permutations mismatch&quot;</span><span class="p">)</span></div>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Numbers of hash values and permutations mismatch&quot;</span><span class="p">)</span>
 
+        <span class="c1"># GPU state</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_gpu_mode</span><span class="p">:</span> <span class="n">Literal</span><span class="p">[</span><span class="s2">&quot;disable&quot;</span><span class="p">,</span> <span class="s2">&quot;detect&quot;</span><span class="p">,</span> <span class="s2">&quot;always&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">gpu_mode</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_a_gpu</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_b_gpu</span> <span class="o">=</span> <span class="kc">None</span></div>
+
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_ensure_gpu_caches</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Cache permutation arrays on device. Call only when GPU is available.&quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_a_gpu</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">_b_gpu</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">a</span><span class="p">,</span> <span class="n">b</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">permutations</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_a_gpu</span> <span class="o">=</span> <span class="n">cp</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">cp</span><span class="o">.</span><span class="n">uint64</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_b_gpu</span> <span class="o">=</span> <span class="n">cp</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">b</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">cp</span><span class="o">.</span><span class="n">uint64</span><span class="p">)</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">_init_hashvalues</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">num_perm</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
         <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">(</span><span class="n">num_perm</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">uint64</span><span class="p">)</span> <span class="o">*</span> <span class="n">_max_hash</span>
@@ -261,23 +313,73 @@
 <span class="sd">        The values will be hashed using the hash function specified by</span>
 <span class="sd">        the `hashfunc` argument in the constructor.</span>
 
+<span class="sd">        Notes:</span>
+<span class="sd">            - Hashing of input values always runs on CPU.</span>
+<span class="sd">            - Permutation application + min-reduction may run on GPU</span>
+<span class="sd">            depending on `gpu_mode`:</span>
+<span class="sd">                &#39;disable&#39; : CPU</span>
+<span class="sd">                &#39;detect&#39;  : GPU if available else CPU</span>
+<span class="sd">                &#39;always&#39;  : GPU (error if unavailable)</span>
+
 <span class="sd">        Args:</span>
 <span class="sd">            b (Iterable): Values to be hashed using the hash function specified.</span>
 
-<span class="sd">        Example:</span>
-<span class="sd">            To update with new string values (using the default SHA1 hash</span>
-<span class="sd">            function, which requires bytes as input):</span>
+<span class="sd">        Examples:</span>
+<span class="sd">            Basic usage with string values (default SHA1 hash, requires bytes):</span>
 
 <span class="sd">            .. code-block:: python</span>
 
-<span class="sd">                minhash = Minhash()</span>
-<span class="sd">                minhash.update_batch([s.encode(&quot;utf-8&quot;) for s in [&quot;token1&quot;, &quot;token2&quot;]])</span>
+<span class="sd">                from datasketch import MinHash</span>
+
+<span class="sd">                m = MinHash()</span>
+<span class="sd">                m.update_batch([s.encode(&quot;utf-8&quot;) for s in [&quot;token1&quot;, &quot;token2&quot;]])</span>
+
+<span class="sd">            Using GPU mode if available:</span>
+
+<span class="sd">            .. code-block:: python</span>
+
+<span class="sd">                from datasketch import MinHash</span>
+
+<span class="sd">                m = MinHash(num_perm=256, gpu_mode=&quot;detect&quot;)</span>
+<span class="sd">                m.update_batch([b&quot;token1&quot;, b&quot;token2&quot;])</span>
 
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="n">hv</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="bp">self</span><span class="o">.</span><span class="n">hashfunc</span><span class="p">(</span><span class="n">_b</span><span class="p">)</span> <span class="k">for</span> <span class="n">_b</span> <span class="ow">in</span> <span class="n">b</span><span class="p">],</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">uint64</span><span class="p">,</span> <span class="n">ndmin</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span><span class="o">.</span><span class="n">T</span>
-        <span class="n">a</span><span class="p">,</span> <span class="n">b</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">permutations</span>
-        <span class="n">phv</span> <span class="o">=</span> <span class="p">(</span><span class="n">hv</span> <span class="o">*</span> <span class="n">a</span> <span class="o">+</span> <span class="n">b</span><span class="p">)</span> <span class="o">%</span> <span class="n">_mersenne_prime</span> <span class="o">&amp;</span> <span class="n">_max_hash</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">hashvalues</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">vstack</span><span class="p">([</span><span class="n">phv</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">hashvalues</span><span class="p">])</span><span class="o">.</span><span class="n">min</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span></div>
+        <span class="c1"># Hash on CPU to preserve hashfunc semantics</span>
+        <span class="n">hv_list</span> <span class="o">=</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">hashfunc</span><span class="p">(</span><span class="n">_b</span><span class="p">)</span> <span class="k">for</span> <span class="n">_b</span> <span class="ow">in</span> <span class="n">b</span><span class="p">]</span>
+        <span class="c1"># Optimization: empty batch is a no-op (preserves original behavior)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">hv_list</span><span class="p">:</span>
+            <span class="k">return</span>
+
+        <span class="n">a</span><span class="p">,</span> <span class="n">b</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">permutations</span>  <span class="c1"># np.ndarray[uint64]</span>
+
+        <span class="c1"># Decide backend</span>
+        <span class="n">use_gpu</span> <span class="o">=</span> <span class="kc">False</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_gpu_mode</span> <span class="o">==</span> <span class="s2">&quot;always&quot;</span><span class="p">:</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">_gpu_available</span><span class="p">():</span>
+                <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s2">&quot;GPU mode &#39;always&#39; requested but CuPy/CUDA device is unavailable.&quot;</span><span class="p">)</span>
+            <span class="n">use_gpu</span> <span class="o">=</span> <span class="kc">True</span>
+        <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">_gpu_mode</span> <span class="o">==</span> <span class="s2">&quot;detect&quot;</span><span class="p">:</span>
+            <span class="n">use_gpu</span> <span class="o">=</span> <span class="n">_gpu_available</span><span class="p">()</span>
+        <span class="k">else</span><span class="p">:</span>  <span class="c1"># &#39;disable&#39;</span>
+            <span class="n">use_gpu</span> <span class="o">=</span> <span class="kc">False</span>
+
+        <span class="k">if</span> <span class="n">use_gpu</span><span class="p">:</span>
+            <span class="c1"># GPU path (keep indentation minimal as requested)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_ensure_gpu_caches</span><span class="p">()</span>
+            <span class="n">hv_gpu</span> <span class="o">=</span> <span class="n">cp</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">hv_list</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">cp</span><span class="o">.</span><span class="n">uint64</span><span class="p">)</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+            <span class="n">phv_gpu</span> <span class="o">=</span> <span class="p">(</span><span class="n">hv_gpu</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">_a_gpu</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">_b_gpu</span><span class="p">)</span> <span class="o">%</span> <span class="n">cp</span><span class="o">.</span><span class="n">uint64</span><span class="p">(</span><span class="n">_mersenne_prime</span><span class="p">)</span>
+            <span class="n">phv_gpu</span> <span class="o">=</span> <span class="n">cp</span><span class="o">.</span><span class="n">bitwise_and</span><span class="p">(</span><span class="n">phv_gpu</span><span class="p">,</span> <span class="n">cp</span><span class="o">.</span><span class="n">uint64</span><span class="p">(</span><span class="n">_max_hash</span><span class="p">))</span>
+            <span class="n">base_gpu</span> <span class="o">=</span> <span class="n">cp</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">hashvalues</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">cp</span><span class="o">.</span><span class="n">uint64</span><span class="p">)</span>
+            <span class="c1"># column-wise min without extra vstack</span>
+            <span class="n">col_min</span> <span class="o">=</span> <span class="n">cp</span><span class="o">.</span><span class="n">minimum</span><span class="p">(</span><span class="n">base_gpu</span><span class="p">,</span> <span class="n">cp</span><span class="o">.</span><span class="n">min</span><span class="p">(</span><span class="n">phv_gpu</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">))</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">hashvalues</span> <span class="o">=</span> <span class="n">cp</span><span class="o">.</span><span class="n">asnumpy</span><span class="p">(</span><span class="n">col_min</span><span class="p">)</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">uint64</span><span class="p">,</span> <span class="n">copy</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+            <span class="k">return</span>
+
+        <span class="c1"># CPU path</span>
+        <span class="n">hv</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">hv_list</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">uint64</span><span class="p">,</span> <span class="n">ndmin</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span><span class="o">.</span><span class="n">T</span>
+        <span class="n">phv</span> <span class="o">=</span> <span class="p">(</span><span class="n">hv</span> <span class="o">*</span> <span class="n">a</span> <span class="o">+</span> <span class="n">b</span><span class="p">)</span> <span class="o">%</span> <span class="n">_mersenne_prime</span>
+        <span class="n">phv</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">bitwise_and</span><span class="p">(</span><span class="n">phv</span><span class="p">,</span> <span class="n">_max_hash</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">hashvalues</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">minimum</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">hashvalues</span><span class="p">,</span> <span class="n">phv</span><span class="o">.</span><span class="n">min</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">))</span></div>
 
 
 <div class="viewcode-block" id="MinHash.jaccard">
@@ -387,15 +489,13 @@
 <div class="viewcode-block" id="MinHash.copy">
 <a class="viewcode-back" href="../../documentation.html#datasketch.MinHash.copy">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">copy</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">MinHash</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Returns:</span>
-<span class="sd">        MinHash: a copy of this MinHash by exporting its state.</span>
-
-<span class="sd">        &quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return a copy; preserves gpu_mode (rehydrates caches lazily).&quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="n">MinHash</span><span class="p">(</span>
             <span class="n">seed</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">seed</span><span class="p">,</span>
             <span class="n">hashfunc</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">hashfunc</span><span class="p">,</span>
             <span class="n">hashvalues</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">digest</span><span class="p">(),</span>
             <span class="n">permutations</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">permutations</span><span class="p">,</span>
+            <span class="n">gpu_mode</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_gpu_mode</span><span class="p">,</span>
         <span class="p">)</span></div>
 
 
@@ -539,8 +639,26 @@
             <span class="n">_m</span> <span class="o">=</span> <span class="n">m</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
             <span class="n">_m</span><span class="o">.</span><span class="n">update_batch</span><span class="p">(</span><span class="n">_b</span><span class="p">)</span>
             <span class="k">yield</span> <span class="n">_m</span></div>
-</div>
 
+
+    <span class="c1"># NOTE:</span>
+    <span class="c1"># CuPy device arrays (`_a_gpu`, `_b_gpu`) are not reliably picklable across</span>
+    <span class="c1"># environments and can inflate pickle size or fail on machines without CUDA.</span>
+    <span class="c1"># We therefore drop device state on pickle so round-tripped MinHash objects</span>
+    <span class="c1"># remain portable; callers can still use `gpu_mode=&quot;detect&quot;` to re-enable GPU.</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">__getstate__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">state</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="vm">__dict__</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+        <span class="c1"># Drop device arrays; keep gpu_mode as-is (portable across envs).</span>
+        <span class="n">state</span><span class="p">[</span><span class="s2">&quot;_a_gpu&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="n">state</span><span class="p">[</span><span class="s2">&quot;_b_gpu&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="k">return</span> <span class="n">state</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">__setstate__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">state</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="vm">__dict__</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">state</span><span class="p">)</span></div>
+
+        <span class="c1"># After unpickling we remain on CPU until update_batch decides backend.</span>
+
+    <span class="c1"># Caches will be recreated on first GPU use via _ensure_gpu_caches().</span>
 </pre></div>
 
            </div>

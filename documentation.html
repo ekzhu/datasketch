@@ -59,10 +59,10 @@
 <li class="toctree-l4"><a class="reference internal" href="#datasketch.MinHash.__len__"><code class="docutils literal notranslate"><span class="pre">MinHash.__len__()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="#datasketch.MinHash.__eq__"><code class="docutils literal notranslate"><span class="pre">MinHash.__eq__()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="#datasketch.MinHash.union"><code class="docutils literal notranslate"><span class="pre">MinHash.union()</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="#datasketch.MinHash.__hash__"><code class="docutils literal notranslate"><span class="pre">MinHash.__hash__</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="#datasketch.MinHash.__weakref__"><code class="docutils literal notranslate"><span class="pre">MinHash.__weakref__</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="#datasketch.MinHash.bulk"><code class="docutils literal notranslate"><span class="pre">MinHash.bulk()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="#datasketch.MinHash.generator"><code class="docutils literal notranslate"><span class="pre">MinHash.generator()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#datasketch.MinHash.__hash__"><code class="docutils literal notranslate"><span class="pre">MinHash.__hash__</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#datasketch.MinHash.__weakref__"><code class="docutils literal notranslate"><span class="pre">MinHash.__weakref__</span></code></a></li>
 </ul>
 </li>
 </ul>
@@ -260,7 +260,7 @@
 <h2>MinHash<a class="headerlink" href="#minhash" title="Link to this heading"></a></h2>
 <dl class="py class">
 <dt class="sig sig-object py" id="datasketch.MinHash">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">datasketch.</span></span><span class="sig-name descname"><span class="pre">MinHash</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">num_perm:</span> <span class="pre">int</span> <span class="pre">=</span> <span class="pre">128</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">seed:</span> <span class="pre">int</span> <span class="pre">=</span> <span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">hashfunc:</span> <span class="pre">~typing.Callable</span> <span class="pre">=</span> <span class="pre">&lt;function</span> <span class="pre">sha1_hash32&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">hashobj:</span> <span class="pre">object</span> <span class="pre">|</span> <span class="pre">None</span> <span class="pre">=</span> <span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">hashvalues:</span> <span class="pre">~collections.abc.Iterable</span> <span class="pre">|</span> <span class="pre">None</span> <span class="pre">=</span> <span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">permutations:</span> <span class="pre">tuple[~collections.abc.Iterable</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">~collections.abc.Iterable]</span> <span class="pre">|</span> <span class="pre">None</span> <span class="pre">=</span> <span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/datasketch/minhash.html#MinHash"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#datasketch.MinHash" title="Link to this definition"></a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">datasketch.</span></span><span class="sig-name descname"><span class="pre">MinHash</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">num_perm:</span> <span class="pre">int</span> <span class="pre">=</span> <span class="pre">128</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">seed:</span> <span class="pre">int</span> <span class="pre">=</span> <span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">gpu_mode:</span> <span class="pre">~typing.Literal['disable'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">'detect'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">'always']</span> <span class="pre">=</span> <span class="pre">'disable'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">hashfunc:</span> <span class="pre">~typing.Callable</span> <span class="pre">=</span> <span class="pre">&lt;function</span> <span class="pre">sha1_hash32&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">hashobj:</span> <span class="pre">object</span> <span class="pre">|</span> <span class="pre">None</span> <span class="pre">=</span> <span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">hashvalues:</span> <span class="pre">~collections.abc.Iterable</span> <span class="pre">|</span> <span class="pre">None</span> <span class="pre">=</span> <span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">permutations:</span> <span class="pre">tuple[~collections.abc.Iterable</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">~collections.abc.Iterable]</span> <span class="pre">|</span> <span class="pre">None</span> <span class="pre">=</span> <span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/datasketch/minhash.html#MinHash"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#datasketch.MinHash" title="Link to this definition"></a></dt>
 <dd><p>MinHash is a probabilistic data structure for computing
 <a class="reference external" href="https://en.wikipedia.org/wiki/Jaccard_index">Jaccard similarity</a> between sets.</p>
 <dl class="field-list simple">
@@ -270,6 +270,15 @@
 It will be ignored if <cite>hashvalues</cite> is not None.</p></li>
 <li><p><strong>seed</strong> (<em>int</em>) – The random seed controls the set of random
 permutation functions generated for this MinHash.</p></li>
+<li><p><strong>gpu_mode</strong> – <p>{‘disable’, ‘detect’, ‘always’}, default ‘disable’
+Controls GPU use in <a class="reference internal" href="#datasketch.MinHash.update_batch" title="datasketch.MinHash.update_batch"><code class="xref py py-meth docutils literal notranslate"><span class="pre">update_batch()</span></code></a>.</p>
+<ul>
+<li><p><code class="docutils literal notranslate"><span class="pre">'disable'</span></code> — always CPU.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">'detect'</span></code> — use GPU if available, otherwise CPU.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">'always'</span></code> — require GPU; raise <code class="docutils literal notranslate"><span class="pre">RuntimeError</span></code> if CuPy/CUDA</p></li>
+</ul>
+<p>is unavailable.</p>
+</p></li>
 <li><p><strong>hashfunc</strong> (<em>Callable</em>) – The hash function used by
 this MinHash.
 It takes the input passed to the <a class="reference internal" href="#datasketch.MinHash.update" title="datasketch.MinHash.update"><code class="xref py py-meth docutils literal notranslate"><span class="pre">update()</span></code></a> method and
@@ -289,6 +298,12 @@ can be specified for faster initialization using the existing
 </ul>
 </dd>
 </dl>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Hashing and permutation <em>generation</em> always run on CPU to preserve
+existing semantics; only the permutation application and the
+columnwise min-reduction inside <a class="reference internal" href="#datasketch.MinHash.update_batch" title="datasketch.MinHash.update_batch"><code class="xref py py-meth docutils literal notranslate"><span class="pre">update_batch()</span></code></a> may run on GPU.</p>
+</div>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
 <p>To save memory usage, consider using <a class="reference internal" href="#datasketch.LeanMinHash" title="datasketch.LeanMinHash"><code class="xref py py-class docutils literal notranslate"><span class="pre">datasketch.LeanMinHash</span></code></a>.</p>
@@ -312,7 +327,7 @@ with those created after.</p>
 </div>
 <dl class="py method">
 <dt class="sig sig-object py" id="datasketch.MinHash.__init__">
-<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">num_perm:</span> <span class="pre">int</span> <span class="pre">=</span> <span class="pre">128</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">seed:</span> <span class="pre">int</span> <span class="pre">=</span> <span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">hashfunc:</span> <span class="pre">~typing.Callable</span> <span class="pre">=</span> <span class="pre">&lt;function</span> <span class="pre">sha1_hash32&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">hashobj:</span> <span class="pre">object</span> <span class="pre">|</span> <span class="pre">None</span> <span class="pre">=</span> <span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">hashvalues:</span> <span class="pre">~collections.abc.Iterable</span> <span class="pre">|</span> <span class="pre">None</span> <span class="pre">=</span> <span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">permutations:</span> <span class="pre">tuple[~collections.abc.Iterable</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">~collections.abc.Iterable]</span> <span class="pre">|</span> <span class="pre">None</span> <span class="pre">=</span> <span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="reference internal" href="_modules/datasketch/minhash.html#MinHash.__init__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#datasketch.MinHash.__init__" title="Link to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">num_perm:</span> <span class="pre">int</span> <span class="pre">=</span> <span class="pre">128</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">seed:</span> <span class="pre">int</span> <span class="pre">=</span> <span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">gpu_mode:</span> <span class="pre">~typing.Literal['disable'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">'detect'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">'always']</span> <span class="pre">=</span> <span class="pre">'disable'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">hashfunc:</span> <span class="pre">~typing.Callable</span> <span class="pre">=</span> <span class="pre">&lt;function</span> <span class="pre">sha1_hash32&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">hashobj:</span> <span class="pre">object</span> <span class="pre">|</span> <span class="pre">None</span> <span class="pre">=</span> <span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">hashvalues:</span> <span class="pre">~collections.abc.Iterable</span> <span class="pre">|</span> <span class="pre">None</span> <span class="pre">=</span> <span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">permutations:</span> <span class="pre">tuple[~collections.abc.Iterable</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">~collections.abc.Iterable]</span> <span class="pre">|</span> <span class="pre">None</span> <span class="pre">=</span> <span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="reference internal" href="_modules/datasketch/minhash.html#MinHash.__init__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#datasketch.MinHash.__init__" title="Link to this definition"></a></dt>
 <dd></dd></dl>
 
 <dl class="py method">
@@ -353,16 +368,35 @@ function, which requires bytes as input):</p>
 <dd><p>Update this MinHash with new values.
 The values will be hashed using the hash function specified by
 the <cite>hashfunc</cite> argument in the constructor.</p>
+<p class="rubric">Notes</p>
+<ul class="simple">
+<li><p>Hashing of input values always runs on CPU.</p></li>
+<li><p>Permutation application + min-reduction may run on GPU</p></li>
+</ul>
+<dl class="simple">
+<dt>depending on <cite>gpu_mode</cite>:</dt><dd><p>‘disable’ : CPU
+‘detect’  : GPU if available else CPU
+‘always’  : GPU (error if unavailable)</p>
+</dd>
+</dl>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><p><strong>b</strong> (<em>Iterable</em>) – Values to be hashed using the hash function specified.</p>
 </dd>
 </dl>
-<p class="rubric">Example</p>
-<p>To update with new string values (using the default SHA1 hash
-function, which requires bytes as input):</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">minhash</span> <span class="o">=</span> <span class="n">Minhash</span><span class="p">()</span>
-<span class="n">minhash</span><span class="o">.</span><span class="n">update_batch</span><span class="p">([</span><span class="n">s</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="s2">&quot;utf-8&quot;</span><span class="p">)</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="p">[</span><span class="s2">&quot;token1&quot;</span><span class="p">,</span> <span class="s2">&quot;token2&quot;</span><span class="p">]])</span>
+<p class="rubric">Examples</p>
+<p>Basic usage with string values (default SHA1 hash, requires bytes):</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">datasketch</span><span class="w"> </span><span class="kn">import</span> <span class="n">MinHash</span>
+
+<span class="n">m</span> <span class="o">=</span> <span class="n">MinHash</span><span class="p">()</span>
+<span class="n">m</span><span class="o">.</span><span class="n">update_batch</span><span class="p">([</span><span class="n">s</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="s2">&quot;utf-8&quot;</span><span class="p">)</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="p">[</span><span class="s2">&quot;token1&quot;</span><span class="p">,</span> <span class="s2">&quot;token2&quot;</span><span class="p">]])</span>
+</pre></div>
+</div>
+<p>Using GPU mode if available:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">datasketch</span><span class="w"> </span><span class="kn">import</span> <span class="n">MinHash</span>
+
+<span class="n">m</span> <span class="o">=</span> <span class="n">MinHash</span><span class="p">(</span><span class="n">num_perm</span><span class="o">=</span><span class="mi">256</span><span class="p">,</span> <span class="n">gpu_mode</span><span class="o">=</span><span class="s2">&quot;detect&quot;</span><span class="p">)</span>
+<span class="n">m</span><span class="o">.</span><span class="n">update_batch</span><span class="p">([</span><span class="sa">b</span><span class="s2">&quot;token1&quot;</span><span class="p">,</span> <span class="sa">b</span><span class="s2">&quot;token2&quot;</span><span class="p">])</span>
 </pre></div>
 </div>
 </dd></dl>
@@ -455,8 +489,7 @@ All hash values are reset.</p>
 <dl class="py method">
 <dt class="sig sig-object py" id="datasketch.MinHash.copy">
 <span class="sig-name descname"><span class="pre">copy</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="#datasketch.MinHash" title="datasketch.minhash.MinHash"><span class="pre">MinHash</span></a></span></span><a class="reference internal" href="_modules/datasketch/minhash.html#MinHash.copy"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#datasketch.MinHash.copy" title="Link to this definition"></a></dt>
-<dd><p>Returns:
-MinHash: a copy of this MinHash by exporting its state.</p>
+<dd><p>Return a copy; preserves gpu_mode (rehydrates caches lazily).</p>
 </dd></dl>
 
 <dl class="py method">
@@ -508,17 +541,6 @@ but must be at least 2.</p>
 <span class="n">m</span> <span class="o">=</span> <span class="n">MinHash</span><span class="o">.</span><span class="n">union</span><span class="p">(</span><span class="n">m1</span><span class="p">,</span> <span class="n">m2</span><span class="p">)</span>
 </pre></div>
 </div>
-</dd></dl>
-
-<dl class="py attribute">
-<dt class="sig sig-object py" id="datasketch.MinHash.__hash__">
-<span class="sig-name descname"><span class="pre">__hash__</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#datasketch.MinHash.__hash__" title="Link to this definition"></a></dt>
-<dd></dd></dl>
-
-<dl class="py attribute">
-<dt class="sig sig-object py" id="datasketch.MinHash.__weakref__">
-<span class="sig-name descname"><span class="pre">__weakref__</span></span><a class="headerlink" href="#datasketch.MinHash.__weakref__" title="Link to this definition"></a></dt>
-<dd><p>list of weak references to the object (if defined)</p>
 </dd></dl>
 
 <dl class="py method">
@@ -583,6 +605,17 @@ will be used for all minhashes.</p></li>
     <span class="n">minhash</span>
 </pre></div>
 </div>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="datasketch.MinHash.__hash__">
+<span class="sig-name descname"><span class="pre">__hash__</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#datasketch.MinHash.__hash__" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="datasketch.MinHash.__weakref__">
+<span class="sig-name descname"><span class="pre">__weakref__</span></span><a class="headerlink" href="#datasketch.MinHash.__weakref__" title="Link to this definition"></a></dt>
+<dd><p>list of weak references to the object (if defined)</p>
 </dd></dl>
 
 </dd></dl>
@@ -659,8 +692,7 @@ Calling it raises a TypeError.</p>
 <dl class="py method">
 <dt class="sig sig-object py" id="datasketch.LeanMinHash.copy">
 <span class="sig-name descname"><span class="pre">copy</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="#datasketch.LeanMinHash" title="datasketch.lean_minhash.LeanMinHash"><span class="pre">LeanMinHash</span></a></span></span><a class="reference internal" href="_modules/datasketch/lean_minhash.html#LeanMinHash.copy"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#datasketch.LeanMinHash.copy" title="Link to this definition"></a></dt>
-<dd><p>Returns:
-MinHash: a copy of this MinHash by exporting its state.</p>
+<dd><p>Return a copy; preserves gpu_mode (rehydrates caches lazily).</p>
 </dd></dl>
 
 <dl class="py method">

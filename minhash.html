@@ -52,6 +52,8 @@
 <li class="toctree-l1"><a class="reference internal" href="lshforest.html">MinHash LSH Forest</a></li>
 <li class="toctree-l1 current"><a class="current reference internal" href="#">MinHash</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="#use-different-hash-functions">Use Different Hash Functions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#gpu-usage-experimental">GPU usage (experimental)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#gpu-runtime-comparisons">GPU runtime comparisons</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#common-issues-with-minhash">Common Issues with MinHash</a></li>
 </ul>
 </li>
@@ -91,13 +93,13 @@ similarity</a>
 arbitrary sizes in linear time using a small and fixed memory space. It
 can also be used to compute Jaccard similarity between data streams.
 MinHash is introduced by Andrei Z. Broder in this
-<a class="reference external" href="http://cs.brown.edu/courses/cs253/papers/nearduplicate.pdf">paper</a></p>
+<a class="reference external" href="http://cs.brown.edu/courses/cs253/papers/nearduplicate.pdf">paper</a>.</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">datasketch</span><span class="w"> </span><span class="kn">import</span> <span class="n">MinHash</span>
 
 <span class="n">data1</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;minhash&#39;</span><span class="p">,</span> <span class="s1">&#39;is&#39;</span><span class="p">,</span> <span class="s1">&#39;a&#39;</span><span class="p">,</span> <span class="s1">&#39;probabilistic&#39;</span><span class="p">,</span> <span class="s1">&#39;data&#39;</span><span class="p">,</span> <span class="s1">&#39;structure&#39;</span><span class="p">,</span> <span class="s1">&#39;for&#39;</span><span class="p">,</span>
-        <span class="s1">&#39;estimating&#39;</span><span class="p">,</span> <span class="s1">&#39;the&#39;</span><span class="p">,</span> <span class="s1">&#39;similarity&#39;</span><span class="p">,</span> <span class="s1">&#39;between&#39;</span><span class="p">,</span> <span class="s1">&#39;datasets&#39;</span><span class="p">]</span>
+         <span class="s1">&#39;estimating&#39;</span><span class="p">,</span> <span class="s1">&#39;the&#39;</span><span class="p">,</span> <span class="s1">&#39;similarity&#39;</span><span class="p">,</span> <span class="s1">&#39;between&#39;</span><span class="p">,</span> <span class="s1">&#39;datasets&#39;</span><span class="p">]</span>
 <span class="n">data2</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;minhash&#39;</span><span class="p">,</span> <span class="s1">&#39;is&#39;</span><span class="p">,</span> <span class="s1">&#39;a&#39;</span><span class="p">,</span> <span class="s1">&#39;probability&#39;</span><span class="p">,</span> <span class="s1">&#39;data&#39;</span><span class="p">,</span> <span class="s1">&#39;structure&#39;</span><span class="p">,</span> <span class="s1">&#39;for&#39;</span><span class="p">,</span>
-        <span class="s1">&#39;estimating&#39;</span><span class="p">,</span> <span class="s1">&#39;the&#39;</span><span class="p">,</span> <span class="s1">&#39;similarity&#39;</span><span class="p">,</span> <span class="s1">&#39;between&#39;</span><span class="p">,</span> <span class="s1">&#39;documents&#39;</span><span class="p">]</span>
+         <span class="s1">&#39;estimating&#39;</span><span class="p">,</span> <span class="s1">&#39;the&#39;</span><span class="p">,</span> <span class="s1">&#39;similarity&#39;</span><span class="p">,</span> <span class="s1">&#39;between&#39;</span><span class="p">,</span> <span class="s1">&#39;documents&#39;</span><span class="p">]</span>
 
 <span class="n">m1</span><span class="p">,</span> <span class="n">m2</span> <span class="o">=</span> <span class="n">MinHash</span><span class="p">(),</span> <span class="n">MinHash</span><span class="p">()</span>
 <span class="k">for</span> <span class="n">d</span> <span class="ow">in</span> <span class="n">data1</span><span class="p">:</span>
@@ -119,21 +121,20 @@ functions used in MinHash.</p>
 </pre></div>
 </div>
 <p>The trade-off for better accuracy is slower speed and higher memory
-usage. Because using more permutation functions means</p>
-<blockquote>
-<div><ol class="arabic simple">
-<li><p>more CPU instructions for every data value hashed and</p></li>
+usage, because using more permutation functions means:</p>
+<ol class="arabic simple">
+<li><p>more CPU instructions for every data value hashed, and</p></li>
 <li><p>more hash values to be stored.</p></li>
 </ol>
-</div></blockquote>
 <p>The speed and memory usage of MinHash are both linearly
 proportional to the number of permutation functions used.</p>
-<figure class="align-default">
+<figure class="align-center">
 <img alt="MinHash Benchmark" src="_images/minhash_benchmark_sha1.png" />
 </figure>
-<p>You can union two MinHash object using the <code class="docutils literal notranslate"><span class="pre">merge</span></code> function. This
-makes MinHash useful in parallel MapReduce style data analysis.</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># The makes m1 the union of m2 and the original m1.</span>
+<p>You can union two MinHash objects using the
+<a class="reference internal" href="documentation.html#datasketch.MinHash.merge" title="datasketch.MinHash.merge"><code class="xref py py-meth docutils literal notranslate"><span class="pre">datasketch.MinHash.merge()</span></code></a> function. This
+makes MinHash useful in parallel MapReduce-style data analysis.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># This makes m1 the union of m2 and the original m1.</span>
 <span class="n">m1</span><span class="o">.</span><span class="n">merge</span><span class="p">(</span><span class="n">m2</span><span class="p">)</span>
 </pre></div>
 </div>
@@ -149,9 +150,9 @@ cardinality. The analysis is presented in <a class="reference external" href="ht
 <a class="reference internal" href="documentation.html#datasketch.LeanMinHash" title="datasketch.LeanMinHash"><code class="xref py py-class docutils literal notranslate"><span class="pre">datasketch.LeanMinHash</span></code></a> to reduce your memory footprint.</p>
 <section id="use-different-hash-functions">
 <h2>Use Different Hash Functions<a class="headerlink" href="#use-different-hash-functions" title="Link to this heading"></a></h2>
-<p>MinHash by default uses the SHA1 hash funciton from Python’s built-in
+<p>MinHash by default uses the SHA1 hash function from Python’s built-in
 <a class="reference external" href="https://docs.python.org/3.7/library/hashlib.html">hashlib</a> library.
-You can also change the hash function using the <cite>hashfunc</cite> parameter
+You can also change the hash function using the <code class="docutils literal notranslate"><span class="pre">hashfunc</span></code> parameter
 in the constructor.</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Let&#39;s use MurmurHash3.</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">mmh3</span>
@@ -165,28 +166,81 @@ in the constructor.</p>
 <span class="n">m</span> <span class="o">=</span> <span class="n">MinHash</span><span class="p">(</span><span class="n">hashfunc</span><span class="o">=</span><span class="n">_hash_func</span><span class="p">)</span>
 </pre></div>
 </div>
-<p>Different hash functions have different performance-accuracy trade-off,
-you can use the benchmark code in <cite>benchmark/minhash_benchmark.py</cite> to
+<p>Different hash functions have different performance–accuracy trade-offs;
+you can use the benchmark code in <code class="docutils literal notranslate"><span class="pre">benchmark/minhash_benchmark.py</span></code> to
 run some tests. Here are the results for some popular hash functions
 available in Python.</p>
 <p>MurmurHash3: <a class="reference external" href="https://pypi.org/project/mmh3/">mmh3</a></p>
-<figure class="align-default">
-<img alt="MinHash Benchmark" src="_images/minhash_benchmark_mmh3.png" />
+<figure class="align-center">
+<img alt="MinHash Benchmark (mmh3)" src="_images/minhash_benchmark_mmh3.png" />
 </figure>
 <p><a class="reference external" href="https://pypi.org/project/xxhash/">xxhash</a></p>
-<figure class="align-default">
-<img alt="MinHash Benchmark" src="_images/minhash_benchmark_xxh.png" />
+<figure class="align-center">
+<img alt="MinHash Benchmark (xxhash)" src="_images/minhash_benchmark_xxh.png" />
 </figure>
 <p><a class="reference external" href="https://pypi.org/project/pyfarmhash">Farmhash</a></p>
-<figure class="align-default">
-<img alt="MinHash Benchmark" src="_images/minhash_benchmark_farmhash.png" />
+<figure class="align-center">
+<img alt="MinHash Benchmark (farmhash)" src="_images/minhash_benchmark_farmhash.png" />
 </figure>
+</section>
+<section id="gpu-usage-experimental">
+<h2>GPU usage (experimental)<a class="headerlink" href="#gpu-usage-experimental" title="Link to this heading"></a></h2>
+<p><a class="reference internal" href="documentation.html#datasketch.MinHash" title="datasketch.MinHash"><code class="xref py py-class docutils literal notranslate"><span class="pre">datasketch.MinHash</span></code></a> can optionally run part of
+<a class="reference internal" href="documentation.html#datasketch.MinHash.update_batch" title="datasketch.MinHash.update_batch"><code class="xref py py-meth docutils literal notranslate"><span class="pre">datasketch.MinHash.update_batch()</span></code></a> on a CUDA GPU
+via <a class="reference external" href="https://cupy.dev/">CuPy</a>. Hashing and permutation <em>generation</em> remain on CPU;
+only the permutation application and min-reduction may use the GPU.</p>
+<p>Control behavior with the constructor argument <code class="docutils literal notranslate"><span class="pre">gpu_mode</span></code>:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">'disable'</span></code> (default): always CPU.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">'detect'</span></code>: use GPU if available, otherwise fallback to CPU.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">'always'</span></code>: require GPU; raises <code class="docutils literal notranslate"><span class="pre">RuntimeError</span></code> if no CUDA device is available.</p></li>
+</ul>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Force CPU only</span>
+<span class="n">m</span> <span class="o">=</span> <span class="n">MinHash</span><span class="p">(</span><span class="n">num_perm</span><span class="o">=</span><span class="mi">256</span><span class="p">,</span> <span class="n">gpu_mode</span><span class="o">=</span><span class="s2">&quot;disable&quot;</span><span class="p">)</span>
+<span class="n">m</span><span class="o">.</span><span class="n">update_batch</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
+</pre></div>
+</div>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Require GPU (raises RuntimeError if no CUDA device)</span>
+<span class="n">m</span> <span class="o">=</span> <span class="n">MinHash</span><span class="p">(</span><span class="n">num_perm</span><span class="o">=</span><span class="mi">256</span><span class="p">,</span> <span class="n">gpu_mode</span><span class="o">=</span><span class="s2">&quot;always&quot;</span><span class="p">)</span>
+<span class="n">m</span><span class="o">.</span><span class="n">update_batch</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
+</pre></div>
+</div>
+<p><strong>Install.</strong> CuPy is an optional dependency (not installed by default).
+See CuPy’s docs for wheels matching your CUDA version, e.g.
+<code class="docutils literal notranslate"><span class="pre">pip</span> <span class="pre">install</span> <span class="pre">cupy-cuda12x</span></code> for CUDA 12.</p>
+</section>
+<section id="gpu-runtime-comparisons">
+<h2>GPU runtime comparisons<a class="headerlink" href="#gpu-runtime-comparisons" title="Link to this heading"></a></h2>
+<p>The optional GPU backend accelerates the permutation-and-min step in
+<a class="reference internal" href="documentation.html#datasketch.MinHash.update_batch" title="datasketch.MinHash.update_batch"><code class="xref py py-meth docutils literal notranslate"><span class="pre">datasketch.MinHash.update_batch()</span></code></a>. Hashing still runs on CPU to
+preserve <code class="docutils literal notranslate"><span class="pre">hashfunc</span></code> semantics.</p>
+<p><strong>Runtime vs number of permutations (fixed ``n``).</strong></p>
+<figure class="align-center" id="id2">
+<img alt="Runtime comparison CPU vs GPU across num_perm" src="_images/minhash_gpu_size_50000.png" />
+<figcaption>
+<p><span class="caption-text">Update time for a fixed batch size (<code class="docutils literal notranslate"><span class="pre">n</span> <span class="pre">=</span> <span class="pre">50,000</span></code>) as <code class="docutils literal notranslate"><span class="pre">num_perm</span></code> grows.
+GPU shows increasing speedups as <code class="docutils literal notranslate"><span class="pre">num_perm</span></code> increases because more parallel
+work amortizes transfer/launch overhead.</span><a class="headerlink" href="#id2" title="Link to this image"></a></p>
+</figcaption>
+</figure>
+<p><strong>Runtime vs batch size ``n`` (fixed ``num_perm``).</strong></p>
+<figure class="align-center" id="id3">
+<img alt="Runtime comparison CPU vs GPU across n" src="_images/minhash_gpu_vs_size_k256.png" />
+<figcaption>
+<p><span class="caption-text">Update time for a fixed number of permutations (e.g., <code class="docutils literal notranslate"><span class="pre">num_perm</span> <span class="pre">=</span> <span class="pre">256</span></code>)
+as batch size increases. Small batches are often CPU-favorable due to
+transfer overhead; larger batches benefit from GPU parallelism.</span><a class="headerlink" href="#id3" title="Link to this image"></a></p>
+</figcaption>
+</figure>
+<p><strong>Notes.</strong> Results vary by hardware and CuPy version. The GPU backend is
+controlled by <code class="docutils literal notranslate"><span class="pre">gpu_mode</span></code>: <code class="docutils literal notranslate"><span class="pre">&quot;disable&quot;</span></code> (CPU), <code class="docutils literal notranslate"><span class="pre">&quot;detect&quot;</span></code> (use GPU if
+available, otherwise CPU), and <code class="docutils literal notranslate"><span class="pre">&quot;always&quot;</span></code> (require GPU; raises if unavailable).</p>
 </section>
 <section id="common-issues-with-minhash">
 <h2>Common Issues with MinHash<a class="headerlink" href="#common-issues-with-minhash" title="Link to this heading"></a></h2>
 <ol class="arabic simple">
 <li><p><a class="reference external" href="https://github.com/ekzhu/datasketch/issues/85">High estimation error when set sizes differ by a lot</a></p></li>
-<li><p><a class="reference external" href="https://github.com/ekzhu/datasketch/issues/85">Use Inclusion-Exclusion Principle (i.e., merge() and count() functions) instead of jaccard() to estimate similarity</a></p></li>
+<li><p><a class="reference external" href="https://github.com/ekzhu/datasketch/issues/85">Use Inclusion–Exclusion Principle (i.e., merge() and count() functions) instead of jaccard() to estimate similarity</a></p></li>
 <li><p><a class="reference external" href="https://github.com/ekzhu/datasketch/issues/122">Storing MinHash for later use</a></p></li>
 </ol>
 <p><a class="reference external" href="https://github.com/ekzhu/datasketch/issues?utf8=%E2%9C%93&amp;q=minhash">See more issues</a></p>
