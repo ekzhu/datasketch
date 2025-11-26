@@ -148,39 +148,6 @@ class MinHash:
             self.permutations = self._init_permutations(num_perm)
         if len(self) != len(self.permutations[0]):
             raise ValueError("Numbers of hash values and permutations mismatch")
-        # GPU backend flag and caches
-        self._use_gpu: bool = False
-        self._a_gpu = None
-        self._b_gpu = None
-        # honor constructor flag
-        if use_gpu:
-            self.enable_gpu()
-
-    def enable_gpu(self) -> None:
-        """Enable GPU backend (CuPy) for `update_batch`.
-
-        Only the permutation application and min-reduction run on GPU; hashing and
-        permutation generation remain on CPU to preserve semantics.
-
-        Notes:
-          - Idempotent: safe to call multiple times.
-          - `copy()` preserves GPU mode if a device is available.
-          - Pickling intentionally resets to CPU and drops GPU caches.
-
-        """
-        if not _gpu_available():
-            raise RuntimeError("GPU backend unavailable: CuPy not installed or no CUDA device.")
-        # cache permutation vectors on device (do this once)
-        a, b = self.permutations
-        self._a_gpu = cp.asarray(a, dtype=cp.uint64)
-        self._b_gpu = cp.asarray(b, dtype=cp.uint64)
-        self._use_gpu = True
-
-    def disable_gpu(self) -> None:
-        """Disable GPU backend and release cached device arrays."""
-        self._use_gpu = False
-        self._a_gpu = None
-        self._b_gpu = None
 
         # GPU state
         self._gpu_mode: Literal["disable", "detect", "always"] = gpu_mode
@@ -253,7 +220,7 @@ class MinHash:
         phv = np.bitwise_and((a * hv + b) % _mersenne_prime, _max_hash)
         self.hashvalues = np.minimum(phv, self.hashvalues)
 
-    def update_batch(self, b: Iterable, *, use_gpu: Optional[bool] = None) -> None:
+    def update_batch(self, b: Iterable) -> None:
         """Update this MinHash with new values.
         The values will be hashed using the hash function specified by
         the `hashfunc` argument in the constructor.
@@ -268,8 +235,6 @@ class MinHash:
 
         Args:
             b (Iterable): Values to be hashed using the hash function specified.
-            use_gpu (Optional[bool]): Per-call override. If None, use the instance
-                flag. If True/False, force that backend for this call.
 
         Examples:
             Basic usage with string values (default SHA1 hash, requires bytes):
