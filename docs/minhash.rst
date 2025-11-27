@@ -182,42 +182,6 @@ preserve ``hashfunc`` semantics.
 controlled by ``gpu_mode``: ``"disable"`` (CPU), ``"detect"`` (use GPU if
 available, otherwise CPU), and ``"always"`` (require GPU; raises if unavailable).
 
-GPU-accelerated update_batch (experimental)
--------------------------------------------
-
-MinHash supports an *optional* GPU backend via CuPy for the permutation
-application and columnwise minimum reduction inside :meth:`MinHash.update_batch`.
-Hashing and permutation generation remain on CPU to preserve semantics.
-
-Enable either from the constructor or via a method:
-
-.. code-block:: python
-
-    from datasketch import MinHash
-    m = MinHash(num_perm=256, seed=7, use_gpu=True)
-    m.update_batch([b"t1", b"t2"])
-
-    # or:
-    m = MinHash(num_perm=256, seed=7)
-    m.enable_gpu()
-    m.update_batch(batch)
-
-Notes:
-- Requires CuPy and a CUDA-capable device.
-- Pickling resets to CPU mode (GPU caches are not serialized).
-- Performance gains depend on batch size and num_perm (see benchmark).
-
-Benchmark
----------
-Run:
-
-.. code-block:: bash
-
-    python benchmark/sketches/minhash_gpu_benchmark.py \
-      --sizes 1000 10000 50000 --num-perm 128 256 512 --repeats 5 --warmup --plot
-
-This produces CSV to stdout and figures in ``benchmark_out/``.
-
 Common Issues with MinHash
 --------------------------
 
