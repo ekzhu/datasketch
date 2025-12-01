@@ -14,7 +14,7 @@ jobs:
       matrix:
         python-version: ["3.10"]
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
       - name: Setup MongoDB
         uses: supercharge/mongodb-github-action@1.12.1
       - name: Install uv and setup python ${{ matrix.python-version }}

@@ -20,7 +20,7 @@ jobs:
           - 9042:9042
         options: --health-cmd "cqlsh --debug" --health-interval 10s --health-retries 15 --health-start-period 30s
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
       - name: Install uv and setup python ${{ matrix.python-version }}
         uses: astral-sh/setup-uv@v7
         with:
