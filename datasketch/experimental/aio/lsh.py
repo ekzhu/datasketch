@@ -116,7 +116,9 @@ class AsyncMinHashLSH:
     def __setstate__(self, state):
         state["_lock"] = asyncio.Lock()
         self.__dict__ = state
-        self.__init__(self._threshold, self._num_perm, self._weights, self._params, self._storage_config, self.prepickle)
+        self.__init__(
+            self._threshold, self._num_perm, self._weights, self._params, self._storage_config, self.prepickle
+        )
 
     @property
     def batch_size(self):

@@ -19,7 +19,11 @@ MONGO_URL = os.environ.get("MONGO_UNIT_TEST_URL")
 if MONGO_URL:
     STORAGE_CONFIG_MONGO["mongo"] = {"url": MONGO_URL}
 else:
-    STORAGE_CONFIG_MONGO["mongo"] = {"host": "localhost", "port": 27017, "db": "lsh_test"}
+    STORAGE_CONFIG_MONGO["mongo"] = {
+        "host": "localhost",
+        "port": 27017,
+        "db": "lsh_test",
+    }
 
 STORAGE_CONFIG_REDIS = {
     "basename": b"async_lsh_test",
@@ -85,7 +89,12 @@ class TestAsyncMinHashLSH:
             assert await lsh.is_empty()
             b1, r1 = lsh.b, lsh.r
 
-        async with AsyncMinHashLSH(storage_config=storage_config, threshold=0.8, weights=(0.2, 0.8), prepickle=False) as lsh:
+        async with AsyncMinHashLSH(
+            storage_config=storage_config,
+            threshold=0.8,
+            weights=(0.2, 0.8),
+            prepickle=False,
+        ) as lsh:
             b2, r2 = lsh.b, lsh.r
         assert b1 < b2
         assert r1 > r2
@@ -104,12 +113,22 @@ class TestAsyncMinHashLSH:
                         sizes.append(len(H))
                 assert all(sizes[0] == s for s in sizes)
 
-            if storage_config["type"] == "aioredis":
-                await _clear_redis()
+            await _clear_redis()
 
     async def test_insert(self, storage_config):
         async with AsyncMinHashLSH(storage_config=storage_config, threshold=0.5, num_perm=16, prepickle=False) as lsh:
-            seq = [b"aahhb", b"aahh", b"aahhc", b"aac", b"kld", b"bhg", b"kkd", b"yow", b"ppi", b"eer"]
+            seq = [
+                b"aahhb",
+                b"aahh",
+                b"aahhc",
+                b"aac",
+                b"kld",
+                b"bhg",
+                b"kkd",
+                b"yow",
+                b"ppi",
+                b"eer",
+            ]
             objs = [MinHash(16) for _ in range(len(seq))]
             for e, obj in zip(seq, objs):
                 for i in e:
@@ -225,7 +244,18 @@ class TestAsyncMinHashLSH:
         seq = frozenset(
             chain(
                 ("".join(s).encode() for s in _chunked_str),
-                (b"aahhb", b"aahh", b"aahhc", b"aac", b"kld", b"bhg", b"kkd", b"yow", b"ppi", b"eer"),
+                (
+                    b"aahhb",
+                    b"aahh",
+                    b"aahhc",
+                    b"aac",
+                    b"kld",
+                    b"bhg",
+                    b"kkd",
+                    b"yow",
+                    b"ppi",
+                    b"eer",
+                ),
             )
         )
         objs = [MinHash(16) for _ in range(len(seq))]
@@ -261,7 +291,18 @@ class TestAsyncMinHashLSH:
         seq = frozenset(
             chain(
                 ("".join(s).encode() for s in _chunked_str),
-                (b"aahhb", b"aahh", b"aahhc", b"aac", b"kld", b"bhg", b"kkd", b"yow", b"ppi", b"eer"),
+                (
+                    b"aahhb",
+                    b"aahh",
+                    b"aahhc",
+                    b"aac",
+                    b"kld",
+                    b"bhg",
+                    b"kkd",
+                    b"yow",
+                    b"ppi",
+                    b"eer",
+                ),
             )
         )
         objs = [MinHash(16) for _ in range(len(seq))]
@@ -270,7 +311,18 @@ class TestAsyncMinHashLSH:
                 obj.update(bytes([i]))
 
         data = [(e, m) for e, m in zip(seq, objs)]
-        keys_to_remove = (b"aahhb", b"aahh", b"aahhc", b"aac", b"kld", b"bhg", b"kkd", b"yow", b"ppi", b"eer")
+        keys_to_remove = (
+            b"aahhb",
+            b"aahh",
+            b"aahhc",
+            b"aac",
+            b"kld",
+            b"bhg",
+            b"kkd",
+            b"yow",
+            b"ppi",
+            b"eer",
+        )
         keys_left = frozenset(seq) - frozenset(keys_to_remove)
 
         async with AsyncMinHashLSH(storage_config=storage_config, threshold=0.5, num_perm=16, prepickle=False) as lsh:
@@ -312,7 +364,10 @@ class TestAsyncMinHashLSH:
 
     @pytest.mark.skipif(not DO_TEST_MONGO, reason="MongoDB-specific test")
     async def test_arbitrary_url(self):
-        config = {"type": "aiomongo", "mongo": {"url": MONGO_URL or "mongodb://localhost/lsh_test"}}
+        config = {
+            "type": "aiomongo",
+            "mongo": {"url": MONGO_URL or "mongodb://localhost/lsh_test"},
+        }
         async with AsyncMinHashLSH(storage_config=config, threshold=0.5, num_perm=16) as lsh:
             m1 = MinHash(16)
             m1.update(b"a")
@@ -354,7 +409,12 @@ class TestWeightedMinHashLSH:
         async with AsyncMinHashLSH(storage_config=storage_config, threshold=0.8, prepickle=False) as lsh:
             assert await lsh.is_empty()
             b1, r1 = lsh.b, lsh.r
-        async with AsyncMinHashLSH(storage_config=storage_config, threshold=0.8, weights=(0.2, 0.8), prepickle=False) as lsh:
+        async with AsyncMinHashLSH(
+            storage_config=storage_config,
+            threshold=0.8,
+            weights=(0.2, 0.8),
+            prepickle=False,
+        ) as lsh:
             b2, r2 = lsh.b, lsh.r
         assert b1 < b2
         assert r1 > r2
@@ -370,8 +430,7 @@ class TestWeightedMinHashLSH:
                 sizes = [len(H) for H in hashtables]
                 assert all(sizes[0] == s for s in sizes)
 
-            if storage_config["type"] == "aioredis":
-                await _clear_redis()
+            await _clear_redis()
 
     async def test_insert(self, storage_config):
         async with AsyncMinHashLSH(storage_config=storage_config, threshold=0.5, num_perm=4, prepickle=False) as lsh:
