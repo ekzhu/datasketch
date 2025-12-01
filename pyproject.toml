@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "datasketch"
-version = "1.7.1"
+version = "1.8.0"
 description = "Probabilistic data structures for processing and searching very large datasets"
 readme = "README.rst"
 requires-python = ">=3.9"

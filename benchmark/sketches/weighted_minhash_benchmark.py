@@ -16,9 +16,9 @@ def run_perf(dim, num_rep, sample_size):
     data = np.random.uniform(0, dim, (num_rep, dim))
     durs = []
     for i in range(num_rep):
-        start = time.clock()
+        start = time.perf_counter()
         wmg.minhash(data[i])
-        duration = (time.clock() - start) * 1000
+        duration = (time.perf_counter() - start) * 1000
         durs.append(duration)
     ave = np.mean(durs)
     logging.info("Generated %d minhashes, average time %.4f ms" % (num_rep, ave))
