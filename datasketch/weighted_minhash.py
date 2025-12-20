@@ -133,14 +133,15 @@ class WeightedMinHashGenerator:
             WeightedMinHash: The weighted MinHash.
 
         """
-        if not isinstance(v, collections.abc.Iterable):
-            raise TypeError("Input vector must be an iterable")
+        if not isinstance(v, collections.abc.Sized):
+            raise TypeError("Input vector must be sized")
         if not len(v) == self.dim:
             raise ValueError("Input dimension mismatch, expecting %d" % self.dim)
         if not isinstance(v, np.ndarray):
             v = np.array(v, dtype=np.float32)
         elif v.dtype != np.float32:
             v = v.astype(np.float32)
+        v: np.ndarray = v
         hashvalues = np.zeros((self.sample_size, 2), dtype=int)
         vzeros = v == 0
         if vzeros.all():
@@ -227,8 +228,8 @@ class WeightedMinHashGenerator:
                 doc_k = doc_cidx[doc_argmin]
 
                 all_hashvalues[it_doc] = np.zeros((self.sample_size, 2), dtype=int)
-
                 hashvalues = all_hashvalues[it_doc]
+                assert hashvalues is not None
                 hashvalues[:, 0], hashvalues[:, 1] = (
                     doc_k,
                     t[np.arange(self.sample_size), doc_begin + doc_argmin],
