@@ -2,8 +2,8 @@ from __future__ import annotations
 
 import copy
 import warnings
-from collections.abc import Generator, Iterable
-from typing import Callable, Optional
+from collections.abc import Generator, Iterable, Sized
+from typing import Callable, Optional, Union
 
 try:
     from typing import Literal  # py3.8+; if older, you can fallback to typing_extensions
@@ -114,10 +114,11 @@ class MinHash:
         gpu_mode: Literal["disable", "detect", "always"] = "disable",
         hashfunc: Callable = sha1_hash32,
         hashobj: Optional[object] = None,  # Deprecated.
-        hashvalues: Optional[Iterable] = None,
-        permutations: Optional[tuple[Iterable, Iterable]] = None,
+        hashvalues: Optional[Union[Sized, np.ndarray]] = None,
+        permutations: Optional[Union[tuple[Sized, Sized], np.ndarray]] = None,
     ) -> None:
         if hashvalues is not None:
+            hashvalues = self._parse_hashvalues(hashvalues)
             num_perm = len(hashvalues)
         if num_perm > _hash_range:
             # Because 1) we don't want the size to be too large, and
@@ -180,7 +181,7 @@ class MinHash:
             dtype=np.uint64,
         ).T
 
-    def _parse_hashvalues(self, hashvalues):
+    def _parse_hashvalues(self, hashvalues) -> np.ndarray:
         return np.array(hashvalues, dtype=np.uint64)
 
     def update(self, b) -> None:

@@ -252,9 +252,9 @@ class MinHashLSHBloom:
             raise ValueError("threshold must be in [0.0, 1.0]")
         if num_perm < 2:
             raise ValueError("Too few permutation functions")
-        if n <= 0:
+        if n is None or n <= 0:
             raise ValueError("n for LSHBloom must be >= 0")
-        if fp >= 1.0 or fp <= 0.0:
+        if fp is None or fp >= 1.0 or fp <= 0.0:
             raise ValueError("fp must be in (0.0, 1.0)")
         if save_dir is None:
             warnings.warn(
