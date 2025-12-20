@@ -222,7 +222,6 @@ class MinHashLSHEnsemble:
         curr_part = 0
         for key, minhash, size in entries:
             u = self.uppers[curr_part]
-            assert u is not None
             if size > u:
                 curr_part += 1
             for r in self.indexes[curr_part]:
