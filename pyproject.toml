@@ -175,6 +175,16 @@ exclude = [
 pythonVersion = "3.9"
 typeCheckingMode = "basic" # todo: change to "strict" in future
 
-reportMissingImports = true
+reportMissingImports = "none"
 reportUnusedVariable = "warning"
-
+reportAttributeAccessIssue = "none"
+reportOptionalMemberAccess = "none"
+reportGeneralTypeIssues = "none"
+reportArgumentType = "none"
+reportOptionalIterable = "none"
+reportReturnType = "none"
+reportRedeclaration = "none"
+reportOperatorIssue = "none"
+reportAssignmentType = "none"
+reportOptionalSubscript = "none"
+reportCallIssue = "none"

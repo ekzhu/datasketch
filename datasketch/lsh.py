@@ -3,12 +3,18 @@ from __future__ import annotations
 import pickle
 import struct
 from collections.abc import Hashable
-from typing import Callable, Optional, Union
+from typing import Callable, List, Optional, Union
 
 from scipy.integrate import quad as integrate
 
 from datasketch.minhash import MinHash
-from datasketch.storage import _random_name, ordered_storage, unordered_storage
+from datasketch.storage import (
+    OrderedStorage,
+    UnorderedStorage,
+    _random_name,
+    ordered_storage,
+    unordered_storage,
+)
 from datasketch.weighted_minhash import WeightedMinHash
 
 
@@ -183,7 +189,7 @@ class MinHashLSH:
             self._H = self._byteswap
 
         basename = storage_config.get("basename", _random_name(11))
-        self.hashtables = [
+        self.hashtables: List[UnorderedStorage] = [
             unordered_storage(
                 storage_config,
                 name=b"".join([basename, b"_bucket_", struct.pack(">H", i)]),
@@ -191,7 +197,7 @@ class MinHashLSH:
             for i in range(self.b)
         ]
         self.hashranges = [(i * self.r, (i + 1) * self.r) for i in range(self.b)]
-        self.keys = ordered_storage(storage_config, name=b"".join([basename, b"_keys"]))
+        self.keys: OrderedStorage = ordered_storage(storage_config, name=b"".join([basename, b"_keys"]))
 
     @property
     def buffer_size(self) -> int:
@@ -524,6 +530,7 @@ class MinHashLSH:
         return bytes(hs.byteswap().data)
 
     def _hashed_byteswap(self, hs):
+        assert self.hashfunc is not None
         return self.hashfunc(bytes(hs.byteswap().data))
 
     def _query_b(self, minhash, b):
