@@ -353,7 +353,7 @@ class MinHashLSH:
         """
         return type(self) is type(other) and self.h == other.h and self.b == other.b and self.r == other.r
 
-    def _merge(self, other: MinHashLSH, check_overlap: bool = False, buffer: bool = False) -> MinHashLSH:
+    def _merge(self, other: MinHashLSH, check_overlap: bool = False, buffer: bool = False) -> None:
         if self.__equivalent(other):
             if check_overlap and set(self.keys).intersection(set(other.keys)):
                 raise ValueError("The keys are overlapping, duplicate key exists.")
@@ -530,7 +530,8 @@ class MinHashLSH:
         return bytes(hs.byteswap().data)
 
     def _hashed_byteswap(self, hs):
-        assert self.hashfunc is not None
+        if self.hashfunc is None:
+            raise RuntimeError("Hash function not configured.")
         return self.hashfunc(bytes(hs.byteswap().data))
 
     def _query_b(self, minhash, b):
