@@ -128,7 +128,6 @@ class AsyncMinHashLSH:
         else:
             raise AttributeError("AsyncMinHash is not initialized.")
 
-        assert self.hashtables is not None
         for t in self.hashtables:
             t.batch_size = value
 
@@ -285,8 +284,6 @@ class AsyncMinHashLSH:
             raise ValueError("The given key already exists")
         Hs = [self._H(minhash.hashvalues[start:end]) for start, end in self.hashranges]
 
-        assert self.keys is not None
-        assert self.hashtables is not None
         fs = chain(
             (self.keys.insert(key, *Hs, buffer=buffer),),
             (hashtable.insert(H, key, buffer=buffer) for H, hashtable in zip(Hs, self.hashtables)),
@@ -298,7 +295,6 @@ class AsyncMinHashLSH:
         if len(minhash) != self.h:
             raise ValueError("Expecting minhash with length %d, got %d" % (self.h, len(minhash)))
 
-        assert self.hashtables is not None
         fs = (
             hashtable.get(self._H(minhash.hashvalues[start:end]))
             for (start, end), hashtable in zip(self.hashranges, self.hashtables)
@@ -310,7 +306,6 @@ class AsyncMinHashLSH:
 
     async def has_key(self, key):
         """See :class:`datasketch.MinHashLSH`."""
-        assert self.keys is not None
         return await self.keys.has_key(key)
 
     async def remove(self, key):
@@ -321,8 +316,6 @@ class AsyncMinHashLSH:
         if not await self.has_key(key):
             raise ValueError("The given key does not exist")
 
-        assert self.keys is not None
-        assert self.hashtables is not None
         for H, hashtable in zip(await self.keys.get(key), self.hashtables):
             await hashtable.remove_val(H, key, buffer=buffer)
             if not await hashtable.get(H):
@@ -332,7 +325,6 @@ class AsyncMinHashLSH:
 
     async def is_empty(self):
         """See :class:`datasketch.MinHashLSH`."""
-        assert self.hashtables is not None
         for t in self.hashtables:
             if await t.size() == 0:
                 return True
@@ -345,7 +337,6 @@ class AsyncMinHashLSH:
     async def _query_b(self, minhash, b):
         if len(minhash) != self.h:
             raise ValueError("Expecting minhash with length %d, got %d" % (self.h, len(minhash)))
-        assert self.hashtables is not None
         if b > len(self.hashtables):
             raise ValueError("b must be less or equal to the number of hash tables")
         fs = []
@@ -357,7 +348,6 @@ class AsyncMinHashLSH:
 
     async def get_counts(self):
         """See :class:`datasketch.MinHashLSH`."""
-        assert self.hashtables is not None
         fs = (hashtable.itemcounts() for hashtable in self.hashtables)
         return await asyncio.gather(*fs)
 
@@ -365,7 +355,6 @@ class AsyncMinHashLSH:
         """See :class:`datasketch.MinHashLSH`."""
         key_set = list(set(keys))
         hashtables = [unordered_storage({"type": "dict"}) for _ in range(self.b)]
-        assert self.keys is not None
         Hss = await self.keys.getmany(*key_set)
         for key, Hs in zip(key_set, Hss):
             for H, hashtable in zip(Hs, hashtables):
@@ -387,8 +376,6 @@ class AsyncMinHashLSHInsertionSession:
         await self.close()
 
     async def close(self):
-        assert self.lsh.keys is not None
-        assert self.lsh.hashtables is not None
         fs = chain((self.lsh.keys.empty_buffer(),), (hashtable.empty_buffer() for hashtable in self.lsh.hashtables))
         await asyncio.gather(*fs)
 
