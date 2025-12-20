@@ -227,9 +227,8 @@ class WeightedMinHashGenerator:
                 doc_argmin = np.argmin(doc_ln_a, axis=1)
                 doc_k = doc_cidx[doc_argmin]
 
-                all_hashvalues[it_doc] = np.zeros((self.sample_size, 2), dtype=int)
-                hashvalues = all_hashvalues[it_doc]
-                assert hashvalues is not None
+                hashvalues = np.zeros((self.sample_size, 2), dtype=int)
+                all_hashvalues[it_doc] = hashvalues
                 hashvalues[:, 0], hashvalues[:, 1] = (
                     doc_k,
                     t[np.arange(self.sample_size), doc_begin + doc_argmin],
