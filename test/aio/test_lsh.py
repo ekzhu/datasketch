@@ -37,15 +37,11 @@ DO_TEST_REDIS = os.environ.get("DO_TEST_REDIS") == "true"
 
 
 def _clear_mongo():
-    if not DO_TEST_MONGO:
-        return
     dsn = MONGO_URL or "mongodb://{host}:{port}".format(**STORAGE_CONFIG_MONGO["mongo"])
     MongoClient(dsn).drop_database(STORAGE_CONFIG_MONGO["mongo"]["db"])
 
 
 async def _clear_redis():
-    if not DO_TEST_REDIS:
-        return
     import redis.asyncio as redis
 
     r = redis.Redis(host="localhost", port=6379)
@@ -110,7 +106,8 @@ class TestAsyncMinHashLSH:
                         sizes.append(len(H))
                 assert all(sizes[0] == s for s in sizes)
 
-            await _clear_redis()
+            if storage_config["type"] == "aioredis":
+                await _clear_redis()
 
     async def test_insert(self, storage_config):
         async with AsyncMinHashLSH(storage_config=storage_config, threshold=0.5, num_perm=16, prepickle=False) as lsh:
@@ -427,7 +424,8 @@ class TestWeightedMinHashLSH:
                 sizes = [len(H) for H in hashtables]
                 assert all(sizes[0] == s for s in sizes)
 
-            await _clear_redis()
+            if storage_config["type"] == "aioredis":
+                await _clear_redis()
 
     async def test_insert(self, storage_config):
         async with AsyncMinHashLSH(storage_config=storage_config, threshold=0.5, num_perm=4, prepickle=False) as lsh:
