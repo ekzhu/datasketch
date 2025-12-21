@@ -46,15 +46,12 @@ def _clear_mongo():
 async def _clear_redis():
     if not DO_TEST_REDIS:
         return
-    try:
-        import redis.asyncio as redis
+    import redis.asyncio as redis
 
-        r = redis.Redis(host="localhost", port=6379)
-        async for key in r.scan_iter(match="async_lsh_test*"):
-            await r.delete(key)
-        await r.aclose()
-    except (ImportError, ConnectionError):
-        pass
+    r = redis.Redis(host="localhost", port=6379)
+    async for key in r.scan_iter(match="async_lsh_test*"):
+        await r.delete(key)
+    await r.aclose()
 
 
 @pytest.fixture(
@@ -487,7 +484,7 @@ class TestWeightedMinHashLSH:
                 for H in await table.keys():
                     table_vals = await table.get(H)
                     assert len(table_vals) > 0
-                    assert "a" not in table_vals
+                    assert b"a" not in table_vals
 
             with pytest.raises(ValueError):
                 await lsh.remove(b"c")
