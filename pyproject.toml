@@ -49,6 +49,7 @@ test = [
   "nose-exclude>=0.5.0",
   "pytest",
   "pytest-rerunfailures",
+  "pytest-asyncio",
 ]
 experimental_aio = ["aiounittest", "motor>3.6.0"]
 
@@ -160,3 +161,4 @@ include = ["pyproject.toml", "README.rst", "LICENSE", "datasketch/**"]
 minversion = "6.0"
 addopts = ["--strict-markers", "--color=yes"]
 testpaths = ["test"]
+asyncio_mode = "auto"
