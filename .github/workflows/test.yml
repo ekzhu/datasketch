@@ -8,7 +8,7 @@ jobs:
     runs-on: "ubuntu-22.04"
     strategy:
       matrix:
-        python-version: ["3.9", "3.10", "3.11", "3.12", "3.13", "3.14"]
+        python-version: ["3.9", "3.10", "3.11", "3.12", "3.13"]
 
     steps:
       - uses: actions/checkout@v6
@@ -18,19 +18,15 @@ jobs:
           activate-environment: true
           python-version: ${{ matrix.python-version }}
           enable-cache: true
-      - name: Install build dependencies
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y libev4 libev-dev
       - name: Install dependencies
         run: |
           uv pip install pytest
           if [ -f requirements.txt ]; then uv pip install -r requirements.txt; fi
       - name: Install package
         run: |
-          # Disable Cassandra optional extensions (faster testing) for Python < 3.12
+          # Disable Cassandra optional extensions (faster testing).
           export CASS_DRIVER_NO_EXTENSIONS=1
-          uv run pip install --no-binary cassandra-driver -e ."[test,experimental_aio,bloom]"
+          uv pip install -e ."[test,experimental_aio,bloom]"
           uv pip list
       - name: Test with pytest
         run: |
