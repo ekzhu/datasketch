@@ -60,6 +60,7 @@ class AsyncMinHashLSH:
         self._weights = weights
         self._params = params
         self.prepickle = storage_config["type"] == "aioredis" if prepickle is None else prepickle
+        self._require_bytes_keys = not self.prepickle
 
         if self._threshold > 1.0 or self._threshold < 0.0:
             raise ValueError("threshold must be in [0.0, 1.0]")
@@ -115,7 +116,9 @@ class AsyncMinHashLSH:
     def __setstate__(self, state):
         state["_lock"] = asyncio.Lock()
         self.__dict__ = state
-        self.__init__(self._threshold, self._num_perm, self._weights, self._params, self._storage_config)
+        self.__init__(
+            self._threshold, self._num_perm, self._weights, self._params, self._storage_config, self.prepickle
+        )
 
     @property
     def batch_size(self):
@@ -277,6 +280,11 @@ class AsyncMinHashLSH:
     async def _insert(self, key, minhash, check_duplication=True, buffer=False):
         if len(minhash) != self.h:
             raise ValueError("Expecting minhash with length %d, got %d" % (self.h, len(minhash)))
+        if self._require_bytes_keys and not isinstance(key, bytes):
+            raise TypeError(
+                f"prepickle=False requires bytes keys for non-dict storage, got {type(key).__name__}. "
+                "Either pass bytes keys or use prepickle=True for automatic serialization."
+            )
         if self.prepickle:
             key = pickle.dumps(key)
 
