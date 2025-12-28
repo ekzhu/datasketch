@@ -18,6 +18,10 @@ jobs:
           activate-environment: true
           python-version: ${{ matrix.python-version }}
           enable-cache: true
+      - name: Install build dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libev4 libev-dev
       - name: Install dependencies
         run: |
           uv pip install pytest
@@ -25,9 +29,7 @@ jobs:
       - name: Install package
         run: |
           # Disable Cassandra optional extensions (faster testing) for Python < 3.12
-          if [[ "${{ matrix.python-version }}" < "3.12" ]]; then
-            export CASS_DRIVER_NO_EXTENSIONS=1
-          fi
+          export CASS_DRIVER_NO_EXTENSIONS=1
           uv pip install -e ."[test,experimental_aio,bloom]"
           uv pip list
       - name: Test with pytest
