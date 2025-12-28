@@ -30,6 +30,19 @@ jobs:
           uv pip list
       - name: Test with pytest
         run: |
-          uv run pytest
+          uv run pytest --cov=datasketch
+      - name: Statistics
+        run: |
+          coverage report
+          coverage xml
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v5
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          files: ./coverage.xml
+          flags: unittests
+          env_vars: OS,PYTHON
+          name: codecov-umbrella
+          fail_ci_if_error: false
       - name: Minimize uv cache
         run: uv cache prune --ci
