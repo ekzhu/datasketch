@@ -24,8 +24,10 @@ jobs:
           if [ -f requirements.txt ]; then uv pip install -r requirements.txt; fi
       - name: Install package
         run: |
-          # Disable Cassandra optional extensions (faster testing).
-          export CASS_DRIVER_NO_EXTENSIONS=1
+          # Disable Cassandra optional extensions (faster testing) for Python < 3.12
+          if [[ "${{ matrix.python-version }}" < "3.12" ]]; then
+            export CASS_DRIVER_NO_EXTENSIONS=1
+          fi
           uv pip install -e ."[test,experimental_aio,bloom]"
           uv pip list
       - name: Test with pytest
