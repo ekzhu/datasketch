@@ -45,6 +45,7 @@ test = [
   "mock>=2.0.0",
   "mockredispy",
   "coverage",
+  "pytest-cov",
   "pymongo>=3.9.0",
   "nose>=1.3.7",
   "nose-exclude>=0.5.0",
@@ -160,6 +161,10 @@ include = ["pyproject.toml", "README.rst", "LICENSE", "datasketch/**"]
 
 [tool.pytest.ini_options]
 minversion = "6.0"
-addopts = ["--strict-markers", "--color=yes"]
+addopts = ["--strict-markers", "--color=yes", "--cov-report=xml"]
 testpaths = ["test"]
 asyncio_mode = "auto"
+
+[tool.coverage.run]
+source = ["datasketch"]
+omit = ["*/experimental/*", "*/tests/*", "*/test/*"]
