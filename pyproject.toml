@@ -94,7 +94,6 @@ exclude = [
   "dist",
   "docs",
   "examples",
-  "travis",
   "datasketch/hyperloglog_const.py",
 ]
 
