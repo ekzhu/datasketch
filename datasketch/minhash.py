@@ -2,15 +2,18 @@ from __future__ import annotations
 
 import copy
 import warnings
-from collections.abc import Generator, Iterable, Sized
-from typing import Callable, Optional, Union
+from collections.abc import Generator, Iterable
+from typing import TYPE_CHECKING, Callable, Optional, Union
 
 try:
     from typing import Literal  # py3.8+; if older, you can fallback to typing_extensions
-except Exception:
+except ImportError:
     from typing_extensions import Literal
 
 import numpy as np
+
+if TYPE_CHECKING:
+    from numpy.typing import ArrayLike
 
 # GPU backend
 try:
@@ -114,8 +117,8 @@ class MinHash:
         gpu_mode: Literal["disable", "detect", "always"] = "disable",
         hashfunc: Callable = sha1_hash32,
         hashobj: Optional[object] = None,  # Deprecated.
-        hashvalues: Optional[Union[Sized, np.ndarray]] = None,
-        permutations: Optional[Union[tuple[Sized, Sized], np.ndarray]] = None,
+        hashvalues: Optional[ArrayLike] = None,
+        permutations: Optional[Union[tuple[ArrayLike, ArrayLike], ArrayLike]] = None,
     ) -> None:
         if hashvalues is not None:
             num_perm = len(hashvalues)
