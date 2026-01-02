@@ -276,7 +276,7 @@ if cassandra is not None:
         QUERY_DROP_KEYSPACE = "DROP KEYSPACE IF EXISTS {}"
 
         @classmethod
-        def get_session(cls, seeds=None, **kwargs):
+        def get_session(cls, seeds, **kwargs):
             _ = kwargs
             keyspace = kwargs["keyspace"]
             replication = kwargs["replication"]
