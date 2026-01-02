@@ -306,7 +306,8 @@
         <span class="n">entries</span><span class="o">.</span><span class="n">sort</span><span class="p">(</span><span class="n">key</span><span class="o">=</span><span class="k">lambda</span> <span class="n">e</span><span class="p">:</span> <span class="n">e</span><span class="p">[</span><span class="mi">2</span><span class="p">])</span>
         <span class="n">curr_part</span> <span class="o">=</span> <span class="mi">0</span>
         <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">minhash</span><span class="p">,</span> <span class="n">size</span> <span class="ow">in</span> <span class="n">entries</span><span class="p">:</span>
-            <span class="k">if</span> <span class="n">size</span> <span class="o">&gt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">uppers</span><span class="p">[</span><span class="n">curr_part</span><span class="p">]:</span>
+            <span class="n">u</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">uppers</span><span class="p">[</span><span class="n">curr_part</span><span class="p">]</span>
+            <span class="k">if</span> <span class="n">size</span> <span class="o">&gt;</span> <span class="n">u</span><span class="p">:</span>
                 <span class="n">curr_part</span> <span class="o">+=</span> <span class="mi">1</span>
             <span class="k">for</span> <span class="n">r</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">indexes</span><span class="p">[</span><span class="n">curr_part</span><span class="p">]:</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">indexes</span><span class="p">[</span><span class="n">curr_part</span><span class="p">][</span><span class="n">r</span><span class="p">]</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="n">minhash</span><span class="p">)</span></div>
@@ -381,7 +382,7 @@
   <hr/>
 
   <div role="contentinfo">
-    <p>&#169; Copyright 2025, Eric Zhu.</p>
+    <p>&#169; Copyright 2026, Eric Zhu.</p>
   </div>
 
   Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
