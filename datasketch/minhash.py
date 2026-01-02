@@ -118,7 +118,6 @@ class MinHash:
         permutations: Optional[Union[tuple[Sized, Sized], np.ndarray]] = None,
     ) -> None:
         if hashvalues is not None:
-            hashvalues = self._parse_hashvalues(hashvalues)
             num_perm = len(hashvalues)
         if num_perm > _hash_range:
             # Because 1) we don't want the size to be too large, and
