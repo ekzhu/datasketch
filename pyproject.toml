@@ -21,6 +21,7 @@ classifiers = [
   "Programming Language :: Python :: 3.10",
   "Programming Language :: Python :: 3.11",
   "Programming Language :: Python :: 3.12",
+  "Programming Language :: Python :: 3.13",
 ]
 dependencies = ["numpy>=1.11", "scipy>=1.0.0"]
 
@@ -44,6 +45,7 @@ test = [
   "mock>=2.0.0",
   "mockredispy",
   "coverage",
+  "pytest-cov",
   "pymongo>=3.9.0",
   "nose>=1.3.7",
   "nose-exclude>=0.5.0",
@@ -92,7 +94,6 @@ exclude = [
   "dist",
   "docs",
   "examples",
-  "travis",
   "datasketch/hyperloglog_const.py",
 ]
 
@@ -159,7 +160,7 @@ include = ["pyproject.toml", "README.rst", "LICENSE", "datasketch/**"]
 
 [tool.pytest.ini_options]
 minversion = "6.0"
-addopts = ["--strict-markers", "--color=yes"]
+addopts = ["--strict-markers", "--color=yes", "--cov-report=xml"]
 testpaths = ["test"]
 asyncio_mode = "auto"
 
@@ -190,3 +191,7 @@ reportOperatorIssue = "none"
 reportAssignmentType = "none"
 reportOptionalSubscript = "none"
 reportCallIssue = "none"
+
+[tool.coverage.run]
+source = ["datasketch"]
+omit = ["*/experimental/*", "*/tests/*", "*/test/*"]

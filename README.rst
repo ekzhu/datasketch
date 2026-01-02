@@ -7,6 +7,9 @@ datasketch: Big Data Looks Small
 .. image:: https://zenodo.org/badge/DOI/10.5281/zenodo.598238.svg
    :target: https://zenodo.org/doi/10.5281/zenodo.598238
 
+.. image:: https://codecov.io/gh/ekzhu/datasketch/branch/master/graph/badge.svg
+    :target: https://codecov.io/gh/ekzhu/datasketch
+
 datasketch gives you probabilistic data structures that can process and
 search very large amount of data super fast, with little loss of
 accuracy.
