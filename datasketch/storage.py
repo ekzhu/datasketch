@@ -26,7 +26,7 @@ except ImportError:
     c_concurrent = None
 
 
-def ordered_storage(config, name=None):
+def ordered_storage(config, name=None) -> "OrderedStorage":
     """Return ordered storage system based on the specified config.
 
     The canonical example of such a storage container is
@@ -62,10 +62,10 @@ def ordered_storage(config, name=None):
         return RedisListStorage(config, name=name)
     if tp == "cassandra":
         return CassandraListStorage(config, name=name)
-    return None
+    raise ValueError(f"Unknown storage type: {tp}")
 
 
-def unordered_storage(config, name=None):
+def unordered_storage(config, name=None) -> "UnorderedStorage":
     """Return an unordered storage system based on the specified config.
 
     The canonical example of such a storage container is
@@ -100,7 +100,7 @@ def unordered_storage(config, name=None):
         return RedisSetStorage(config, name=name)
     if tp == "cassandra":
         return CassandraSetStorage(config, name=name)
-    return None
+    raise ValueError(f"Unknown storage type: {tp}")
 
 
 class Storage(ABC):
@@ -144,7 +144,7 @@ class Storage(ABC):
         pass
 
     @abstractmethod
-    def remove(self, *keys):
+    def remove(self, *keys, **kwargs):
         """Remove `keys` from storage."""
         pass
 
@@ -154,12 +154,12 @@ class Storage(ABC):
         pass
 
     @abstractmethod
-    def size(self):
+    def size(self) -> int:
         """Return size of storage with respect to number of keys."""
         pass
 
     @abstractmethod
-    def itemcounts(self, **kwargs):
+    def itemcounts(self, **kwargs) -> dict:
         """Returns the number of items stored under each key."""
         pass
 
@@ -167,6 +167,14 @@ class Storage(ABC):
     def has_key(self, key):
         """Determines whether the key is in the storage or not."""
         pass
+
+    @property
+    def buffer_size(self) -> int:
+        return getattr(self, "_buffer_size", 50000)
+
+    @buffer_size.setter
+    def buffer_size(self, value: int):
+        self._buffer_size = value
 
     def status(self):
         return {"keyspace_size": len(self)}

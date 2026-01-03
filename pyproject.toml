@@ -164,6 +164,34 @@ addopts = ["--strict-markers", "--color=yes", "--cov-report=xml"]
 testpaths = ["test"]
 asyncio_mode = "auto"
 
+[tool.pyright]
+include = ["datasketch"]
+exclude = [
+  "benchmark",
+  "docs",
+  "examples",
+  "test",
+  "travis",
+  "**/.venv/**",
+  "**/__pycache__",
+]
+pythonVersion = "3.9"
+typeCheckingMode = "basic" # todo: change to "strict" in future
+
+reportMissingImports = "none"
+reportUnusedVariable = "warning"
+reportAttributeAccessIssue = "none"
+reportOptionalMemberAccess = "none"
+reportGeneralTypeIssues = "none"
+reportArgumentType = "none"
+reportOptionalIterable = "none"
+reportReturnType = "none"
+reportRedeclaration = "none"
+reportOperatorIssue = "none"
+reportAssignmentType = "none"
+reportOptionalSubscript = "none"
+reportCallIssue = "none"
+
 [tool.coverage.run]
 source = ["datasketch"]
 omit = ["*/experimental/*", "*/tests/*", "*/test/*"]

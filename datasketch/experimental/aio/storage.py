@@ -332,10 +332,10 @@ if redis is not None:
 
     class AsyncRedisListStorage(OrderedStorage, AsyncRedisStorage):
         async def keys(self):
-            return await self._redis.hkeys(self._name)
+            return await self._redis.hkeys(self._name)  # type: ignore
 
         async def redis_keys(self):
-            return await self._redis.hvals(self._name)
+            return await self._redis.hvals(self._name)  # type: ignore
 
         def status(self):
             status = self._parse_config(self.config["redis"])
@@ -374,8 +374,8 @@ if redis is not None:
                 await self._buffer.lrem(redis_key, val)
             else:
                 await self._redis.lrem(redis_key, val)
-                if not await self._redis.exists(redis_key):
-                    await self._redis.hdel(self._name, redis_key)
+                if not await self._redis.exists(redis_key):  # type: ignore
+                    await self._redis.hdel(self._name, redis_key)  # type: ignore
 
         async def insert(self, key, *vals, **kwargs):
             # Using buffer=True outside of an `insertion_session`
@@ -394,7 +394,7 @@ if redis is not None:
             await r.rpush(redis_key, *values)
 
         async def size(self):
-            return await self._redis.hlen(self._name)
+            return await self._redis.hlen(self._name)  # type: ignore
 
         async def itemcounts(self):
             pipe = self._redis.pipeline()
@@ -409,7 +409,7 @@ if redis is not None:
             return await r.llen(k)
 
         async def has_key(self, key):
-            return await self._redis.hexists(self._name, key)
+            return await self._redis.hexists(self._name, key)  # type: ignore
 
         async def empty_buffer(self):
             await self._buffer.execute()
@@ -429,8 +429,8 @@ if redis is not None:
                 await self._buffer.srem(redis_key, val)
             else:
                 await self._redis.srem(redis_key, val)
-                if not await self._redis.exists(redis_key):
-                    await self._redis.hdel(self._name, redis_key)
+                if not await self._redis.exists(redis_key):  # type: ignore
+                    await self._redis.hdel(self._name, redis_key)  # type: ignore
 
         async def _insert(self, r, key, *values):
             redis_key = self.redis_key(key)
