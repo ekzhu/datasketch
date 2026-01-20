@@ -12,7 +12,8 @@ from itertools import chain
 
 from datasketch.storage import OrderedStorage, Storage, UnorderedStorage, _random_name
 
-# Try to import RedisStorage (only available when redis is installed)
+# RedisStorage is only available when redis package is installed (optional dependency)
+# Import it conditionally to avoid ImportError when redis is not installed
 try:
     from datasketch.storage import RedisStorage
 except ImportError:
@@ -307,6 +308,8 @@ if motor is not None and ReturnDocument is not None:
                 await self._collection.find_one_and_delete({"key": key, "vals": val})
 
 
+# Redis-based async storage classes are only defined when both redis package
+# and RedisStorage are available (optional dependencies)
 if redis is not None and RedisStorage is not None:
 
     class AsyncRedisBuffer(redis.client.Pipeline):
