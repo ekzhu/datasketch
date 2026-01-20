@@ -10,7 +10,13 @@ import os
 from abc import ABCMeta
 from itertools import chain
 
-from datasketch.storage import OrderedStorage, RedisStorage, Storage, UnorderedStorage, _random_name
+from datasketch.storage import OrderedStorage, Storage, UnorderedStorage, _random_name
+
+# Try to import RedisStorage (only available when redis is installed)
+try:
+    from datasketch.storage import RedisStorage
+except ImportError:
+    RedisStorage = None
 
 ABC = ABCMeta("ABC", (object,), {})
 
@@ -301,7 +307,7 @@ if motor is not None and ReturnDocument is not None:
                 await self._collection.find_one_and_delete({"key": key, "vals": val})
 
 
-if redis is not None:
+if redis is not None and RedisStorage is not None:
 
     class AsyncRedisBuffer(redis.client.Pipeline):
         def __init__(self, connection_pool, response_callbacks, transaction, buffer_size, shard_hint=None):
