@@ -1,15 +1,26 @@
-"""Warning.
+"""Deprecated experimental module.
 
-datasketch.experimental is dedicated to new modules that are to be merged into
-the stable interface of datasketch. So their interfaces may change in future
-versions.
+.. deprecated::
+    The `datasketch.experimental` module is deprecated and will be removed in a future version.
+    Please use `datasketch.aio` instead:
 
-To add a new class or function, register it here in this file. For example:
+    Old: ``from datasketch.experimental import AsyncMinHashLSH``
+    New: ``from datasketch.aio import AsyncMinHashLSH``
 
-from new_module import NewModuleClass
-
+    Or simply: ``from datasketch import AsyncMinHashLSH``
 """
 
-from datasketch.experimental.aio.lsh import AsyncMinHashLSH
+import warnings
+
+warnings.warn(
+    "datasketch.experimental is deprecated. "
+    "Use 'from datasketch.aio import AsyncMinHashLSH' or "
+    "'from datasketch import AsyncMinHashLSH' instead.",
+    DeprecationWarning,
+    stacklevel=2,
+)
+
+# Re-export from new location for backward compatibility
+from datasketch.aio import AsyncMinHashLSH
 
 __all__ = ["AsyncMinHashLSH"]

@@ -10,7 +10,7 @@ import pytest
 from motor.motor_asyncio import AsyncIOMotorClient
 from pymongo import MongoClient
 
-from datasketch.experimental.aio.lsh import AsyncMinHashLSH
+from datasketch.aio import AsyncMinHashLSH
 from datasketch.minhash import MinHash
 from datasketch.weighted_minhash import WeightedMinHashGenerator
 
