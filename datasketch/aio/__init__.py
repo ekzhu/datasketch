@@ -19,6 +19,7 @@ Example:
                 m.update(b"data")
                 await lsh.insert("key", m)
                 result = await lsh.query(m)
+
 """
 
 from datasketch.aio.lsh import (
@@ -29,6 +30,6 @@ from datasketch.aio.lsh import (
 
 __all__ = [
     "AsyncMinHashLSH",
-    "AsyncMinHashLSHInsertionSession",
     "AsyncMinHashLSHDeleteSession",
+    "AsyncMinHashLSHInsertionSession",
 ]

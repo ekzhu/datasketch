@@ -18,7 +18,7 @@ warnings.warn(
 )
 
 # Re-export from new location for backward compatibility
-from datasketch.aio import (
+from datasketch.aio import (  # noqa: E402
     AsyncMinHashLSH,
     AsyncMinHashLSHDeleteSession,
     AsyncMinHashLSHInsertionSession,
@@ -26,6 +26,6 @@ from datasketch.aio import (
 
 __all__ = [
     "AsyncMinHashLSH",
-    "AsyncMinHashLSHInsertionSession",
     "AsyncMinHashLSHDeleteSession",
+    "AsyncMinHashLSHInsertionSession",
 ]

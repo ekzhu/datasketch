@@ -30,8 +30,8 @@ except ImportError:
     AsyncMinHashLSH = None  # type: ignore[misc,assignment]
 
 __all__ = [
-    "AsyncMinHashLSH",
     "HNSW",
+    "AsyncMinHashLSH",
     "HyperLogLog",
     "HyperLogLogPlusPlus",
     "LeanMinHash",

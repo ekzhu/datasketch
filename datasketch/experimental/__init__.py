@@ -21,6 +21,6 @@ warnings.warn(
 )
 
 # Re-export from new location for backward compatibility
-from datasketch.aio import AsyncMinHashLSH
+from datasketch.aio import AsyncMinHashLSH  # noqa: E402
 
 __all__ = ["AsyncMinHashLSH"]
