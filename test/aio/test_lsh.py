@@ -356,6 +356,37 @@ class TestAsyncMinHashLSH:
             for table in counts:
                 assert sum(table.values()) == 2
 
+    async def test_get_subset_counts(self, storage_config):
+        """Test get_subset_counts which uses the getmany() method."""
+        async with AsyncMinHashLSH(storage_config=storage_config, threshold=0.5, num_perm=16, prepickle=False) as lsh:
+            m1 = MinHash(16)
+            m1.update(b"a")
+            m2 = MinHash(16)
+            m2.update(b"b")
+            m3 = MinHash(16)
+            m3.update(b"c")
+            await lsh.insert(b"a", m1)
+            await lsh.insert(b"b", m2)
+            await lsh.insert(b"c", m3)
+
+            # Test get_subset_counts with a subset of keys
+            subset_counts = await lsh.get_subset_counts(b"a", b"b")
+            assert len(subset_counts) == lsh.b
+            for table in subset_counts:
+                assert sum(table.values()) == 2
+
+            # Test with all keys
+            all_counts = await lsh.get_subset_counts(b"a", b"b", b"c")
+            assert len(all_counts) == lsh.b
+            for table in all_counts:
+                assert sum(table.values()) == 3
+
+            # Test with single key
+            single_counts = await lsh.get_subset_counts(b"a")
+            assert len(single_counts) == lsh.b
+            for table in single_counts:
+                assert sum(table.values()) == 1
+
     @pytest.mark.skipif(not DO_TEST_MONGO, reason="MongoDB-specific test")
     async def test_arbitrary_url(self):
         config = {
