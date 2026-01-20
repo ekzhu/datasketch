@@ -10,7 +10,14 @@ import os
 from abc import ABCMeta
 from itertools import chain
 
-from datasketch.storage import OrderedStorage, RedisStorage, Storage, UnorderedStorage, _random_name
+from datasketch.storage import OrderedStorage, Storage, UnorderedStorage, _random_name
+
+# RedisStorage is only available when redis package is installed (optional dependency)
+# Import it conditionally to avoid ImportError when redis is not installed
+try:
+    from datasketch.storage import RedisStorage
+except ImportError:
+    RedisStorage = None
 
 ABC = ABCMeta("ABC", (object,), {})
 
@@ -301,7 +308,9 @@ if motor is not None and ReturnDocument is not None:
                 await self._collection.find_one_and_delete({"key": key, "vals": val})
 
 
-if redis is not None:
+# Redis-based async storage classes are only defined when both redis package
+# and RedisStorage are available (optional dependencies)
+if redis is not None and RedisStorage is not None:
 
     class AsyncRedisBuffer(redis.client.Pipeline):
         def __init__(self, connection_pool, response_callbacks, transaction, buffer_size, shard_hint=None):
