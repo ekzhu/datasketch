@@ -53,7 +53,8 @@ test = [
   "pytest-rerunfailures",
   "pytest-asyncio",
 ]
-experimental_aio = ["aiounittest", "motor>3.6.0"]
+aio = ["aiounittest", "motor>3.6.0"]
+experimental_aio = ["aiounittest", "motor>3.6.0"]  # Deprecated alias for 'aio'
 
 [project.urls]
 Homepage = "https://ekzhu.github.io/datasketch"
@@ -194,4 +195,4 @@ reportCallIssue = "none"
 
 [tool.coverage.run]
 source = ["datasketch"]
-omit = ["*/experimental/*", "*/tests/*", "*/test/*"]
+omit = ["*/tests/*", "*/test/*"]
