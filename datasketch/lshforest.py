@@ -113,15 +113,15 @@ class MinHashLSHForest:
             raise ValueError("k must be positive")
         if len(minhash) < self.k * self.l:
             raise ValueError("The num_perm of MinHash out of range")
-        results = set()
+        results = {}
         r = self.k
         while r > 0:
             for key in self._query(minhash, r, self.l):
-                results.add(key)
+                results[key]=''
                 if len(results) >= k:
-                    return list(results)
+                    return list(results.keys())
             r -= 1
-        return list(results)
+        return list(results.keys())
 
     def get_minhash_hashvalues(self, key: Hashable) -> np.ndarray:
         """Returns the hashvalues from the MinHash object that corresponds to the given key in the LSHForest,
