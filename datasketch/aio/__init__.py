@@ -13,7 +13,8 @@ Example:
             async with AsyncMinHashLSH(
                 storage_config={"type": "aiomongo", "mongo": {"host": "localhost", "port": 27017}},
                 threshold=0.5,
-                num_perm=128
+                num_perm=128,
+                prepickle=True,  # Enable string keys
             ) as lsh:
                 m = MinHash(num_perm=128)
                 m.update(b"data")
