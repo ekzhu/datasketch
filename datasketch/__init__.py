@@ -23,9 +23,15 @@ from datasketch.weighted_minhash import WeightedMinHash, WeightedMinHashGenerato
 WeightedMinHashLSH = MinHashLSH
 WeightedMinHashLSHForest = MinHashLSHForest
 
+# Optional async export (requires motor or redis.asyncio)
+try:
+    from datasketch.aio import AsyncMinHashLSH
+except ImportError:
+    AsyncMinHashLSH = None  # type: ignore[misc,assignment]
 
 __all__ = [
     "HNSW",
+    "AsyncMinHashLSH",
     "HyperLogLog",
     "HyperLogLogPlusPlus",
     "LeanMinHash",
