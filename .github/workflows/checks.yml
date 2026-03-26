@@ -25,6 +25,21 @@ jobs:
       - name: Minimize uv cache
         run: uv cache prune --ci
 
+  ty:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - uses: astral-sh/setup-uv@v7
+        with:
+          activate-environment: true
+          python-version: "3.10"
+          enable-cache: true
+      - name: Test ty
+        run: |
+          uvx ty check
+      - name: Minimize uv cache
+        run: uv cache prune --ci
+
   link-check:
     runs-on: ubuntu-latest
     steps:
