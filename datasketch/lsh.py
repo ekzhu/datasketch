@@ -471,7 +471,7 @@ class MinHashLSH:
         # union candidates across bands for each query, then intersect across the
         # buffered queries to match repeated calls to `query()`.
         per_query_result_sets = [
-            set().union(*(set(result_list) for result_list in query_result_lists))
+            set().union(*query_result_lists)
             for query_result_lists in zip(*collected_result_lists)
         ]
         if not per_query_result_sets:
