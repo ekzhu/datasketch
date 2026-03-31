@@ -124,6 +124,24 @@ class TestMinHashLSH(unittest.TestCase):
         self.assertEqual(buffered_result, direct_result)
         self.assertEqual(buffered_result, {0, 1})
 
+    def test_query_buffer_with_prepickle(self):
+        lsh = MinHashLSH(threshold=0.5, num_perm=32, prepickle=True)
+        docs = []
+        for tokens in ([b"a", b"b", b"c"], [b"a", b"b", b"d"], [b"x", b"y", b"z"]):
+            minhash = MinHash(num_perm=32)
+            for token in tokens:
+                minhash.update(token)
+            docs.append(minhash)
+        for key, minhash in enumerate(docs):
+            lsh.insert(key, minhash)
+
+        lsh.add_to_query_buffer(docs[0])
+        buffered_result = set(lsh.collect_query_buffer())
+        direct_result = set(lsh.query(docs[0]))
+
+        self.assertEqual(buffered_result, direct_result)
+        self.assertEqual(buffered_result, {0, 1})
+
     def test_remove(self):
         lsh = MinHashLSH(threshold=0.5, num_perm=16)
         m1 = MinHash(16)
