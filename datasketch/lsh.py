@@ -463,16 +463,24 @@ class MinHashLSH:
             list: a list of unique keys.
 
         """
-        collected_result_sets = [
-            set(collected_result_lists)
-            for hashtable in self.hashtables
-            for collected_result_lists in hashtable.collect_select_buffer()
-        ]
-        if not collected_result_sets:
+        collected_result_lists = [hashtable.collect_select_buffer() for hashtable in self.hashtables]
+        if not any(collected_result_lists):
             return []
+
+        # Each buffered query contributes one result list per hashtable. We first
+        # union candidates across bands for each query, then intersect across the
+        # buffered queries to match repeated calls to `query()`.
+        per_query_result_sets = [
+            set().union(*query_result_lists)
+            for query_result_lists in zip(*collected_result_lists)
+        ]
+        if not per_query_result_sets:
+            return []
+
+        candidates = set.intersection(*per_query_result_sets)
         if self.prepickle:
-            return [pickle.loads(key) for key in set.intersection(*collected_result_sets)]
-        return list(set.intersection(*collected_result_sets))
+            return [pickle.loads(key) for key in candidates]
+        return list(candidates)
 
     def __contains__(self, key: Hashable) -> bool:
         """Args:

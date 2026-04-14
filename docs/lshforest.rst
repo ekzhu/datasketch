@@ -4,9 +4,8 @@ MinHash LSH Forest
 ==================
 
 :ref:`minhash_lsh` is useful for radius (or threshold) queries. However,
-**top-k** queries are often more useful in some cases. `LSH
-Forest <http://ilpubs.stanford.edu:8090/678/1/2005-14.pdf>`__ by Bawa et
-al. is a general LSH data structure that makes top-k query possible for
+**top-k** queries are often more useful in some cases. LSH
+Forest by Bawa et al. (WWW 2005) is a general LSH data structure that makes top-k query possible for
 many different types of LSH indexes, which include MinHash LSH. I
 implemented the MinHash LSH Forest, which takes a :ref:`minhash` data sketch of
 the query set, and returns the top-k matching sets that have the 
@@ -69,9 +68,8 @@ for details.
 .. figure:: /_static/lshforest_benchmark.png
    :alt: MinHashLSHForest Benchmark
 
-(Optional) If you have read the LSH Forest
-`paper <http://ilpubs.stanford.edu:8090/678/1/2005-14.pdf>`__, and
-understand the data structure, you may want to customize another
+(Optional) If you have read the original LSH Forest paper by Bawa et al.
+(WWW 2005) and understand the data structure, you may want to customize another
 parameter for :class:`datasketch.MinHashLSHForest` -- ``l``, the number of prefix trees
 (or "LSH Trees" as in the paper) in the LSH Forest index. Different from
 the paper, this implementation fixes the number of LSH functions, in

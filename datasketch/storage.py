@@ -603,12 +603,14 @@ if cassandra is not None:
             del self._select_statements_and_parameters_with_decoders[:]
             statements_and_parameters, decoders = zip(*buffer)
 
-            ret = collections.defaultdict(list)
             query_results = self._select(statements_and_parameters)
-            for rows, (key_decoder, val_decoder) in zip(query_results, decoders):
+            ret = []
+            for rows, (_key_decoder, val_decoder) in zip(query_results, decoders):
+                values = []
                 for row in rows:
-                    ret[key_decoder(row.key)].append((val_decoder(row.value), row.ts))
-            return [[x[0] for x in sorted(v, key=operator.itemgetter(1))] for v in ret.values()]
+                    values.append((val_decoder(row.value), row.ts))
+                ret.append([x[0] for x in sorted(values, key=operator.itemgetter(1))])
+            return ret
 
         def select(self, keys):
             """Select all values for the given keys.
