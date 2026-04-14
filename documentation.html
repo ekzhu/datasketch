@@ -1566,7 +1566,8 @@ the Jaccard similarity is estimated by MinHash.</p>
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">datasketch.</span></span><span class="sig-name descname"><span class="pre">MinHashLSHForest</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">num_perm</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">128</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">l</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">8</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/datasketch/lshforest.html#MinHashLSHForest"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#datasketch.MinHashLSHForest" title="Link to this definition"></a></dt>
 <dd><p>The LSH Forest for MinHash. It supports top-k query in Jaccard
 similarity.
-Instead of using prefix trees as the <a class="reference external" href="http://ilpubs.stanford.edu:8090/678/1/2005-14.pdf">original paper</a>,
+Instead of using prefix trees as described in the original LSH Forest
+paper by Bawa et al. (WWW 2005),
 I use a sorted array to store the hash values in every
 hash table.</p>
 <dl class="field-list simple">
