@@ -204,7 +204,7 @@ class MinHashLSHEnsemble:
         if not self.is_empty():
             raise ValueError("Cannot call index again on a non-empty index")
         if not isinstance(entries, list):
-            queue = deque([])
+            queue = deque()
             for key, minhash, size in entries:
                 if size <= 0:
                     raise ValueError("Set size must be positive")
