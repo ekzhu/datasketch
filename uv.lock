@@ -605,6 +605,10 @@ dependencies = [
 ]
 
 [package.optional-dependencies]
+aio = [
+    { name = "aiounittest" },
+    { name = "motor" },
+]
 benchmark = [
     { name = "fonttools" },
     { name = "matplotlib", version = "3.9.4", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.10'" },
@@ -655,6 +659,7 @@ test = [
 
 [package.metadata]
 requires-dist = [
+    { name = "aiounittest", marker = "extra == 'aio'" },
     { name = "aiounittest", marker = "extra == 'experimental-aio'" },
     { name = "cassandra-driver", marker = "extra == 'cassandra'", specifier = ">=3.20" },
     { name = "cassandra-driver", marker = "extra == 'test'", specifier = ">=3.20" },
@@ -663,6 +668,7 @@ requires-dist = [
     { name = "matplotlib", marker = "extra == 'benchmark'", specifier = ">=3.1.2" },
     { name = "mock", marker = "extra == 'test'", specifier = ">=2.0.0" },
     { name = "mockredispy", marker = "extra == 'test'" },
+    { name = "motor", marker = "extra == 'aio'", specifier = ">3.6.0" },
     { name = "motor", marker = "extra == 'experimental-aio'", specifier = ">3.6.0" },
     { name = "nltk", marker = "extra == 'benchmark'", specifier = ">=3.4.5" },
     { name = "nose", marker = "extra == 'test'", specifier = ">=1.3.7" },
@@ -686,7 +692,7 @@ requires-dist = [
     { name = "scipy", marker = "extra == 'benchmark'", specifier = ">=1.3.3" },
     { name = "setsimilaritysearch", marker = "extra == 'benchmark'", specifier = ">=0.1.7" },
 ]
-provides-extras = ["cassandra", "redis", "bloom", "benchmark", "test", "experimental-aio"]
+provides-extras = ["cassandra", "redis", "bloom", "benchmark", "test", "aio", "experimental-aio"]
 
 [[package]]
 name = "dnspython"

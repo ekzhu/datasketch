@@ -6,20 +6,28 @@ async storage backends like MongoDB (via motor) and Redis (via redis.asyncio).
 Example:
     .. code-block:: python
 
+        import asyncio
+
         from datasketch.aio import AsyncMinHashLSH
         from datasketch import MinHash
 
+
         async def main():
+            # prepickle=True lets you use non-bytes keys (e.g. str). With the
+            # default prepickle=False, keys passed to insert() must be bytes.
             async with AsyncMinHashLSH(
                 storage_config={"type": "aiomongo", "mongo": {"host": "localhost", "port": 27017}},
                 threshold=0.5,
                 num_perm=128,
-                prepickle=True,  # Enable string keys
+                prepickle=True,
             ) as lsh:
                 m = MinHash(num_perm=128)
                 m.update(b"data")
                 await lsh.insert("key", m)
                 result = await lsh.query(m)
+
+
+        asyncio.run(main())
 
 """
 

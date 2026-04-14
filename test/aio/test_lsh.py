@@ -387,6 +387,27 @@ class TestAsyncMinHashLSH:
             for table in single_counts:
                 assert sum(table.values()) == 1
 
+    async def test_get_subset_counts_prepickle(self, storage_config):
+        """get_subset_counts must pickle query keys to match prepickled storage."""
+        async with AsyncMinHashLSH(storage_config=storage_config, threshold=0.5, num_perm=16, prepickle=True) as lsh:
+            m1 = MinHash(16)
+            m1.update(b"a")
+            m2 = MinHash(16)
+            m2.update(b"b")
+            # Use non-bytes (str) keys that prepickle needs to serialize.
+            await lsh.insert("a", m1)
+            await lsh.insert("b", m2)
+
+            subset_counts = await lsh.get_subset_counts("a", "b")
+            assert len(subset_counts) == lsh.b
+            for table in subset_counts:
+                assert sum(table.values()) == 2
+
+            single_counts = await lsh.get_subset_counts("a")
+            assert len(single_counts) == lsh.b
+            for table in single_counts:
+                assert sum(table.values()) == 1
+
     @pytest.mark.skipif(not DO_TEST_MONGO, reason="MongoDB-specific test")
     async def test_arbitrary_url(self):
         config = {

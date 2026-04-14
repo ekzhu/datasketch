@@ -59,7 +59,10 @@ test = [
   "pygments>=2.20.0",
 ]
 aio = ["aiounittest", "motor>3.6.0"]
-experimental_aio = ["aiounittest", "motor>3.6.0"]  # Deprecated alias for 'aio'
+# KEEP IN SYNC WITH `aio` ABOVE. Deprecated alias retained for backwards compat;
+# PEP 621 does not support referencing one optional-dependency group from
+# another, so the dependency list must be duplicated verbatim.
+experimental_aio = ["aiounittest", "motor>3.6.0"]
 
 [project.urls]
 Homepage = "https://ekzhu.github.io/datasketch"

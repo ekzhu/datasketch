@@ -329,6 +329,10 @@ class AsyncMinHashLSH:
 
     async def get_subset_counts(self, *keys):
         """See :class:`datasketch.MinHashLSH`."""
+        # Keys in storage are pickled when prepickle is enabled, so we have to
+        # pickle the query keys to match the stored representation.
+        if self.prepickle:
+            keys = tuple(pickle.dumps(key) for key in keys)
         key_set = list(set(keys))
         hashtables = [unordered_storage({"type": "dict"}) for _ in range(self.b)]
         Hss = await self.keys.getmany(*key_set)
