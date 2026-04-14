@@ -38,6 +38,9 @@ benchmark = [
   "SetSimilaritySearch>=0.1.7",
   "pyfarmhash>=0.2.2",
   "nltk>=3.4.5",
+  # Transitive deps of matplotlib listed to avoid dependabot uv.lock-only PRs.
+  "pillow>=12.2.0; python_version >= '3.10'",
+  "fonttools>=4.60.2",
 ]
 test = [
   "cassandra-driver>=3.20",
@@ -52,6 +55,8 @@ test = [
   "pytest",
   "pytest-rerunfailures",
   "pytest-asyncio",
+  # Transitive dep of pytest listed to avoid dependabot uv.lock-only PRs.
+  "pygments>=2.20.0",
 ]
 experimental_aio = ["aiounittest", "motor>3.6.0"]
 
