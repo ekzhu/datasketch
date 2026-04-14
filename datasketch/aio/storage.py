@@ -275,7 +275,7 @@ if motor is not None and ReturnDocument is not None:
             return bool(await self._collection.find_one({"key": key}))
 
         async def getmany(self, *keys):
-            return [await self.get(key) for key in keys]
+            return await asyncio.gather(*(self.get(key) for key in keys))
 
         async def status(self):
             status = self._parse_config(self.config["mongo"])
