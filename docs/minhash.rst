@@ -89,10 +89,10 @@ in the constructor.
     # Let's use MurmurHash3.
     import mmh3
 
-    # We need to define a new hash function that outputs an integer that
-    # can be encoded in 32 bits.
+    # We need to define a new hash function that outputs an unsigned
+    # 32-bit integer.
     def _hash_func(d):
-        return mmh3.hash32(d)
+        return mmh3.hash(d, signed=False)
 
     # Use this function in MinHash constructor.
     m = MinHash(hashfunc=_hash_func)

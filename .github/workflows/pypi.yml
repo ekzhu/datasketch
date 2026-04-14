@@ -33,7 +33,7 @@ jobs:
         run: uv build
 
       - name: Publish package to PyPI
-        uses: pypa/gh-action-pypi-publish@v1.13.0
+        uses: pypa/gh-action-pypi-publish@v1.14.0
 
       - name: Minimize uv cache
         run: uv cache prune --ci
