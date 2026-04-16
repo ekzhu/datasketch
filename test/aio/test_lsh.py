@@ -387,6 +387,30 @@ class TestAsyncMinHashLSH:
             for table in single_counts:
                 assert sum(table.values()) == 1
 
+    async def test_unordered_storage_getmany(self, storage_config):
+        """Exercise `getmany()` on hashtable (unordered / set-backed) storage.
+
+        Without the polymorphic `_get_items` dispatch, Redis set-backed
+        storage would inherit a `getmany` that sends LRANGE against set
+        keys and fails with WRONGTYPE.
+        """
+        async with AsyncMinHashLSH(storage_config=storage_config, threshold=0.5, num_perm=16, prepickle=False) as lsh:
+            m1 = MinHash(16)
+            m1.update(b"a")
+            m2 = MinHash(16)
+            m2.update(b"b")
+            await lsh.insert(b"a", m1)
+            await lsh.insert(b"b", m2)
+
+            hashtable = lsh.hashtables[0]
+            hash_keys = await hashtable.keys()
+            assert len(hash_keys) > 0
+
+            results = await hashtable.getmany(*hash_keys)
+            assert len(results) == len(hash_keys)
+            combined = {v for items in results for v in items}
+            assert b"a" in combined or b"b" in combined
+
     async def test_get_subset_counts_prepickle(self, storage_config):
         """get_subset_counts must pickle query keys to match prepickled storage."""
         async with AsyncMinHashLSH(storage_config=storage_config, threshold=0.5, num_perm=16, prepickle=True) as lsh:
