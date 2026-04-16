@@ -256,7 +256,9 @@ class AsyncMinHashLSH:
         if self.prepickle:
             key = pickle.dumps(key)
 
-        if check_duplication and await self.has_key(key):
+        # `key` is already pickled at this point under prepickle=True; call the
+        # storage primitive directly so we don't re-pickle through has_key().
+        if check_duplication and await self.keys.has_key(key):
             raise ValueError("The given key already exists")
         Hs = [self._H(minhash.hashvalues[start:end]) for start, end in self.hashranges]
 
@@ -282,6 +284,8 @@ class AsyncMinHashLSH:
 
     async def has_key(self, key):
         """See :class:`datasketch.MinHashLSH`."""
+        if self.prepickle:
+            key = pickle.dumps(key)
         return await self.keys.has_key(key)
 
     async def remove(self, key):
@@ -289,7 +293,12 @@ class AsyncMinHashLSH:
         await self._remove(key, buffer=False)
 
     async def _remove(self, key, buffer=False):
-        if not await self.has_key(key):
+        if self.prepickle:
+            key = pickle.dumps(key)
+
+        # `key` is already pickled here; call storage primitives directly so
+        # the existence check, lookup, and deletes all use the stored form.
+        if not await self.keys.has_key(key):
             raise ValueError("The given key does not exist")
 
         for H, hashtable in zip(await self.keys.get(key), self.hashtables):

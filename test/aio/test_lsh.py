@@ -639,3 +639,44 @@ class TestAsyncMinHashLSHWithPrepickle:
             result = await lsh2.query(m1)
             assert "test_key" in result
             await lsh2.close()
+
+    async def test_has_key_with_string_key_prepickle(self, storage_config):
+        """has_key() must pickle the lookup key under prepickle=True to match storage."""
+        async with AsyncMinHashLSH(storage_config=storage_config, threshold=0.5, num_perm=16, prepickle=True) as lsh:
+            m = MinHash(16)
+            m.update(b"a")
+            await lsh.insert("string_key", m)
+
+            assert await lsh.has_key("string_key")
+            assert not await lsh.has_key("missing_key")
+
+    async def test_remove_with_string_key_prepickle(self, storage_config):
+        """remove() must pickle the key under prepickle=True so it actually removes."""
+        async with AsyncMinHashLSH(storage_config=storage_config, threshold=0.5, num_perm=16, prepickle=True) as lsh:
+            m = MinHash(16)
+            m.update(b"a")
+            await lsh.insert("string_key", m)
+            assert await lsh.has_key("string_key")
+
+            await lsh.remove("string_key")
+            assert not await lsh.has_key("string_key")
+
+            # Removing a non-existent key should still raise ValueError.
+            with pytest.raises(ValueError):
+                await lsh.remove("string_key")
+
+    async def test_delete_session_with_string_key_prepickle(self, storage_config):
+        """delete_session.remove() must work with string keys under prepickle=True."""
+        async with AsyncMinHashLSH(storage_config=storage_config, threshold=0.5, num_perm=16, prepickle=True) as lsh:
+            m1 = MinHash(16)
+            m1.update(b"a")
+            m2 = MinHash(16)
+            m2.update(b"b")
+            await lsh.insert("key1", m1)
+            await lsh.insert("key2", m2)
+
+            async with lsh.delete_session(batch_size=10) as session:
+                await session.remove("key1")
+
+            assert not await lsh.has_key("key1")
+            assert await lsh.has_key("key2")
