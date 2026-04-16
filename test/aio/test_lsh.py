@@ -161,6 +161,39 @@ class TestAsyncMinHashLSH:
             with pytest.raises(TypeError):
                 await lsh.insert(123, m1)
 
+    async def test_insert_duplicate_raises(self, storage_config):
+        """Re-inserting an existing key must raise ValueError by default."""
+        async with AsyncMinHashLSH(storage_config=storage_config, threshold=0.5, num_perm=16, prepickle=False) as lsh:
+            m = MinHash(16)
+            m.update(b"a")
+            await lsh.insert(b"a", m)
+
+            with pytest.raises(ValueError, match="already exists"):
+                await lsh.insert(b"a", m)
+
+    async def test_insert_check_duplication_false(self, storage_config):
+        """`check_duplication=False` must bypass the existence check."""
+        async with AsyncMinHashLSH(storage_config=storage_config, threshold=0.5, num_perm=16, prepickle=False) as lsh:
+            m = MinHash(16)
+            m.update(b"a")
+            await lsh.insert(b"a", m)
+            # Must not raise ValueError.
+            await lsh.insert(b"a", m, check_duplication=False)
+            assert await lsh.has_key(b"a")
+
+    async def test_is_empty(self, storage_config):
+        """is_empty() reflects insertions."""
+        async with AsyncMinHashLSH(storage_config=storage_config, threshold=0.5, num_perm=16, prepickle=False) as lsh:
+            assert await lsh.is_empty()
+
+            m = MinHash(16)
+            m.update(b"a")
+            await lsh.insert(b"a", m)
+            assert not await lsh.is_empty()
+
+            await lsh.remove(b"a")
+            assert await lsh.is_empty()
+
     async def test_query(self, storage_config):
         async with AsyncMinHashLSH(storage_config=storage_config, threshold=0.5, num_perm=16, prepickle=False) as lsh:
             m1 = MinHash(16)
@@ -680,3 +713,16 @@ class TestAsyncMinHashLSHWithPrepickle:
 
             assert not await lsh.has_key("key1")
             assert await lsh.has_key("key2")
+
+    async def test_insert_duplicate_prepickle(self, storage_config):
+        """Duplicate detection must work for pickled (e.g. string) keys too."""
+        async with AsyncMinHashLSH(storage_config=storage_config, threshold=0.5, num_perm=16, prepickle=True) as lsh:
+            m = MinHash(16)
+            m.update(b"a")
+            await lsh.insert("k", m)
+
+            with pytest.raises(ValueError, match="already exists"):
+                await lsh.insert("k", m)
+
+            # Bypass still works with string keys.
+            await lsh.insert("k", m, check_duplication=False)
