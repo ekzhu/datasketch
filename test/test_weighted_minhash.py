@@ -34,6 +34,13 @@ class TestWeightedMinHashGenerator(unittest.TestCase):
         self.assertEqual(len(m), 4)
         self.assertTrue(m.hashvalues.dtype == int)
 
+    def test_minhash_does_not_mutate_float32_input(self):
+        mg = WeightedMinHashGenerator(3, 4, 1)
+        v = np.array([1, 0, 3], dtype=np.float32)
+        expected = v.copy()
+        mg.minhash(v)
+        np.testing.assert_array_equal(v, expected)
+
     def test_minhash_many_dense_onerow(self):
         mg = WeightedMinHashGenerator(2, 4, 1)
         m_list = mg.minhash_many(np.array([1, 3]).reshape(1, 2))
