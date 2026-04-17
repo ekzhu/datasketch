@@ -62,6 +62,8 @@ class TestMinHash(unittest.TestCase):
         m2.update(12)
         u = minhash.MinHash.union(m1, m2)
         self.assertTrue(u.jaccard(m2) == 1.0)
+        self.assertIs(u.hashfunc, fake_hash_func)
+        u.update(13)
 
     def test_pickle(self):
         m = minhash.MinHash(4, 1, hashfunc=fake_hash_func)

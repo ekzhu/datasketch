@@ -455,6 +455,7 @@ class MinHash:
         return cls(
             num_perm=num_perm,
             seed=seed,
+            hashfunc=mhs[0].hashfunc,
             hashvalues=hashvalues,
             permutations=permutations,
         )
