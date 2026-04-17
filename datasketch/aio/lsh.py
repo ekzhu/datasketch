@@ -329,7 +329,10 @@ class AsyncMinHashLSH:
             H = self._H(minhash.hashvalues[start:end])
             if await hashtable.has_key(H):
                 fs.append(hashtable.get(H))
-        return set(chain.from_iterable(await asyncio.gather(*fs)))  # candidates
+        candidates = set(chain.from_iterable(await asyncio.gather(*fs)))
+        if self.prepickle:
+            return {pickle.loads(key) for key in candidates}
+        return candidates
 
     async def get_counts(self):
         """See :class:`datasketch.MinHashLSH`."""
