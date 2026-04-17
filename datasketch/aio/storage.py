@@ -371,13 +371,9 @@ if redis is not None and RedisStorage is not None:
             return await self._get_items(self._redis, self.redis_key(key))
 
         async def getmany(self, *keys):
-            # Route through `_get_items` so the unordered subclass's override
-            # (`smembers`) queues the correct Redis command. Hardcoding `lrange`
-            # here would send LRANGE against set keys in AsyncRedisSetStorage
-            # and fail with WRONGTYPE.
             pipe = self._redis.pipeline()
             for key in keys:
-                await self._get_items(pipe, self.redis_key(key))
+                pipe.lrange(self.redis_key(key), 0, -1)
             return await pipe.execute()
 
         @staticmethod
@@ -449,6 +445,12 @@ if redis is not None and RedisStorage is not None:
         @staticmethod
         async def _get_items(r, k):
             return await r.smembers(k)
+
+        async def getmany(self, *keys):
+            pipe = self._redis.pipeline()
+            for key in keys:
+                pipe.smembers(self.redis_key(key))
+            return await pipe.execute()
 
         async def remove_val(self, key, val, **kwargs):
             buffer = kwargs.pop("buffer", False)
