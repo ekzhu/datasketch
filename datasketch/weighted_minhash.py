@@ -141,6 +141,8 @@ class WeightedMinHashGenerator:
             v = np.array(v, dtype=np.float32)
         elif v.dtype != np.float32:
             v = v.astype(np.float32)
+        else:
+            v = v.copy()
         v: np.ndarray = v
         hashvalues = np.zeros((self.sample_size, 2), dtype=int)
         vzeros = v == 0
