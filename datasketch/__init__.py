@@ -7,6 +7,7 @@ except importlib.metadata.PackageNotFoundError:
     _version = "0.0.0"  # Fallback for development mode
 __version__: Final[str] = _version
 
+from datasketch.aio import AsyncMinHashLSH  # Instantiation requires motor/redis.asyncio; import itself is always safe.
 from datasketch.b_bit_minhash import bBitMinHash
 from datasketch.hashfunc import sha1_hash32
 from datasketch.hnsw import HNSW
@@ -23,9 +24,9 @@ from datasketch.weighted_minhash import WeightedMinHash, WeightedMinHashGenerato
 WeightedMinHashLSH = MinHashLSH
 WeightedMinHashLSHForest = MinHashLSHForest
 
-
 __all__ = [
     "HNSW",
+    "AsyncMinHashLSH",
     "HyperLogLog",
     "HyperLogLogPlusPlus",
     "LeanMinHash",

@@ -1,9 +1,23 @@
+"""Async storage backends for MinHash LSH.
+
+This module provides async storage implementations for use with AsyncMinHashLSH:
+- AsyncMongoListStorage / AsyncMongoSetStorage: MongoDB storage via motor
+- AsyncRedisListStorage / AsyncRedisSetStorage: Redis storage via redis.asyncio
+"""
+
 import asyncio
 import os
 from abc import ABCMeta
 from itertools import chain
 
-from datasketch.storage import OrderedStorage, RedisStorage, Storage, UnorderedStorage, _random_name
+from datasketch.storage import OrderedStorage, Storage, UnorderedStorage, _random_name
+
+# RedisStorage is only available when redis package is installed (optional dependency)
+# Import it conditionally to avoid ImportError when redis is not installed
+try:
+    from datasketch.storage import RedisStorage
+except ImportError:
+    RedisStorage = None
 
 ABC = ABCMeta("ABC", (object,), {})
 
@@ -22,6 +36,12 @@ try:
     import redis.asyncio as redis
 except ImportError:
     redis = None
+
+
+__all__ = [
+    "async_ordered_storage",
+    "async_unordered_storage",
+]
 
 
 async def async_ordered_storage(config, name=None):
@@ -55,9 +75,9 @@ if motor is not None and ReturnDocument is not None:
     class AsyncMongoBuffer:
         def __init__(self, aio_mongo_collection, batch_size):
             self._batch_size = batch_size
-            self._insert_documents_stack = tuple()
-            self._delete_by_key_documents_stack = tuple()
-            self._delete_by_val_documents_stack = tuple()
+            self._insert_documents_stack = []
+            self._delete_by_key_documents_stack = []
+            self._delete_by_val_documents_stack = []
             self._mongo_coll = aio_mongo_collection
 
         @property
@@ -73,28 +93,28 @@ if motor is not None and ReturnDocument is not None:
             if command == "insert":
                 if len(self._insert_documents_stack) >= self.batch_size:
                     await self.execute(command)
-                self._insert_documents_stack += (kwargs["obj"],)
+                self._insert_documents_stack.append(kwargs["obj"])
             elif command == "delete_by_key":
                 if len(self._delete_by_key_documents_stack) >= self.batch_size:
                     await self.execute(command)
-                self._delete_by_key_documents_stack += (kwargs["key"],)
+                self._delete_by_key_documents_stack.append(kwargs["key"])
             elif command == "delete_by_val":
                 if len(self._delete_by_val_documents_stack) >= self.batch_size:
                     await self.execute(command)
-                self._delete_by_val_documents_stack += (kwargs["val"],)
+                self._delete_by_val_documents_stack.append(kwargs["val"])
 
         async def execute(self, command):
             if command == "insert" and self._insert_documents_stack:
                 buffer = self._insert_documents_stack
-                self._insert_documents_stack = tuple()
+                self._insert_documents_stack = []
                 await self._mongo_coll.insert_many(buffer, ordered=False)
             elif command == "delete_by_key" and self._delete_by_key_documents_stack:
                 buffer = self._delete_by_key_documents_stack
-                self._delete_by_key_documents_stack = tuple()
+                self._delete_by_key_documents_stack = []
                 await self._mongo_coll.delete_many({"key": {"$in": buffer}})
             elif command == "delete_by_val" and self._delete_by_val_documents_stack:
                 buffer = self._delete_by_val_documents_stack
-                self._delete_by_val_documents_stack = tuple()
+                self._delete_by_val_documents_stack = []
                 await self._mongo_coll.delete_many({"vals": {"$in": buffer}})
 
         async def insert_one(self, **kwargs):
@@ -254,6 +274,9 @@ if motor is not None and ReturnDocument is not None:
         async def has_key(self, key):
             return bool(await self._collection.find_one({"key": key}))
 
+        async def getmany(self, *keys):
+            return await asyncio.gather(*(self.get(key) for key in keys))
+
         async def status(self):
             status = self._parse_config(self.config["mongo"])
             status.update({"keyspace_size": await self.size()})
@@ -285,7 +308,9 @@ if motor is not None and ReturnDocument is not None:
                 await self._collection.find_one_and_delete({"key": key, "vals": val})
 
 
-if redis is not None:
+# Redis-based async storage classes are only defined when both redis package
+# and RedisStorage are available (optional dependencies)
+if redis is not None and RedisStorage is not None:
 
     class AsyncRedisBuffer(redis.client.Pipeline):
         def __init__(self, connection_pool, response_callbacks, transaction, buffer_size, shard_hint=None):
@@ -304,7 +329,7 @@ if redis is not None:
 
         async def execute_command(self, *args, **kwargs):
             if len(self.command_stack) >= self._buffer_size:
-                self.execute()
+                await self.execute()
             await super(AsyncRedisBuffer, self).execute_command(*args, **kwargs)
 
     class AsyncRedisStorage(RedisStorage):
@@ -347,9 +372,8 @@ if redis is not None:
 
         async def getmany(self, *keys):
             pipe = self._redis.pipeline()
-            pipe.multi()
             for key in keys:
-                await self._get_items(pipe, self.redis_key(key))
+                pipe.lrange(self.redis_key(key), 0, -1)
             return await pipe.execute()
 
         @staticmethod
@@ -421,6 +445,12 @@ if redis is not None:
         @staticmethod
         async def _get_items(r, k):
             return await r.smembers(k)
+
+        async def getmany(self, *keys):
+            pipe = self._redis.pipeline()
+            for key in keys:
+                pipe.smembers(self.redis_key(key))
+            return await pipe.execute()
 
         async def remove_val(self, key, val, **kwargs):
             buffer = kwargs.pop("buffer", False)

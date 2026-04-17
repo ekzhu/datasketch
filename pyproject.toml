@@ -58,6 +58,10 @@ test = [
   # Transitive dep of pytest listed to avoid dependabot uv.lock-only PRs.
   "pygments>=2.20.0",
 ]
+aio = ["aiounittest", "motor>3.6.0"]
+# KEEP IN SYNC WITH `aio` ABOVE. Deprecated alias retained for backwards compat;
+# PEP 621 does not support referencing one optional-dependency group from
+# another, so the dependency list must be duplicated verbatim.
 experimental_aio = ["aiounittest", "motor>3.6.0"]
 
 [project.urls]
@@ -199,4 +203,4 @@ reportCallIssue = "none"
 
 [tool.coverage.run]
 source = ["datasketch"]
-omit = ["*/experimental/*", "*/tests/*", "*/test/*"]
+omit = ["*/tests/*", "*/test/*"]

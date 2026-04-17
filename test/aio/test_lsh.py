@@ -10,7 +10,7 @@ import pytest
 from motor.motor_asyncio import AsyncIOMotorClient
 from pymongo import MongoClient
 
-from datasketch.experimental.aio.lsh import AsyncMinHashLSH
+from datasketch.aio import AsyncMinHashLSH
 from datasketch.minhash import MinHash
 from datasketch.weighted_minhash import WeightedMinHashGenerator
 
@@ -160,6 +160,39 @@ class TestAsyncMinHashLSH:
             # Should raise TypeError when trying to insert with int key
             with pytest.raises(TypeError):
                 await lsh.insert(123, m1)
+
+    async def test_insert_duplicate_raises(self, storage_config):
+        """Re-inserting an existing key must raise ValueError by default."""
+        async with AsyncMinHashLSH(storage_config=storage_config, threshold=0.5, num_perm=16, prepickle=False) as lsh:
+            m = MinHash(16)
+            m.update(b"a")
+            await lsh.insert(b"a", m)
+
+            with pytest.raises(ValueError, match="already exists"):
+                await lsh.insert(b"a", m)
+
+    async def test_insert_check_duplication_false(self, storage_config):
+        """`check_duplication=False` must bypass the existence check."""
+        async with AsyncMinHashLSH(storage_config=storage_config, threshold=0.5, num_perm=16, prepickle=False) as lsh:
+            m = MinHash(16)
+            m.update(b"a")
+            await lsh.insert(b"a", m)
+            # Must not raise ValueError.
+            await lsh.insert(b"a", m, check_duplication=False)
+            assert await lsh.has_key(b"a")
+
+    async def test_is_empty(self, storage_config):
+        """is_empty() reflects insertions."""
+        async with AsyncMinHashLSH(storage_config=storage_config, threshold=0.5, num_perm=16, prepickle=False) as lsh:
+            assert await lsh.is_empty()
+
+            m = MinHash(16)
+            m.update(b"a")
+            await lsh.insert(b"a", m)
+            assert not await lsh.is_empty()
+
+            await lsh.remove(b"a")
+            assert await lsh.is_empty()
 
     async def test_query(self, storage_config):
         async with AsyncMinHashLSH(storage_config=storage_config, threshold=0.5, num_perm=16, prepickle=False) as lsh:
@@ -355,6 +388,82 @@ class TestAsyncMinHashLSH:
             assert len(counts) == lsh.b
             for table in counts:
                 assert sum(table.values()) == 2
+
+    async def test_get_subset_counts(self, storage_config):
+        """Test get_subset_counts which uses the getmany() method."""
+        async with AsyncMinHashLSH(storage_config=storage_config, threshold=0.5, num_perm=16, prepickle=False) as lsh:
+            m1 = MinHash(16)
+            m1.update(b"a")
+            m2 = MinHash(16)
+            m2.update(b"b")
+            m3 = MinHash(16)
+            m3.update(b"c")
+            await lsh.insert(b"a", m1)
+            await lsh.insert(b"b", m2)
+            await lsh.insert(b"c", m3)
+
+            # Test get_subset_counts with a subset of keys
+            subset_counts = await lsh.get_subset_counts(b"a", b"b")
+            assert len(subset_counts) == lsh.b
+            for table in subset_counts:
+                assert sum(table.values()) == 2
+
+            # Test with all keys
+            all_counts = await lsh.get_subset_counts(b"a", b"b", b"c")
+            assert len(all_counts) == lsh.b
+            for table in all_counts:
+                assert sum(table.values()) == 3
+
+            # Test with single key
+            single_counts = await lsh.get_subset_counts(b"a")
+            assert len(single_counts) == lsh.b
+            for table in single_counts:
+                assert sum(table.values()) == 1
+
+    async def test_unordered_storage_getmany(self, storage_config):
+        """Exercise `getmany()` on hashtable (unordered / set-backed) storage.
+
+        Without the polymorphic `_get_items` dispatch, Redis set-backed
+        storage would inherit a `getmany` that sends LRANGE against set
+        keys and fails with WRONGTYPE.
+        """
+        async with AsyncMinHashLSH(storage_config=storage_config, threshold=0.5, num_perm=16, prepickle=False) as lsh:
+            m1 = MinHash(16)
+            m1.update(b"a")
+            m2 = MinHash(16)
+            m2.update(b"b")
+            await lsh.insert(b"a", m1)
+            await lsh.insert(b"b", m2)
+
+            hashtable = lsh.hashtables[0]
+            hash_keys = await hashtable.keys()
+            assert len(hash_keys) > 0
+
+            results = await hashtable.getmany(*hash_keys)
+            assert len(results) == len(hash_keys)
+            combined = {v for items in results for v in items}
+            assert b"a" in combined or b"b" in combined
+
+    async def test_get_subset_counts_prepickle(self, storage_config):
+        """get_subset_counts must pickle query keys to match prepickled storage."""
+        async with AsyncMinHashLSH(storage_config=storage_config, threshold=0.5, num_perm=16, prepickle=True) as lsh:
+            m1 = MinHash(16)
+            m1.update(b"a")
+            m2 = MinHash(16)
+            m2.update(b"b")
+            # Use non-bytes (str) keys that prepickle needs to serialize.
+            await lsh.insert("a", m1)
+            await lsh.insert("b", m2)
+
+            subset_counts = await lsh.get_subset_counts("a", "b")
+            assert len(subset_counts) == lsh.b
+            for table in subset_counts:
+                assert sum(table.values()) == 2
+
+            single_counts = await lsh.get_subset_counts("a")
+            assert len(single_counts) == lsh.b
+            for table in single_counts:
+                assert sum(table.values()) == 1
 
     @pytest.mark.skipif(not DO_TEST_MONGO, reason="MongoDB-specific test")
     async def test_arbitrary_url(self):
@@ -563,3 +672,57 @@ class TestAsyncMinHashLSHWithPrepickle:
             result = await lsh2.query(m1)
             assert "test_key" in result
             await lsh2.close()
+
+    async def test_has_key_with_string_key_prepickle(self, storage_config):
+        """has_key() must pickle the lookup key under prepickle=True to match storage."""
+        async with AsyncMinHashLSH(storage_config=storage_config, threshold=0.5, num_perm=16, prepickle=True) as lsh:
+            m = MinHash(16)
+            m.update(b"a")
+            await lsh.insert("string_key", m)
+
+            assert await lsh.has_key("string_key")
+            assert not await lsh.has_key("missing_key")
+
+    async def test_remove_with_string_key_prepickle(self, storage_config):
+        """remove() must pickle the key under prepickle=True so it actually removes."""
+        async with AsyncMinHashLSH(storage_config=storage_config, threshold=0.5, num_perm=16, prepickle=True) as lsh:
+            m = MinHash(16)
+            m.update(b"a")
+            await lsh.insert("string_key", m)
+            assert await lsh.has_key("string_key")
+
+            await lsh.remove("string_key")
+            assert not await lsh.has_key("string_key")
+
+            # Removing a non-existent key should still raise ValueError.
+            with pytest.raises(ValueError):
+                await lsh.remove("string_key")
+
+    async def test_delete_session_with_string_key_prepickle(self, storage_config):
+        """delete_session.remove() must work with string keys under prepickle=True."""
+        async with AsyncMinHashLSH(storage_config=storage_config, threshold=0.5, num_perm=16, prepickle=True) as lsh:
+            m1 = MinHash(16)
+            m1.update(b"a")
+            m2 = MinHash(16)
+            m2.update(b"b")
+            await lsh.insert("key1", m1)
+            await lsh.insert("key2", m2)
+
+            async with lsh.delete_session(batch_size=10) as session:
+                await session.remove("key1")
+
+            assert not await lsh.has_key("key1")
+            assert await lsh.has_key("key2")
+
+    async def test_insert_duplicate_prepickle(self, storage_config):
+        """Duplicate detection must work for pickled (e.g. string) keys too."""
+        async with AsyncMinHashLSH(storage_config=storage_config, threshold=0.5, num_perm=16, prepickle=True) as lsh:
+            m = MinHash(16)
+            m.update(b"a")
+            await lsh.insert("k", m)
+
+            with pytest.raises(ValueError, match="already exists"):
+                await lsh.insert("k", m)
+
+            # Bypass still works with string keys.
+            await lsh.insert("k", m, check_duplication=False)
