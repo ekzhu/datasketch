@@ -237,8 +237,7 @@ Asynchronous MinHash LSH at scale
 ---------------------------------
 
 .. note::
-    The module supports Python version >=3.6, and is currently experimental.
-    So the interface may change slightly in the future.
+    The module supports Python version >=3.6.
 
 This module may be useful if you want to process millions of text documents
 in streaming/batch mode using asynchronous RESTful API (for example, aiohttp)
@@ -256,7 +255,7 @@ The Asynchronous MongoDB storage option can be configured using:
 
 .. code:: python
 
-        from datasketch.experimental.aio.lsh import AsyncMinHashLSH
+        from datasketch.aio import AsyncMinHashLSH
         from datasketch import MinHash
 
         _storage = {'type': 'aiomongo', 'mongo': {'host': 'localhost', 'port': 27017, 'db': 'lsh_test'}}
@@ -277,7 +276,7 @@ The Asynchronous MongoDB storage option can be configured using:
 
 .. code:: python
 
-        from datasketch.experimental.aio.lsh import AsyncMinHashLSH
+        from datasketch.aio import AsyncMinHashLSH
         from datasketch import MinHash
 
         _storage = {'type': 'aiomongo', 'mongo': {'host': 'localhost', 'port': 27017, 'db': 'lsh_test'}}
@@ -329,7 +328,7 @@ To create index for a large number of MinHashes using asynchronous MinHash LSH.
 
 .. code:: python
 
-    from datasketch.experimental.aio.lsh import AsyncMinHashLSH
+    from datasketch.aio import AsyncMinHashLSH
     from datasketch import MinHash
 
     def chunk(it, size):
@@ -355,7 +354,7 @@ To bulk remove keys from LSH index using asynchronous MinHash LSH.
 
 .. code:: python
 
-    from datasketch.experimental.aio.lsh import AsyncMinHashLSH
+    from datasketch.aio import AsyncMinHashLSH
     from datasketch import MinHash
 
     def chunk(it, size):

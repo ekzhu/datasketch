@@ -291,8 +291,7 @@ as the base name, and collision is extremely unlikely.</p>
 <span id="minhash-lsh-async"></span><h2>Asynchronous MinHash LSH at scale<a class="headerlink" href="#asynchronous-minhash-lsh-at-scale" title="Link to this heading"></a></h2>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
-<p>The module supports Python version &gt;=3.6, and is currently experimental.
-So the interface may change slightly in the future.</p>
+<p>The module supports Python version &gt;=3.6.</p>
 </div>
 <p>This module may be useful if you want to process millions of text documents
 in streaming/batch mode using asynchronous RESTful API (for example, aiohttp)
@@ -305,7 +304,7 @@ processes see <a class="reference internal" href="#minhash-lsh-at-scale"><span c
 <ul class="simple">
 <li><p>Usual way:</p></li>
 </ul>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">datasketch.experimental.aio.lsh</span><span class="w"> </span><span class="kn">import</span> <span class="n">AsyncMinHashLSH</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">datasketch.aio</span><span class="w"> </span><span class="kn">import</span> <span class="n">AsyncMinHashLSH</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">datasketch</span><span class="w"> </span><span class="kn">import</span> <span class="n">MinHash</span>
 
 <span class="n">_storage</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;type&#39;</span><span class="p">:</span> <span class="s1">&#39;aiomongo&#39;</span><span class="p">,</span> <span class="s1">&#39;mongo&#39;</span><span class="p">:</span> <span class="p">{</span><span class="s1">&#39;host&#39;</span><span class="p">:</span> <span class="s1">&#39;localhost&#39;</span><span class="p">,</span> <span class="s1">&#39;port&#39;</span><span class="p">:</span> <span class="mi">27017</span><span class="p">,</span> <span class="s1">&#39;db&#39;</span><span class="p">:</span> <span class="s1">&#39;lsh_test&#39;</span><span class="p">}}</span>
@@ -326,7 +325,7 @@ processes see <a class="reference internal" href="#minhash-lsh-at-scale"><span c
 <ul class="simple">
 <li><p>Context Manager style:</p></li>
 </ul>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">datasketch.experimental.aio.lsh</span><span class="w"> </span><span class="kn">import</span> <span class="n">AsyncMinHashLSH</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">datasketch.aio</span><span class="w"> </span><span class="kn">import</span> <span class="n">AsyncMinHashLSH</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">datasketch</span><span class="w"> </span><span class="kn">import</span> <span class="n">MinHash</span>
 
 <span class="n">_storage</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;type&#39;</span><span class="p">:</span> <span class="s1">&#39;aiomongo&#39;</span><span class="p">,</span> <span class="s1">&#39;mongo&#39;</span><span class="p">:</span> <span class="p">{</span><span class="s1">&#39;host&#39;</span><span class="p">:</span> <span class="s1">&#39;localhost&#39;</span><span class="p">,</span> <span class="s1">&#39;port&#39;</span><span class="p">:</span> <span class="mi">27017</span><span class="p">,</span> <span class="s1">&#39;db&#39;</span><span class="p">:</span> <span class="s1">&#39;lsh_test&#39;</span><span class="p">}}</span>
@@ -370,7 +369,7 @@ processes see <a class="reference internal" href="#minhash-lsh-at-scale"><span c
 </pre></div>
 </div>
 <p>To create index for a large number of MinHashes using asynchronous MinHash LSH.</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">datasketch.experimental.aio.lsh</span><span class="w"> </span><span class="kn">import</span> <span class="n">AsyncMinHashLSH</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">datasketch.aio</span><span class="w"> </span><span class="kn">import</span> <span class="n">AsyncMinHashLSH</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">datasketch</span><span class="w"> </span><span class="kn">import</span> <span class="n">MinHash</span>
 
 <span class="k">def</span><span class="w"> </span><span class="nf">chunk</span><span class="p">(</span><span class="n">it</span><span class="p">,</span> <span class="n">size</span><span class="p">):</span>
@@ -394,7 +393,7 @@ processes see <a class="reference internal" href="#minhash-lsh-at-scale"><span c
 </pre></div>
 </div>
 <p>To bulk remove keys from LSH index using asynchronous MinHash LSH.</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">datasketch.experimental.aio.lsh</span><span class="w"> </span><span class="kn">import</span> <span class="n">AsyncMinHashLSH</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">datasketch.aio</span><span class="w"> </span><span class="kn">import</span> <span class="n">AsyncMinHashLSH</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">datasketch</span><span class="w"> </span><span class="kn">import</span> <span class="n">MinHash</span>
 
 <span class="k">def</span><span class="w"> </span><span class="nf">chunk</span><span class="p">(</span><span class="n">it</span><span class="p">,</span> <span class="n">size</span><span class="p">):</span>

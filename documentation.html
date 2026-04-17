@@ -122,7 +122,24 @@
 </li>
 </ul>
 </li>
-<li class="toctree-l2"><a class="reference internal" href="#asynchronous-minhash-lsh">Asynchronous MinHash LSH</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#asynchronous-minhash-lsh">Asynchronous MinHash LSH</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#datasketch.aio.AsyncMinHashLSH"><code class="docutils literal notranslate"><span class="pre">AsyncMinHashLSH</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#datasketch.aio.AsyncMinHashLSH.__init__"><code class="docutils literal notranslate"><span class="pre">AsyncMinHashLSH.__init__()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#datasketch.aio.AsyncMinHashLSH.close"><code class="docutils literal notranslate"><span class="pre">AsyncMinHashLSH.close()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#datasketch.aio.AsyncMinHashLSH.insert"><code class="docutils literal notranslate"><span class="pre">AsyncMinHashLSH.insert()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#datasketch.aio.AsyncMinHashLSH.insertion_session"><code class="docutils literal notranslate"><span class="pre">AsyncMinHashLSH.insertion_session()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#datasketch.aio.AsyncMinHashLSH.delete_session"><code class="docutils literal notranslate"><span class="pre">AsyncMinHashLSH.delete_session()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#datasketch.aio.AsyncMinHashLSH.query"><code class="docutils literal notranslate"><span class="pre">AsyncMinHashLSH.query()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#datasketch.aio.AsyncMinHashLSH.has_key"><code class="docutils literal notranslate"><span class="pre">AsyncMinHashLSH.has_key()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#datasketch.aio.AsyncMinHashLSH.remove"><code class="docutils literal notranslate"><span class="pre">AsyncMinHashLSH.remove()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#datasketch.aio.AsyncMinHashLSH.is_empty"><code class="docutils literal notranslate"><span class="pre">AsyncMinHashLSH.is_empty()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#datasketch.aio.AsyncMinHashLSH.get_counts"><code class="docutils literal notranslate"><span class="pre">AsyncMinHashLSH.get_counts()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#datasketch.aio.AsyncMinHashLSH.get_subset_counts"><code class="docutils literal notranslate"><span class="pre">AsyncMinHashLSH.get_subset_counts()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#datasketch.aio.AsyncMinHashLSH.__weakref__"><code class="docutils literal notranslate"><span class="pre">AsyncMinHashLSH.__weakref__</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
 <li class="toctree-l2"><a class="reference internal" href="#lshbloom">LSHBloom</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="#datasketch.MinHashLSHBloom"><code class="docutils literal notranslate"><span class="pre">MinHashLSHBloom</span></code></a><ul>
 <li class="toctree-l4"><a class="reference internal" href="#datasketch.MinHashLSHBloom.__init__"><code class="docutils literal notranslate"><span class="pre">MinHashLSHBloom.__init__()</span></code></a></li>
@@ -1368,6 +1385,168 @@ counts.</p>
 </section>
 <section id="asynchronous-minhash-lsh">
 <h2>Asynchronous MinHash LSH<a class="headerlink" href="#asynchronous-minhash-lsh" title="Link to this heading"></a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="datasketch.aio.AsyncMinHashLSH">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">datasketch.aio.</span></span><span class="sig-name descname"><span class="pre">AsyncMinHashLSH</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">threshold</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0.9</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">num_perm</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">128</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">weights</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">float</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">float</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">(0.5,</span> <span class="pre">0.5)</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">params</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">int</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">storage_config</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">dict</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">prepickle</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/datasketch/aio/lsh.html#AsyncMinHashLSH"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#datasketch.aio.AsyncMinHashLSH" title="Link to this definition"></a></dt>
+<dd><p>Asynchronous MinHashLSH index.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>threshold</strong> (<em>float</em>) – see <a class="reference internal" href="#datasketch.MinHashLSH" title="datasketch.MinHashLSH"><code class="xref py py-class docutils literal notranslate"><span class="pre">datasketch.MinHashLSH</span></code></a>.</p></li>
+<li><p><strong>num_perm</strong> (<em>int</em>) – see <a class="reference internal" href="#datasketch.MinHashLSH" title="datasketch.MinHashLSH"><code class="xref py py-class docutils literal notranslate"><span class="pre">datasketch.MinHashLSH</span></code></a>.</p></li>
+<li><p><strong>weights</strong> (<em>tuple</em><em>(</em><em>float</em><em>, </em><em>float</em><em>)</em>) – see <a class="reference internal" href="#datasketch.MinHashLSH" title="datasketch.MinHashLSH"><code class="xref py py-class docutils literal notranslate"><span class="pre">datasketch.MinHashLSH</span></code></a>.</p></li>
+<li><p><strong>params</strong> (<em>tuple</em>) – see <a class="reference internal" href="#datasketch.MinHashLSH" title="datasketch.MinHashLSH"><code class="xref py py-class docutils literal notranslate"><span class="pre">datasketch.MinHashLSH</span></code></a>.</p></li>
+<li><p><strong>storage_config</strong> (<em>dict</em>) – New type of storage service - aiomongo - to use for storing
+hashtables and keys are implemented.
+If storage_config is None aiomongo storage will be used.</p></li>
+<li><p><strong>optional</strong><strong>)</strong> (<em>prepickle</em><em> (</em><em>bool</em><em>,</em>) – If True, all keys are pickled to bytes before
+insertion. If None, a default value is chosen based on the
+<cite>storage_config</cite>.</p></li>
+</ul>
+</dd>
+</dl>
+<p>For example usage see <a class="reference internal" href="lsh.html#minhash-lsh-async"><span class="std std-ref">Asynchronous MinHash LSH at scale</span></a>.</p>
+<p>Example of supported storage configuration:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">MONGO</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;aiomongo&quot;</span><span class="p">,</span> <span class="s2">&quot;basename&quot;</span><span class="p">:</span> <span class="s2">&quot;base_name_1&quot;</span><span class="p">,</span> <span class="s2">&quot;mongo&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;host&quot;</span><span class="p">:</span> <span class="s2">&quot;localhost&quot;</span><span class="p">,</span> <span class="s2">&quot;port&quot;</span><span class="p">:</span> <span class="mi">27017</span><span class="p">}}</span>
+</pre></div>
+</div>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<ul class="simple">
+<li><p>For main functionality of LSH algorithm see <a class="reference internal" href="#datasketch.MinHashLSH" title="datasketch.MinHashLSH"><code class="xref py py-class docutils literal notranslate"><span class="pre">datasketch.MinHashLSH</span></code></a>.</p></li>
+<li><p>For additional information see <a class="reference internal" href="lsh.html#minhash-lsh-at-scale"><span class="std std-ref">MinHash LSH at scale</span></a> and <a class="reference internal" href="lsh.html#minhash-lsh-async"><span class="std std-ref">Asynchronous MinHash LSH at scale</span></a></p></li>
+</ul>
+</div>
+<dl class="py method">
+<dt class="sig sig-object py" id="datasketch.aio.AsyncMinHashLSH.__init__">
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">threshold</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0.9</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">num_perm</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">128</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">weights</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">float</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">float</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">(0.5,</span> <span class="pre">0.5)</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">params</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">int</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">storage_config</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">dict</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">prepickle</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/datasketch/aio/lsh.html#AsyncMinHashLSH.__init__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#datasketch.aio.AsyncMinHashLSH.__init__" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="datasketch.aio.AsyncMinHashLSH.close">
+<em class="property"><span class="pre">async</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">close</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/datasketch/aio/lsh.html#AsyncMinHashLSH.close"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#datasketch.aio.AsyncMinHashLSH.close" title="Link to this definition"></a></dt>
+<dd><p>Cleanup client resources and disconnect from AsyncMinHashLSH storage.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="datasketch.aio.AsyncMinHashLSH.insert">
+<em class="property"><span class="pre">async</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">insert</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">key</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">minhash</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">check_duplication</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/datasketch/aio/lsh.html#AsyncMinHashLSH.insert"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#datasketch.aio.AsyncMinHashLSH.insert" title="Link to this definition"></a></dt>
+<dd><p>See <a class="reference internal" href="#datasketch.MinHashLSH" title="datasketch.MinHashLSH"><code class="xref py py-class docutils literal notranslate"><span class="pre">datasketch.MinHashLSH</span></code></a>.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="datasketch.aio.AsyncMinHashLSH.insertion_session">
+<span class="sig-name descname"><span class="pre">insertion_session</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">batch_size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">10000</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/datasketch/aio/lsh.html#AsyncMinHashLSH.insertion_session"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#datasketch.aio.AsyncMinHashLSH.insertion_session" title="Link to this definition"></a></dt>
+<dd><p>Create a asynchronous context manager for fast insertion in index.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>batch_size</strong> (<em>int</em>) – the size of chunks to use in insert_session mode (default=10000).</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>datasketch.aio.lsh.AsyncMinHashLSHInsertionSession</p>
+</dd>
+</dl>
+<p class="rubric">Example</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">asyncio</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">datasketch.aio</span><span class="w"> </span><span class="kn">import</span> <span class="n">AsyncMinHashLSH</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">datasketch</span><span class="w"> </span><span class="kn">import</span> <span class="n">MinHash</span>
+
+<span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">main</span><span class="p">():</span>
+    <span class="n">storage_config</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;aiomongo&quot;</span><span class="p">,</span> <span class="s2">&quot;mongo&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;host&quot;</span><span class="p">:</span> <span class="s2">&quot;localhost&quot;</span><span class="p">,</span> <span class="s2">&quot;port&quot;</span><span class="p">:</span> <span class="mi">27017</span><span class="p">}}</span>
+    <span class="k">async</span> <span class="k">with</span> <span class="n">AsyncMinHashLSH</span><span class="p">(</span>
+        <span class="n">storage_config</span><span class="o">=</span><span class="n">storage_config</span><span class="p">,</span> <span class="n">threshold</span><span class="o">=</span><span class="mf">0.5</span><span class="p">,</span> <span class="n">num_perm</span><span class="o">=</span><span class="mi">16</span><span class="p">,</span> <span class="n">prepickle</span><span class="o">=</span><span class="kc">True</span>
+    <span class="p">)</span> <span class="k">as</span> <span class="n">lsh</span><span class="p">:</span>
+        <span class="k">async</span> <span class="k">with</span> <span class="n">lsh</span><span class="o">.</span><span class="n">insertion_session</span><span class="p">(</span><span class="n">batch_size</span><span class="o">=</span><span class="mi">1000</span><span class="p">)</span> <span class="k">as</span> <span class="n">session</span><span class="p">:</span>
+            <span class="n">m</span> <span class="o">=</span> <span class="n">MinHash</span><span class="p">(</span><span class="n">num_perm</span><span class="o">=</span><span class="mi">16</span><span class="p">)</span>
+            <span class="n">m</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="sa">b</span><span class="s2">&quot;data&quot;</span><span class="p">)</span>
+            <span class="k">await</span> <span class="n">session</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="s2">&quot;key&quot;</span><span class="p">,</span> <span class="n">m</span><span class="p">)</span>
+
+<span class="n">asyncio</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">main</span><span class="p">())</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="datasketch.aio.AsyncMinHashLSH.delete_session">
+<span class="sig-name descname"><span class="pre">delete_session</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">batch_size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">10000</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/datasketch/aio/lsh.html#AsyncMinHashLSH.delete_session"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#datasketch.aio.AsyncMinHashLSH.delete_session" title="Link to this definition"></a></dt>
+<dd><p>Create a asynchronous context manager for fast removal of keys
+from index.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>batch_size</strong> (<em>int</em>) – the size of chunks to use in delete_session mode (default=10000).</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>datasketch.aio.lsh.AsyncMinHashLSHDeleteSession</p>
+</dd>
+</dl>
+<p class="rubric">Example</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">asyncio</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">datasketch.aio</span><span class="w"> </span><span class="kn">import</span> <span class="n">AsyncMinHashLSH</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">datasketch</span><span class="w"> </span><span class="kn">import</span> <span class="n">MinHash</span>
+
+<span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">main</span><span class="p">():</span>
+    <span class="n">storage_config</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;aiomongo&quot;</span><span class="p">,</span> <span class="s2">&quot;mongo&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;host&quot;</span><span class="p">:</span> <span class="s2">&quot;localhost&quot;</span><span class="p">,</span> <span class="s2">&quot;port&quot;</span><span class="p">:</span> <span class="mi">27017</span><span class="p">}}</span>
+    <span class="k">async</span> <span class="k">with</span> <span class="n">AsyncMinHashLSH</span><span class="p">(</span>
+        <span class="n">storage_config</span><span class="o">=</span><span class="n">storage_config</span><span class="p">,</span> <span class="n">threshold</span><span class="o">=</span><span class="mf">0.5</span><span class="p">,</span> <span class="n">num_perm</span><span class="o">=</span><span class="mi">16</span><span class="p">,</span> <span class="n">prepickle</span><span class="o">=</span><span class="kc">True</span>
+    <span class="p">)</span> <span class="k">as</span> <span class="n">lsh</span><span class="p">:</span>
+        <span class="c1"># Insert some data first</span>
+        <span class="n">m</span> <span class="o">=</span> <span class="n">MinHash</span><span class="p">(</span><span class="n">num_perm</span><span class="o">=</span><span class="mi">16</span><span class="p">)</span>
+        <span class="n">m</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="sa">b</span><span class="s2">&quot;data&quot;</span><span class="p">)</span>
+        <span class="k">await</span> <span class="n">lsh</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="s2">&quot;key1&quot;</span><span class="p">,</span> <span class="n">m</span><span class="p">)</span>
+
+        <span class="c1"># Delete using session</span>
+        <span class="k">async</span> <span class="k">with</span> <span class="n">lsh</span><span class="o">.</span><span class="n">delete_session</span><span class="p">(</span><span class="n">batch_size</span><span class="o">=</span><span class="mi">100</span><span class="p">)</span> <span class="k">as</span> <span class="n">session</span><span class="p">:</span>
+            <span class="k">await</span> <span class="n">session</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="s2">&quot;key1&quot;</span><span class="p">)</span>
+
+<span class="n">asyncio</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">main</span><span class="p">())</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="datasketch.aio.AsyncMinHashLSH.query">
+<em class="property"><span class="pre">async</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">query</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">minhash</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/datasketch/aio/lsh.html#AsyncMinHashLSH.query"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#datasketch.aio.AsyncMinHashLSH.query" title="Link to this definition"></a></dt>
+<dd><p>See <a class="reference internal" href="#datasketch.MinHashLSH" title="datasketch.MinHashLSH"><code class="xref py py-class docutils literal notranslate"><span class="pre">datasketch.MinHashLSH</span></code></a>.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="datasketch.aio.AsyncMinHashLSH.has_key">
+<em class="property"><span class="pre">async</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">has_key</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">key</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/datasketch/aio/lsh.html#AsyncMinHashLSH.has_key"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#datasketch.aio.AsyncMinHashLSH.has_key" title="Link to this definition"></a></dt>
+<dd><p>See <a class="reference internal" href="#datasketch.MinHashLSH" title="datasketch.MinHashLSH"><code class="xref py py-class docutils literal notranslate"><span class="pre">datasketch.MinHashLSH</span></code></a>.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="datasketch.aio.AsyncMinHashLSH.remove">
+<em class="property"><span class="pre">async</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">remove</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">key</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/datasketch/aio/lsh.html#AsyncMinHashLSH.remove"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#datasketch.aio.AsyncMinHashLSH.remove" title="Link to this definition"></a></dt>
+<dd><p>See <a class="reference internal" href="#datasketch.MinHashLSH" title="datasketch.MinHashLSH"><code class="xref py py-class docutils literal notranslate"><span class="pre">datasketch.MinHashLSH</span></code></a>.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="datasketch.aio.AsyncMinHashLSH.is_empty">
+<em class="property"><span class="pre">async</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">is_empty</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/datasketch/aio/lsh.html#AsyncMinHashLSH.is_empty"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#datasketch.aio.AsyncMinHashLSH.is_empty" title="Link to this definition"></a></dt>
+<dd><p>See <a class="reference internal" href="#datasketch.MinHashLSH" title="datasketch.MinHashLSH"><code class="xref py py-class docutils literal notranslate"><span class="pre">datasketch.MinHashLSH</span></code></a>.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="datasketch.aio.AsyncMinHashLSH.get_counts">
+<em class="property"><span class="pre">async</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">get_counts</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/datasketch/aio/lsh.html#AsyncMinHashLSH.get_counts"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#datasketch.aio.AsyncMinHashLSH.get_counts" title="Link to this definition"></a></dt>
+<dd><p>See <a class="reference internal" href="#datasketch.MinHashLSH" title="datasketch.MinHashLSH"><code class="xref py py-class docutils literal notranslate"><span class="pre">datasketch.MinHashLSH</span></code></a>.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="datasketch.aio.AsyncMinHashLSH.get_subset_counts">
+<em class="property"><span class="pre">async</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">get_subset_counts</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">keys</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/datasketch/aio/lsh.html#AsyncMinHashLSH.get_subset_counts"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#datasketch.aio.AsyncMinHashLSH.get_subset_counts" title="Link to this definition"></a></dt>
+<dd><p>See <a class="reference internal" href="#datasketch.MinHashLSH" title="datasketch.MinHashLSH"><code class="xref py py-class docutils literal notranslate"><span class="pre">datasketch.MinHashLSH</span></code></a>.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="datasketch.aio.AsyncMinHashLSH.__weakref__">
+<span class="sig-name descname"><span class="pre">__weakref__</span></span><a class="headerlink" href="#datasketch.aio.AsyncMinHashLSH.__weakref__" title="Link to this definition"></a></dt>
+<dd><p>list of weak references to the object (if defined)</p>
+</dd></dl>
+
+</dd></dl>
+
 </section>
 <section id="lshbloom">
 <h2>LSHBloom<a class="headerlink" href="#lshbloom" title="Link to this heading"></a></h2>
