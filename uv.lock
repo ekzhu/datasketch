@@ -613,7 +613,8 @@ benchmark = [
     { name = "fonttools" },
     { name = "matplotlib", version = "3.9.4", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.10'" },
     { name = "matplotlib", version = "3.10.7", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.10'" },
-    { name = "nltk", marker = "python_full_version >= '3.10'" },
+    { name = "nltk", version = "3.9.2", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.10'" },
+    { name = "nltk", version = "3.9.4", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.10'" },
     { name = "pandas" },
     { name = "pillow", version = "12.2.0", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.10'" },
     { name = "pyfarmhash" },
@@ -648,6 +649,7 @@ test = [
     { name = "nose-exclude" },
     { name = "pygments" },
     { name = "pymongo" },
+    { name = "pytest", version = "8.4.2", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.10'" },
     { name = "pytest", version = "9.0.3", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.10'" },
     { name = "pytest-asyncio", version = "1.2.0", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.10'" },
     { name = "pytest-asyncio", version = "1.3.0", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.10'" },
@@ -671,6 +673,7 @@ requires-dist = [
     { name = "motor", marker = "extra == 'aio'", specifier = ">3.6.0" },
     { name = "motor", marker = "extra == 'experimental-aio'", specifier = ">3.6.0" },
     { name = "nltk", marker = "python_full_version >= '3.10' and extra == 'benchmark'", specifier = ">=3.9.4" },
+    { name = "nltk", marker = "python_full_version < '3.10' and extra == 'benchmark'", specifier = ">=3.4.5" },
     { name = "nose", marker = "extra == 'test'", specifier = ">=1.3.7" },
     { name = "nose-exclude", marker = "extra == 'test'", specifier = ">=0.5.0" },
     { name = "numpy", specifier = ">=1.11" },
@@ -682,6 +685,7 @@ requires-dist = [
     { name = "pyhash", marker = "extra == 'benchmark'", specifier = ">=0.9.3" },
     { name = "pymongo", marker = "extra == 'test'", specifier = ">=3.9.0" },
     { name = "pytest", marker = "python_full_version >= '3.10' and extra == 'test'", specifier = ">=9.0.3" },
+    { name = "pytest", marker = "python_full_version < '3.10' and extra == 'test'" },
     { name = "pytest-asyncio", marker = "extra == 'test'" },
     { name = "pytest-cov", marker = "extra == 'test'" },
     { name = "pytest-rerunfailures", marker = "extra == 'test'" },
@@ -1245,8 +1249,31 @@ wheels = [
 
 [[package]]
 name = "nltk"
+version = "3.9.2"
+source = { registry = "https://pypi.org/simple" }
+resolution-markers = [
+    "python_full_version < '3.10'",
+]
+dependencies = [
+    { name = "click", version = "8.1.8", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.10'" },
+    { name = "joblib", marker = "python_full_version < '3.10'" },
+    { name = "regex", marker = "python_full_version < '3.10'" },
+    { name = "tqdm", marker = "python_full_version < '3.10'" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/f9/76/3a5e4312c19a028770f86fd7c058cf9f4ec4321c6cf7526bab998a5b683c/nltk-3.9.2.tar.gz", hash = "sha256:0f409e9b069ca4177c1903c3e843eef90c7e92992fa4931ae607da6de49e1419", size = 2887629, upload-time = "2025-10-01T07:19:23.764Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/60/90/81ac364ef94209c100e12579629dc92bf7a709a84af32f8c551b02c07e94/nltk-3.9.2-py3-none-any.whl", hash = "sha256:1e209d2b3009110635ed9709a67a1a3e33a10f799490fa71cf4bec218c11c88a", size = 1513404, upload-time = "2025-10-01T07:19:21.648Z" },
+]
+
+[[package]]
+name = "nltk"
 version = "3.9.4"
 source = { registry = "https://pypi.org/simple" }
+resolution-markers = [
+    "python_full_version >= '3.12'",
+    "python_full_version == '3.11.*'",
+    "python_full_version == '3.10.*'",
+]
 dependencies = [
     { name = "click", version = "8.3.0", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.10'" },
     { name = "joblib", marker = "python_full_version >= '3.10'" },
@@ -2549,7 +2576,7 @@ name = "tqdm"
 version = "4.67.1"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
-    { name = "colorama", marker = "python_full_version >= '3.10' and sys_platform == 'win32'" },
+    { name = "colorama", marker = "sys_platform == 'win32'" },
 ]
 sdist = { url = "https://files.pythonhosted.org/packages/a8/4b/29b4ef32e036bb34e4ab51796dd745cdba7ed47ad142a9f4a1eb8e0c744d/tqdm-4.67.1.tar.gz", hash = "sha256:f8aef9c52c08c13a65f30ea34f4e5aac3fd1a34959879d7e59e63027286627f2", size = 169737, upload-time = "2024-11-24T20:12:22.481Z" }
 wheels = [
