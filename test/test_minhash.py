@@ -57,12 +57,13 @@ class TestMinHash(unittest.TestCase):
         self.assertTrue(m1.jaccard(m2) == 1.0)
 
     def test_union(self):
-        m1 = minhash.MinHash(4, 1, hashfunc=fake_hash_func)
-        m2 = minhash.MinHash(4, 1, hashfunc=fake_hash_func)
+        m1 = minhash.MinHash(4, 1, gpu_mode="detect", hashfunc=fake_hash_func)
+        m2 = minhash.MinHash(4, 1, gpu_mode="detect", hashfunc=fake_hash_func)
         m2.update(12)
         u = minhash.MinHash.union(m1, m2)
         self.assertTrue(u.jaccard(m2) == 1.0)
         self.assertIs(u.hashfunc, fake_hash_func)
+        self.assertEqual(u._gpu_mode, "detect")
         u.update(13)
 
     def test_pickle(self):
