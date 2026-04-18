@@ -98,6 +98,8 @@ class TestHyperLogLog(unittest.TestCase):
         self.assertEqual(h.reg[0b1111], self._class._hash_range_bit - 4)
         self.assertEqual(h.reg[1], 1)
         self.assertEqual(h.reg[5], self._class._hash_range_bit - 4 - 3)
+        self.assertIs(h.hashfunc, fake_hash_func)
+        h.update(0x000000A7)
 
     def test_eq(self):
         h1 = self._class(4, hashfunc=fake_hash_func)
@@ -170,6 +172,8 @@ class TestHyperLogLogPlusPlus(TestHyperLogLog):
         self.assertEqual(h.reg[0b1111], self._class._hash_range_bit - 4)
         self.assertEqual(h.reg[1], 1)
         self.assertEqual(h.reg[5], self._class._hash_range_bit - 4 - 3)
+        self.assertIs(h.hashfunc, fake_hash_func)
+        h.update(0x000000A7)
 
 
 if __name__ == "__main__":
