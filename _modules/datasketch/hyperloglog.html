@@ -375,7 +375,7 @@
 <span class="s2">                    different precisions&quot;</span>
             <span class="p">)</span>
         <span class="n">reg</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">maximum</span><span class="o">.</span><span class="n">reduce</span><span class="p">([</span><span class="n">h</span><span class="o">.</span><span class="n">reg</span> <span class="k">for</span> <span class="n">h</span> <span class="ow">in</span> <span class="n">hyperloglogs</span><span class="p">])</span>
-        <span class="k">return</span> <span class="bp">cls</span><span class="p">(</span><span class="n">reg</span><span class="o">=</span><span class="n">reg</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">cls</span><span class="p">(</span><span class="n">reg</span><span class="o">=</span><span class="n">reg</span><span class="p">,</span> <span class="n">hashfunc</span><span class="o">=</span><span class="n">hyperloglogs</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">hashfunc</span><span class="p">)</span>
 
 <div class="viewcode-block" id="HyperLogLog.bytesize">
 <a class="viewcode-back" href="../../documentation.html#datasketch.HyperLogLog.bytesize">[docs]</a>
