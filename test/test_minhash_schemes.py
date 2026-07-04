@@ -632,6 +632,26 @@ class TestBBitSchemes(unittest.TestCase):
                 self.assertEqual(bb, bb2, (scheme, b))
                 self.assertEqual(bb2.scheme, scheme, (scheme, b))
 
+    def test_estimation_accuracy_per_scheme(self):
+        # b-bit keeps the *low* bits of each min hash value, which are the
+        # softest bits of a multiply-shift (affine) output, so verify the
+        # estimate stays accurate under every scheme. Two sets of size 1000
+        # sharing 500 elements have true Jaccard 500 / 1500 = 1/3.
+        true_j = 1.0 / 3.0
+        a = [b"w%d" % i for i in range(0, 1000)]
+        b_set = [b"w%d" % i for i in range(500, 1500)]
+        for scheme in ALL_SCHEMES:
+            ma = MinHash(num_perm=512, seed=7, scheme=scheme)
+            mb = MinHash(num_perm=512, seed=7, scheme=scheme)
+            ma.update_batch(a)
+            mb.update_batch(b_set)
+            for nbits in (1, 4, 8, 16, 32):
+                est = bBitMinHash(ma, nbits).jaccard(bBitMinHash(mb, nbits))
+                self.assertLess(abs(est - true_j), 0.1, (scheme, nbits))
+            # Keeping all 32 bits reproduces the full MinHash estimate.
+            est32 = bBitMinHash(ma, 32).jaccard(bBitMinHash(mb, 32))
+            self.assertLess(abs(est32 - ma.jaccard(mb)), 0.02, scheme)
+
 
 class TestLSHIntegration(unittest.TestCase):
     def _tokens(self, words):

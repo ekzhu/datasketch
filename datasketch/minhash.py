@@ -42,6 +42,12 @@ _hash_range = 1 << 32
 # function and inflates similarity estimates on large sets.
 # See https://github.com/ekzhu/datasketch/issues/212.
 #
+# a_k * h + b_k mod 2^w is 2-universal but not provably min-wise independent,
+# so the estimator's accuracy here is empirical, not proven: it rests on the
+# bijection property (which removes the large-set collision bias above), the
+# fmix pre-mix (which spreads structured inputs), and the bias/accuracy
+# benchmarks in benchmark/sketches/ and test/test_minhash_schemes.py.
+#
 # "legacy" (the only scheme before 2.0.0): (a * h + b) % mersenne_prime
 # truncated to 32 bits, stored in uint64. Preserved bit-for-bit so sketches
 # created by earlier versions keep working.
