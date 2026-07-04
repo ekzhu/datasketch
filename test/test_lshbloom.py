@@ -7,7 +7,20 @@ import numpy as np
 from datasketch.lsh_bloom import BloomTable, MinHashLSHBloom
 from datasketch.minhash import MinHash
 
+# pybloomfilter is an optional dependency (the `bloom` extra); the classes
+# above import fine without it but raise on use. Skip rather than error when
+# it is absent, as the GPU and storage-backend tests do for theirs.
+try:
+    import pybloomfilter  # noqa: F401
 
+    BLOOM_AVAILABLE = True
+except ImportError:
+    BLOOM_AVAILABLE = False
+
+_SKIP_REASON = "pybloomfilter not installed (pip install datasketch[bloom])"
+
+
+@unittest.skipUnless(BLOOM_AVAILABLE, _SKIP_REASON)
 class TestBloomTable(unittest.TestCase):
     def test_insert(self):
         r = 3
@@ -48,6 +61,7 @@ class TestBloomTable(unittest.TestCase):
             self.assertTrue(b_.query(item))
 
 
+@unittest.skipUnless(BLOOM_AVAILABLE, _SKIP_REASON)
 class TestMinHashLSHBloom(unittest.TestCase):
     def test_init(self):
         lsh = MinHashLSHBloom(threshold=0.8, n=10, fp=0.01)
