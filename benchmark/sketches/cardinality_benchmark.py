@@ -1,5 +1,10 @@
-import time, logging, random, struct
-import pyhash
+'''
+Test the accuracy of cardinality estimation using data sketches.
+Requires mmh3, used as a seeded hash function to obtain independent
+runs.
+'''
+import logging
+import mmh3
 from datasketch.hyperloglog import HyperLogLog
 from datasketch.minhash import MinHash
 
@@ -8,34 +13,29 @@ logging.basicConfig(level=logging.INFO)
 # Produce some bytes
 int_bytes = lambda x : ("a-%d-%d" % (x, x)).encode('utf-8')
 
-class Hash(object):
-    def __init__(self, h):
-        self.h = h
-    def digest(self):
-        return struct.pack('<I', self.h)
+def seeded_hashfunc(seed):
+    return lambda d: mmh3.hash(d, seed, signed=False)
 
 def _gen_data(size):
     return [int_bytes(i) for i in range(size)]
 
 def _run_hyperloglog(data, seed, p):
-    hasher = pyhash.murmur3_32()
-    h = HyperLogLog(p=p, hashobj=Hash)
+    h = HyperLogLog(p=p, hashfunc=seeded_hashfunc(seed))
     for d in data:
-        h.update(hasher(d, seed=seed))
+        h.update(d)
     return h.count()
 
 def _run_minhash(data, seed, p):
-    hasher = pyhash.murmur3_32()
-    m = MinHash(num_perm=2**p, hashobj=Hash)
+    m = MinHash(num_perm=2**p, hashfunc=seeded_hashfunc(seed))
     for d in data:
-        m.update(hasher(d, seed=seed))
+        m.update(d)
     return m.count()
 
 def _run_test(data, n, p):
     logging.info("Running HyperLogLog with p = %d" % p)
-    hll_runs = [_run_hyperloglog(data, i, p) for i in xrange(n)]
+    hll_runs = [_run_hyperloglog(data, i, p) for i in range(n)]
     logging.info("Running MinHash with num_perm = %d" % 2**p)
-    minhash_runs = [_run_minhash(data, i, p) for i in xrange(n)]
+    minhash_runs = [_run_minhash(data, i, p) for i in range(n)]
     return (hll_runs, minhash_runs)
 
 
@@ -48,7 +48,6 @@ def plot_hist(ax, est_cards, bins, title, exact_card):
     errors = [float(exact_card - c)/float(exact_card) for c in est_cards]
     errors.sort()
     ax.plot(errors, 'g.', markersize=12)
-    # ax.hist(errors, histtype='stepfilled', facecolor='g', alpha=0.75)
     ax.set_title(title)
 
 

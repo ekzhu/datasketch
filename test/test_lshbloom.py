@@ -86,6 +86,16 @@ class TestMinHashLSHBloom(unittest.TestCase):
         m3 = MinHash(18)
         self.assertRaises(ValueError, lsh.query, m3)
 
+    def test_scheme_mismatch(self):
+        lsh = MinHashLSHBloom(threshold=0.5, num_perm=16, n=10, fp=0.01)
+        m1 = MinHash(16)
+        m1.update(b"a")
+        lsh.insert(m1)
+        m2 = MinHash(16, scheme="legacy")
+        m2.update(b"a")
+        self.assertRaises(ValueError, lsh.insert, m2)
+        self.assertRaises(ValueError, lsh.query, m2)
+
     def test_save(self):
         save_path = "./test_save/"
         for item in glob(f"{save_path}/*.bf"):

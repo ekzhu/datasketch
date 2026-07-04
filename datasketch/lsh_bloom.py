@@ -8,7 +8,7 @@ from typing import Optional
 import numpy as np
 from scipy.integrate import quad as integrate
 
-from datasketch.minhash import MinHash
+from datasketch.minhash import MinHash, _check_scheme_consistency
 
 try:
     import pybloomfilter
@@ -91,6 +91,15 @@ if pybloomfilter is not None:
                     f"Invalid length for indices, {len(hashvalues)}, expected {self.r} hashvalues in band"
                 )
 
+        def _band_hash(self, hashvalues) -> int:
+            # https://en.wikipedia.org/wiki/Universal_hashing#Hashing_vectors
+            # as the hashvalues are the result of a universal hashing function,
+            # their sum is also a universal hash function.
+            # Sum in uint64 regardless of the MinHash scheme's value width so
+            # the result is deterministic across numpy versions and schemes.
+            x = np.sum(np.asarray(hashvalues, dtype=np.uint64), dtype=np.uint64)
+            return int(x % _mersenne_prime)
+
         def insert(self, hashvalues: list[int]) -> None:
             """Takes as input the indices for a single band and inserts them into the corresponding bit arrays.
 
@@ -99,11 +108,7 @@ if pybloomfilter is not None:
 
             """
             self.assert_size(hashvalues)
-            # https://en.wikipedia.org/wiki/Universal_hashing#Hashing_vectors
-            # as the hashvalues are the result of a universal hashing function,
-            # their sum is also a universal hash function
-            x = sum(hashvalues) % _mersenne_prime
-            self.bloom_filter.add(x)
+            self.bloom_filter.add(self._band_hash(hashvalues))
 
         def query(self, hashvalues: list[int]) -> bool:
             """Takes as input the indices for a single band and queries them against the corresponding arrays
@@ -114,8 +119,7 @@ if pybloomfilter is not None:
 
             """
             self.assert_size(hashvalues)
-            x = sum(hashvalues) % _mersenne_prime
-            return x in self.bloom_filter
+            return self._band_hash(hashvalues) in self.bloom_filter
 else:
 
     class BloomTable:
@@ -294,6 +298,10 @@ class MinHashLSHBloom:
             for i in range(self.b)
         ]
         self.hashranges = [(i * self.r, (i + 1) * self.r) for i in range(self.b)]
+        # The permutation scheme of the indexed MinHash, learned from the
+        # first insert. Note that an index restored from Bloom filter files
+        # re-learns the scheme on its first insert.
+        self._minhash_scheme: Optional[str] = None
 
     def insert(self, minhash: MinHash):
         """Insert the MinHash or Weighted MinHash
@@ -308,6 +316,7 @@ class MinHashLSHBloom:
     def _insert(self, minhash: MinHash):
         if len(minhash) != self.h:
             raise ValueError("Expecting minhash with length %d, got %d" % (self.h, len(minhash)))
+        self._minhash_scheme = _check_scheme_consistency(getattr(self, "_minhash_scheme", None), minhash)
 
         Hs = [minhash.hashvalues[start:end] for start, end in self.hashranges]
 
@@ -362,6 +371,7 @@ class MinHashLSHBloom:
         """
         if len(minhash) != self.h:
             raise ValueError("Expecting minhash with length %d, got %d" % (self.h, len(minhash)))
+        _check_scheme_consistency(getattr(self, "_minhash_scheme", None), minhash)
 
         # if we match in any band, this is a candidate pair
         for (start, end), hashtable in zip(self.hashranges, self.hashtables):

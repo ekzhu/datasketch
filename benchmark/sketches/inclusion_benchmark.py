@@ -1,13 +1,14 @@
 '''
-Test the accuracy of inclusion estimation using data sketches
-Must be using Python 2 as pyhash does not support Python 3
+Test the accuracy of inclusion estimation using data sketches.
+Requires mmh3, used as a seeded hash function to obtain independent
+runs.
 HyperLogLog inclusion score is computed using cardinality estimate
 and inclusion-exclusion principle.
 MinHash inclusion score is computed using Jaccard estiamte,
 inclusion-exclusion principle, and the exact cardinality.
 '''
-import time, logging, random, struct
-import pyhash
+import logging
+import mmh3
 from datasketch.hyperloglog import HyperLogLog
 from datasketch.minhash import MinHash
 
@@ -16,11 +17,8 @@ logging.basicConfig(level=logging.INFO)
 # Produce some bytes
 int_bytes = lambda x : ("a-%d-%d" % (x, x)).encode('utf-8')
 
-class Hash(object):
-    def __init__(self, h):
-        self.h = h
-    def digest(self):
-        return struct.pack('<I', self.h)
+def seeded_hashfunc(seed):
+    return lambda d: mmh3.hash(d, seed, signed=False)
 
 def _gen_data(size):
     return [int_bytes(i) for i in range(size)]
@@ -50,31 +48,31 @@ def _hyperloglog_inclusion(h1, h2):
 
 def _run_hyperloglog(A, B, data, seed, p):
     (a_start, a_end), (b_start, b_end) = A, B
-    hasher = pyhash.murmur3_32()
-    h1 = HyperLogLog(p=p, hashobj=Hash)
-    h2 = HyperLogLog(p=p, hashobj=Hash)
-    for i in xrange(a_start, a_end):
-        h1.update(hasher(data[i], seed=seed))
-    for i in xrange(b_start, b_end):
-        h2.update(hasher(data[i], seed=seed))
+    hashfunc = seeded_hashfunc(seed)
+    h1 = HyperLogLog(p=p, hashfunc=hashfunc)
+    h2 = HyperLogLog(p=p, hashfunc=hashfunc)
+    for i in range(a_start, a_end):
+        h1.update(data[i])
+    for i in range(b_start, b_end):
+        h2.update(data[i])
     return _hyperloglog_inclusion(h1, h2)
 
 def _run_minhash(A, B, data, seed, p):
     (a_start, a_end), (b_start, b_end) = A, B
-    hasher = pyhash.murmur3_32()
-    m1 = MinHash(num_perm=2**p, hashobj=Hash)
-    m2 = MinHash(num_perm=2**p, hashobj=Hash)
-    for i in xrange(a_start, a_end):
-        m1.update(hasher(data[i], seed=seed))
-    for i in xrange(b_start, b_end):
-        m2.update(hasher(data[i], seed=seed))
+    hashfunc = seeded_hashfunc(seed)
+    m1 = MinHash(num_perm=2**p, hashfunc=hashfunc)
+    m2 = MinHash(num_perm=2**p, hashfunc=hashfunc)
+    for i in range(a_start, a_end):
+        m1.update(data[i])
+    for i in range(b_start, b_end):
+        m2.update(data[i])
     return _minhash_inclusion(m1, m2)
 
 def _run_test(A, B, data, n, p):
     logging.info("Running HyperLogLog with p = %d" % p)
-    hll_runs = [_run_hyperloglog(A, B, data, i, p) for i in xrange(n)]
+    hll_runs = [_run_hyperloglog(A, B, data, i, p) for i in range(n)]
     logging.info("Running MinHash with num_perm = %d" % 2**p)
-    minhash_runs = [_run_minhash(A, B, data, i, p) for i in xrange(n)]
+    minhash_runs = [_run_minhash(A, B, data, i, p) for i in range(n)]
     return (hll_runs, minhash_runs)
 
 

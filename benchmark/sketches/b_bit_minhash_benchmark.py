@@ -1,15 +1,22 @@
 """
-Benchmarking the performance and accuracy of b-bit MinHash.
+Benchmarking the accuracy of b-bit MinHash against the full MinHash.
+
+For each true Jaccard similarity, two sets with exactly that similarity
+are sketched 100 times, each run using a different set of random hash
+functions (a different MinHash seed). The plot shows the sorted Jaccard
+estimates of all runs for the full MinHash and for 1-, 2- and 3-bit
+MinHash against the exact similarity, so the vertical span of each line
+is the spread of the estimator; the standard deviation of each estimator
+is printed in each panel.
 """
-import time, logging
-from numpy import random
+import logging
 import matplotlib
+import numpy as np
 
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 from datasketch.minhash import MinHash
 from datasketch.b_bit_minhash import bBitMinHash
-from datasketch.hashfunc import *
 
 logging.basicConfig(level=logging.INFO)
 
@@ -17,95 +24,72 @@ logging.basicConfig(level=logging.INFO)
 int_bytes = lambda x: ("a-%d-%d" % (x, x)).encode("utf-8")
 
 
-def run_perf(card, num_perm, num_bits):
-    dur = 0
-    n_trials = 5
-    for i in range(n_trials):
-        m = MinHash(num_perm=num_perm)
-        logging.info("MinHash using %d permutation functions" % num_perm)
-        start = time.perf_counter()
-        for i in range(card):
-            m.update(int_bytes(i))
-
-        b = bBitMinHash(m, num_bits)
-        duration = time.perf_counter() - start
-        dur += duration
-        logging.info("Digested %d hashes in %.4f sec" % (card, duration))
-    return dur / n_trials
+def make_sets(jaccard, union_size):
+    """Two lists of distinct tokens whose exact Jaccard is `jaccard`."""
+    num_common = int(round(jaccard * union_size))
+    num_only = (union_size - num_common) // 2
+    tokens = [int_bytes(i) for i in range(num_common + 2 * num_only)]
+    common = tokens[:num_common]
+    a_only = tokens[num_common : num_common + num_only]
+    b_only = tokens[num_common + num_only :]
+    return common + a_only, common + b_only
 
 
-def _run_acc(size, seed, num_perm, num_bits):
-    m = MinHash(num_perm=num_perm)
-    s = set()
-    random.seed(seed)
-    for i in range(size):
-        v = int_bytes(random.randint(1, size))
-        m.update(v)
-        s.add(v)
-
-    b = bBitMinHash(m, num_bits)
-    return (b, s)
-
-
-def run_acc(size, num_perm, num_bits):
-    logging.info("MinHash using %d permutation functions" % num_perm)
-    m1, s1 = _run_acc(size, 1, num_perm, num_bits)
-    m2, s2 = _run_acc(size, 4, num_perm, num_bits)
-    j = float(len(s1.intersection(s2))) / float(len(s1.union(s2)))
-    j_e = m1.jaccard(m2)
-    err = abs(j - j_e)
-    return err
+def run(jaccard, union_size, num_perm, num_runs, bits):
+    estimates = {"minhash": []}
+    for b in bits:
+        estimates[b] = []
+    a, b_set = make_sets(jaccard, union_size)
+    for seed in range(1, num_runs + 1):
+        m1 = MinHash(num_perm=num_perm, seed=seed)
+        m2 = MinHash(num_perm=num_perm, seed=seed)
+        m1.update_batch(a)
+        m2.update_batch(b_set)
+        estimates["minhash"].append(m1.jaccard(m2))
+        for b in bits:
+            estimates[b].append(bBitMinHash(m1, b).jaccard(bBitMinHash(m2, b)))
+    return estimates
 
 
-num_perms = range(10, 256, 20)
-num_bits = [1, 2, 3, 4, 8, 12, 16, 32]
-bit_colors = colors = [
-    "#1f77b4",
-    "#ff7f0e",
-    "#2ca02c",
-    "#d62728",
-    "#9467bd",
-    "#8c564b",
-    "#e377c2",
-    "#7f7f7f",
-]
+num_perm = 128
+num_runs = 100
+union_size = 5000
+jaccards = [0.2, 0.4, 0.8]
+bits = [1, 2, 3]
 output = "b_bit_minhash_benchmark.png"
 
-logging.info("> Running performance tests")
-card = 5000
-perf_times = {}
-for b in num_bits:
-    run_times = [run_perf(card, n, b) for n in num_perms]
-    perf_times[b] = run_times
-
-
-logging.info("> Running accuracy tests")
-size = 5000
-errors = {}
-for b in num_bits:
-    errs = [run_acc(size, n, b) for n in num_perms]
-    errors[b] = errs
-
-logging.info("> Plotting result")
-fig, axe = plt.subplots(1, 2, sharex=True, figsize=(10, 4))
-ax = axe[1]
-for i, b in enumerate(num_bits):
-    ax.plot(
-        num_perms, perf_times[b], marker="+", color=bit_colors[i], label=f"{b} bits"
-    )
-ax.set_xlabel("Number of permutation functions")
-ax.set_ylabel("Running time (sec)")
-ax.set_title("MinHash performance")
-ax.grid()
-ax.legend()
-ax = axe[0]
-for i, b in enumerate(num_bits):
-    ax.plot(num_perms, errors[b], marker="+", color=bit_colors[i], label=f"{b} bits")
-ax.set_xlabel("Number of permutation functions")
-ax.set_ylabel("Absolute error in Jaccard estimation")
-ax.set_title("MinHash accuracy")
-ax.grid()
-ax.legend()
+fig, axes = plt.subplots(1, len(jaccards), sharex=True, sharey=True, figsize=(15, 4.5))
+runs = range(1, num_runs + 1)
+for ax, jaccard in zip(axes, jaccards):
+    logging.info("> Running with exact Jaccard %.1f" % jaccard)
+    estimates = run(jaccard, union_size, num_perm, num_runs, bits)
+    series = [("MinHash", estimates["minhash"])]
+    series += [("%d-bit" % b, estimates[b]) for b in bits]
+    # Sort each estimator's runs so the slope and vertical span of a line
+    # show the spread of that estimator directly.
+    for label, values in series:
+        ax.plot(runs, sorted(values), label=label)
+    ax.axhline(jaccard, color="black", linestyle="--", label="Exact")
+    # Print the standard deviation of each estimator, in the corner
+    # away from the curves.
+    y0 = 0.29 if jaccard >= 0.6 else 0.96
+    ax.text(0.03, y0, "std of estimates", transform=ax.transAxes, fontsize=9, va="top")
+    for i, (label, values) in enumerate(series):
+        ax.text(
+            0.03,
+            y0 - 0.055 * (i + 1),
+            "%s: %.3f" % (label, np.std(values)),
+            transform=ax.transAxes,
+            fontsize=9,
+            color="C%d" % i,
+            va="top",
+        )
+    ax.set_title("%d perm funcs, exact = %.1f" % (num_perm, jaccard))
+    ax.set_xlabel("Runs with random hash functions, sorted by estimate")
+    ax.set_ylim(0.0, 1.0)
+    ax.grid()
+axes[0].set_ylabel("Jaccard")
+axes[-1].legend(loc="lower right")
 
 plt.tight_layout()
 fig.savefig(output)

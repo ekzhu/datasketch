@@ -68,7 +68,7 @@ class TestMinHashLSHForest(unittest.TestCase):
         for key in data:
             minhash_ori = data[key]
             hashvalues = forest.get_minhash_hashvalues(key)
-            minhash_retrieved = MinHash(hashvalues=hashvalues)
+            minhash_retrieved = MinHash(seed=minhash_ori.seed, hashvalues=hashvalues, scheme=minhash_ori.scheme)
             retrieved_hashvalues = minhash_retrieved.hashvalues
             self.assertEqual(len(hashvalues), len(retrieved_hashvalues))
             self.assertEqual(minhash_retrieved.jaccard(minhash_ori), 1.0)

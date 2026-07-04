@@ -14,6 +14,7 @@ from datasketch.aio.storage import (
     async_unordered_storage,
 )
 from datasketch.lsh import _optimal_param
+from datasketch.minhash import _check_scheme_consistency
 from datasketch.storage import _random_name, unordered_storage
 
 
@@ -88,6 +89,10 @@ class AsyncMinHashLSH:
         self.hashranges = [(i * self.r, (i + 1) * self.r) for i in range(self.b)]
         self.hashtables = None
         self.keys = None
+        # The permutation scheme of the indexed MinHash, learned from the
+        # first insert. Note that an index attached to pre-existing external
+        # storage re-learns the scheme on its first insert.
+        self._minhash_scheme: Optional[str] = None
 
         self._lock = asyncio.Lock()
         self._initialized = False
@@ -248,6 +253,7 @@ class AsyncMinHashLSH:
     async def _insert(self, key, minhash, check_duplication=True, buffer=False):
         if len(minhash) != self.h:
             raise ValueError("Expecting minhash with length %d, got %d" % (self.h, len(minhash)))
+        self._minhash_scheme = _check_scheme_consistency(getattr(self, "_minhash_scheme", None), minhash)
         if self._require_bytes_keys and not isinstance(key, bytes):
             raise TypeError(
                 f"prepickle=False requires bytes keys for non-dict storage, got {type(key).__name__}. "
@@ -272,6 +278,7 @@ class AsyncMinHashLSH:
         """See :class:`datasketch.MinHashLSH`."""
         if len(minhash) != self.h:
             raise ValueError("Expecting minhash with length %d, got %d" % (self.h, len(minhash)))
+        _check_scheme_consistency(getattr(self, "_minhash_scheme", None), minhash)
 
         fs = (
             hashtable.get(self._H(minhash.hashvalues[start:end]))
@@ -322,6 +329,7 @@ class AsyncMinHashLSH:
     async def _query_b(self, minhash, b):
         if len(minhash) != self.h:
             raise ValueError("Expecting minhash with length %d, got %d" % (self.h, len(minhash)))
+        _check_scheme_consistency(getattr(self, "_minhash_scheme", None), minhash)
         if b > len(self.hashtables):
             raise ValueError("b must be less or equal to the number of hash tables")
         fs = []

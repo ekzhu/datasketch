@@ -21,19 +21,31 @@ def _make_data(n: int):
     return [f"token-{i}".encode("utf-8") for i in range(n)]
 
 
+# The GPU path branches on the permutation scheme (legacy modular
+# arithmetic vs affine multiply-shift), so parity must hold per scheme.
+SCHEMES = ["affine32", "affine64", "legacy"]
+
+
 class TestMinHashGPU(unittest.TestCase):
     @unittest.skipUnless(GPU_AVAILABLE, "CuPy/CUDA not available")
     def test_update_batch_gpu_matches_cpu(self):
         data = _make_data(1000)
 
-        m_cpu = MinHash(num_perm=256, seed=7, gpu_mode="disable")
-        m_cpu.update_batch(data)
+        for scheme in SCHEMES:
+            with self.subTest(scheme=scheme):
+                m_cpu = MinHash(
+                    num_perm=256, seed=7, gpu_mode="disable", scheme=scheme)
+                m_cpu.update_batch(data)
 
-        # Force GPU path
-        m_gpu = MinHash(num_perm=256, seed=7, gpu_mode="always")
-        m_gpu.update_batch(data)
+                # Force GPU path
+                m_gpu = MinHash(
+                    num_perm=256, seed=7, gpu_mode="always", scheme=scheme)
+                m_gpu.update_batch(data)
 
-        self.assertTrue(np.array_equal(m_cpu.hashvalues, m_gpu.hashvalues))
+                self.assertEqual(
+                    m_cpu.hashvalues.dtype, m_gpu.hashvalues.dtype)
+                self.assertTrue(
+                    np.array_equal(m_cpu.hashvalues, m_gpu.hashvalues))
 
     @unittest.skipUnless(GPU_AVAILABLE, "CuPy/CUDA not available")
     def test_detect_mode_matches_cpu(self):
@@ -41,15 +53,20 @@ class TestMinHashGPU(unittest.TestCase):
         data1 = _make_data(500)
         data2 = _make_data(700)
 
-        m_cpu = MinHash(num_perm=128, seed=7, gpu_mode="disable")
-        m_cpu.update_batch(data1)
-        m_cpu.update_batch(data2)
+        for scheme in SCHEMES:
+            with self.subTest(scheme=scheme):
+                m_cpu = MinHash(
+                    num_perm=128, seed=7, gpu_mode="disable", scheme=scheme)
+                m_cpu.update_batch(data1)
+                m_cpu.update_batch(data2)
 
-        m_auto = MinHash(num_perm=128, seed=7, gpu_mode="detect")
-        m_auto.update_batch(data1)
-        m_auto.update_batch(data2)
+                m_auto = MinHash(
+                    num_perm=128, seed=7, gpu_mode="detect", scheme=scheme)
+                m_auto.update_batch(data1)
+                m_auto.update_batch(data2)
 
-        self.assertTrue(np.array_equal(m_cpu.hashvalues, m_auto.hashvalues))
+                self.assertTrue(
+                    np.array_equal(m_cpu.hashvalues, m_auto.hashvalues))
 
     def test_pickle_roundtrip_is_portable(self):
         """Pickle should drop device state so round-tripped objects are portable.
