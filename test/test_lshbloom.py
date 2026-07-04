@@ -9,12 +9,17 @@ from datasketch.minhash import MinHash
 
 # pybloomfilter is an optional dependency (the `bloom` extra); the classes
 # above import fine without it but raise on use. Skip rather than error when
-# it is absent, as the GPU and storage-backend tests do for theirs.
+# it is absent, as the GPU and storage-backend tests do for theirs -- but the
+# `bloom` extra IS installed in CI (see .github/workflows/test.yml), so a
+# missing pybloomfilter under CI means a broken setup, not an optional-dep
+# absence: fail loudly there instead of silently dropping coverage.
 try:
     import pybloomfilter  # noqa: F401
 
     BLOOM_AVAILABLE = True
 except ImportError:
+    if os.environ.get("CI"):
+        raise
     BLOOM_AVAILABLE = False
 
 _SKIP_REASON = "pybloomfilter not installed (pip install datasketch[bloom])"
