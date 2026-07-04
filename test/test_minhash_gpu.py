@@ -1,8 +1,10 @@
 import pickle
+import types
 import unittest
 
 import numpy as np
 
+import datasketch.minhash as _mh
 from datasketch import MinHash
 
 # Robust GPU availability check
@@ -94,3 +96,53 @@ class TestMinHashGPU(unittest.TestCase):
         m = MinHash(num_perm=64, seed=1, gpu_mode="always")
         with self.assertRaises(RuntimeError):
             m.update_batch(_make_data(32))
+
+
+class TestGPUPathOnCPU(unittest.TestCase):
+    """Exercise the GPU branch of update_batch without a CUDA device by
+    injecting a numpy-backed CuPy stand-in. This runs the same code the GPU
+    path runs (per scheme) and asserts it matches the CPU path -- unlike the
+    hardware-gated tests above, it always runs.
+    """
+
+    @staticmethod
+    def _shim():
+        # Only the cupy surface update_batch / _ensure_gpu_caches touch.
+        return types.SimpleNamespace(
+            uint32=np.uint32, uint64=np.uint64,
+            asarray=np.asarray, minimum=np.minimum, min=np.min,
+            bitwise_and=np.bitwise_and, asnumpy=np.asarray,
+        )
+
+    def _run_with_shim(self, cp_module, gpu_cache):
+        saved = (_mh.cp, _mh._GPU_OK_CACHE)
+        _mh.cp, _mh._GPU_OK_CACHE = cp_module, gpu_cache
+        try:
+            data = _make_data(500)
+            results = {}
+            for scheme in SCHEMES:
+                m = MinHash(num_perm=128, seed=3, scheme=scheme, gpu_mode="always")
+                m.update_batch(data)
+                results[scheme] = m.hashvalues
+            return results
+        finally:
+            _mh.cp, _mh._GPU_OK_CACHE = saved
+
+    def test_gpu_branch_matches_cpu_all_schemes(self):
+        gpu = self._run_with_shim(self._shim(), True)
+        data = _make_data(500)
+        for scheme in SCHEMES:
+            m_cpu = MinHash(num_perm=128, seed=3, scheme=scheme, gpu_mode="disable")
+            m_cpu.update_batch(data)
+            self.assertEqual(m_cpu.hashvalues.dtype, gpu[scheme].dtype, scheme)
+            self.assertTrue(np.array_equal(m_cpu.hashvalues, gpu[scheme]), scheme)
+
+    def test_shim_catches_wrong_cache_dtype(self):
+        # Mutation guard: forcing uint64 caches for affine32 changes the
+        # pre-truncation minimum ordering, so the result must differ from CPU.
+        bad = self._shim()
+        bad.uint32 = np.uint64  # affine32 caches wrongly built as uint64
+        gpu = self._run_with_shim(bad, True)
+        m_cpu = MinHash(num_perm=128, seed=3, scheme="affine32", gpu_mode="disable")
+        m_cpu.update_batch(_make_data(500))
+        self.assertFalse(np.array_equal(m_cpu.hashvalues, gpu["affine32"]))

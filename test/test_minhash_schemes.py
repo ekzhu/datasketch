@@ -462,6 +462,27 @@ class TestStatisticalBehavior(unittest.TestCase):
         # the known bias on this input (measured -0.061 for these seeds).
         self.assertLess(self._structured_bias("legacy"), -0.04)
 
+    def _structured_count_error(self, scheme, trials=12, n=5000, num_perm=256):
+        # Relative error of count() on sequential integers under an identity
+        # hash -- the structured-input class the fmix pre-mix was built for.
+        errors = []
+        for seed in range(trials):
+            m = MinHash(num_perm, seed=seed, hashfunc=fake_hash_func, scheme=scheme)
+            m.update_batch(range(n))
+            errors.append(m.count() / n - 1.0)
+        return sum(errors) / len(errors)
+
+    def test_affine_count_accurate_on_structured_input(self):
+        # affine's fmix keeps cardinality estimates accurate (measured
+        # about +0.013 to +0.027 for these seeds) well within tolerance.
+        for scheme in AFFINE_SCHEMES:
+            self.assertLess(abs(self._structured_count_error(scheme)), 0.10, scheme)
+
+    def test_legacy_count_collapses_on_structured_input(self):
+        # The legacy permutation collapses on structured input, so count()
+        # is far off (measured about -0.40 for these seeds).
+        self.assertLess(self._structured_count_error("legacy"), -0.15)
+
     def test_affine_accuracy_on_random_sets(self):
         rng = np.random.RandomState(99)
         for scheme in AFFINE_SCHEMES:
@@ -651,6 +672,24 @@ class TestBBitSchemes(unittest.TestCase):
             # Keeping all 32 bits reproduces the full MinHash estimate.
             est32 = bBitMinHash(ma, 32).jaccard(bBitMinHash(mb, 32))
             self.assertLess(abs(est32 - ma.jaccard(mb)), 0.02, scheme)
+
+    def test_setstate_unknown_scheme_code_raises(self):
+        # The pickle path (__setstate__) must reject a corrupt scheme byte,
+        # like deserialize() does. The byte sits right after the fixed header:
+        # "qi" (seed, negated size) for LeanMinHash, "<qBdi" (seed, b, r,
+        # negated size) for bBitMinHash. Valid codes are 1/2; 99 is unknown.
+        m = MinHash(16, 1, scheme="affine32")
+        m.update_batch([b"a", b"b", b"c"])
+
+        lean_buf = bytearray(LeanMinHash(m).__getstate__())
+        lean_buf[struct.calcsize("qi")] = 99
+        with self.assertRaises(ValueError):
+            LeanMinHash.__new__(LeanMinHash).__setstate__(lean_buf)
+
+        bbit_buf = bytearray(bBitMinHash(m, 4).__getstate__())
+        bbit_buf[struct.calcsize("<qBdi")] = 99
+        with self.assertRaises(ValueError):
+            bBitMinHash.__new__(bBitMinHash).__setstate__(bbit_buf)
 
 
 class TestLSHIntegration(unittest.TestCase):
