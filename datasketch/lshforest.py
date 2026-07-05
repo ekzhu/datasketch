@@ -150,10 +150,20 @@ class MinHashLSHForest:
                 f"The provided key does not exist in the LSHForest: {key}")
         # Each stored segment packs self.k hash values; derive the value byte
         # width from the segment size (4 for the "affine32" MinHash scheme,
-        # 8 for "affine64" and "legacy").
-        bytes_per_value = len(byteslist[0]) // self.k
+        # 8 for "affine64" and "legacy"). Validate before trusting it, so
+        # corrupted or truncated storage raises instead of being silently
+        # reinterpreted with the wrong width.
+        segment_size = len(byteslist[0])
+        bytes_per_value, remainder = divmod(segment_size, self.k)
+        if remainder != 0 or bytes_per_value not in (4, 8):
+            raise ValueError(
+                "Stored hash segment of %d bytes is not %d values of a "
+                "supported width (4 or 8 bytes)" % (segment_size, self.k)
+            )
+        if any(len(item) != segment_size for item in byteslist):
+            raise ValueError("Stored hash segments have inconsistent sizes")
         dtype = np.uint32 if bytes_per_value == 4 else np.uint64
-        values_per_segment = len(byteslist[0]) // np.dtype(dtype).itemsize
+        values_per_segment = segment_size // np.dtype(dtype).itemsize
         hashvalues = np.empty(
             len(byteslist) * values_per_segment, dtype=dtype)
         for index, item in enumerate(byteslist):

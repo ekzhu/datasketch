@@ -83,18 +83,15 @@ class bBitMinHash:
         """
         if self.b != other.b:
             raise ValueError(
-                "Cannot compare two b-bit MinHashes with different\
-                    b values"
+                "Cannot compare two b-bit MinHashes with different b values"
             )
         if self.scheme != other.scheme:
             raise ValueError(
-                "Cannot compare two b-bit MinHashes with different\
-                    permutation schemes"
+                "Cannot compare two b-bit MinHashes with different permutation schemes"
             )
         if self.seed != other.seed:
             raise ValueError(
-                "Cannot compare two b-bit MinHashes with different\
-                    set of permutations"
+                "Cannot compare two b-bit MinHashes with different set of permutations"
             )
         intersection = np.count_nonzero(self.hashvalues == other.hashvalues)
         raw_est = float(intersection) / float(self.hashvalues.size)

@@ -248,8 +248,7 @@ class LeanMinHash(MinHash):
         """
         if len(buf) < self.bytesize(byteorder):
             raise ValueError(
-                "The buffer does not have enough space\
-                    for holding this MinHash."
+                "The buffer does not have enough space for holding this MinHash."
             )
         if self.scheme == _SCHEME_LEGACY:
             fmt = "%sqi%dI" % (byteorder, len(self))
@@ -351,8 +350,7 @@ class LeanMinHash(MinHash):
         scheme = lmhs[0].scheme
         if any((seed != m.seed or num_perm != len(m) or scheme != m.scheme) for m in lmhs):
             raise ValueError(
-                "The unioning MinHash must have the\
-                    same seed, number of permutation functions and scheme."
+                "The unioning MinHash must have the same seed, number of permutation functions and scheme."
             )
         hashvalues = np.minimum.reduce([m.hashvalues for m in lmhs])
 

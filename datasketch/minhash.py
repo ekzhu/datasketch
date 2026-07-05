@@ -279,8 +279,7 @@ class MinHash:
             # Because 1) we don't want the size to be too large, and
             # 2) we are using 4 bytes to store the size value
             raise ValueError(
-                "Cannot have more than %d number of\
-                    permutation functions"
+                "Cannot have more than %d number of permutation functions"
                 % _hash_range
             )
         self.seed = seed
@@ -556,18 +555,15 @@ class MinHash:
         """
         if getattr(other, "scheme", None) != self.scheme:
             raise ValueError(
-                "Cannot compute Jaccard given MinHash with\
-                    different permutation schemes"
+                "Cannot compute Jaccard given MinHash with different permutation schemes"
             )
         if other.seed != self.seed:
             raise ValueError(
-                "Cannot compute Jaccard given MinHash with\
-                    different seeds"
+                "Cannot compute Jaccard given MinHash with different seeds"
             )
         if len(self) != len(other):
             raise ValueError(
-                "Cannot compute Jaccard given MinHash with\
-                    different numbers of permutation functions"
+                "Cannot compute Jaccard given MinHash with different numbers of permutation functions"
             )
         return float(np.count_nonzero(self.hashvalues == other.hashvalues)) / float(len(self))
 
@@ -597,18 +593,15 @@ class MinHash:
         """
         if getattr(other, "scheme", None) != self.scheme:
             raise ValueError(
-                "Cannot merge MinHash with\
-                    different permutation schemes"
+                "Cannot merge MinHash with different permutation schemes"
             )
         if other.seed != self.seed:
             raise ValueError(
-                "Cannot merge MinHash with\
-                    different seeds"
+                "Cannot merge MinHash with different seeds"
             )
         if len(self) != len(other):
             raise ValueError(
-                "Cannot merge MinHash with\
-                    different numbers of permutation functions"
+                "Cannot merge MinHash with different numbers of permutation functions"
             )
         self.hashvalues = np.minimum(other.hashvalues, self.hashvalues)
 
@@ -707,8 +700,7 @@ class MinHash:
         scheme = mhs[0].scheme
         if any((seed != m.seed or num_perm != len(m) or scheme != m.scheme) for m in mhs):
             raise ValueError(
-                "The unioning MinHash must have the\
-                    same seed, number of permutation functions and scheme"
+                "The unioning MinHash must have the same seed, number of permutation functions and scheme"
             )
         hashvalues = np.minimum.reduce([m.hashvalues for m in mhs])
         permutations = mhs[0].permutations

@@ -75,6 +75,21 @@ class TestMinHashLSHForest(unittest.TestCase):
             for i in range(len(retrieved_hashvalues)):
                 self.assertEqual(hashvalues[i], retrieved_hashvalues[i])
 
+    def test_get_minhash_hashvalues_rejects_corrupt_segments(self):
+        forest, data = self._setup()
+        key = next(iter(data))
+        segments = forest.keys[key]
+        # Truncated first segment: no longer a whole number of hash values
+        # of a supported width, must not be silently reinterpreted.
+        forest.keys[key] = [segments[0][:-3], *segments[1:]]
+        with self.assertRaises(ValueError):
+            forest.get_minhash_hashvalues(key)
+        # First segment intact but a later one truncated: inconsistent sizes.
+        forest.keys[key] = [*segments[:-1], segments[-1][: len(segments[-1]) // 2]]
+        with self.assertRaises(ValueError):
+            forest.get_minhash_hashvalues(key)
+        forest.keys[key] = segments
+
     def test_pickle(self):
         forest, _ = self._setup()
         forest2 = pickle.loads(pickle.dumps(forest))
