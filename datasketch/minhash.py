@@ -21,7 +21,7 @@ try:
 except ImportError:
     cp = None
 
-from datasketch.hashfunc import sha1_hash32
+from datasketch.hashfunc import sha1_hash32, sha1_hash64
 
 # The size of a hash value in number of bytes
 hashvalue_byte_size = len(bytes(np.int64(42).data))
@@ -30,6 +30,104 @@ hashvalue_byte_size = len(bytes(np.int64(42).data))
 _mersenne_prime = np.uint64((1 << 61) - 1)
 _max_hash = np.uint64((1 << 32) - 1)
 _hash_range = 1 << 32
+
+# Permutation schemes.
+#
+# "affine32" / "affine64" (since 2.0.0): the input hash is pre-mixed once with
+# the MurmurHash3 finalizer (a fixed bijection), then each permutation applies
+# phv_k = a_k * h + b_k computed in uint{w}, where the hardware wraparound IS
+# the modulo 2^w. With a_k odd the map is a bijection on [0, 2^w), so the
+# permutation step cannot introduce hash collisions -- unlike "legacy", whose
+# fold from the 61-bit prime range down to 32 bits behaves like a random
+# function and inflates similarity estimates on large sets.
+# See https://github.com/ekzhu/datasketch/issues/212.
+#
+# a_k * h + b_k mod 2^w is 2-universal but not provably min-wise independent,
+# so the estimator's accuracy here is empirical, not proven: it rests on the
+# bijection property (which removes the large-set collision bias above), the
+# fmix pre-mix (which spreads structured inputs), and the bias/accuracy
+# benchmarks in benchmark/sketches/ and test/test_minhash_schemes.py.
+#
+# "legacy" (the only scheme before 2.0.0): (a * h + b) % mersenne_prime
+# truncated to 32 bits, stored in uint64. Preserved bit-for-bit so sketches
+# created by earlier versions keep working.
+_SCHEME_LEGACY = "legacy"
+_SCHEME_AFFINE32 = "affine32"
+_SCHEME_AFFINE64 = "affine64"
+_VALID_SCHEMES = (_SCHEME_AFFINE32, _SCHEME_AFFINE64, _SCHEME_LEGACY)
+
+# Per-scheme storage dtype and maximum hash value (also the "empty" sentinel).
+_SCHEME_DTYPES = {
+    _SCHEME_LEGACY: np.uint64,
+    _SCHEME_AFFINE32: np.uint32,
+    _SCHEME_AFFINE64: np.uint64,
+}
+_SCHEME_MAX_HASHES = {
+    _SCHEME_LEGACY: _max_hash,
+    _SCHEME_AFFINE32: np.uint32((1 << 32) - 1),
+    _SCHEME_AFFINE64: np.uint64((1 << 64) - 1),
+}
+_SCHEME_WIDTHS = {
+    _SCHEME_AFFINE32: 32,
+    _SCHEME_AFFINE64: 64,
+}
+
+# Scheme codes used in the LeanMinHash and bBitMinHash byte formats. Legacy
+# payloads have no scheme field (they predate it), so there is no code for
+# the legacy scheme.
+_SCHEME_CODES = {
+    _SCHEME_AFFINE32: 1,
+    _SCHEME_AFFINE64: 2,
+}
+_SCHEME_CODES_INV = {code: scheme for scheme, code in _SCHEME_CODES.items()}
+
+# MurmurHash3 finalizer constants per width:
+# (shift1, multiplier1, shift2, multiplier2, shift3).
+_FMIX_CONSTANTS = {
+    32: (np.uint32(16), np.uint32(0x85EBCA6B), np.uint32(13), np.uint32(0xC2B2AE35), np.uint32(16)),
+    64: (np.uint64(33), np.uint64(0xFF51AFD7ED558CCD), np.uint64(33), np.uint64(0xC4CEB9FE1A85EC53), np.uint64(33)),
+}
+
+
+def _fmix(hv, width: int):
+    """Apply the MurmurHash3 finalizer, a fixed avalanching bijection on
+    [0, 2^width).
+
+    Used as a one-shot pre-mix so that structured or weakly hashed inputs
+    (e.g. sequential integers with an identity hash function) are safe to
+    feed to the affine permutations. Operates element-wise on numpy or cupy
+    unsigned integer arrays; multiplication wraps around, which is the
+    intended modulo 2^width arithmetic.
+
+    """
+    s1, m1, s2, m2, s3 = _FMIX_CONSTANTS[width]
+    hv = hv ^ (hv >> s1)
+    hv = hv * m1
+    hv = hv ^ (hv >> s2)
+    hv = hv * m2
+    return hv ^ (hv >> s3)
+
+
+def _check_scheme_consistency(known: Optional[str], minhash) -> Optional[str]:
+    """Check the permutation scheme of a MinHash given to an LSH index
+    against the scheme of the MinHash previously given to it, and return
+    the scheme the index should remember.
+
+    Hash values carry no trace of the scheme that produced them, so mixing
+    schemes in one index silently returns wrong results instead of failing;
+    this check makes it fail. Sketch types without a scheme attribute
+    (WeightedMinHash) are exempt.
+    """
+    scheme = getattr(minhash, "scheme", None)
+    if scheme is None:
+        return known
+    if known is None:
+        return scheme
+    if scheme != known:
+        raise ValueError(
+            "MinHash scheme %r does not match scheme %r of the MinHash previously given to this index" % (scheme, known)
+        )
+    return known
 
 
 _GPU_OK_CACHE: Optional[bool] = None
@@ -64,22 +162,51 @@ class MinHash:
             - ``'detect'`` — use GPU if available, otherwise CPU.
             - ``'always'`` — require GPU; raise ``RuntimeError`` if CuPy/CUDA
             is unavailable.
-        hashfunc (Callable): The hash function used by
+        hashfunc (Optional[Callable]): The hash function used by
             this MinHash.
             It takes the input passed to the :meth:`update` method and
-            returns an integer that can be encoded with 32 bits.
-            The default hash function is based on SHA1 from hashlib_.
+            returns an integer that can be encoded with 32 bits for the
+            "affine32" and "legacy" schemes, or with 64 bits for the
+            "affine64" scheme.
+            If None (default), a SHA1-based hash function matching the
+            scheme width is used (:func:`datasketch.hashfunc.sha1_hash32`
+            or :func:`datasketch.hashfunc.sha1_hash64`).
             Users can use `farmhash` for better performance.
             See the example in :meth:`update`.
         hashobj (**deprecated**): This argument is deprecated since version
             1.4.0. It is a no-op and has been replaced by `hashfunc`.
         hashvalues (Optional[Iterable]): The hash values is
             the internal state of the MinHash. It can be specified for faster
-            initialization using the existing :attr:`hashvalues` of another MinHash.
+            initialization using the existing :attr:`hashvalues` of another
+            MinHash. `scheme` must then be specified explicitly, because hash
+            values carry no trace of the scheme that produced them.
         permutations (Optional[Tuple[Iterable, Iterable]]): The permutation
             function parameters as a tuple of two lists. This argument
             can be specified for faster initialization using the existing
-            :attr:`permutations` from another MinHash.
+            :attr:`permutations` from another MinHash. `scheme` must then be
+            specified explicitly.
+        scheme (Optional[str]): The permutation scheme: one of ``"affine32"``,
+            ``"affine64"``, and ``"legacy"``. If None (the default), the
+            scheme is ``"affine32"``; however, when `hashvalues` or
+            `permutations` are given, the scheme of the MinHash they came
+            from must be passed explicitly (``"legacy"`` for values created
+            by datasketch before 2.0.0).
+
+            - ``"affine32"`` — the input hash is pre-mixed once with the
+              32-bit MurmurHash3 finalizer, then permuted with
+              ``a * h + b mod 2^32`` (``a`` odd, a bijection). Hash values
+              are stored as uint32, halving memory use compared to
+              ``"legacy"``, and the permutation step is collision-free.
+            - ``"affine64"`` — same construction over 64-bit hash values,
+              for very large sets (roughly 100 million elements or more)
+              where any 32-bit input hash saturates and inflates similarity
+              estimates regardless of the permutation scheme.
+            - ``"legacy"`` — the scheme used before version 2.0.0, kept for
+              compatibility with existing serialized sketches. It is biased
+              on large sets and slower; do not use it for new data.
+
+            MinHash created with different schemes cannot be compared,
+            merged, or unioned.
 
     Note:
         Hashing and permutation *generation* always run on CPU to preserve
@@ -104,6 +231,14 @@ class MinHash:
         work (i.e., :meth:`jaccard`, :meth:`merge` and :meth:`union`)
         with those created after.
 
+    Note:
+        Since version 2.0.0, the default permutation scheme is ``"affine32"``,
+        which produces different hash values than earlier versions. MinHash
+        pickled by earlier versions deserializes with ``scheme="legacy"`` and
+        keeps working, but new MinHash interoperates with it only when
+        created with ``scheme="legacy"`` explicitly. Any persisted LSH index
+        must be rebuilt with sketches of a single scheme.
+
     .. _`Jaccard similarity`: https://en.wikipedia.org/wiki/Jaccard_index
     .. _hashlib: https://docs.python.org/3.5/library/hashlib.html
     .. _`pickle`: https://docs.python.org/3/library/pickle.html
@@ -115,24 +250,43 @@ class MinHash:
         num_perm: int = 128,
         seed: int = 1,
         gpu_mode: Literal["disable", "detect", "always"] = "disable",
-        hashfunc: Callable = sha1_hash32,
+        hashfunc: Optional[Callable] = None,
         hashobj: Optional[object] = None,  # Deprecated.
         hashvalues: Optional[ArrayLike] = None,
         permutations: Optional[Union[tuple[ArrayLike, ArrayLike], ArrayLike]] = None,
+        scheme: Optional[Literal["affine32", "affine64", "legacy"]] = None,
     ) -> None:
+        if scheme is None:
+            # Hash values and permutation parameters carry no trace of the
+            # scheme that produced them (e.g. legacy values fit the affine32
+            # range), so a default here would silently mislabel pre-2.0.0
+            # state and defeat the cross-scheme comparison guards.
+            if hashvalues is not None or permutations is not None:
+                raise ValueError(
+                    "scheme must be specified explicitly when initializing from existing "
+                    "hash values or permutations: pass the scheme of the MinHash they came "
+                    "from, or scheme='legacy' for values created by datasketch before 2.0.0."
+                )
+            scheme = _SCHEME_AFFINE32
+        elif scheme not in _VALID_SCHEMES:
+            raise ValueError("scheme must be one of %s, got %r" % (", ".join(_VALID_SCHEMES), scheme))
+        self.scheme = scheme
         if hashvalues is not None:
             num_perm = len(hashvalues)
+        if num_perm < 1:
+            raise ValueError("num_perm must be positive")
         if num_perm > _hash_range:
             # Because 1) we don't want the size to be too large, and
             # 2) we are using 4 bytes to store the size value
             raise ValueError(
-                "Cannot have more than %d number of\
-                    permutation functions"
+                "Cannot have more than %d number of permutation functions"
                 % _hash_range
             )
         self.seed = seed
         self.num_perm = num_perm
         # Check the hash function.
+        if hashfunc is None:
+            hashfunc = sha1_hash64 if scheme == _SCHEME_AFFINE64 else sha1_hash32
         if not callable(hashfunc):
             raise ValueError("The hashfunc must be a callable.")
         self.hashfunc = hashfunc
@@ -146,7 +300,7 @@ class MinHash:
             self.hashvalues = self._init_hashvalues(num_perm)
         # Initalize permutation function parameters
         if permutations is not None:
-            self.permutations = permutations
+            self.permutations = self._parse_permutations(permutations)
         else:
             self.permutations = self._init_permutations(num_perm)
         if len(self) != len(self.permutations[0]):
@@ -161,30 +315,100 @@ class MinHash:
         """Cache permutation arrays on device. Call only when GPU is available."""
         if self._a_gpu is None or self._b_gpu is None:
             a, b = self.permutations
-            self._a_gpu = cp.asarray(a, dtype=cp.uint64)
-            self._b_gpu = cp.asarray(b, dtype=cp.uint64)
+            dtype = cp.uint32 if self.scheme == _SCHEME_AFFINE32 else cp.uint64
+            self._a_gpu = cp.asarray(a, dtype=dtype)
+            self._b_gpu = cp.asarray(b, dtype=dtype)
 
     def _init_hashvalues(self, num_perm: int) -> np.ndarray:
-        return np.ones(num_perm, dtype=np.uint64) * _max_hash
+        if self.scheme == _SCHEME_LEGACY:
+            return np.ones(num_perm, dtype=np.uint64) * _max_hash
+        return np.full(num_perm, _SCHEME_MAX_HASHES[self.scheme], dtype=_SCHEME_DTYPES[self.scheme])
 
     def _init_permutations(self, num_perm: int) -> np.ndarray:
-        # Create parameters for a random bijective permutation function
-        # that maps a 32-bit hash value to another 32-bit hash value.
-        # http://en.wikipedia.org/wiki/Universal_hashing
         gen = np.random.RandomState(self.seed)
-        return np.array(
-            [
-                (
-                    gen.randint(1, _mersenne_prime, dtype=np.uint64),
-                    gen.randint(0, _mersenne_prime, dtype=np.uint64),
-                )
-                for _ in range(num_perm)
-            ],
-            dtype=np.uint64,
-        ).T
+        if self.scheme == _SCHEME_LEGACY:
+            # Create parameters for a random bijective permutation function
+            # that maps a 32-bit hash value to another 32-bit hash value.
+            # http://en.wikipedia.org/wiki/Universal_hashing
+            return np.array(
+                [
+                    (
+                        gen.randint(1, _mersenne_prime, dtype=np.uint64),
+                        gen.randint(0, _mersenne_prime, dtype=np.uint64),
+                    )
+                    for _ in range(num_perm)
+                ],
+                dtype=np.uint64,
+            ).T
+        # Affine permutations h -> a * h + b mod 2^width. An odd `a` makes the
+        # map bijective: a collision requires 2^width to divide a * (h1 - h2),
+        # and an odd `a` contributes no factors of two. (An even `a` would
+        # collapse the value range instead.)
+        width = _SCHEME_WIDTHS[self.scheme]
+        dtype = _SCHEME_DTYPES[self.scheme]
+        a = gen.randint(0, 1 << (width - 1), num_perm, dtype=dtype) * dtype(2) + dtype(1)
+        b = gen.randint(0, 1 << width, num_perm, dtype=dtype)
+        return np.array([a, b])
+
+    def _to_scheme_array(self, values, what: str) -> np.ndarray:
+        """Convert values to an array of the scheme's dtype without loss.
+
+        Sequences of Python ints are converted with an explicit dtype: dtype
+        inference would pick float64 when values above 2^63 are mixed with
+        smaller ones, silently rounding 64-bit hash values.
+        """
+        if isinstance(values, np.ndarray):
+            if (
+                values.dtype.kind in "iu"
+                and values.size
+                and (int(values.max()) > int(_SCHEME_MAX_HASHES[self.scheme]) or int(values.min()) < 0)
+            ):
+                raise ValueError("%s out of range for scheme %r" % (what, self.scheme))
+            return values.astype(_SCHEME_DTYPES[self.scheme])
+        try:
+            return np.array(values, dtype=_SCHEME_DTYPES[self.scheme])
+        except OverflowError as err:
+            raise ValueError("%s out of range for scheme %r: %s" % (what, self.scheme, err)) from err
 
     def _parse_hashvalues(self, hashvalues) -> np.ndarray:
-        return np.array(hashvalues, dtype=np.uint64)
+        if self.scheme == _SCHEME_LEGACY:
+            return np.array(hashvalues, dtype=np.uint64)
+        return self._to_scheme_array(hashvalues, "hash values")
+
+    def _parse_permutations(self, permutations):
+        if self.scheme == _SCHEME_LEGACY:
+            return permutations
+        dtype = _SCHEME_DTYPES[self.scheme]
+        if (
+            isinstance(permutations, np.ndarray)
+            and permutations.dtype == dtype
+            and permutations.ndim == 2
+            and permutations.shape[0] == 2
+        ):
+            # Already in canonical form (e.g. from copy()/union()/bulk()):
+            # share the array across sketches like the legacy scheme does,
+            # instead of duplicating ~2 * num_perm values per sketch.
+            parsed = permutations
+        else:
+            a = self._to_scheme_array(permutations[0], "permutation parameters")
+            b = self._to_scheme_array(permutations[1], "permutation parameters")
+            parsed = np.array([a, b])
+        if np.any(parsed[0] & dtype(1) == 0):
+            raise ValueError("all `a` permutation parameters must be odd for scheme %r" % self.scheme)
+        return parsed
+
+    def _hash_input_array(self, hvs) -> np.ndarray:
+        """Convert hash function outputs to an array of the scheme's dtype,
+        with a helpful error if a value does not fit the scheme width.
+        """
+        try:
+            return np.array(hvs, dtype=_SCHEME_DTYPES[self.scheme])
+        except OverflowError as err:
+            raise ValueError(
+                "hashfunc returned a value out of range for scheme %r: %s. "
+                "Use a hash function matching the scheme width, or scheme='affine64' "
+                "for 64-bit hash values." % (self.scheme, err)
+            ) from err
 
     def update(self, b) -> None:
         """Update this MinHash with a new value.
@@ -220,7 +444,13 @@ class MinHash:
         """
         hv = self.hashfunc(b)
         a, b = self.permutations
-        phv = np.bitwise_and((a * hv + b) % _mersenne_prime, _max_hash)
+        if self.scheme == _SCHEME_LEGACY:
+            phv = np.bitwise_and((a * hv + b) % _mersenne_prime, _max_hash)
+        else:
+            # A 1-element array rather than a scalar: numpy warns on scalar
+            # overflow, while array arithmetic wraps silently as intended.
+            hv = _fmix(self._hash_input_array([hv]), _SCHEME_WIDTHS[self.scheme])
+            phv = a * hv + b
         self.hashvalues = np.minimum(phv, self.hashvalues)
 
     def update_batch(self, b: Iterable) -> None:
@@ -265,7 +495,7 @@ class MinHash:
         if not hv_list:
             return
 
-        a, b = self.permutations  # np.ndarray[uint64]
+        a, b = self.permutations
 
         # Decide backend
         use_gpu = False
@@ -281,19 +511,30 @@ class MinHash:
         if use_gpu:
             # GPU path (keep indentation minimal as requested)
             self._ensure_gpu_caches()
-            hv_gpu = cp.asarray(hv_list, dtype=cp.uint64).reshape(-1, 1)
-            phv_gpu = (hv_gpu * self._a_gpu + self._b_gpu) % cp.uint64(_mersenne_prime)
-            phv_gpu = cp.bitwise_and(phv_gpu, cp.uint64(_max_hash))
-            base_gpu = cp.asarray(self.hashvalues, dtype=cp.uint64)
+            if self.scheme == _SCHEME_LEGACY:
+                hv_gpu = cp.asarray(hv_list, dtype=cp.uint64).reshape(-1, 1)
+                phv_gpu = (hv_gpu * self._a_gpu + self._b_gpu) % cp.uint64(_mersenne_prime)
+                phv_gpu = cp.bitwise_and(phv_gpu, cp.uint64(_max_hash))
+            else:
+                # Validate and convert on CPU, then transfer to device.
+                hv_gpu = cp.asarray(self._hash_input_array(hv_list)).reshape(-1, 1)
+                hv_gpu = _fmix(hv_gpu, _SCHEME_WIDTHS[self.scheme])
+                phv_gpu = hv_gpu * self._a_gpu + self._b_gpu
+            base_gpu = cp.asarray(self.hashvalues)
             # column-wise min without extra vstack
             col_min = cp.minimum(base_gpu, cp.min(phv_gpu, axis=0))
-            self.hashvalues = cp.asnumpy(col_min).astype(np.uint64, copy=False)
+            self.hashvalues = cp.asnumpy(col_min).astype(_SCHEME_DTYPES[self.scheme], copy=False)
             return
 
         # CPU path
-        hv = np.array(hv_list, dtype=np.uint64, ndmin=2).T
-        phv = (hv * a + b) % _mersenne_prime
-        phv = np.bitwise_and(phv, _max_hash)
+        if self.scheme == _SCHEME_LEGACY:
+            hv = np.array(hv_list, dtype=np.uint64, ndmin=2).T
+            phv = (hv * a + b) % _mersenne_prime
+            phv = np.bitwise_and(phv, _max_hash)
+        else:
+            hv = self._hash_input_array(hv_list).reshape(-1, 1)
+            hv = _fmix(hv, _SCHEME_WIDTHS[self.scheme])
+            phv = hv * a + b
         self.hashvalues = np.minimum(self.hashvalues, phv.min(axis=0))
 
     def jaccard(self, other: MinHash) -> float:
@@ -308,18 +549,21 @@ class MinHash:
 
         Raises:
             ValueError: If the two MinHashes have different numbers of
-                permutation functions or different seeds.
+                permutation functions, different seeds, or different
+                permutation schemes.
 
         """
+        if getattr(other, "scheme", None) != self.scheme:
+            raise ValueError(
+                "Cannot compute Jaccard given MinHash with different permutation schemes"
+            )
         if other.seed != self.seed:
             raise ValueError(
-                "Cannot compute Jaccard given MinHash with\
-                    different seeds"
+                "Cannot compute Jaccard given MinHash with different seeds"
             )
         if len(self) != len(other):
             raise ValueError(
-                "Cannot compute Jaccard given MinHash with\
-                    different numbers of permutation functions"
+                "Cannot compute Jaccard given MinHash with different numbers of permutation functions"
             )
         return float(np.count_nonzero(self.hashvalues == other.hashvalues)) / float(len(self))
 
@@ -332,7 +576,7 @@ class MinHash:
 
         """
         k = len(self)
-        return float(k) / np.sum(self.hashvalues / float(_max_hash)) - 1.0
+        return float(k) / np.sum(self.hashvalues / float(_SCHEME_MAX_HASHES[self.scheme])) - 1.0
 
     def merge(self, other: MinHash) -> None:
         """Merge the other MinHash with this one, making this one the union
@@ -343,18 +587,21 @@ class MinHash:
 
         Raises:
             ValueError: If the two MinHashes have different numbers of
-                permutation functions or different seeds.
+                permutation functions, different seeds, or different
+                permutation schemes.
 
         """
+        if getattr(other, "scheme", None) != self.scheme:
+            raise ValueError(
+                "Cannot merge MinHash with different permutation schemes"
+            )
         if other.seed != self.seed:
             raise ValueError(
-                "Cannot merge MinHash with\
-                    different seeds"
+                "Cannot merge MinHash with different seeds"
             )
         if len(self) != len(other):
             raise ValueError(
-                "Cannot merge MinHash with\
-                    different numbers of permutation functions"
+                "Cannot merge MinHash with different numbers of permutation functions"
             )
         self.hashvalues = np.minimum(other.hashvalues, self.hashvalues)
 
@@ -374,7 +621,7 @@ class MinHash:
             initialized.
 
         """
-        return not np.any(self.hashvalues != _max_hash)
+        return not np.any(self.hashvalues != _SCHEME_MAX_HASHES[self.scheme])
 
     def clear(self) -> None:
         """Clear the current state of the MinHash.
@@ -390,6 +637,7 @@ class MinHash:
             hashvalues=self.digest(),
             permutations=self.permutations,
             gpu_mode=self._gpu_mode,
+            scheme=self.scheme,
         )
 
     def __len__(self) -> int:
@@ -401,11 +649,14 @@ class MinHash:
 
     def __eq__(self, other: MinHash) -> bool:
         """Returns:
-        bool: If their seeds and hash values are both equal then two are equivalent.
+        bool: If their schemes, seeds and hash values are all equal then two are equivalent.
 
         """
         return (
-            type(self) is type(other) and self.seed == other.seed and np.array_equal(self.hashvalues, other.hashvalues)
+            type(self) is type(other)
+            and self.scheme == other.scheme
+            and self.seed == other.seed
+            and np.array_equal(self.hashvalues, other.hashvalues)
         )
 
     @classmethod
@@ -421,8 +672,9 @@ class MinHash:
 
         Raises:
             ValueError: If the number of MinHash objects passed as arguments is less than 2,
-                or if the MinHash objects passed as arguments have different seeds or
-                different numbers of permutation functions.
+                or if the MinHash objects passed as arguments have different seeds,
+                different numbers of permutation functions, or different
+                permutation schemes.
 
         Example:
 
@@ -445,10 +697,10 @@ class MinHash:
             raise ValueError("Cannot union less than 2 MinHash")
         num_perm = len(mhs[0])
         seed = mhs[0].seed
-        if any((seed != m.seed or num_perm != len(m)) for m in mhs):
+        scheme = mhs[0].scheme
+        if any((seed != m.seed or num_perm != len(m) or scheme != m.scheme) for m in mhs):
             raise ValueError(
-                "The unioning MinHash must have the\
-                    same seed and number of permutation functions"
+                "The unioning MinHash must have the same seed, number of permutation functions and scheme"
             )
         hashvalues = np.minimum.reduce([m.hashvalues for m in mhs])
         permutations = mhs[0].permutations
@@ -459,6 +711,7 @@ class MinHash:
             hashvalues=hashvalues,
             permutations=permutations,
             gpu_mode=mhs[0]._gpu_mode,
+            scheme=scheme,
         )
 
     @classmethod
@@ -534,6 +787,9 @@ class MinHash:
         return state
 
     def __setstate__(self, state):
+        # MinHash pickled before version 2.0.0 predates permutation schemes
+        # and always used the legacy scheme.
+        state.setdefault("scheme", _SCHEME_LEGACY)
         self.__dict__.update(state)
         # After unpickling we remain on CPU until update_batch decides backend.
 

@@ -14,6 +14,17 @@ datasketch gives you probabilistic data structures that can process and
 search very large amount of data super fast, with little loss of
 accuracy.
 
+.. note::
+    **Version 2.0.0** changes the default MinHash permutation scheme to
+    ``"affine32"``, which fixes a similarity over-estimation bias on large
+    sets (`issue #212 <https://github.com/ekzhu/datasketch/issues/212>`__),
+    halves sketch memory, and speeds up updates by roughly 4x. A 64-bit
+    ``"affine64"`` scheme is available for billion-scale sets. Hash values
+    differ from earlier versions: rebuild persisted sketches and LSH
+    indexes, or pass ``MinHash(..., scheme="legacy")`` to interoperate with
+    existing data. See the `MinHash documentation
+    <https://ekzhu.github.io/datasketch/minhash.html>`__ for details.
+
 This package contains the following data sketches:
 
 +-------------------------+-----------------------------------------------+

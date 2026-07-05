@@ -99,33 +99,70 @@ Just like MinHash LSH, LSH Ensemble also works directly with :ref:`minhash` data
         for key in lshensemble.query(m1, len(set1)):
             print(key)
 
-The precision of LSH Ensemble increases with the number of partitions, 
-so does the querying time, as the plot below shows.
-The experiment code can be found in the `benchmark` directory
-of the source code repository.
-There are other optional parameters that can be used to tune the index to achieve better accuracy or performance.
-See the documentation of :class:`datasketch.MinHashLSHEnsemble` for details.
+Benchmarks
+----------
 
-.. image:: /_static/lshensemble_benchmark_1k/lshensemble_num_perm_256_precision.png
-   :scale: 75 %
+LSH Ensemble partitions the indexed sets by size and tunes the LSH
+parameters separately for each partition, so more partitions
+(``num_part``) help in proportion to how *skewed* the set sizes are. The
+benchmark below makes that concrete: containment threshold queries on a
+synthetic corpus, with ``num_part`` on the x-axis and one figure per
+index-size distribution, comparing the ensemble against a linear scan
+(``benchmark/indexes/lshensemble_synthetic_benchmark.py``). Each query is
+a fixed 200 tokens with planted neighbours spread across containments
+(0.05--0.95); queries are held out of the index; ground truth is exact
+containment at or above the threshold of 0.5. The linear scan converts
+the MinHash Jaccard estimate of every indexed set to a containment
+estimate and thresholds it -- it does not depend on ``num_part``, so it
+is drawn as a reference line.
+
+**No skew: partitioning cannot help.** When every indexed set is the
+same size there is nothing to partition by, so the optimal partitioning
+is degenerate and accuracy is flat across ``num_part``.
+
+.. figure:: /_static/lshensemble_constant_benchmark.png
+   :alt: MinHashLSHEnsemble vs. num_part, constant index sizes
    :align: center
-   :alt: MinHashLSHEnsemble Benchmark Precision
 
-.. image:: /_static/lshensemble_benchmark_1k/lshensemble_num_perm_256_recall.png
-   :scale: 75 %
+**Moderate skew: a modest, saturating gain.** With log-uniform sizes
+spanning 100 to 10,000 tokens, a single partition must compromise across
+the whole range; partitioning recovers some precision (about 0.12 to
+0.34 from one partition to 32) but with diminishing returns.
+
+.. figure:: /_static/lshensemble_loguniform_benchmark.png
+   :alt: MinHashLSHEnsemble vs. num_part, log-uniform index sizes
    :align: center
-   :alt: MinHashLSHEnsemble Benchmark Recall
 
-.. image:: /_static/lshensemble_benchmark_1k/lshensemble_num_perm_256_fscore.png
-   :scale: 75 %
+**Heavy skew: partitioning pays off strongly.** Real open-data corpora
+have power-law cardinalities -- most sets small, a heavy tail of very
+large ones (the shape the `LSH Ensemble paper
+<http://www.vldb.org/pvldb/vol9/p1185-zhu.pdf>`_ models; here the median
+set is ~170 tokens with a tail to 10,000). Precision climbs from 0.15
+with one partition to 0.69 with 32 (a 4--5x gain), because optimal
+partitioning confines the heavy tail of large sets -- whose equivalent
+Jaccard thresholds are near zero and would otherwise flood every query
+with candidates -- to a few partitions of their own, letting the many
+small-set partitions run with tight parameters.
+
+.. figure:: /_static/lshensemble_zipf_benchmark.png
+   :alt: MinHashLSHEnsemble vs. num_part, Zipfian index sizes
    :align: center
-   :alt: MinHashLSHEnsemble Benchmark F-Score
 
-.. image:: /_static/lshensemble_benchmark_1k/lshensemble_num_perm_256_query_time.png
-   :scale: 75 %
-   :align: center
-   :alt: MinHashLSHEnsemble Benchmark Query Time
+Across all three, recall stays high (near or above the scan) while query
+time grows with the partition count but remains well under the scan's --
+so partitioning trades a little speed for precision. Two caveats when
+reading the absolute numbers. The ensemble returns *candidates* --
+everything that collided in some partition's bands -- so its precision is
+meant to be lifted by verifying candidates against the query (with exact
+containment, or the same estimate-and-convert the scan uses); the gap up
+to the scan's reference line is what such a check recovers. And
+containment of a small query in a much larger set is a tiny Jaccard
+similarity, which MinHash estimates with large relative noise, so heavy
+skew is intrinsically hard for any method built on these sketches --
+more permutations (``num_perm``) soften it.
 
+There are other optional parameters that can be used to tune the index;
+see the documentation of :class:`datasketch.MinHashLSHEnsemble`.
 
 Common Issues with LSH Ensemble
 -------------------------------

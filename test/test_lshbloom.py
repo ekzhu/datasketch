@@ -7,7 +7,25 @@ import numpy as np
 from datasketch.lsh_bloom import BloomTable, MinHashLSHBloom
 from datasketch.minhash import MinHash
 
+# pybloomfilter is an optional dependency (the `bloom` extra); the classes
+# above import fine without it but raise on use. Skip rather than error when
+# it is absent, as the GPU and storage-backend tests do for theirs -- but the
+# `bloom` extra IS installed in CI (see .github/workflows/test.yml), so a
+# missing pybloomfilter under CI means a broken setup, not an optional-dep
+# absence: fail loudly there instead of silently dropping coverage.
+try:
+    import pybloomfilter  # noqa: F401
 
+    BLOOM_AVAILABLE = True
+except ImportError:
+    if os.environ.get("CI"):
+        raise
+    BLOOM_AVAILABLE = False
+
+_SKIP_REASON = "pybloomfilter not installed (pip install datasketch[bloom])"
+
+
+@unittest.skipUnless(BLOOM_AVAILABLE, _SKIP_REASON)
 class TestBloomTable(unittest.TestCase):
     def test_insert(self):
         r = 3
@@ -48,6 +66,7 @@ class TestBloomTable(unittest.TestCase):
             self.assertTrue(b_.query(item))
 
 
+@unittest.skipUnless(BLOOM_AVAILABLE, _SKIP_REASON)
 class TestMinHashLSHBloom(unittest.TestCase):
     def test_init(self):
         lsh = MinHashLSHBloom(threshold=0.8, n=10, fp=0.01)
@@ -85,6 +104,16 @@ class TestMinHashLSHBloom(unittest.TestCase):
 
         m3 = MinHash(18)
         self.assertRaises(ValueError, lsh.query, m3)
+
+    def test_scheme_mismatch(self):
+        lsh = MinHashLSHBloom(threshold=0.5, num_perm=16, n=10, fp=0.01)
+        m1 = MinHash(16)
+        m1.update(b"a")
+        lsh.insert(m1)
+        m2 = MinHash(16, scheme="legacy")
+        m2.update(b"a")
+        self.assertRaises(ValueError, lsh.insert, m2)
+        self.assertRaises(ValueError, lsh.query, m2)
 
     def test_save(self):
         save_path = "./test_save/"

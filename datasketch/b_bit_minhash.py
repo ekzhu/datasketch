@@ -9,16 +9,37 @@ import struct
 
 import numpy as np
 
+from datasketch.minhash import _SCHEME_CODES, _SCHEME_CODES_INV, _SCHEME_LEGACY, _VALID_SCHEMES
+
 
 class bBitMinHash:
-    """The b-bit MinHash object."""
+    """b-bit MinHash of an existing :class:`datasketch.MinHash`.
 
-    __slots__ = ("b", "hashvalues", "r", "seed")
+    b-bit MinHash reduces storage by keeping only the lowest `b` bits of
+    each minimum hash value, at some loss of accuracy. It supports
+    :meth:`jaccard` and pickle serialization, but cannot be updated with
+    new values and cannot be used with the LSH indexes. See `b-Bit Minwise
+    Hashing <http://research.microsoft.com/pubs/120078/wfc0398-liPS.pdf>`_
+    by Ping Li and Arnd Christian König.
+
+    Args:
+        minhash (datasketch.MinHash): The MinHash to compress.
+        b (int): The number of lowest bits to keep for each minimum hash
+            value, between 0 and 32.
+        r (float): The expected ratio of set size to the size of the
+            universe of all values, used by the Jaccard estimator. Leave
+            at 0.0 if unknown: the estimator then uses the limit as the
+            ratio goes to zero.
+
+    """
+
+    __slots__ = ("b", "hashvalues", "r", "scheme", "seed")
 
     # seed as int64
     # b as uint8
     # r as float64
-    # num_perm as int32
+    # num_perm as int32 (negated and followed by a scheme code byte for
+    # non-legacy permutation schemes; legacy payloads predate the field)
     _serial_fmt_params = "<qBdi"
     # each block as uint64
     _serial_fmt_block = "Q"
@@ -37,6 +58,11 @@ class bBitMinHash:
         bmask = (1 << b) - 1
         self.hashvalues = np.bitwise_and(minhash.hashvalues, bmask).astype(np.uint32)
         self.seed = minhash.seed
+        # Requiring the attribute (rather than assuming a default) keeps a
+        # sketch type without a scheme from being silently mislabeled.
+        self.scheme = minhash.scheme
+        if self.scheme not in _VALID_SCHEMES:
+            raise ValueError("scheme must be one of %s, got %r" % (", ".join(_VALID_SCHEMES), self.scheme))
         self.b = b
         self.r = r
 
@@ -44,6 +70,7 @@ class bBitMinHash:
         """Check for full equality of two b-bit MinHash objects."""
         return (
             type(self) is type(other)
+            and self.scheme == other.scheme
             and self.seed == other.seed
             and self.b == other.b
             and self.r == other.r
@@ -56,13 +83,15 @@ class bBitMinHash:
         """
         if self.b != other.b:
             raise ValueError(
-                "Cannot compare two b-bit MinHashes with different\
-                    b values"
+                "Cannot compare two b-bit MinHashes with different b values"
+            )
+        if self.scheme != other.scheme:
+            raise ValueError(
+                "Cannot compare two b-bit MinHashes with different permutation schemes"
             )
         if self.seed != other.seed:
             raise ValueError(
-                "Cannot compare two b-bit MinHashes with different\
-                    set of permutations"
+                "Cannot compare two b-bit MinHashes with different set of permutations"
             )
         intersection = np.count_nonzero(self.hashvalues == other.hashvalues)
         raw_est = float(intersection) / float(self.hashvalues.size)
@@ -74,6 +103,13 @@ class bBitMinHash:
     def bytesize(self):
         """Get the serialized size of this b-bit MinHash in number of bytes."""
         return self._bytesize()[-1]
+
+    def _params_fmt(self):
+        """The struct format of the parameter header for this scheme."""
+        if self.scheme == _SCHEME_LEGACY:
+            return self._serial_fmt_params
+        # Non-legacy schemes append a scheme code byte to the parameters.
+        return self._serial_fmt_params + "B"
 
     def __getstate__(self):
         """Called when pickling the b-bit MinHash object.
@@ -96,8 +132,14 @@ class bBitMinHash:
                 # Doing this in BigInteger guarantees we do not experience overflow and still
                 # coerces to np.uint64 as expected.
                 blocks[i] = int(blocks[i]) | (int(hv) << (n - 1 - j) * slot_size)
-        fmt = self._serial_fmt_params + "%d%s" % (num_blocks, self._serial_fmt_block)
-        struct.pack_into(fmt, buffer, 0, self.seed, self.b, self.r, self.hashvalues.size, *blocks)
+        fmt = self._params_fmt() + "%d%s" % (num_blocks, self._serial_fmt_block)
+        if self.scheme == _SCHEME_LEGACY:
+            struct.pack_into(fmt, buffer, 0, self.seed, self.b, self.r, self.hashvalues.size, *blocks)
+        else:
+            # A negated size marks the post-2.0.0 format carrying a scheme code.
+            struct.pack_into(
+                fmt, buffer, 0, self.seed, self.b, self.r, -self.hashvalues.size, _SCHEME_CODES[self.scheme], *blocks
+            )
         return buffer
 
     def __setstate__(self, buf):
@@ -107,8 +149,19 @@ class bBitMinHash:
         try:
             self.seed, self.b, self.r, num_perm = struct.unpack_from(self._serial_fmt_params, buf, 0)
         except TypeError:
-            self.seed, self.b, self.r, num_perm = struct.unpack_from(self._serial_fmt_params, memoryview(buf), 0)
+            buf = memoryview(buf)
+            self.seed, self.b, self.r, num_perm = struct.unpack_from(self._serial_fmt_params, buf, 0)
         offset = struct.calcsize(self._serial_fmt_params)
+        if num_perm >= 0:
+            # Payloads from before version 2.0.0 have no scheme field.
+            self.scheme = _SCHEME_LEGACY
+        else:
+            num_perm = -num_perm
+            (scheme_code,) = struct.unpack_from("<B", buf, offset)
+            if scheme_code not in _SCHEME_CODES_INV:
+                raise ValueError("Unknown permutation scheme code: %d" % scheme_code)
+            self.scheme = _SCHEME_CODES_INV[scheme_code]
+            offset += 1
         self.hashvalues = np.zeros((num_perm,), dtype=np.uint32)
         # Reconstruct the hash values
         slot_size, n, num_blocks, _total = self._bytesize()
@@ -168,5 +221,5 @@ class bBitMinHash:
         # Get the number of blocks required
         num_blocks = int(np.ceil(float(self.hashvalues.size) / num_slots_per_block))
         # Get the total serialized size
-        total = struct.calcsize(self._serial_fmt_params + "%d%s" % (num_blocks, self._serial_fmt_block))
+        total = struct.calcsize(self._params_fmt() + "%d%s" % (num_blocks, self._serial_fmt_block))
         return slot_size, num_slots_per_block, num_blocks, total

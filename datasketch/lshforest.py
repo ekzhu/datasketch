@@ -3,7 +3,7 @@ from collections.abc import Hashable
 
 import numpy as np
 
-from datasketch.minhash import MinHash
+from datasketch.minhash import MinHash, _check_scheme_consistency
 
 
 class MinHashLSHForest:
@@ -42,6 +42,8 @@ class MinHashLSHForest:
         self.keys = dict()
         # This is the sorted array implementation for the prefix trees
         self.sorted_hashtables = [[] for _ in range(self.l)]
+        # The permutation scheme of the indexed MinHash, learned on first add.
+        self._minhash_scheme = None
 
     def add(self, key: Hashable, minhash: MinHash) -> None:
         """Add a unique key, together
@@ -58,6 +60,8 @@ class MinHashLSHForest:
         """
         if len(minhash) < self.k * self.l:
             raise ValueError("The num_perm of MinHash out of range")
+        self._minhash_scheme = _check_scheme_consistency(
+            getattr(self, "_minhash_scheme", None), minhash)
         if key in self.keys:
             raise ValueError("The given key has already been added")
         self.keys[key] = [self._H(minhash.hashvalues[start:end])
@@ -117,6 +121,7 @@ class MinHashLSHForest:
             raise ValueError("k must be positive")
         if len(minhash) < self.k * self.l:
             raise ValueError("The num_perm of MinHash out of range")
+        _check_scheme_consistency(getattr(self, "_minhash_scheme", None), minhash)
         results = set()
         r = self.k
         while r > 0:
@@ -143,15 +148,30 @@ class MinHashLSHForest:
         if byteslist is None:
             raise KeyError(
                 f"The provided key does not exist in the LSHForest: {key}")
-        hashvalue_byte_size = len(byteslist[0]) // 8
+        # Each stored segment packs self.k hash values; derive the value byte
+        # width from the segment size (4 for the "affine32" MinHash scheme,
+        # 8 for "affine64" and "legacy"). Validate before trusting it, so
+        # corrupted or truncated storage raises instead of being silently
+        # reinterpreted with the wrong width.
+        segment_size = len(byteslist[0])
+        bytes_per_value, remainder = divmod(segment_size, self.k)
+        if remainder != 0 or bytes_per_value not in (4, 8):
+            raise ValueError(
+                "Stored hash segment of %d bytes is not %d values of a "
+                "supported width (4 or 8 bytes)" % (segment_size, self.k)
+            )
+        if any(len(item) != segment_size for item in byteslist):
+            raise ValueError("Stored hash segments have inconsistent sizes")
+        dtype = np.uint32 if bytes_per_value == 4 else np.uint64
+        values_per_segment = segment_size // np.dtype(dtype).itemsize
         hashvalues = np.empty(
-            len(byteslist) * hashvalue_byte_size, dtype=np.uint64)
+            len(byteslist) * values_per_segment, dtype=dtype)
         for index, item in enumerate(byteslist):
             # unswap the bytes, as their representation is flipped during storage
-            hv_segment = np.frombuffer(item, dtype=np.uint64).byteswap()
-            curr_index = index * hashvalue_byte_size
+            hv_segment = np.frombuffer(item, dtype=dtype).byteswap()
+            curr_index = index * values_per_segment
             hashvalues[curr_index: curr_index +
-                       hashvalue_byte_size] = hv_segment
+                       values_per_segment] = hv_segment
         return hashvalues
 
     def _binary_search(self, n, func):

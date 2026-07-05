@@ -20,7 +20,7 @@ jobs:
     environment: package
 
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
         with:
           ref: ${{ github.event.inputs.ref }}
       - name: Install uv

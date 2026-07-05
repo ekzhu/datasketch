@@ -107,7 +107,19 @@ class TestMinHash(unittest.TestCase):
         self.assertGreaterEqual(c, 0)
 
     def test_byte_tokens(self):
-        m = minhash.MinHash(4, 1)
+        m = minhash.MinHash(4, 1)  # default scheme "affine32"
+        m.update(b"Hello")
+        self.assertListEqual(
+            m.hashvalues.tolist(),
+            [3231258861, 1388533999, 831950533, 1845606703],
+        )
+        m = minhash.MinHash(4, 1, scheme="affine64")
+        m.update(b"Hello")
+        self.assertListEqual(
+            m.hashvalues.tolist(),
+            [17263807126536662982, 6203611050164820875, 4141308390362884389, 4915270424612038026],
+        )
+        m = minhash.MinHash(4, 1, scheme="legacy")
         m.update(b"Hello")
         self.assertListEqual(
             m.hashvalues.tolist(),

@@ -16,6 +16,13 @@ Lean MinHash
     :members:
     :special-members:
 
+b-bit MinHash
+-------------
+
+.. autoclass:: datasketch.bBitMinHash
+    :members:
+    :special-members:
+
 
 Weighted MinHash
 ----------------

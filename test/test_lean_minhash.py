@@ -16,8 +16,8 @@ class TestLeanMinHash(unittest.TestCase):
         self.assertTrue(np.array_equal(lm1.hashvalues, lm2.hashvalues))
         self.assertTrue(np.array_equal(lm1.seed, lm2.seed))
 
-        lm1 = LeanMinHash(seed=m1.seed, hashvalues=m1.hashvalues)
-        lm2 = LeanMinHash(seed=m2.seed, hashvalues=m2.hashvalues)
+        lm1 = LeanMinHash(seed=m1.seed, hashvalues=m1.hashvalues, scheme=m1.scheme)
+        lm2 = LeanMinHash(seed=m2.seed, hashvalues=m2.hashvalues, scheme=m2.scheme)
         self.assertTrue(np.array_equal(lm1.hashvalues, lm2.hashvalues))
         self.assertTrue(np.array_equal(lm1.seed, lm2.seed))
 
@@ -68,9 +68,15 @@ class TestLeanMinHash(unittest.TestCase):
         self.assertTrue(u.jaccard(lm2) == 1.0)
 
     def test_bytesize(self):
-        m1 = MinHash(4, 1, hashfunc=fake_hash_func)
+        m1 = MinHash(4, 1, hashfunc=fake_hash_func, scheme="legacy")
         lm1 = LeanMinHash(m1)
         self.assertTrue(lm1.bytesize() == (4 * 4) + 4 + 8)
+        # The affine formats add one scheme code byte (shown here with "<",
+        # which has no alignment padding).
+        m2 = MinHash(4, 1, hashfunc=fake_hash_func, scheme="affine32")
+        self.assertEqual(LeanMinHash(m2).bytesize("<"), (4 * 4) + 4 + 8 + 1)
+        m3 = MinHash(4, 1, hashfunc=fake_hash_func, scheme="affine64")
+        self.assertEqual(LeanMinHash(m3).bytesize("<"), (8 * 4) + 4 + 8 + 1)
 
     def test_serialize(self):
         m1 = MinHash(2, 1, hashfunc=fake_hash_func)
