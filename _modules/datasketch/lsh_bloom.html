@@ -5,14 +5,14 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>datasketch.lsh_bloom &mdash; datasketch 1.10.0 documentation</title>
+  <title>datasketch.lsh_bloom &mdash; datasketch 2.0.0 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=03e43079" />
       <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=9edc463e" />
 
   
       <script src="../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../_static/documentation_options.js?v=1d24b1d9"></script>
+      <script src="../../_static/documentation_options.js?v=51b770b3"></script>
       <script src="../../_static/doctools.js?v=9bcbadda"></script>
       <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../_static/js/theme.js"></script>
@@ -40,6 +40,7 @@
 </div>
         </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
               <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../b-bit-minhash.html">b-bit MinHash</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../documentation.html">API Documentation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../hyperloglog.html">HyperLogLog</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../hyperloglog.html#hyperloglog-plusplus">HyperLogLog++</a></li>
@@ -86,7 +87,7 @@
 <span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">scipy.integrate</span><span class="w"> </span><span class="kn">import</span> <span class="n">quad</span> <span class="k">as</span> <span class="n">integrate</span>
 
-<span class="kn">from</span><span class="w"> </span><span class="nn">datasketch.minhash</span><span class="w"> </span><span class="kn">import</span> <span class="n">MinHash</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">datasketch.minhash</span><span class="w"> </span><span class="kn">import</span> <span class="n">MinHash</span><span class="p">,</span> <span class="n">_check_scheme_consistency</span>
 
 <span class="k">try</span><span class="p">:</span>
     <span class="kn">import</span><span class="w"> </span><span class="nn">pybloomfilter</span>
@@ -169,6 +170,15 @@
                     <span class="sa">f</span><span class="s2">&quot;Invalid length for indices, </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">hashvalues</span><span class="p">)</span><span class="si">}</span><span class="s2">, expected </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">r</span><span class="si">}</span><span class="s2"> hashvalues in band&quot;</span>
                 <span class="p">)</span>
 
+        <span class="k">def</span><span class="w"> </span><span class="nf">_band_hash</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">hashvalues</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+            <span class="c1"># https://en.wikipedia.org/wiki/Universal_hashing#Hashing_vectors</span>
+            <span class="c1"># as the hashvalues are the result of a universal hashing function,</span>
+            <span class="c1"># their sum is also a universal hash function.</span>
+            <span class="c1"># Sum in uint64 regardless of the MinHash scheme&#39;s value width so</span>
+            <span class="c1"># the result is deterministic across numpy versions and schemes.</span>
+            <span class="n">x</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">hashvalues</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">uint64</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">uint64</span><span class="p">)</span>
+            <span class="k">return</span> <span class="nb">int</span><span class="p">(</span><span class="n">x</span> <span class="o">%</span> <span class="n">_mersenne_prime</span><span class="p">)</span>
+
         <span class="k">def</span><span class="w"> </span><span class="nf">insert</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">hashvalues</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">int</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">            </span><span class="sd">&quot;&quot;&quot;Takes as input the indices for a single band and inserts them into the corresponding bit arrays.</span>
 
@@ -177,11 +187,7 @@
 
 <span class="sd">            &quot;&quot;&quot;</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">assert_size</span><span class="p">(</span><span class="n">hashvalues</span><span class="p">)</span>
-            <span class="c1"># https://en.wikipedia.org/wiki/Universal_hashing#Hashing_vectors</span>
-            <span class="c1"># as the hashvalues are the result of a universal hashing function,</span>
-            <span class="c1"># their sum is also a universal hash function</span>
-            <span class="n">x</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">(</span><span class="n">hashvalues</span><span class="p">)</span> <span class="o">%</span> <span class="n">_mersenne_prime</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">bloom_filter</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">bloom_filter</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_band_hash</span><span class="p">(</span><span class="n">hashvalues</span><span class="p">))</span>
 
         <span class="k">def</span><span class="w"> </span><span class="nf">query</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">hashvalues</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">int</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
 <span class="w">            </span><span class="sd">&quot;&quot;&quot;Takes as input the indices for a single band and queries them against the corresponding arrays</span>
@@ -192,8 +198,7 @@
 
 <span class="sd">            &quot;&quot;&quot;</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">assert_size</span><span class="p">(</span><span class="n">hashvalues</span><span class="p">)</span>
-            <span class="n">x</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">(</span><span class="n">hashvalues</span><span class="p">)</span> <span class="o">%</span> <span class="n">_mersenne_prime</span>
-            <span class="k">return</span> <span class="n">x</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">bloom_filter</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_band_hash</span><span class="p">(</span><span class="n">hashvalues</span><span class="p">)</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">bloom_filter</span>
 <span class="k">else</span><span class="p">:</span>
 
     <span class="k">class</span><span class="w"> </span><span class="nc">BloomTable</span><span class="p">:</span>
@@ -375,7 +380,11 @@
             <span class="p">)</span>
             <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">b</span><span class="p">)</span>
         <span class="p">]</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">hashranges</span> <span class="o">=</span> <span class="p">[(</span><span class="n">i</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">r</span><span class="p">,</span> <span class="p">(</span><span class="n">i</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">r</span><span class="p">)</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">b</span><span class="p">)]</span></div>
+        <span class="bp">self</span><span class="o">.</span><span class="n">hashranges</span> <span class="o">=</span> <span class="p">[(</span><span class="n">i</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">r</span><span class="p">,</span> <span class="p">(</span><span class="n">i</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">r</span><span class="p">)</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">b</span><span class="p">)]</span>
+        <span class="c1"># The permutation scheme of the indexed MinHash, learned from the</span>
+        <span class="c1"># first insert. Note that an index restored from Bloom filter files</span>
+        <span class="c1"># re-learns the scheme on its first insert.</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_minhash_scheme</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span></div>
 
 
 <div class="viewcode-block" id="MinHashLSHBloom.insert">
@@ -394,6 +403,7 @@
     <span class="k">def</span><span class="w"> </span><span class="nf">_insert</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">minhash</span><span class="p">:</span> <span class="n">MinHash</span><span class="p">):</span>
         <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">minhash</span><span class="p">)</span> <span class="o">!=</span> <span class="bp">self</span><span class="o">.</span><span class="n">h</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Expecting minhash with length </span><span class="si">%d</span><span class="s2">, got </span><span class="si">%d</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">h</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">minhash</span><span class="p">)))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_minhash_scheme</span> <span class="o">=</span> <span class="n">_check_scheme_consistency</span><span class="p">(</span><span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s2">&quot;_minhash_scheme&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">),</span> <span class="n">minhash</span><span class="p">)</span>
 
         <span class="n">Hs</span> <span class="o">=</span> <span class="p">[</span><span class="n">minhash</span><span class="o">.</span><span class="n">hashvalues</span><span class="p">[</span><span class="n">start</span><span class="p">:</span><span class="n">end</span><span class="p">]</span> <span class="k">for</span> <span class="n">start</span><span class="p">,</span> <span class="n">end</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">hashranges</span><span class="p">]</span>
 
@@ -450,6 +460,7 @@
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">minhash</span><span class="p">)</span> <span class="o">!=</span> <span class="bp">self</span><span class="o">.</span><span class="n">h</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Expecting minhash with length </span><span class="si">%d</span><span class="s2">, got </span><span class="si">%d</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">h</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">minhash</span><span class="p">)))</span>
+        <span class="n">_check_scheme_consistency</span><span class="p">(</span><span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s2">&quot;_minhash_scheme&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">),</span> <span class="n">minhash</span><span class="p">)</span>
 
         <span class="c1"># if we match in any band, this is a candidate pair</span>
         <span class="k">for</span> <span class="p">(</span><span class="n">start</span><span class="p">,</span> <span class="n">end</span><span class="p">),</span> <span class="n">hashtable</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">hashranges</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">hashtables</span><span class="p">):</span>

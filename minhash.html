@@ -6,14 +6,14 @@
   <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>MinHash &mdash; datasketch 1.10.0 documentation</title>
+  <title>MinHash &mdash; datasketch 2.0.0 documentation</title>
       <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=03e43079" />
       <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=9edc463e" />
 
   
       <script src="_static/jquery.js?v=5d32c60e"></script>
       <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="_static/documentation_options.js?v=1d24b1d9"></script>
+      <script src="_static/documentation_options.js?v=51b770b3"></script>
       <script src="_static/doctools.js?v=9bcbadda"></script>
       <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="_static/js/theme.js"></script>
@@ -43,6 +43,7 @@
 </div>
         </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
               <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="b-bit-minhash.html">b-bit MinHash</a></li>
 <li class="toctree-l1"><a class="reference internal" href="documentation.html">API Documentation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="hyperloglog.html">HyperLogLog</a></li>
 <li class="toctree-l1"><a class="reference internal" href="hyperloglog.html#hyperloglog-plusplus">HyperLogLog++</a></li>
@@ -51,9 +52,14 @@
 <li class="toctree-l1"><a class="reference internal" href="lshensemble.html">MinHash LSH Ensemble</a></li>
 <li class="toctree-l1"><a class="reference internal" href="lshforest.html">MinHash LSH Forest</a></li>
 <li class="toctree-l1 current"><a class="current reference internal" href="#">MinHash</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#permutation-schemes">Permutation Schemes</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#the-affine-permutation-scheme">The Affine Permutation Scheme</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#why-the-legacy-scheme-was-replaced">Why the legacy scheme was replaced</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#migrating-from-versions-before-2-0-0">Migrating from versions before 2.0.0</a></li>
+</ul>
+</li>
 <li class="toctree-l2"><a class="reference internal" href="#use-different-hash-functions">Use Different Hash Functions</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#gpu-usage-experimental">GPU usage (experimental)</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#gpu-runtime-comparisons">GPU runtime comparisons</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#common-issues-with-minhash">Common Issues with MinHash</a></li>
 </ul>
 </li>
@@ -120,16 +126,19 @@ functions used in MinHash.</p>
 <span class="n">m</span> <span class="o">=</span> <span class="n">MinHash</span><span class="p">(</span><span class="n">num_perm</span><span class="o">=</span><span class="mi">256</span><span class="p">)</span>
 </pre></div>
 </div>
-<p>The trade-off for better accuracy is slower speed and higher memory
-usage, because using more permutation functions means:</p>
-<ol class="arabic simple">
-<li><p>more CPU instructions for every data value hashed, and</p></li>
-<li><p>more hash values to be stored.</p></li>
-</ol>
-<p>The speed and memory usage of MinHash are both linearly
-proportional to the number of permutation functions used.</p>
+<p>Better accuracy costs memory more than it costs update speed. A MinHash
+keeps one hash value per permutation function, so memory, serialized
+size, and the work of whole-signature operations such as
+<a class="reference internal" href="documentation.html#datasketch.MinHash.jaccard" title="datasketch.MinHash.jaccard"><code class="xref py py-meth docutils literal notranslate"><span class="pre">datasketch.MinHash.jaccard()</span></code></a>,
+<a class="reference internal" href="documentation.html#datasketch.MinHash.merge" title="datasketch.MinHash.merge"><code class="xref py py-meth docutils literal notranslate"><span class="pre">datasketch.MinHash.merge()</span></code></a>, and LSH indexing all grow linearly
+with <code class="docutils literal notranslate"><span class="pre">num_perm</span></code>. Update time is far less sensitive: applying the
+permutations is vectorized and cheap, so hashing the input dominates,
+and doubling <code class="docutils literal notranslate"><span class="pre">num_perm</span></code> from 128 to 256 adds only about 10-35% to
+<code class="docutils literal notranslate"><span class="pre">update_batch</span></code> time in our measurements. The benchmark below shows how
+accuracy and running time depend on the number of permutation functions
+(one line per hash function, see <a class="reference internal" href="#use-different-hash-functions">Use Different Hash Functions</a>).</p>
 <figure class="align-center">
-<img alt="MinHash Benchmark" src="_images/minhash_benchmark_sha1.png" />
+<img alt="MinHash benchmark for different hash functions" src="_images/minhash_benchmark.png" />
 </figure>
 <p>You can union two MinHash objects using the
 <a class="reference internal" href="documentation.html#datasketch.MinHash.merge" title="datasketch.MinHash.merge"><code class="xref py py-meth docutils literal notranslate"><span class="pre">datasketch.MinHash.merge()</span></code></a> function. This
@@ -147,11 +156,159 @@ cardinality. The analysis is presented in <a class="reference external" href="ht
 </pre></div>
 </div>
 <p>If you are handling billions of MinHash objects, consider using
-<a class="reference internal" href="documentation.html#datasketch.LeanMinHash" title="datasketch.LeanMinHash"><code class="xref py py-class docutils literal notranslate"><span class="pre">datasketch.LeanMinHash</span></code></a> to reduce your memory footprint.</p>
+<a class="reference internal" href="documentation.html#datasketch.LeanMinHash" title="datasketch.LeanMinHash"><code class="xref py py-class docutils literal notranslate"><span class="pre">datasketch.LeanMinHash</span></code></a> to reduce your memory footprint. For
+sketches that need no further updates, <a class="reference internal" href="b-bit-minhash.html#b-bit-minhash"><span class="std std-ref">b-bit MinHash</span></a> cuts storage
+further by keeping only the lowest bits of each hash value.</p>
+<section id="permutation-schemes">
+<h2>Permutation Schemes<a class="headerlink" href="#permutation-schemes" title="Link to this heading"></a></h2>
+<p>Since version 2.0.0, <a class="reference internal" href="documentation.html#datasketch.MinHash" title="datasketch.MinHash"><code class="xref py py-class docutils literal notranslate"><span class="pre">datasketch.MinHash</span></code></a> supports three
+permutation schemes, selected with the <code class="docutils literal notranslate"><span class="pre">scheme</span></code> constructor argument:
+<code class="docutils literal notranslate"><span class="pre">&quot;affine32&quot;</span></code> (the default), <code class="docutils literal notranslate"><span class="pre">&quot;affine64&quot;</span></code>, and <code class="docutils literal notranslate"><span class="pre">&quot;legacy&quot;</span></code>.</p>
+<section id="the-affine-permutation-scheme">
+<h3>The Affine Permutation Scheme<a class="headerlink" href="#the-affine-permutation-scheme" title="Link to this heading"></a></h3>
+<figure class="align-center">
+<img alt="The affine permutation scheme, from input value to signature" src="_images/affine_scheme.svg" />
+</figure>
+<p>Every value passed to <a class="reference internal" href="documentation.html#datasketch.MinHash.update" title="datasketch.MinHash.update"><code class="xref py py-meth docutils literal notranslate"><span class="pre">datasketch.MinHash.update()</span></code></a> or
+<a class="reference internal" href="documentation.html#datasketch.MinHash.update_batch" title="datasketch.MinHash.update_batch"><code class="xref py py-meth docutils literal notranslate"><span class="pre">datasketch.MinHash.update_batch()</span></code></a> moves through four steps:</p>
+<ol class="arabic simple">
+<li><p>The hash function maps the value to a hash value <code class="docutils literal notranslate"><span class="pre">h</span></code> of the scheme
+width <code class="docutils literal notranslate"><span class="pre">w</span></code>: 32 bits for <code class="docutils literal notranslate"><span class="pre">&quot;affine32&quot;</span></code>, 64 bits for <code class="docutils literal notranslate"><span class="pre">&quot;affine64&quot;</span></code>.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">h</span></code> is mixed once with the <a class="reference external" href="https://github.com/aappleby/smhasher/blob/master/src/MurmurHash3.cpp">MurmurHash3 finalizer</a>
+(<code class="docutils literal notranslate"><span class="pre">fmix</span></code>), a fixed bijection that spreads every input bit over the
+whole word. This protects the estimate when the hash function is weak
+relative to the input, for example sequential integer keys under an
+identity hash function.</p></li>
+<li><p>Each of the <code class="docutils literal notranslate"><span class="pre">num_perm</span></code> permutations maps the mixed value <code class="docutils literal notranslate"><span class="pre">h'</span></code> to
+<code class="docutils literal notranslate"><span class="pre">a_k</span> <span class="pre">*</span> <span class="pre">h'</span> <span class="pre">+</span> <span class="pre">b_k</span> <span class="pre">mod</span> <span class="pre">2**w</span></code>, computed in <code class="docutils literal notranslate"><span class="pre">w</span></code>-bit unsigned arithmetic
+whose wraparound is the modulo. The multiplier <code class="docutils literal notranslate"><span class="pre">a_k</span></code> is odd, so the
+map is a bijection on <code class="docutils literal notranslate"><span class="pre">[0,</span> <span class="pre">2**w)</span></code>: distinct hash values can never
+collide after permutation.</p></li>
+<li><p>Each slot of the signature keeps the minimum value its permutation has
+seen: <code class="docutils literal notranslate"><span class="pre">hashvalues[k]</span> <span class="pre">=</span> <span class="pre">min(hashvalues[k],</span> <span class="pre">a_k</span> <span class="pre">*</span> <span class="pre">h'</span> <span class="pre">+</span> <span class="pre">b_k)</span></code>.</p></li>
+</ol>
+<p>Two sets place the same value in slot <code class="docutils literal notranslate"><span class="pre">k</span></code> with probability equal to
+their Jaccard similarity, so the fraction of matching slots estimates it.
+Because every permutation is a bijection, the permutation step adds no
+collisions of its own; the only sources of error are the sampling noise
+of <code class="docutils literal notranslate"><span class="pre">num_perm</span></code> slots and collisions in the input hash itself.</p>
+<p><strong>Choosing between affine32 and affine64.</strong> The scheme width <code class="docutils literal notranslate"><span class="pre">w</span></code> is
+the width of the input hash space, and that space is the scheme’s one
+capacity limit. The hash function gives every element a <code class="docutils literal notranslate"><span class="pre">w</span></code>-bit
+fingerprint. With <code class="docutils literal notranslate"><span class="pre">w</span> <span class="pre">=</span> <span class="pre">32</span></code> there are only about 4.3 billion distinct
+fingerprints, so as sets grow toward that size, more and more
+<em>different</em> elements receive the <em>same</em> fingerprint – and the sketch
+cannot tell such elements apart. Two sets with no elements in common
+therefore still share some fingerprints, and their estimated similarity
+rises above zero through no fault of the permutations. This unavoidable
+baseline is the <em>saturation floor</em>: the similarity that input-hash
+collisions alone create, and the level below which no permutation
+scheme can reach.</p>
+<p>The experiment below makes the floor visible. Two <em>disjoint</em> sets (true
+Jaccard similarity 0) of up to 10 billion simulated hash values each
+are sketched with <code class="docutils literal notranslate"><span class="pre">num_perm=128</span></code>; the dashed curve is the analytic
+32-bit floor. <code class="docutils literal notranslate"><span class="pre">affine32</span></code> sits on the floor at every size – its
+permutations add no collisions of their own – while <code class="docutils literal notranslate"><span class="pre">affine64</span></code>,
+whose 64-bit fingerprints effectively never collide, reads zero
+throughout. (The red curve is the scheme used before 2.0.0, covered in
+the next section.) See
+<code class="docutils literal notranslate"><span class="pre">benchmark/sketches/minhash_scheme_bias_benchmark.py</span></code> for the
+experiment code.</p>
+<figure class="align-center" id="id2">
+<img alt="Estimated Jaccard similarity of two disjoint sets by scheme" src="_images/scheme_bias.png" />
+<figcaption>
+<p><span class="caption-text">Estimated Jaccard similarity of two disjoint sets versus set size
+(mean of 6–16 seeded trials per point, 95% confidence intervals;
+the per-trial data is in <code class="docutils literal notranslate"><span class="pre">scheme_bias_results.json</span></code> next to the
+figure).</span><a class="headerlink" href="#id2" title="Link to this image"></a></p>
+</figcaption>
+</figure>
+<p>In numbers, the 32-bit floor is about +0.001 at 10 million elements per
+set, +0.01 at 100 million, and +0.12 at a billion. Hence:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">&quot;affine32&quot;</span></code> (the default) stores hash values as <code class="docutils literal notranslate"><span class="pre">uint32</span></code>. Up to
+roughly 100 million elements per set the floor (at most about +0.01)
+stays below the sampling error of a <code class="docutils literal notranslate"><span class="pre">num_perm=128</span></code> signature (about
+0.03-0.04), so for most workloads it gives the same accuracy in half
+the memory.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">&quot;affine64&quot;</span></code> runs the same construction over 64-bit hash values:
+twice the signature memory and a somewhat slower update (1.3-2x the
+<code class="docutils literal notranslate"><span class="pre">affine32</span></code> update time, depending on platform). Its hash space does
+not saturate at any realistic scale – the same measurement reads
+0.0000 out to 10 billion elements per set – so use it once sets grow
+past the tens of millions, or whenever a percent-level positive bias
+matters. Its default hash function is
+<code class="xref py py-func docutils literal notranslate"><span class="pre">datasketch.hashfunc.sha1_hash64()</span></code>, and a custom <code class="docutils literal notranslate"><span class="pre">hashfunc</span></code>
+must return 64-bit integers.</p></li>
+</ul>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># 64-bit scheme for billion-scale sets.</span>
+<span class="n">m</span> <span class="o">=</span> <span class="n">MinHash</span><span class="p">(</span><span class="n">num_perm</span><span class="o">=</span><span class="mi">128</span><span class="p">,</span> <span class="n">scheme</span><span class="o">=</span><span class="s2">&quot;affine64&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>MinHash objects created with different schemes cannot be compared, merged,
+or unioned: <code class="docutils literal notranslate"><span class="pre">jaccard()</span></code>, <code class="docutils literal notranslate"><span class="pre">merge()</span></code> and <code class="docutils literal notranslate"><span class="pre">union()</span></code> raise <code class="docutils literal notranslate"><span class="pre">ValueError</span></code>
+on a scheme mismatch.</p>
+</section>
+<section id="why-the-legacy-scheme-was-replaced">
+<h3>Why the legacy scheme was replaced<a class="headerlink" href="#why-the-legacy-scheme-was-replaced" title="Link to this heading"></a></h3>
+<p>The scheme used before 2.0.0 permuted hash values with universal hashing
+modulo the Mersenne prime <code class="docutils literal notranslate"><span class="pre">2**61</span> <span class="pre">-</span> <span class="pre">1</span></code> and truncated the result to 32
+bits. Folding the 61-bit range onto 32 bits turns the combined step into
+a random function rather than a permutation: unlike the affine
+bijections, it introduces collisions <em>of its own</em>, on top of the
+input-hash collisions that set the saturation floor
+(<a class="reference external" href="https://github.com/ekzhu/datasketch/issues/212">issue #212</a>). The
+red curve in the figure above shows the consequence: at a billion
+elements two disjoint sets measure about 0.23 – nearly twice the floor
+– and the excess bias persists at every scale.</p>
+<p>The affine schemes remove the bias and are also cheaper: end-to-end
+<code class="docutils literal notranslate"><span class="pre">update_batch</span></code> measures about 4x (<code class="docutils literal notranslate"><span class="pre">affine32</span></code>) and 2x (<code class="docutils literal notranslate"><span class="pre">affine64</span></code>)
+faster than legacy on x86-64 servers at <code class="docutils literal notranslate"><span class="pre">num_perm=256</span></code> – about 2x and
+1.5x on Apple Silicon, where fast 64-bit integer division makes legacy’s
+modulo step less of a penalty – and <code class="docutils literal notranslate"><span class="pre">affine32</span></code> signatures take half
+the memory. <code class="docutils literal notranslate"><span class="pre">scheme=&quot;legacy&quot;</span></code> remains only for working with sketches
+created by earlier versions.</p>
+</section>
+<section id="migrating-from-versions-before-2-0-0">
+<h3>Migrating from versions before 2.0.0<a class="headerlink" href="#migrating-from-versions-before-2-0-0" title="Link to this heading"></a></h3>
+<p>All hash values produced by the default scheme change in 2.0.0: sketches and
+LSH indexes persisted with earlier versions cannot be mixed with newly
+created sketches unless you pass <code class="docutils literal notranslate"><span class="pre">scheme=&quot;legacy&quot;</span></code>.</p>
+<ul class="simple">
+<li><p>Pickled <code class="docutils literal notranslate"><span class="pre">MinHash</span></code>, <code class="docutils literal notranslate"><span class="pre">LeanMinHash</span></code> and <code class="docutils literal notranslate"><span class="pre">bBitMinHash</span></code> objects and
+<code class="docutils literal notranslate"><span class="pre">LeanMinHash</span></code> buffers written by earlier versions load correctly and are
+marked <code class="docutils literal notranslate"><span class="pre">scheme=&quot;legacy&quot;</span></code>; the legacy scheme keeps producing bit-identical
+hash values.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">LeanMinHash</span></code> and <code class="docutils literal notranslate"><span class="pre">bBitMinHash</span></code> objects with <code class="docutils literal notranslate"><span class="pre">scheme=&quot;legacy&quot;</span></code>
+serialize to the exact same bytes as earlier versions, so they remain
+readable by programs running datasketch 1.x.</p></li>
+<li><p>Constructing a sketch from raw values – <code class="docutils literal notranslate"><span class="pre">MinHash(hashvalues=...)</span></code>,
+<code class="docutils literal notranslate"><span class="pre">MinHash(permutations=...)</span></code> or <code class="docutils literal notranslate"><span class="pre">LeanMinHash(seed=...,</span> <span class="pre">hashvalues=...)</span></code>
+– now requires passing <code class="docutils literal notranslate"><span class="pre">scheme</span></code> explicitly. Hash values carry no trace
+of the scheme that produced them, so a default would silently mislabel
+values stored by 1.x and defeat the cross-scheme guards. Pass
+<code class="docutils literal notranslate"><span class="pre">scheme=&quot;legacy&quot;</span></code> for values created before 2.0.0.</p></li>
+<li><p>LSH indexes (<code class="docutils literal notranslate"><span class="pre">MinHashLSH</span></code>, <code class="docutils literal notranslate"><span class="pre">MinHashLSHForest</span></code>, <code class="docutils literal notranslate"><span class="pre">MinHashLSHEnsemble</span></code>,
+<code class="docutils literal notranslate"><span class="pre">MinHashLSHBloom</span></code>, <code class="docutils literal notranslate"><span class="pre">AsyncMinHashLSH</span></code>) learn the scheme from the first
+inserted MinHash and raise <code class="docutils literal notranslate"><span class="pre">ValueError</span></code> when a MinHash of a different
+scheme is inserted or used as a query. An index attached to pre-existing
+external storage (e.g. Redis) cannot know what scheme the stored data was
+built with and re-learns it on the first insert; until then queries of any
+scheme are accepted unchecked, so rebuilding such indexes is still up to
+you.</p></li>
+<li><p>To adopt the new default, recompute sketches from the original data and
+rebuild any persisted LSH index.</p></li>
+<li><p>The pre-mix protects against <em>naturally</em> structured inputs (for example
+sequential integers combined with a weak or identity hash function), but a
+quality <code class="docutils literal notranslate"><span class="pre">hashfunc</span></code> is still recommended; the default SHA1-based functions
+are safe.</p></li>
+</ul>
+</section>
+</section>
 <section id="use-different-hash-functions">
 <h2>Use Different Hash Functions<a class="headerlink" href="#use-different-hash-functions" title="Link to this heading"></a></h2>
 <p>MinHash by default uses the SHA1 hash function from Python’s built-in
-<a class="reference external" href="https://docs.python.org/3.7/library/hashlib.html">hashlib</a> library.
+<a class="reference external" href="https://docs.python.org/3/library/hashlib.html">hashlib</a> library.
 You can also change the hash function using the <code class="docutils literal notranslate"><span class="pre">hashfunc</span></code> parameter
 in the constructor.</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Let&#39;s use MurmurHash3.</span>
@@ -166,22 +323,19 @@ in the constructor.</p>
 <span class="n">m</span> <span class="o">=</span> <span class="n">MinHash</span><span class="p">(</span><span class="n">hashfunc</span><span class="o">=</span><span class="n">_hash_func</span><span class="p">)</span>
 </pre></div>
 </div>
-<p>Different hash functions have different performance–accuracy trade-offs;
-you can use the benchmark code in <code class="docutils literal notranslate"><span class="pre">benchmark/minhash_benchmark.py</span></code> to
-run some tests. Here are the results for some popular hash functions
-available in Python.</p>
-<p>MurmurHash3: <a class="reference external" href="https://pypi.org/project/mmh3/">mmh3</a></p>
-<figure class="align-center">
-<img alt="MinHash Benchmark (mmh3)" src="_images/minhash_benchmark_mmh3.png" />
-</figure>
-<p><a class="reference external" href="https://pypi.org/project/xxhash/">xxhash</a></p>
-<figure class="align-center">
-<img alt="MinHash Benchmark (xxhash)" src="_images/minhash_benchmark_xxh.png" />
-</figure>
-<p><a class="reference external" href="https://pypi.org/project/pyfarmhash">Farmhash</a></p>
-<figure class="align-center">
-<img alt="MinHash Benchmark (farmhash)" src="_images/minhash_benchmark_farmhash.png" />
-</figure>
+<p>Note that the hash function must produce integers matching the scheme
+width: 32-bit values for <code class="docutils literal notranslate"><span class="pre">&quot;affine32&quot;</span></code> (the default) and <code class="docutils literal notranslate"><span class="pre">&quot;legacy&quot;</span></code>,
+and 64-bit values for <code class="docutils literal notranslate"><span class="pre">&quot;affine64&quot;</span></code>.</p>
+<p>The benchmark figure near the top of this page compares the default SHA1
+with <a class="reference external" href="https://pypi.org/project/mmh3/">mmh3</a> (MurmurHash3),
+<a class="reference external" href="https://pypi.org/project/xxhash/">xxhash</a>, and
+<a class="reference external" href="https://pypi.org/project/pyfarmhash">Farmhash</a>: the accuracy is the
+same for all of them, and the running time differences are small because
+per-update overhead, not the hash computation, dominates on short
+inputs. Hash function choice matters more for long inputs, or when
+hashing in bulk outside of <a class="reference internal" href="documentation.html#datasketch.MinHash.update" title="datasketch.MinHash.update"><code class="xref py py-meth docutils literal notranslate"><span class="pre">datasketch.MinHash.update()</span></code></a>. You can
+run the comparison yourself with
+<code class="docutils literal notranslate"><span class="pre">benchmark/sketches/minhash_benchmark.py</span></code>.</p>
 </section>
 <section id="gpu-usage-experimental">
 <h2>GPU usage (experimental)<a class="headerlink" href="#gpu-usage-experimental" title="Link to this heading"></a></h2>
@@ -207,34 +361,32 @@ only the permutation application and min-reduction may use the GPU.</p>
 </div>
 <p><strong>Install.</strong> CuPy is an optional dependency (not installed by default).
 See CuPy’s docs for wheels matching your CUDA version, e.g.
-<code class="docutils literal notranslate"><span class="pre">pip</span> <span class="pre">install</span> <span class="pre">cupy-cuda12x</span></code> for CUDA 12.</p>
-</section>
-<section id="gpu-runtime-comparisons">
-<h2>GPU runtime comparisons<a class="headerlink" href="#gpu-runtime-comparisons" title="Link to this heading"></a></h2>
-<p>The optional GPU backend accelerates the permutation-and-min step in
-<a class="reference internal" href="documentation.html#datasketch.MinHash.update_batch" title="datasketch.MinHash.update_batch"><code class="xref py py-meth docutils literal notranslate"><span class="pre">datasketch.MinHash.update_batch()</span></code></a>. Hashing still runs on CPU to
-preserve <code class="docutils literal notranslate"><span class="pre">hashfunc</span></code> semantics.</p>
-<p><strong>Runtime vs number of permutations (fixed ``n``).</strong></p>
-<figure class="align-center" id="id2">
+<code class="docutils literal notranslate"><span class="pre">pip</span> <span class="pre">install</span> <span class="pre">cupy-cuda12x</span></code> for CUDA 12. On machines that have an NVIDIA
+driver but no local CUDA Toolkit (typical for cloud GPU containers), use
+<code class="docutils literal notranslate"><span class="pre">pip</span> <span class="pre">install</span> <span class="pre">&quot;cupy-cuda12x[ctk]&quot;</span></code> so CuPy’s JIT can find the CUDA headers;
+otherwise <code class="docutils literal notranslate"><span class="pre">update_batch</span></code> fails at first use with
+<code class="docutils literal notranslate"><span class="pre">RuntimeError:</span> <span class="pre">Failed</span> <span class="pre">to</span> <span class="pre">find</span> <span class="pre">CUDA</span> <span class="pre">headers</span></code>.</p>
+<p><strong>Runtime comparisons.</strong> The figures below were measured on an NVIDIA
+Tesla T4 (CuPy 14.1, CUDA 12.9) with the default <code class="docutils literal notranslate"><span class="pre">affine32</span></code> scheme;
+results vary by hardware and CuPy version. Because input hashing always
+runs on CPU, GPU runtime is dominated by hashing and stays nearly flat
+as <code class="docutils literal notranslate"><span class="pre">num_perm</span></code> grows – which is where the speedup over CPU comes from.</p>
+<figure class="align-center" id="id3">
 <img alt="Runtime comparison CPU vs GPU across num_perm" src="_images/minhash_gpu_size_50000.png" />
 <figcaption>
 <p><span class="caption-text">Update time for a fixed batch size (<code class="docutils literal notranslate"><span class="pre">n</span> <span class="pre">=</span> <span class="pre">50,000</span></code>) as <code class="docutils literal notranslate"><span class="pre">num_perm</span></code> grows.
 GPU shows increasing speedups as <code class="docutils literal notranslate"><span class="pre">num_perm</span></code> increases because more parallel
-work amortizes transfer/launch overhead.</span><a class="headerlink" href="#id2" title="Link to this image"></a></p>
+work amortizes transfer/launch overhead.</span><a class="headerlink" href="#id3" title="Link to this image"></a></p>
 </figcaption>
 </figure>
-<p><strong>Runtime vs batch size ``n`` (fixed ``num_perm``).</strong></p>
-<figure class="align-center" id="id3">
+<figure class="align-center" id="id4">
 <img alt="Runtime comparison CPU vs GPU across n" src="_images/minhash_gpu_vs_size_k256.png" />
 <figcaption>
-<p><span class="caption-text">Update time for a fixed number of permutations (e.g., <code class="docutils literal notranslate"><span class="pre">num_perm</span> <span class="pre">=</span> <span class="pre">256</span></code>)
+<p><span class="caption-text">Update time for a fixed number of permutations (<code class="docutils literal notranslate"><span class="pre">num_perm</span> <span class="pre">=</span> <span class="pre">256</span></code>)
 as batch size increases. Small batches are often CPU-favorable due to
-transfer overhead; larger batches benefit from GPU parallelism.</span><a class="headerlink" href="#id3" title="Link to this image"></a></p>
+transfer overhead; larger batches benefit from GPU parallelism.</span><a class="headerlink" href="#id4" title="Link to this image"></a></p>
 </figcaption>
 </figure>
-<p><strong>Notes.</strong> Results vary by hardware and CuPy version. The GPU backend is
-controlled by <code class="docutils literal notranslate"><span class="pre">gpu_mode</span></code>: <code class="docutils literal notranslate"><span class="pre">&quot;disable&quot;</span></code> (CPU), <code class="docutils literal notranslate"><span class="pre">&quot;detect&quot;</span></code> (use GPU if
-available, otherwise CPU), and <code class="docutils literal notranslate"><span class="pre">&quot;always&quot;</span></code> (require GPU; raises if unavailable).</p>
 </section>
 <section id="common-issues-with-minhash">
 <h2>Common Issues with MinHash<a class="headerlink" href="#common-issues-with-minhash" title="Link to this heading"></a></h2>

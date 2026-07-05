@@ -5,14 +5,14 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Index &mdash; datasketch 1.10.0 documentation</title>
+  <title>Index &mdash; datasketch 2.0.0 documentation</title>
       <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=03e43079" />
       <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=9edc463e" />
 
   
       <script src="_static/jquery.js?v=5d32c60e"></script>
       <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="_static/documentation_options.js?v=1d24b1d9"></script>
+      <script src="_static/documentation_options.js?v=51b770b3"></script>
       <script src="_static/doctools.js?v=9bcbadda"></script>
       <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="_static/js/theme.js"></script>
@@ -40,6 +40,7 @@
 </div>
         </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
               <ul>
+<li class="toctree-l1"><a class="reference internal" href="b-bit-minhash.html">b-bit MinHash</a></li>
 <li class="toctree-l1"><a class="reference internal" href="documentation.html">API Documentation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="hyperloglog.html">HyperLogLog</a></li>
 <li class="toctree-l1"><a class="reference internal" href="hyperloglog.html#hyperloglog-plusplus">HyperLogLog++</a></li>
@@ -114,9 +115,11 @@
       </ul></li>
       <li><a href="documentation.html#datasketch.HNSW.__delitem__">__delitem__() (datasketch.HNSW method)</a>
 </li>
-      <li><a href="documentation.html#datasketch.HNSW.__eq__">__eq__() (datasketch.HNSW method)</a>
+      <li><a href="documentation.html#datasketch.bBitMinHash.__eq__">__eq__() (datasketch.bBitMinHash method)</a>
 
       <ul>
+        <li><a href="documentation.html#datasketch.HNSW.__eq__">(datasketch.HNSW method)</a>
+</li>
         <li><a href="documentation.html#datasketch.HyperLogLog.__eq__">(datasketch.HyperLogLog method)</a>
 </li>
         <li><a href="documentation.html#datasketch.MinHash.__eq__">(datasketch.MinHash method)</a>
@@ -126,9 +129,13 @@
       </ul></li>
       <li><a href="documentation.html#datasketch.HNSW.__getitem__">__getitem__() (datasketch.HNSW method)</a>
 </li>
-      <li><a href="documentation.html#datasketch.HNSW.__hash__">__hash__ (datasketch.HNSW attribute)</a>
+      <li><a href="documentation.html#datasketch.bBitMinHash.__getstate__">__getstate__() (datasketch.bBitMinHash method)</a>
+</li>
+      <li><a href="documentation.html#datasketch.bBitMinHash.__hash__">__hash__ (datasketch.bBitMinHash attribute)</a>
 
       <ul>
+        <li><a href="documentation.html#datasketch.HNSW.__hash__">(datasketch.HNSW attribute)</a>
+</li>
         <li><a href="documentation.html#datasketch.HyperLogLog.__hash__">(datasketch.HyperLogLog attribute)</a>
 </li>
         <li><a href="documentation.html#datasketch.MinHash.__hash__">(datasketch.MinHash attribute)</a>
@@ -141,6 +148,8 @@
       <li><a href="documentation.html#datasketch.aio.AsyncMinHashLSH.__init__">__init__() (datasketch.aio.AsyncMinHashLSH method)</a>
 
       <ul>
+        <li><a href="documentation.html#datasketch.bBitMinHash.__init__">(datasketch.bBitMinHash method)</a>
+</li>
         <li><a href="documentation.html#datasketch.HNSW.__init__">(datasketch.HNSW method)</a>
 </li>
         <li><a href="documentation.html#datasketch.HyperLogLog.__init__">(datasketch.HyperLogLog method)</a>
@@ -179,6 +188,8 @@
 </li>
       </ul></li>
       <li><a href="documentation.html#datasketch.HNSW.__setitem__">__setitem__() (datasketch.HNSW method)</a>
+</li>
+      <li><a href="documentation.html#datasketch.bBitMinHash.__setstate__">__setstate__() (datasketch.bBitMinHash method)</a>
 </li>
       <li><a href="documentation.html#datasketch.aio.AsyncMinHashLSH.__weakref__">__weakref__ (datasketch.aio.AsyncMinHashLSH attribute)</a>
 
@@ -222,13 +233,17 @@
 <h2 id="B">B</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="documentation.html#datasketch.bBitMinHash">bBitMinHash (class in datasketch)</a>
+</li>
       <li><a href="documentation.html#datasketch.MinHash.bulk">bulk() (datasketch.MinHash class method)</a>
 </li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="documentation.html#datasketch.HyperLogLog.bytesize">bytesize() (datasketch.HyperLogLog method)</a>
+      <li><a href="documentation.html#datasketch.bBitMinHash.bytesize">bytesize() (datasketch.bBitMinHash method)</a>
 
       <ul>
+        <li><a href="documentation.html#datasketch.HyperLogLog.bytesize">(datasketch.HyperLogLog method)</a>
+</li>
         <li><a href="documentation.html#datasketch.LeanMinHash.bytesize">(datasketch.LeanMinHash method)</a>
 </li>
       </ul></li>
@@ -390,9 +405,11 @@
 <h2 id="J">J</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="documentation.html#datasketch.MinHash.jaccard">jaccard() (datasketch.MinHash method)</a>
+      <li><a href="documentation.html#datasketch.bBitMinHash.jaccard">jaccard() (datasketch.bBitMinHash method)</a>
 
       <ul>
+        <li><a href="documentation.html#datasketch.MinHash.jaccard">(datasketch.MinHash method)</a>
+</li>
         <li><a href="documentation.html#datasketch.WeightedMinHash.jaccard">(datasketch.WeightedMinHash method)</a>
 </li>
       </ul></li>

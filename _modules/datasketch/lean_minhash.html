@@ -5,14 +5,14 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>datasketch.lean_minhash &mdash; datasketch 1.10.0 documentation</title>
+  <title>datasketch.lean_minhash &mdash; datasketch 2.0.0 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=03e43079" />
       <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=9edc463e" />
 
   
       <script src="../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../_static/documentation_options.js?v=1d24b1d9"></script>
+      <script src="../../_static/documentation_options.js?v=51b770b3"></script>
       <script src="../../_static/doctools.js?v=9bcbadda"></script>
       <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../_static/js/theme.js"></script>
@@ -40,6 +40,7 @@
 </div>
         </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
               <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../b-bit-minhash.html">b-bit MinHash</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../documentation.html">API Documentation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../hyperloglog.html">HyperLogLog</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../hyperloglog.html#hyperloglog-plusplus">HyperLogLog++</a></li>
@@ -84,7 +85,26 @@
 
 <span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
 
-<span class="kn">from</span><span class="w"> </span><span class="nn">datasketch.minhash</span><span class="w"> </span><span class="kn">import</span> <span class="n">MinHash</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">datasketch.minhash</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
+    <span class="n">_SCHEME_AFFINE32</span><span class="p">,</span>
+    <span class="n">_SCHEME_AFFINE64</span><span class="p">,</span>
+    <span class="n">_SCHEME_CODES</span><span class="p">,</span>
+    <span class="n">_SCHEME_CODES_INV</span><span class="p">,</span>
+    <span class="n">_SCHEME_LEGACY</span><span class="p">,</span>
+    <span class="n">_VALID_SCHEMES</span><span class="p">,</span>
+    <span class="n">MinHash</span><span class="p">,</span>
+<span class="p">)</span>
+
+<span class="c1"># Byte-format notes: legacy payloads have no scheme field and are identified</span>
+<span class="c1"># by a non-negative number-of-hash-values field, while the affine formats</span>
+<span class="c1"># store the negated number followed by a scheme code byte. This keeps legacy</span>
+<span class="c1"># sketches bit-identical to (and readable by) versions before 2.0.0.</span>
+<span class="c1"># struct format character of one hash value, per scheme.</span>
+<span class="n">_SCHEME_VALUE_FMTS</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="n">_SCHEME_LEGACY</span><span class="p">:</span> <span class="s2">&quot;I&quot;</span><span class="p">,</span>
+    <span class="n">_SCHEME_AFFINE32</span><span class="p">:</span> <span class="s2">&quot;I&quot;</span><span class="p">,</span>
+    <span class="n">_SCHEME_AFFINE64</span><span class="p">:</span> <span class="s2">&quot;Q&quot;</span><span class="p">,</span>
+<span class="p">}</span>
 
 
 <div class="viewcode-block" id="LeanMinHash">
@@ -112,22 +132,34 @@
 <span class="sd">            # Or between a lean MinHash and a MinHash</span>
 <span class="sd">            lean_minhash.jaccard(minhash2)</span>
 
-<span class="sd">        To create a lean MinHash from the hash values and seed of an existing</span>
-<span class="sd">        MinHash:</span>
+<span class="sd">        To create a lean MinHash from the hash values, seed, and scheme of an</span>
+<span class="sd">        existing MinHash:</span>
 
 <span class="sd">        .. code-block:: python</span>
 
-<span class="sd">            lean_minhash = LeanMinHash(seed=minhash.seed, hashvalues=minhash.hashvalues)</span>
+<span class="sd">            lean_minhash = LeanMinHash(</span>
+<span class="sd">                seed=minhash.seed,</span>
+<span class="sd">                hashvalues=minhash.hashvalues,</span>
+<span class="sd">                scheme=minhash.scheme,</span>
+<span class="sd">            )</span>
 
 <span class="sd">        To create a MinHash from a lean MinHash:</span>
 
 <span class="sd">        .. code-block:: python</span>
 
-<span class="sd">            minhash = MinHash(seed=lean_minhash.seed, hashvalues=lean_minhash.hashvalues)</span>
+<span class="sd">            minhash = MinHash(</span>
+<span class="sd">                seed=lean_minhash.seed,</span>
+<span class="sd">                hashvalues=lean_minhash.hashvalues,</span>
+<span class="sd">                scheme=lean_minhash.scheme,</span>
+<span class="sd">            )</span>
 
 <span class="sd">            # Or if you want to prevent further updates on minhash</span>
 <span class="sd">            # from affecting the state of lean_minhash</span>
-<span class="sd">            minhash = MinHash(seed=lean_minhash.seed, hashvalues=lean_minhash.digest())</span>
+<span class="sd">            minhash = MinHash(</span>
+<span class="sd">                seed=lean_minhash.seed,</span>
+<span class="sd">                hashvalues=lean_minhash.digest(),</span>
+<span class="sd">                scheme=lean_minhash.scheme,</span>
+<span class="sd">            )</span>
 
 <span class="sd">    Note:</span>
 <span class="sd">        Lean MinHash can also be used in :class:`datasketch.MinHashLSH`,</span>
@@ -143,30 +175,65 @@
 <span class="sd">        hashvalues (optional): The hash values used to inititialize the state</span>
 <span class="sd">            of the LeanMinHash. This parameter must be used together with</span>
 <span class="sd">            `seed`.</span>
+<span class="sd">        scheme (optional): The permutation scheme of the MinHash the</span>
+<span class="sd">            `hashvalues` were taken from. Required when initializing from</span>
+<span class="sd">            `seed` and `hashvalues` (use ``&quot;legacy&quot;`` for hash values created</span>
+<span class="sd">            by datasketch before 2.0.0), because hash values carry no trace</span>
+<span class="sd">            of the scheme that produced them. When `minhash` is set the</span>
+<span class="sd">            scheme is taken from the MinHash object instead, and this</span>
+<span class="sd">            argument may only repeat it.</span>
 
 <span class="sd">    &quot;&quot;&quot;</span>
 
-    <span class="vm">__slots__</span> <span class="o">=</span> <span class="p">(</span><span class="s2">&quot;hashvalues&quot;</span><span class="p">,</span> <span class="s2">&quot;seed&quot;</span><span class="p">)</span>
+    <span class="vm">__slots__</span> <span class="o">=</span> <span class="p">(</span><span class="s2">&quot;hashvalues&quot;</span><span class="p">,</span> <span class="s2">&quot;scheme&quot;</span><span class="p">,</span> <span class="s2">&quot;seed&quot;</span><span class="p">)</span>
 
-    <span class="k">def</span><span class="w"> </span><span class="nf">_initialize_slots</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">seed</span><span class="p">,</span> <span class="n">hashvalues</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_initialize_slots</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">seed</span><span class="p">,</span> <span class="n">hashvalues</span><span class="p">,</span> <span class="n">scheme</span><span class="o">=</span><span class="n">_SCHEME_LEGACY</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Initialize the slots of the LeanMinHash.</span>
 
 <span class="sd">        Args:</span>
 <span class="sd">            seed (int): The random seed controls the set of random</span>
 <span class="sd">                permutation functions generated for this LeanMinHash.</span>
 <span class="sd">            hashvalues (Iterable): The hash values is the internal state of the LeanMinHash.</span>
+<span class="sd">            scheme (str): The permutation scheme of the hash values.</span>
 
 <span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">scheme</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">_VALID_SCHEMES</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;scheme must be one of </span><span class="si">%s</span><span class="s2">, got </span><span class="si">%r</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="s2">&quot;, &quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">_VALID_SCHEMES</span><span class="p">),</span> <span class="n">scheme</span><span class="p">))</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">seed</span> <span class="o">=</span> <span class="n">seed</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">scheme</span> <span class="o">=</span> <span class="n">scheme</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">hashvalues</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_parse_hashvalues</span><span class="p">(</span><span class="n">hashvalues</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">scheme</span> <span class="o">!=</span> <span class="n">_SCHEME_LEGACY</span> <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">hashvalues</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="c1"># An empty sketch would serialize with a hash value count of 0,</span>
+            <span class="c1"># which the deserializer cannot tell apart from the legacy format</span>
+            <span class="c1"># (identified by a non-negative count).</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;hashvalues must not be empty&quot;</span><span class="p">)</span>
 
 <div class="viewcode-block" id="LeanMinHash.__init__">
 <a class="viewcode-back" href="../../documentation.html#datasketch.LeanMinHash.__init__">[docs]</a>
-    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">minhash</span><span class="p">:</span> <span class="n">MinHash</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">seed</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">hashvalues</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Iterable</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">minhash</span><span class="p">:</span> <span class="n">MinHash</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">seed</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">hashvalues</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Iterable</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">scheme</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="p">):</span>
         <span class="k">if</span> <span class="n">minhash</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_initialize_slots</span><span class="p">(</span><span class="n">minhash</span><span class="o">.</span><span class="n">seed</span><span class="p">,</span> <span class="n">minhash</span><span class="o">.</span><span class="n">hashvalues</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">scheme</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">scheme</span> <span class="o">!=</span> <span class="n">minhash</span><span class="o">.</span><span class="n">scheme</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                    <span class="s2">&quot;scheme </span><span class="si">%r</span><span class="s2"> conflicts with the scheme </span><span class="si">%r</span><span class="s2"> of the given MinHash&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">scheme</span><span class="p">,</span> <span class="n">minhash</span><span class="o">.</span><span class="n">scheme</span><span class="p">)</span>
+                <span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_initialize_slots</span><span class="p">(</span><span class="n">minhash</span><span class="o">.</span><span class="n">seed</span><span class="p">,</span> <span class="n">minhash</span><span class="o">.</span><span class="n">hashvalues</span><span class="p">,</span> <span class="n">minhash</span><span class="o">.</span><span class="n">scheme</span><span class="p">)</span>
         <span class="k">elif</span> <span class="n">hashvalues</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">seed</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_initialize_slots</span><span class="p">(</span><span class="n">seed</span><span class="p">,</span> <span class="n">hashvalues</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">scheme</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="c1"># Hash values carry no trace of the scheme that produced</span>
+                <span class="c1"># them, so a default here would silently mislabel pre-2.0.0</span>
+                <span class="c1"># values and defeat the cross-scheme comparison guards.</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                    <span class="s2">&quot;scheme must be specified explicitly when initializing from existing &quot;</span>
+                    <span class="s2">&quot;hash values: pass the scheme of the MinHash they came from, or &quot;</span>
+                    <span class="s2">&quot;scheme=&#39;legacy&#39; for hash values created by datasketch before 2.0.0.&quot;</span>
+                <span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_initialize_slots</span><span class="p">(</span><span class="n">seed</span><span class="p">,</span> <span class="n">hashvalues</span><span class="p">,</span> <span class="n">scheme</span><span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
                 <span class="s2">&quot;Init parameters cannot be None: make sure to set either minhash or both of hash values and seed&quot;</span>
@@ -186,9 +253,12 @@
 <a class="viewcode-back" href="../../documentation.html#datasketch.LeanMinHash.copy">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">copy</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">LeanMinHash</span><span class="p">:</span>
         <span class="n">lmh</span> <span class="o">=</span> <span class="nb">object</span><span class="o">.</span><span class="fm">__new__</span><span class="p">(</span><span class="n">LeanMinHash</span><span class="p">)</span>
-        <span class="n">lmh</span><span class="o">.</span><span class="n">_initialize_slots</span><span class="p">(</span><span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="vm">__slots__</span><span class="p">)</span>
+        <span class="n">lmh</span><span class="o">.</span><span class="n">_initialize_slots</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">seed</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">hashvalues</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">scheme</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">lmh</span></div>
 
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_value_fmt</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">_SCHEME_VALUE_FMTS</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">scheme</span><span class="p">]</span>
 
 <div class="viewcode-block" id="LeanMinHash.bytesize">
 <a class="viewcode-back" href="../../documentation.html#datasketch.LeanMinHash.bytesize">[docs]</a>
@@ -206,13 +276,14 @@
 <span class="sd">            int: Size in number of bytes after serialization.</span>
 
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="c1"># Use 8 bytes to store the seed integer</span>
-        <span class="n">seed_size</span> <span class="o">=</span> <span class="n">struct</span><span class="o">.</span><span class="n">calcsize</span><span class="p">(</span><span class="n">byteorder</span> <span class="o">+</span> <span class="s2">&quot;q&quot;</span><span class="p">)</span>
-        <span class="c1"># Use 4 bytes to store the number of hash values</span>
-        <span class="n">length_size</span> <span class="o">=</span> <span class="n">struct</span><span class="o">.</span><span class="n">calcsize</span><span class="p">(</span><span class="n">byteorder</span> <span class="o">+</span> <span class="s2">&quot;i&quot;</span><span class="p">)</span>
-        <span class="c1"># Use 4 bytes to store each hash value as we are using the lower 32 bit</span>
-        <span class="n">hashvalue_size</span> <span class="o">=</span> <span class="n">struct</span><span class="o">.</span><span class="n">calcsize</span><span class="p">(</span><span class="n">byteorder</span> <span class="o">+</span> <span class="s2">&quot;I&quot;</span><span class="p">)</span>
-        <span class="k">return</span> <span class="n">seed_size</span> <span class="o">+</span> <span class="n">length_size</span> <span class="o">+</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">*</span> <span class="n">hashvalue_size</span></div>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">scheme</span> <span class="o">==</span> <span class="n">_SCHEME_LEGACY</span><span class="p">:</span>
+            <span class="c1"># 8 bytes for the seed, 4 bytes for the number of hash values,</span>
+            <span class="c1"># and 4 bytes for each hash value.</span>
+            <span class="k">return</span> <span class="n">struct</span><span class="o">.</span><span class="n">calcsize</span><span class="p">(</span><span class="s2">&quot;</span><span class="si">%s</span><span class="s2">qi</span><span class="si">%d</span><span class="s2">I&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">byteorder</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="p">)))</span>
+        <span class="c1"># The affine formats add a 1-byte scheme code after the number of</span>
+        <span class="c1"># hash values, and store each hash value in 4 (&quot;affine32&quot;) or</span>
+        <span class="c1"># 8 (&quot;affine64&quot;) bytes.</span>
+        <span class="k">return</span> <span class="n">struct</span><span class="o">.</span><span class="n">calcsize</span><span class="p">(</span><span class="s2">&quot;</span><span class="si">%s</span><span class="s2">qiB</span><span class="si">%d%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">byteorder</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="p">),</span> <span class="bp">self</span><span class="o">.</span><span class="n">_value_fmt</span><span class="p">()))</span></div>
 
 
 <div class="viewcode-block" id="LeanMinHash.serialize">
@@ -232,10 +303,20 @@
 <span class="sd">        This is preferred over using `pickle`_ if the serialized lean MinHash needs</span>
 <span class="sd">        to be used by another program in a different programming language.</span>
 
-<span class="sd">        The serialization schema:</span>
+<span class="sd">        The serialization schema for the ``&quot;legacy&quot;`` scheme (identical to</span>
+<span class="sd">        versions before 2.0.0):</span>
 <span class="sd">            1. The first 8 bytes is the seed integer</span>
 <span class="sd">            2. The next 4 bytes is the number of hash values</span>
 <span class="sd">            3. The rest is the serialized hash values, each uses 4 bytes</span>
+
+<span class="sd">        The serialization schema for the affine schemes:</span>
+<span class="sd">            1. The first 8 bytes is the seed integer</span>
+<span class="sd">            2. The next 4 bytes is the **negated** number of hash values</span>
+<span class="sd">               (a negative value marks the post-2.0.0 format)</span>
+<span class="sd">            3. The next byte is the scheme code (1 for ``&quot;affine32&quot;``,</span>
+<span class="sd">               2 for ``&quot;affine64&quot;``)</span>
+<span class="sd">            4. The rest is the serialized hash values, each uses 4 bytes</span>
+<span class="sd">               for ``&quot;affine32&quot;`` and 8 bytes for ``&quot;affine64&quot;``</span>
 
 <span class="sd">        Example:</span>
 <span class="sd">            To serialize a single lean MinHash into a `bytearray`_ buffer.</span>
@@ -260,13 +341,16 @@
 <span class="sd">        .. _`byteorder`: https://docs.python.org/3/library/struct.html</span>
 
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">buf</span><span class="p">)</span> <span class="o">&lt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">bytesize</span><span class="p">():</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">buf</span><span class="p">)</span> <span class="o">&lt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">bytesize</span><span class="p">(</span><span class="n">byteorder</span><span class="p">):</span>
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
-                <span class="s2">&quot;The buffer does not have enough space</span><span class="se">\</span>
-<span class="s2">                    for holding this MinHash.&quot;</span>
+                <span class="s2">&quot;The buffer does not have enough space for holding this MinHash.&quot;</span>
             <span class="p">)</span>
-        <span class="n">fmt</span> <span class="o">=</span> <span class="s2">&quot;</span><span class="si">%s</span><span class="s2">qi</span><span class="si">%d</span><span class="s2">I&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">byteorder</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="p">))</span>
-        <span class="n">struct</span><span class="o">.</span><span class="n">pack_into</span><span class="p">(</span><span class="n">fmt</span><span class="p">,</span> <span class="n">buf</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">seed</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="p">),</span> <span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">hashvalues</span><span class="p">)</span></div>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">scheme</span> <span class="o">==</span> <span class="n">_SCHEME_LEGACY</span><span class="p">:</span>
+            <span class="n">fmt</span> <span class="o">=</span> <span class="s2">&quot;</span><span class="si">%s</span><span class="s2">qi</span><span class="si">%d</span><span class="s2">I&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">byteorder</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="p">))</span>
+            <span class="n">struct</span><span class="o">.</span><span class="n">pack_into</span><span class="p">(</span><span class="n">fmt</span><span class="p">,</span> <span class="n">buf</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">seed</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="p">),</span> <span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">hashvalues</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">fmt</span> <span class="o">=</span> <span class="s2">&quot;</span><span class="si">%s</span><span class="s2">qiB</span><span class="si">%d%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">byteorder</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="p">),</span> <span class="bp">self</span><span class="o">.</span><span class="n">_value_fmt</span><span class="p">())</span>
+            <span class="n">struct</span><span class="o">.</span><span class="n">pack_into</span><span class="p">(</span><span class="n">fmt</span><span class="p">,</span> <span class="n">buf</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">seed</span><span class="p">,</span> <span class="o">-</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="p">),</span> <span class="n">_SCHEME_CODES</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">scheme</span><span class="p">],</span> <span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">hashvalues</span><span class="p">)</span></div>
 
 
 <div class="viewcode-block" id="LeanMinHash.deserialize">
@@ -274,6 +358,9 @@
     <span class="nd">@classmethod</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">deserialize</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">buf</span><span class="p">,</span> <span class="n">byteorder</span><span class="o">=</span><span class="s2">&quot;@&quot;</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">LeanMinHash</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Deserialize a lean MinHash from a buffer.</span>
+
+<span class="sd">        Buffers written by versions before 2.0.0 (which had no scheme field)</span>
+<span class="sd">        deserialize with ``scheme=&quot;legacy&quot;``.</span>
 
 <span class="sd">        Args:</span>
 <span class="sd">            buf (buffer): `buf` must implement the `buffer`_ interface.</span>
@@ -296,43 +383,63 @@
 
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">fmt_seed_size</span> <span class="o">=</span> <span class="s2">&quot;</span><span class="si">%s</span><span class="s2">qi&quot;</span> <span class="o">%</span> <span class="n">byteorder</span>
-        <span class="n">fmt_hash</span> <span class="o">=</span> <span class="n">byteorder</span> <span class="o">+</span> <span class="s2">&quot;</span><span class="si">%d</span><span class="s2">I&quot;</span>
         <span class="k">try</span><span class="p">:</span>
             <span class="n">seed</span><span class="p">,</span> <span class="n">num_perm</span> <span class="o">=</span> <span class="n">struct</span><span class="o">.</span><span class="n">unpack_from</span><span class="p">(</span><span class="n">fmt_seed_size</span><span class="p">,</span> <span class="n">buf</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
         <span class="k">except</span> <span class="ne">TypeError</span><span class="p">:</span>
-            <span class="n">seed</span><span class="p">,</span> <span class="n">num_perm</span> <span class="o">=</span> <span class="n">struct</span><span class="o">.</span><span class="n">unpack_from</span><span class="p">(</span><span class="n">fmt_seed_size</span><span class="p">,</span> <span class="nb">memoryview</span><span class="p">(</span><span class="n">buf</span><span class="p">),</span> <span class="mi">0</span><span class="p">)</span>
-        <span class="n">offset</span> <span class="o">=</span> <span class="n">struct</span><span class="o">.</span><span class="n">calcsize</span><span class="p">(</span><span class="n">fmt_seed_size</span><span class="p">)</span>
-        <span class="k">try</span><span class="p">:</span>
-            <span class="n">hashvalues</span> <span class="o">=</span> <span class="n">struct</span><span class="o">.</span><span class="n">unpack_from</span><span class="p">(</span><span class="n">fmt_hash</span> <span class="o">%</span> <span class="n">num_perm</span><span class="p">,</span> <span class="n">buf</span><span class="p">,</span> <span class="n">offset</span><span class="p">)</span>
-        <span class="k">except</span> <span class="ne">TypeError</span><span class="p">:</span>
-            <span class="n">hashvalues</span> <span class="o">=</span> <span class="n">struct</span><span class="o">.</span><span class="n">unpack_from</span><span class="p">(</span><span class="n">fmt_hash</span> <span class="o">%</span> <span class="n">num_perm</span><span class="p">,</span> <span class="nb">memoryview</span><span class="p">(</span><span class="n">buf</span><span class="p">),</span> <span class="n">offset</span><span class="p">)</span>
+            <span class="n">buf</span> <span class="o">=</span> <span class="nb">memoryview</span><span class="p">(</span><span class="n">buf</span><span class="p">)</span>
+            <span class="n">seed</span><span class="p">,</span> <span class="n">num_perm</span> <span class="o">=</span> <span class="n">struct</span><span class="o">.</span><span class="n">unpack_from</span><span class="p">(</span><span class="n">fmt_seed_size</span><span class="p">,</span> <span class="n">buf</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">num_perm</span> <span class="o">&gt;=</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">scheme</span> <span class="o">=</span> <span class="n">_SCHEME_LEGACY</span>
+            <span class="n">offset</span> <span class="o">=</span> <span class="n">struct</span><span class="o">.</span><span class="n">calcsize</span><span class="p">(</span><span class="n">fmt_seed_size</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">num_perm</span> <span class="o">=</span> <span class="o">-</span><span class="n">num_perm</span>
+            <span class="p">(</span><span class="n">scheme_code</span><span class="p">,)</span> <span class="o">=</span> <span class="n">struct</span><span class="o">.</span><span class="n">unpack_from</span><span class="p">(</span><span class="n">byteorder</span> <span class="o">+</span> <span class="s2">&quot;B&quot;</span><span class="p">,</span> <span class="n">buf</span><span class="p">,</span> <span class="n">struct</span><span class="o">.</span><span class="n">calcsize</span><span class="p">(</span><span class="n">fmt_seed_size</span><span class="p">))</span>
+            <span class="k">if</span> <span class="n">scheme_code</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">_SCHEME_CODES_INV</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Unknown permutation scheme code: </span><span class="si">%d</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="n">scheme_code</span><span class="p">)</span>
+            <span class="n">scheme</span> <span class="o">=</span> <span class="n">_SCHEME_CODES_INV</span><span class="p">[</span><span class="n">scheme_code</span><span class="p">]</span>
+            <span class="c1"># The 0-count value entry aligns the offset without consuming data</span>
+            <span class="c1"># (only relevant for the native byte order &quot;@&quot;).</span>
+            <span class="n">offset</span> <span class="o">=</span> <span class="n">struct</span><span class="o">.</span><span class="n">calcsize</span><span class="p">(</span><span class="s2">&quot;</span><span class="si">%s</span><span class="s2">qiB0</span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">byteorder</span><span class="p">,</span> <span class="n">_SCHEME_VALUE_FMTS</span><span class="p">[</span><span class="n">scheme</span><span class="p">]))</span>
+        <span class="n">fmt_hash</span> <span class="o">=</span> <span class="s2">&quot;</span><span class="si">%s%d%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">byteorder</span><span class="p">,</span> <span class="n">num_perm</span><span class="p">,</span> <span class="n">_SCHEME_VALUE_FMTS</span><span class="p">[</span><span class="n">scheme</span><span class="p">])</span>
+        <span class="n">hashvalues</span> <span class="o">=</span> <span class="n">struct</span><span class="o">.</span><span class="n">unpack_from</span><span class="p">(</span><span class="n">fmt_hash</span><span class="p">,</span> <span class="n">buf</span><span class="p">,</span> <span class="n">offset</span><span class="p">)</span>
         <span class="n">lmh</span> <span class="o">=</span> <span class="nb">object</span><span class="o">.</span><span class="fm">__new__</span><span class="p">(</span><span class="n">LeanMinHash</span><span class="p">)</span>
-        <span class="n">lmh</span><span class="o">.</span><span class="n">_initialize_slots</span><span class="p">(</span><span class="n">seed</span><span class="p">,</span> <span class="n">hashvalues</span><span class="p">)</span>
+        <span class="n">lmh</span><span class="o">.</span><span class="n">_initialize_slots</span><span class="p">(</span><span class="n">seed</span><span class="p">,</span> <span class="n">hashvalues</span><span class="p">,</span> <span class="n">scheme</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">lmh</span></div>
 
 
     <span class="k">def</span><span class="w"> </span><span class="nf">__getstate__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="n">buf</span> <span class="o">=</span> <span class="nb">bytearray</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">bytesize</span><span class="p">())</span>
-        <span class="n">fmt</span> <span class="o">=</span> <span class="s2">&quot;qi</span><span class="si">%d</span><span class="s2">I&quot;</span> <span class="o">%</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
-        <span class="n">struct</span><span class="o">.</span><span class="n">pack_into</span><span class="p">(</span><span class="n">fmt</span><span class="p">,</span> <span class="n">buf</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">seed</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="p">),</span> <span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">hashvalues</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">scheme</span> <span class="o">==</span> <span class="n">_SCHEME_LEGACY</span><span class="p">:</span>
+            <span class="n">fmt</span> <span class="o">=</span> <span class="s2">&quot;qi</span><span class="si">%d</span><span class="s2">I&quot;</span> <span class="o">%</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+            <span class="n">struct</span><span class="o">.</span><span class="n">pack_into</span><span class="p">(</span><span class="n">fmt</span><span class="p">,</span> <span class="n">buf</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">seed</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="p">),</span> <span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">hashvalues</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">fmt</span> <span class="o">=</span> <span class="s2">&quot;qiB</span><span class="si">%d%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="p">),</span> <span class="bp">self</span><span class="o">.</span><span class="n">_value_fmt</span><span class="p">())</span>
+            <span class="n">struct</span><span class="o">.</span><span class="n">pack_into</span><span class="p">(</span><span class="n">fmt</span><span class="p">,</span> <span class="n">buf</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">seed</span><span class="p">,</span> <span class="o">-</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="p">),</span> <span class="n">_SCHEME_CODES</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">scheme</span><span class="p">],</span> <span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">hashvalues</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">buf</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">__setstate__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">buf</span><span class="p">):</span>
         <span class="k">try</span><span class="p">:</span>
             <span class="n">seed</span><span class="p">,</span> <span class="n">num_perm</span> <span class="o">=</span> <span class="n">struct</span><span class="o">.</span><span class="n">unpack_from</span><span class="p">(</span><span class="s2">&quot;qi&quot;</span><span class="p">,</span> <span class="n">buf</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
         <span class="k">except</span> <span class="ne">TypeError</span><span class="p">:</span>
-            <span class="n">seed</span><span class="p">,</span> <span class="n">num_perm</span> <span class="o">=</span> <span class="n">struct</span><span class="o">.</span><span class="n">unpack_from</span><span class="p">(</span><span class="s2">&quot;qi&quot;</span><span class="p">,</span> <span class="nb">memoryview</span><span class="p">(</span><span class="n">buf</span><span class="p">),</span> <span class="mi">0</span><span class="p">)</span>
-        <span class="n">offset</span> <span class="o">=</span> <span class="n">struct</span><span class="o">.</span><span class="n">calcsize</span><span class="p">(</span><span class="s2">&quot;qi&quot;</span><span class="p">)</span>
-        <span class="k">try</span><span class="p">:</span>
-            <span class="n">hashvalues</span> <span class="o">=</span> <span class="n">struct</span><span class="o">.</span><span class="n">unpack_from</span><span class="p">(</span><span class="s2">&quot;</span><span class="si">%d</span><span class="s2">I&quot;</span> <span class="o">%</span> <span class="n">num_perm</span><span class="p">,</span> <span class="n">buf</span><span class="p">,</span> <span class="n">offset</span><span class="p">)</span>
-        <span class="k">except</span> <span class="ne">TypeError</span><span class="p">:</span>
-            <span class="n">hashvalues</span> <span class="o">=</span> <span class="n">struct</span><span class="o">.</span><span class="n">unpack_from</span><span class="p">(</span><span class="s2">&quot;</span><span class="si">%d</span><span class="s2">I&quot;</span> <span class="o">%</span> <span class="n">num_perm</span><span class="p">,</span> <span class="nb">memoryview</span><span class="p">(</span><span class="n">buf</span><span class="p">),</span> <span class="n">offset</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_initialize_slots</span><span class="p">(</span><span class="n">seed</span><span class="p">,</span> <span class="n">hashvalues</span><span class="p">)</span>
+            <span class="n">buf</span> <span class="o">=</span> <span class="nb">memoryview</span><span class="p">(</span><span class="n">buf</span><span class="p">)</span>
+            <span class="n">seed</span><span class="p">,</span> <span class="n">num_perm</span> <span class="o">=</span> <span class="n">struct</span><span class="o">.</span><span class="n">unpack_from</span><span class="p">(</span><span class="s2">&quot;qi&quot;</span><span class="p">,</span> <span class="n">buf</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">num_perm</span> <span class="o">&gt;=</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">scheme</span> <span class="o">=</span> <span class="n">_SCHEME_LEGACY</span>
+            <span class="n">offset</span> <span class="o">=</span> <span class="n">struct</span><span class="o">.</span><span class="n">calcsize</span><span class="p">(</span><span class="s2">&quot;qi&quot;</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">num_perm</span> <span class="o">=</span> <span class="o">-</span><span class="n">num_perm</span>
+            <span class="p">(</span><span class="n">scheme_code</span><span class="p">,)</span> <span class="o">=</span> <span class="n">struct</span><span class="o">.</span><span class="n">unpack_from</span><span class="p">(</span><span class="s2">&quot;B&quot;</span><span class="p">,</span> <span class="n">buf</span><span class="p">,</span> <span class="n">struct</span><span class="o">.</span><span class="n">calcsize</span><span class="p">(</span><span class="s2">&quot;qi&quot;</span><span class="p">))</span>
+            <span class="k">if</span> <span class="n">scheme_code</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">_SCHEME_CODES_INV</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Unknown permutation scheme code: </span><span class="si">%d</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="n">scheme_code</span><span class="p">)</span>
+            <span class="n">scheme</span> <span class="o">=</span> <span class="n">_SCHEME_CODES_INV</span><span class="p">[</span><span class="n">scheme_code</span><span class="p">]</span>
+            <span class="n">offset</span> <span class="o">=</span> <span class="n">struct</span><span class="o">.</span><span class="n">calcsize</span><span class="p">(</span><span class="s2">&quot;qiB0</span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="n">_SCHEME_VALUE_FMTS</span><span class="p">[</span><span class="n">scheme</span><span class="p">])</span>
+        <span class="n">hashvalues</span> <span class="o">=</span> <span class="n">struct</span><span class="o">.</span><span class="n">unpack_from</span><span class="p">(</span><span class="s2">&quot;</span><span class="si">%d%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">num_perm</span><span class="p">,</span> <span class="n">_SCHEME_VALUE_FMTS</span><span class="p">[</span><span class="n">scheme</span><span class="p">]),</span> <span class="n">buf</span><span class="p">,</span> <span class="n">offset</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_initialize_slots</span><span class="p">(</span><span class="n">seed</span><span class="p">,</span> <span class="n">hashvalues</span><span class="p">,</span> <span class="n">scheme</span><span class="p">)</span>
 
 <div class="viewcode-block" id="LeanMinHash.__hash__">
 <a class="viewcode-back" href="../../documentation.html#datasketch.LeanMinHash.__hash__">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="fm">__hash__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
-        <span class="k">return</span> <span class="nb">hash</span><span class="p">((</span><span class="bp">self</span><span class="o">.</span><span class="n">seed</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">hashvalues</span><span class="p">)))</span></div>
+        <span class="k">return</span> <span class="nb">hash</span><span class="p">((</span><span class="bp">self</span><span class="o">.</span><span class="n">scheme</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">seed</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">hashvalues</span><span class="p">)))</span></div>
 
 
 <div class="viewcode-block" id="LeanMinHash.union">
@@ -344,15 +451,15 @@
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Cannot union less than 2 MinHash&quot;</span><span class="p">)</span>
         <span class="n">num_perm</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">lmhs</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
         <span class="n">seed</span> <span class="o">=</span> <span class="n">lmhs</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">seed</span>
-        <span class="k">if</span> <span class="nb">any</span><span class="p">((</span><span class="n">seed</span> <span class="o">!=</span> <span class="n">m</span><span class="o">.</span><span class="n">seed</span> <span class="ow">or</span> <span class="n">num_perm</span> <span class="o">!=</span> <span class="nb">len</span><span class="p">(</span><span class="n">m</span><span class="p">))</span> <span class="k">for</span> <span class="n">m</span> <span class="ow">in</span> <span class="n">lmhs</span><span class="p">):</span>
+        <span class="n">scheme</span> <span class="o">=</span> <span class="n">lmhs</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">scheme</span>
+        <span class="k">if</span> <span class="nb">any</span><span class="p">((</span><span class="n">seed</span> <span class="o">!=</span> <span class="n">m</span><span class="o">.</span><span class="n">seed</span> <span class="ow">or</span> <span class="n">num_perm</span> <span class="o">!=</span> <span class="nb">len</span><span class="p">(</span><span class="n">m</span><span class="p">)</span> <span class="ow">or</span> <span class="n">scheme</span> <span class="o">!=</span> <span class="n">m</span><span class="o">.</span><span class="n">scheme</span><span class="p">)</span> <span class="k">for</span> <span class="n">m</span> <span class="ow">in</span> <span class="n">lmhs</span><span class="p">):</span>
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
-                <span class="s2">&quot;The unioning MinHash must have the</span><span class="se">\</span>
-<span class="s2">                    same seed, number of permutation functions.&quot;</span>
+                <span class="s2">&quot;The unioning MinHash must have the same seed, number of permutation functions and scheme.&quot;</span>
             <span class="p">)</span>
         <span class="n">hashvalues</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">minimum</span><span class="o">.</span><span class="n">reduce</span><span class="p">([</span><span class="n">m</span><span class="o">.</span><span class="n">hashvalues</span> <span class="k">for</span> <span class="n">m</span> <span class="ow">in</span> <span class="n">lmhs</span><span class="p">])</span>
 
         <span class="n">lmh</span> <span class="o">=</span> <span class="nb">object</span><span class="o">.</span><span class="fm">__new__</span><span class="p">(</span><span class="n">LeanMinHash</span><span class="p">)</span>
-        <span class="n">lmh</span><span class="o">.</span><span class="n">_initialize_slots</span><span class="p">(</span><span class="n">seed</span><span class="p">,</span> <span class="n">hashvalues</span><span class="p">)</span>
+        <span class="n">lmh</span><span class="o">.</span><span class="n">_initialize_slots</span><span class="p">(</span><span class="n">seed</span><span class="p">,</span> <span class="n">hashvalues</span><span class="p">,</span> <span class="n">scheme</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">lmh</span></div>
 </div>
 

@@ -6,21 +6,21 @@
   <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>datasketch: Big Data Looks Small &mdash; datasketch 1.10.0 documentation</title>
+  <title>datasketch: Big Data Looks Small &mdash; datasketch 2.0.0 documentation</title>
       <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=03e43079" />
       <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=9edc463e" />
 
   
       <script src="_static/jquery.js?v=5d32c60e"></script>
       <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="_static/documentation_options.js?v=1d24b1d9"></script>
+      <script src="_static/documentation_options.js?v=51b770b3"></script>
       <script src="_static/doctools.js?v=9bcbadda"></script>
       <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
       <script async="async" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
     <script src="_static/js/theme.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
-    <link rel="next" title="API Documentation" href="documentation.html" /> 
+    <link rel="next" title="b-bit MinHash" href="b-bit-minhash.html" /> 
 </head>
 
 <body class="wy-body-for-nav"> 
@@ -43,6 +43,7 @@
 </div>
         </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
               <ul>
+<li class="toctree-l1"><a class="reference internal" href="b-bit-minhash.html">b-bit MinHash</a></li>
 <li class="toctree-l1"><a class="reference internal" href="documentation.html">API Documentation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="hyperloglog.html">HyperLogLog</a></li>
 <li class="toctree-l1"><a class="reference internal" href="hyperloglog.html#hyperloglog-plusplus">HyperLogLog++</a></li>
@@ -89,6 +90,17 @@
 <p>datasketch gives you probabilistic data structures that can process and
 search very large amount of data super fast, with little loss of
 accuracy.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p><strong>Version 2.0.0</strong> changes the default MinHash permutation scheme to
+<code class="docutils literal notranslate"><span class="pre">&quot;affine32&quot;</span></code>, which fixes a similarity over-estimation bias on large
+sets (<a class="reference external" href="https://github.com/ekzhu/datasketch/issues/212">issue #212</a>),
+halves sketch memory, and speeds up updates by roughly 4x. A 64-bit
+<code class="docutils literal notranslate"><span class="pre">&quot;affine64&quot;</span></code> scheme is available for billion-scale sets. Hash values
+differ from earlier versions: rebuild persisted sketches and LSH
+indexes, or pass <code class="docutils literal notranslate"><span class="pre">MinHash(...,</span> <span class="pre">scheme=&quot;legacy&quot;)</span></code> to interoperate with
+existing data. See the <a class="reference external" href="https://ekzhu.github.io/datasketch/minhash.html">MinHash documentation</a> for details.</p>
+</div>
 <p>This package contains the following data sketches:</p>
 <table class="docutils align-default">
 <thead>
@@ -275,7 +287,7 @@ uvx<span class="w"> </span>ruff<span class="w"> </span>format<span class="w"> </
            </div>
           </div>
           <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
-        <a href="documentation.html" class="btn btn-neutral float-right" title="API Documentation" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="b-bit-minhash.html" class="btn btn-neutral float-right" title="b-bit MinHash" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
     </div>
 
   <hr/>

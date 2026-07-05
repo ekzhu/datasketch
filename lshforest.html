@@ -6,14 +6,14 @@
   <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>MinHash LSH Forest &mdash; datasketch 1.10.0 documentation</title>
+  <title>MinHash LSH Forest &mdash; datasketch 2.0.0 documentation</title>
       <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=03e43079" />
       <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=9edc463e" />
 
   
       <script src="_static/jquery.js?v=5d32c60e"></script>
       <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="_static/documentation_options.js?v=1d24b1d9"></script>
+      <script src="_static/documentation_options.js?v=51b770b3"></script>
       <script src="_static/doctools.js?v=9bcbadda"></script>
       <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="_static/js/theme.js"></script>
@@ -43,6 +43,7 @@
 </div>
         </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
               <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="b-bit-minhash.html">b-bit MinHash</a></li>
 <li class="toctree-l1"><a class="reference internal" href="documentation.html">API Documentation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="hyperloglog.html">HyperLogLog</a></li>
 <li class="toctree-l1"><a class="reference internal" href="hyperloglog.html#hyperloglog-plusplus">HyperLogLog++</a></li>
@@ -50,6 +51,8 @@
 <li class="toctree-l1"><a class="reference internal" href="lshbloom.html">LSHBloom</a></li>
 <li class="toctree-l1"><a class="reference internal" href="lshensemble.html">MinHash LSH Ensemble</a></li>
 <li class="toctree-l1 current"><a class="current reference internal" href="#">MinHash LSH Forest</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#benchmarks">Benchmarks</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#retrieval-characteristics">Retrieval characteristics</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#tips-for-improving-accuracy">Tips for Improving Accuracy</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#common-issues-with-minhash-lsh-forest">Common Issues with MinHash LSH Forest</a></li>
 </ul>
@@ -84,20 +87,16 @@
              
   <section id="minhash-lsh-forest">
 <span id="id1"></span><h1>MinHash LSH Forest<a class="headerlink" href="#minhash-lsh-forest" title="Link to this heading"></a></h1>
-<p><a class="reference internal" href="lsh.html#minhash-lsh"><span class="std std-ref">MinHash LSH</span></a> is useful for radius (or threshold) queries. However,
-<strong>top-k</strong> queries are often more useful in some cases. LSH
-Forest by Bawa et al. (WWW 2005) is a general LSH data structure that makes top-k query possible for
-many different types of LSH indexes, which include MinHash LSH. I
-implemented the MinHash LSH Forest, which takes a <a class="reference internal" href="minhash.html#minhash"><span class="std std-ref">MinHash</span></a> data sketch of
-the query set, and returns the top-k matching sets that have the
-<strong>approximately</strong> highest Jaccard similarities with the query set
-(<a class="reference external" href="https://github.com/ekzhu/datasketch/issues/89">Incorrect results of LSH
-Forest</a>).</p>
-<p>The interface of <a class="reference internal" href="documentation.html#datasketch.MinHashLSHForest" title="datasketch.MinHashLSHForest"><code class="xref py py-class docutils literal notranslate"><span class="pre">datasketch.MinHashLSHForest</span></code></a> is similar to
-<a class="reference internal" href="documentation.html#datasketch.MinHashLSH" title="datasketch.MinHashLSH"><code class="xref py py-class docutils literal notranslate"><span class="pre">datasketch.MinHashLSH</span></code></a>,
-however, it is very important to call <code class="docutils literal notranslate"><span class="pre">index</span></code> method after adding the
-keys. Without calling the <code class="docutils literal notranslate"><span class="pre">index</span></code> method, the keys won’t be
-searchable.</p>
+<p><a class="reference internal" href="lsh.html#minhash-lsh"><span class="std std-ref">MinHash LSH</span></a> answers radius (threshold) queries; often what you
+want instead is the <strong>top-k</strong> most similar sets. LSH Forest by Bawa et
+al. (WWW 2005) is a general LSH data structure that supports top-k
+queries, and <a class="reference internal" href="documentation.html#datasketch.MinHashLSHForest" title="datasketch.MinHashLSHForest"><code class="xref py py-class docutils literal notranslate"><span class="pre">datasketch.MinHashLSHForest</span></code></a> applies it to MinHash:
+given the <a class="reference internal" href="minhash.html#minhash"><span class="std std-ref">MinHash</span></a> sketch of a query set, it returns up to k keys
+whose sets have <strong>approximately</strong> the highest Jaccard similarities to
+the query.</p>
+<p>The interface is similar to <a class="reference internal" href="documentation.html#datasketch.MinHashLSH" title="datasketch.MinHashLSH"><code class="xref py py-class docutils literal notranslate"><span class="pre">datasketch.MinHashLSH</span></code></a>, with one
+important difference: after adding keys you must call the <code class="docutils literal notranslate"><span class="pre">index</span></code>
+method – keys are not searchable until then.</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">datasketch</span><span class="w"> </span><span class="kn">import</span> <span class="n">MinHashLSHForest</span><span class="p">,</span> <span class="n">MinHash</span>
 
 <span class="n">data1</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;minhash&#39;</span><span class="p">,</span> <span class="s1">&#39;is&#39;</span><span class="p">,</span> <span class="s1">&#39;a&#39;</span><span class="p">,</span> <span class="s1">&#39;probabilistic&#39;</span><span class="p">,</span> <span class="s1">&#39;data&#39;</span><span class="p">,</span> <span class="s1">&#39;structure&#39;</span><span class="p">,</span> <span class="s1">&#39;for&#39;</span><span class="p">,</span>
@@ -132,36 +131,106 @@ searchable.</p>
 <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;m2&quot;</span> <span class="ow">in</span> <span class="n">forest</span><span class="p">)</span>
 <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;m3&quot;</span> <span class="ow">in</span> <span class="n">forest</span><span class="p">)</span>
 
-<span class="c1"># Using m1 as the query, retrieve top 2 keys that have the higest Jaccard</span>
+<span class="c1"># Using m1 as the query, retrieve top 2 keys that have the highest Jaccard</span>
 <span class="n">result</span> <span class="o">=</span> <span class="n">forest</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">m1</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span>
 <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Top 2 candidates&quot;</span><span class="p">,</span> <span class="n">result</span><span class="p">)</span>
 </pre></div>
 </div>
-<p>The plot below shows the <a class="reference external" href="https://en.wikipedia.org/wiki/Evaluation_measures_(information_retrieval)#Mean_average_precision">mean average precision
-(MAP)</a> of linear
-scan with MinHash and MinHash LSH Forest. Synthetic data was used. See
-<a class="reference external" href="https://github.com/ekzhu/datasketch/tree/master/benchmark">benchmark</a>
-for details.</p>
-<figure class="align-default">
-<img alt="MinHashLSHForest Benchmark" src="_images/lshforest_benchmark.png" />
+<section id="benchmarks">
+<h2>Benchmarks<a class="headerlink" href="#benchmarks" title="Link to this heading"></a></h2>
+<p>Internally, the forest splits the <code class="docutils literal notranslate"><span class="pre">num_perm</span></code> hash values of each
+signature into <code class="docutils literal notranslate"><span class="pre">l</span></code> prefix trees (“LSH Trees” in the Bawa et al.
+paper), each indexing hash-value prefixes of maximum depth
+<code class="docutils literal notranslate"><span class="pre">num_perm</span> <span class="pre">/</span> <span class="pre">l</span></code>. Unlike the paper, which fixes the tree depth, this
+implementation derives it from the MinHash’s <code class="docutils literal notranslate"><span class="pre">num_perm</span></code>, keeping the
+two interfaces coherent. The number of trees is a constructor parameter
+(default <code class="docutils literal notranslate"><span class="pre">l=8</span></code>):</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># 16 prefix trees, each of maximum depth 128 / 16 = 8.</span>
+<span class="n">forest</span> <span class="o">=</span> <span class="n">MinHashLSHForest</span><span class="p">(</span><span class="n">num_perm</span><span class="o">=</span><span class="mi">128</span><span class="p">,</span> <span class="n">l</span><span class="o">=</span><span class="mi">16</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>How much accuracy a <code class="docutils literal notranslate"><span class="pre">(num_perm,</span> <span class="pre">l)</span></code> budget buys depends on the corpus,
+so the benchmark below runs top-10 queries on two synthetic corpora at
+opposite extremes of the similarity distribution – one line per <code class="docutils literal notranslate"><span class="pre">l</span></code>
+– against a linear scan that ranks all indexed sets by MinHash
+estimate. Accuracy is the <a class="reference external" href="https://en.wikipedia.org/wiki/Evaluation_measures_(information_retrieval)#Mean_average_precision">mean average precision
+(MAP&#64;10)</a>
+relative to the exact-Jaccard top-10; retrieved candidates are re-ranked
+by exact Jaccard before scoring, and queries are held out of the index
+(<code class="docutils literal notranslate"><span class="pre">benchmark/indexes/lshforest_synthetic_benchmark.py</span></code>):</p>
+<ul class="simple">
+<li><p>a <em>near-duplicate</em> corpus: each query has 1–3 planted
+near-duplicates (Jaccard 0.6–0.95) among otherwise-disjoint sets, so
+the true top-k is a short list of clearly similar sets;</p></li>
+<li><p>a <em>clustering</em> corpus: 10,000 heavily overlapping sets give every
+query a deep pool of moderately similar neighbours, so the true top-k
+is a fine ranking among close calls.</p></li>
+</ul>
+<figure class="align-center">
+<img alt="MinHashLSHForest MAP and query time on the near-duplicate corpus" src="_images/lshforest_neardup_benchmark.png" />
 </figure>
-<p>(Optional) If you have read the original LSH Forest paper by Bawa et al.
-(WWW 2005) and understand the data structure, you may want to customize another
-parameter for <a class="reference internal" href="documentation.html#datasketch.MinHashLSHForest" title="datasketch.MinHashLSHForest"><code class="xref py py-class docutils literal notranslate"><span class="pre">datasketch.MinHashLSHForest</span></code></a> – <code class="docutils literal notranslate"><span class="pre">l</span></code>, the number of prefix trees
-(or “LSH Trees” as in the paper) in the LSH Forest index. Different from
-the paper, this implementation fixes the number of LSH functions, in
-this case <code class="docutils literal notranslate"><span class="pre">num_perm</span></code>, and makes the maximum depth of every prefix tree
-dependent on <code class="docutils literal notranslate"><span class="pre">num_perm</span></code> and <code class="docutils literal notranslate"><span class="pre">l</span></code>:</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># The maximum depth of a prefix tree depends on num_perm and l</span>
-<span class="n">k</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">num_perm</span> <span class="o">/</span> <span class="n">l</span><span class="p">)</span>
-</pre></div>
-</div>
-<p>This way the interface of the <a class="reference internal" href="documentation.html#datasketch.MinHashLSHForest" title="datasketch.MinHashLSHForest"><code class="xref py py-class docutils literal notranslate"><span class="pre">datasketch.MinHashLSHForest</span></code></a> is in coherence with
-the interface of <code class="docutils literal notranslate"><span class="pre">MinHash</span></code>.</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># There is another optional parameter l (default l=8).</span>
-<span class="n">forest</span> <span class="o">=</span> <span class="n">MinHashLSHForest</span><span class="p">(</span><span class="n">num_perm</span><span class="o">=</span><span class="mi">250</span><span class="p">,</span> <span class="n">l</span><span class="o">=</span><span class="mi">10</span><span class="p">)</span>
-</pre></div>
-</div>
+<figure class="align-center">
+<img alt="MinHashLSHForest MAP and query time on the clustering corpus" src="_images/lshforest_clustering_benchmark.png" />
+</figure>
+<p>The figures share axes. On the near-duplicate corpus every forest with
+<code class="docutils literal notranslate"><span class="pre">l</span> <span class="pre">&gt;=</span> <span class="pre">4</span></code> scores a MAP of 1.0 or within 0.01 of it at every
+<code class="docutils literal notranslate"><span class="pre">num_perm</span></code>: the planted duplicates are far more similar than
+everything else, and the prefix search surfaces them every time, in
+well under a millisecond versus about 4 ms for the scan. Only <code class="docutils literal notranslate"><span class="pre">l=2</span></code>
+leaves accuracy behind (MAP ~0.94): two trees give a duplicate too few
+chances to share a prefix, and no amount of extra depth buys them back.</p>
+<p>On the clustering corpus – separating sets that differ by a few
+percent of similarity – the split of the hash-value budget between
+tree count and tree depth becomes a visible trade-off. With a small
+budget, depth is the scarce resource: at <code class="docutils literal notranslate"><span class="pre">num_perm=32</span></code>, two deep trees rank
+best (MAP 0.62 for <code class="docutils literal notranslate"><span class="pre">l=2</span></code> against 0.46 for <code class="docutils literal notranslate"><span class="pre">l=16</span></code>, whose depth-2
+prefixes barely discriminate). As the budget grows, the balance tips
+toward more trees: <code class="docutils literal notranslate"><span class="pre">l=8</span></code> leads from <code class="docutils literal notranslate"><span class="pre">num_perm=128</span></code> on and <code class="docutils literal notranslate"><span class="pre">l=16</span></code>
+catches it by 256 (both near 0.76), while <code class="docutils literal notranslate"><span class="pre">l=2</span></code> never rises past
+about 0.66 – extra depth stops helping once prefixes are already
+selective, but extra trees keep adding independent chances to catch a
+neighbour. Every configuration plateaus well below the linear scan,
+whose ranking uses all <code class="docutils literal notranslate"><span class="pre">num_perm</span></code> hash values instead of prefix
+collisions; that gap is the price of queries an order of magnitude or
+more faster (0.01–0.75 ms versus about 7 ms).</p>
+</section>
+<section id="retrieval-characteristics">
+<h2>Retrieval characteristics<a class="headerlink" href="#retrieval-characteristics" title="Link to this heading"></a></h2>
+<p>MAP is a single aggregate number; it helps to see how retrieval depends on
+how similar a neighbour actually is. The figure below plants, for each
+query, one neighbour at every true Jaccard similarity from 0.05 to 0.95,
+then measures the probability that <code class="docutils literal notranslate"><span class="pre">forest.query(query,</span> <span class="pre">k)</span></code> returns it
+(see <code class="docutils literal notranslate"><span class="pre">benchmark/indexes/lshforest_similarity_benchmark.py</span></code>).</p>
+<figure class="align-center" id="id2">
+<img alt="LSH Forest retrieval probability vs. true Jaccard similarity" src="_images/lshforest_characteristics.png" />
+<figcaption>
+<p><span class="caption-text">Probability that a neighbour is returned, as a function of its true
+Jaccard similarity to the query, on planted synthetic data.</span><a class="headerlink" href="#id2" title="Link to this image"></a></p>
+</figcaption>
+</figure>
+<p>The result is the characteristic LSH <em>soft threshold</em>: neighbours above a
+certain similarity are almost always returned, those below almost never,
+with a smooth transition in between. Two parameters move this curve.</p>
+<p><strong>Number of trees</strong> <code class="docutils literal notranslate"><span class="pre">l</span></code> <strong>(left panel).</strong> A query matches the deepest
+prefix (length <code class="docutils literal notranslate"><span class="pre">num_perm</span> <span class="pre">/</span> <span class="pre">l</span></code>) across all <code class="docutils literal notranslate"><span class="pre">l</span></code> trees, then shortens it
+until it has gathered <code class="docutils literal notranslate"><span class="pre">k</span></code> candidates. With few, deep trees (small <code class="docutils literal notranslate"><span class="pre">l</span></code>)
+long-prefix matches are rare, so the query shortens the prefix a lot and
+sweeps in weaker neighbours – a flatter, less selective curve. With many,
+shallow trees (large <code class="docutils literal notranslate"><span class="pre">l</span></code>) it collects <code class="docutils literal notranslate"><span class="pre">k</span></code> candidates while the prefix
+is still near its maximum, concentrating on the most similar sets – a
+sharper curve. The curves cross: above the crossing similarity more trees
+give higher recall, below it fewer trees do.</p>
+<p><strong>Query</strong> <code class="docutils literal notranslate"><span class="pre">k</span></code> <strong>(right panel).</strong> Asking for more results makes the query
+descend to shorter prefixes, shifting the whole curve to lower similarity:
+at <code class="docutils literal notranslate"><span class="pre">k</span> <span class="pre">=</span> <span class="pre">20</span></code> neighbours down to Jaccard ~0.2 are usually retrieved, while
+at <code class="docutils literal notranslate"><span class="pre">k</span> <span class="pre">=</span> <span class="pre">5</span></code> only those above ~0.7 are. This is exactly why over-retrieving
+and then re-ranking (see <a class="reference internal" href="#tips-for-improving-accuracy">Tips for Improving Accuracy</a> below) recovers
+accuracy – a larger <code class="docutils literal notranslate"><span class="pre">k</span></code> widens the net enough to catch true neighbours a
+tighter query would miss, and exact re-ranking restores precision. Note
+that <code class="docutils literal notranslate"><span class="pre">num_perm</span></code> barely moves these curves: it sets the <em>resolution</em> of
+the similarity estimate, not how many candidates the query gathers, so
+<code class="docutils literal notranslate"><span class="pre">l</span></code> and <code class="docutils literal notranslate"><span class="pre">k</span></code> are the effective retrieval knobs.</p>
+</section>
 <section id="tips-for-improving-accuracy">
 <h2>Tips for Improving Accuracy<a class="headerlink" href="#tips-for-improving-accuracy" title="Link to this heading"></a></h2>
 <p>The default parameters may not be good enough for all data. Here are
@@ -195,7 +264,11 @@ computations is still bounded by a constant multiple of <cite>k</cite>, the
 performance won’t degrade too much – however you do have to keep
 the original sets (or MinHashes) around somewhere
 (in-memory, databases, etc.) so that you
-can make references to them.</p>
+can make references to them. The right panel of the retrieval-characteristics
+figure above shows why this works: raising the query <code class="docutils literal notranslate"><span class="pre">k</span></code> shifts the
+retrieval curve toward lower similarity, so a larger <code class="docutils literal notranslate"><span class="pre">k</span></code> recovers true
+neighbours that the tighter query would drop, and the exact re-ranking then
+discards the extra low-similarity candidates it swept in.</p>
 </section>
 <section id="common-issues-with-minhash-lsh-forest">
 <h2>Common Issues with MinHash LSH Forest<a class="headerlink" href="#common-issues-with-minhash-lsh-forest" title="Link to this heading"></a></h2>

@@ -5,14 +5,14 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>datasketch.lsh &mdash; datasketch 1.10.0 documentation</title>
+  <title>datasketch.lsh &mdash; datasketch 2.0.0 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=03e43079" />
       <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=9edc463e" />
 
   
       <script src="../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../_static/documentation_options.js?v=1d24b1d9"></script>
+      <script src="../../_static/documentation_options.js?v=51b770b3"></script>
       <script src="../../_static/doctools.js?v=9bcbadda"></script>
       <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../_static/js/theme.js"></script>
@@ -40,6 +40,7 @@
 </div>
         </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
               <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../b-bit-minhash.html">b-bit MinHash</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../documentation.html">API Documentation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../hyperloglog.html">HyperLogLog</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../hyperloglog.html#hyperloglog-plusplus">HyperLogLog++</a></li>
@@ -85,7 +86,7 @@
 
 <span class="kn">from</span><span class="w"> </span><span class="nn">scipy.integrate</span><span class="w"> </span><span class="kn">import</span> <span class="n">quad</span> <span class="k">as</span> <span class="n">integrate</span>
 
-<span class="kn">from</span><span class="w"> </span><span class="nn">datasketch.minhash</span><span class="w"> </span><span class="kn">import</span> <span class="n">MinHash</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">datasketch.minhash</span><span class="w"> </span><span class="kn">import</span> <span class="n">MinHash</span><span class="p">,</span> <span class="n">_check_scheme_consistency</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">datasketch.storage</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
     <span class="n">OrderedStorage</span><span class="p">,</span>
     <span class="n">UnorderedStorage</span><span class="p">,</span>
@@ -279,7 +280,11 @@
             <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">b</span><span class="p">)</span>
         <span class="p">]</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">hashranges</span> <span class="o">=</span> <span class="p">[(</span><span class="n">i</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">r</span><span class="p">,</span> <span class="p">(</span><span class="n">i</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">r</span><span class="p">)</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">b</span><span class="p">)]</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">keys</span><span class="p">:</span> <span class="n">OrderedStorage</span> <span class="o">=</span> <span class="n">ordered_storage</span><span class="p">(</span><span class="n">storage_config</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="sa">b</span><span class="s2">&quot;&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="n">basename</span><span class="p">,</span> <span class="sa">b</span><span class="s2">&quot;_keys&quot;</span><span class="p">]))</span></div>
+        <span class="bp">self</span><span class="o">.</span><span class="n">keys</span><span class="p">:</span> <span class="n">OrderedStorage</span> <span class="o">=</span> <span class="n">ordered_storage</span><span class="p">(</span><span class="n">storage_config</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="sa">b</span><span class="s2">&quot;&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="n">basename</span><span class="p">,</span> <span class="sa">b</span><span class="s2">&quot;_keys&quot;</span><span class="p">]))</span>
+        <span class="c1"># The permutation scheme of the indexed MinHash, learned from the</span>
+        <span class="c1"># first insert. Note that an index attached to pre-existing external</span>
+        <span class="c1"># storage (e.g. Redis) re-learns the scheme on its first insert.</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_minhash_scheme</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span></div>
 
 
     <span class="nd">@property</span>
@@ -427,6 +432,7 @@
     <span class="p">):</span>
         <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">minhash</span><span class="p">)</span> <span class="o">!=</span> <span class="bp">self</span><span class="o">.</span><span class="n">h</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Expecting minhash with length </span><span class="si">%d</span><span class="s2">, got </span><span class="si">%d</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">h</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">minhash</span><span class="p">)))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_minhash_scheme</span> <span class="o">=</span> <span class="n">_check_scheme_consistency</span><span class="p">(</span><span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s2">&quot;_minhash_scheme&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">),</span> <span class="n">minhash</span><span class="p">)</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_require_bytes_keys</span> <span class="ow">and</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="nb">bytes</span><span class="p">):</span>
             <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span>
                 <span class="sa">f</span><span class="s2">&quot;prepickle=False requires bytes keys for non-dict storage, got </span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="n">key</span><span class="p">)</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2">. &quot;</span>
@@ -450,8 +456,16 @@
 
     <span class="k">def</span><span class="w"> </span><span class="nf">_merge</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">:</span> <span class="n">MinHashLSH</span><span class="p">,</span> <span class="n">check_overlap</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span> <span class="n">buffer</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">__equivalent</span><span class="p">(</span><span class="n">other</span><span class="p">):</span>
+            <span class="n">known</span><span class="p">,</span> <span class="n">other_known</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s2">&quot;_minhash_scheme&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">),</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="s2">&quot;_minhash_scheme&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">known</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">other_known</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">known</span> <span class="o">!=</span> <span class="n">other_known</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                    <span class="s2">&quot;Cannot merge MinHashLSH indexed with MinHash scheme </span><span class="si">%r</span><span class="s2"> into one indexed with scheme </span><span class="si">%r</span><span class="s2">&quot;</span>
+                    <span class="o">%</span> <span class="p">(</span><span class="n">other_known</span><span class="p">,</span> <span class="n">known</span><span class="p">)</span>
+                <span class="p">)</span>
             <span class="k">if</span> <span class="n">check_overlap</span> <span class="ow">and</span> <span class="nb">set</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">keys</span><span class="p">)</span><span class="o">.</span><span class="n">intersection</span><span class="p">(</span><span class="nb">set</span><span class="p">(</span><span class="n">other</span><span class="o">.</span><span class="n">keys</span><span class="p">)):</span>
                 <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;The keys are overlapping, duplicate key exists.&quot;</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">known</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_minhash_scheme</span> <span class="o">=</span> <span class="n">other_known</span>
             <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">other</span><span class="o">.</span><span class="n">keys</span><span class="p">:</span>
                 <span class="n">Hs</span> <span class="o">=</span> <span class="n">other</span><span class="o">.</span><span class="n">keys</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">key</span><span class="p">)</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">keys</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="o">*</span><span class="n">Hs</span><span class="p">,</span> <span class="n">buffer</span><span class="o">=</span><span class="n">buffer</span><span class="p">)</span>
@@ -519,6 +533,7 @@
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">minhash</span><span class="p">)</span> <span class="o">!=</span> <span class="bp">self</span><span class="o">.</span><span class="n">h</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Expecting minhash with length </span><span class="si">%d</span><span class="s2">, got </span><span class="si">%d</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">h</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">minhash</span><span class="p">)))</span>
+        <span class="n">_check_scheme_consistency</span><span class="p">(</span><span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s2">&quot;_minhash_scheme&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">),</span> <span class="n">minhash</span><span class="p">)</span>
         <span class="n">candidates</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
         <span class="k">for</span> <span class="p">(</span><span class="n">start</span><span class="p">,</span> <span class="n">end</span><span class="p">),</span> <span class="n">hashtable</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">hashranges</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">hashtables</span><span class="p">):</span>
             <span class="n">H</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_H</span><span class="p">(</span><span class="n">minhash</span><span class="o">.</span><span class="n">hashvalues</span><span class="p">[</span><span class="n">start</span><span class="p">:</span><span class="n">end</span><span class="p">])</span>
@@ -548,6 +563,7 @@
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">minhash</span><span class="p">)</span> <span class="o">!=</span> <span class="bp">self</span><span class="o">.</span><span class="n">h</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Expecting minhash with length </span><span class="si">%d</span><span class="s2">, got </span><span class="si">%d</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">h</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">minhash</span><span class="p">)))</span>
+        <span class="n">_check_scheme_consistency</span><span class="p">(</span><span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s2">&quot;_minhash_scheme&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">),</span> <span class="n">minhash</span><span class="p">)</span>
         <span class="k">for</span> <span class="p">(</span><span class="n">start</span><span class="p">,</span> <span class="n">end</span><span class="p">),</span> <span class="n">hashtable</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">hashranges</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">hashtables</span><span class="p">):</span>
             <span class="n">H</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_H</span><span class="p">(</span><span class="n">minhash</span><span class="o">.</span><span class="n">hashvalues</span><span class="p">[</span><span class="n">start</span><span class="p">:</span><span class="n">end</span><span class="p">])</span>
             <span class="n">hashtable</span><span class="o">.</span><span class="n">add_to_select_buffer</span><span class="p">([</span><span class="n">H</span><span class="p">])</span></div>
@@ -658,6 +674,7 @@
     <span class="k">def</span><span class="w"> </span><span class="nf">_query_b</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">minhash</span><span class="p">,</span> <span class="n">b</span><span class="p">):</span>
         <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">minhash</span><span class="p">)</span> <span class="o">!=</span> <span class="bp">self</span><span class="o">.</span><span class="n">h</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Expecting minhash with length </span><span class="si">%d</span><span class="s2">, got </span><span class="si">%d</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">h</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">minhash</span><span class="p">)))</span>
+        <span class="n">_check_scheme_consistency</span><span class="p">(</span><span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s2">&quot;_minhash_scheme&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">),</span> <span class="n">minhash</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">b</span> <span class="o">&gt;</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">hashtables</span><span class="p">):</span>
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;b must be less or equal to the number of hash tables&quot;</span><span class="p">)</span>
         <span class="n">candidates</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>

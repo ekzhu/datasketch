@@ -3,21 +3,17 @@
 MinHash LSH Forest
 ==================
 
-:ref:`minhash_lsh` is useful for radius (or threshold) queries. However,
-**top-k** queries are often more useful in some cases. LSH
-Forest by Bawa et al. (WWW 2005) is a general LSH data structure that makes top-k query possible for
-many different types of LSH indexes, which include MinHash LSH. I
-implemented the MinHash LSH Forest, which takes a :ref:`minhash` data sketch of
-the query set, and returns the top-k matching sets that have the 
-**approximately** highest Jaccard similarities with the query set
-(`Incorrect results of LSH
-Forest <https://github.com/ekzhu/datasketch/issues/89>`__).
+:ref:`minhash_lsh` answers radius (threshold) queries; often what you
+want instead is the **top-k** most similar sets. LSH Forest by Bawa et
+al. (WWW 2005) is a general LSH data structure that supports top-k
+queries, and :class:`datasketch.MinHashLSHForest` applies it to MinHash:
+given the :ref:`minhash` sketch of a query set, it returns up to k keys
+whose sets have **approximately** the highest Jaccard similarities to
+the query.
 
-The interface of :class:`datasketch.MinHashLSHForest` is similar to 
-:class:`datasketch.MinHashLSH`,
-however, it is very important to call ``index`` method after adding the
-keys. Without calling the ``index`` method, the keys won't be
-searchable.
+The interface is similar to :class:`datasketch.MinHashLSH`, with one
+important difference: after adding keys you must call the ``index``
+method -- keys are not searchable until then.
 
 .. code:: python
 
@@ -55,40 +51,114 @@ searchable.
     print("m2" in forest)
     print("m3" in forest)
 
-    # Using m1 as the query, retrieve top 2 keys that have the higest Jaccard
+    # Using m1 as the query, retrieve top 2 keys that have the highest Jaccard
     result = forest.query(m1, 2)
     print("Top 2 candidates", result)
 
-The plot below shows the `mean average precision
-(MAP) <https://en.wikipedia.org/wiki/Evaluation_measures_(information_retrieval)#Mean_average_precision>`__ of linear
-scan with MinHash and MinHash LSH Forest. Synthetic data was used. See
-`benchmark <https://github.com/ekzhu/datasketch/tree/master/benchmark>`_ 
-for details.
+Benchmarks
+----------
 
-.. figure:: /_static/lshforest_benchmark.png
-   :alt: MinHashLSHForest Benchmark
-
-(Optional) If you have read the original LSH Forest paper by Bawa et al.
-(WWW 2005) and understand the data structure, you may want to customize another
-parameter for :class:`datasketch.MinHashLSHForest` -- ``l``, the number of prefix trees
-(or "LSH Trees" as in the paper) in the LSH Forest index. Different from
-the paper, this implementation fixes the number of LSH functions, in
-this case ``num_perm``, and makes the maximum depth of every prefix tree
-dependent on ``num_perm`` and ``l``:
+Internally, the forest splits the ``num_perm`` hash values of each
+signature into ``l`` prefix trees ("LSH Trees" in the Bawa et al.
+paper), each indexing hash-value prefixes of maximum depth
+``num_perm / l``. Unlike the paper, which fixes the tree depth, this
+implementation derives it from the MinHash's ``num_perm``, keeping the
+two interfaces coherent. The number of trees is a constructor parameter
+(default ``l=8``):
 
 .. code:: python
 
-    # The maximum depth of a prefix tree depends on num_perm and l
-    k = int(num_perm / l)
+    # 16 prefix trees, each of maximum depth 128 / 16 = 8.
+    forest = MinHashLSHForest(num_perm=128, l=16)
 
-This way the interface of the :class:`datasketch.MinHashLSHForest` is in coherence with
-the interface of ``MinHash``.
+How much accuracy a ``(num_perm, l)`` budget buys depends on the corpus,
+so the benchmark below runs top-10 queries on two synthetic corpora at
+opposite extremes of the similarity distribution -- one line per ``l``
+-- against a linear scan that ranks all indexed sets by MinHash
+estimate. Accuracy is the `mean average precision
+(MAP@10) <https://en.wikipedia.org/wiki/Evaluation_measures_(information_retrieval)#Mean_average_precision>`__
+relative to the exact-Jaccard top-10; retrieved candidates are re-ranked
+by exact Jaccard before scoring, and queries are held out of the index
+(``benchmark/indexes/lshforest_synthetic_benchmark.py``):
 
-.. code:: python
+- a *near-duplicate* corpus: each query has 1--3 planted
+  near-duplicates (Jaccard 0.6--0.95) among otherwise-disjoint sets, so
+  the true top-k is a short list of clearly similar sets;
+- a *clustering* corpus: 10,000 heavily overlapping sets give every
+  query a deep pool of moderately similar neighbours, so the true top-k
+  is a fine ranking among close calls.
 
-    # There is another optional parameter l (default l=8).
-    forest = MinHashLSHForest(num_perm=250, l=10)
+.. figure:: /_static/lshforest_neardup_benchmark.png
+   :alt: MinHashLSHForest MAP and query time on the near-duplicate corpus
+   :align: center
 
+.. figure:: /_static/lshforest_clustering_benchmark.png
+   :alt: MinHashLSHForest MAP and query time on the clustering corpus
+   :align: center
+
+The figures share axes. On the near-duplicate corpus every forest with
+``l >= 4`` scores a MAP of 1.0 or within 0.01 of it at every
+``num_perm``: the planted duplicates are far more similar than
+everything else, and the prefix search surfaces them every time, in
+well under a millisecond versus about 4 ms for the scan. Only ``l=2``
+leaves accuracy behind (MAP ~0.94): two trees give a duplicate too few
+chances to share a prefix, and no amount of extra depth buys them back.
+
+On the clustering corpus -- separating sets that differ by a few
+percent of similarity -- the split of the hash-value budget between
+tree count and tree depth becomes a visible trade-off. With a small
+budget, depth is the scarce resource: at ``num_perm=32``, two deep trees rank
+best (MAP 0.62 for ``l=2`` against 0.46 for ``l=16``, whose depth-2
+prefixes barely discriminate). As the budget grows, the balance tips
+toward more trees: ``l=8`` leads from ``num_perm=128`` on and ``l=16``
+catches it by 256 (both near 0.76), while ``l=2`` never rises past
+about 0.66 -- extra depth stops helping once prefixes are already
+selective, but extra trees keep adding independent chances to catch a
+neighbour. Every configuration plateaus well below the linear scan,
+whose ranking uses all ``num_perm`` hash values instead of prefix
+collisions; that gap is the price of queries an order of magnitude or
+more faster (0.01--0.75 ms versus about 7 ms).
+
+Retrieval characteristics
+-------------------------
+
+MAP is a single aggregate number; it helps to see how retrieval depends on
+how similar a neighbour actually is. The figure below plants, for each
+query, one neighbour at every true Jaccard similarity from 0.05 to 0.95,
+then measures the probability that ``forest.query(query, k)`` returns it
+(see ``benchmark/indexes/lshforest_similarity_benchmark.py``).
+
+.. figure:: /_static/lshforest_characteristics.png
+   :alt: LSH Forest retrieval probability vs. true Jaccard similarity
+   :align: center
+
+   Probability that a neighbour is returned, as a function of its true
+   Jaccard similarity to the query, on planted synthetic data.
+
+The result is the characteristic LSH *soft threshold*: neighbours above a
+certain similarity are almost always returned, those below almost never,
+with a smooth transition in between. Two parameters move this curve.
+
+**Number of trees** ``l`` **(left panel).** A query matches the deepest
+prefix (length ``num_perm / l``) across all ``l`` trees, then shortens it
+until it has gathered ``k`` candidates. With few, deep trees (small ``l``)
+long-prefix matches are rare, so the query shortens the prefix a lot and
+sweeps in weaker neighbours -- a flatter, less selective curve. With many,
+shallow trees (large ``l``) it collects ``k`` candidates while the prefix
+is still near its maximum, concentrating on the most similar sets -- a
+sharper curve. The curves cross: above the crossing similarity more trees
+give higher recall, below it fewer trees do.
+
+**Query** ``k`` **(right panel).** Asking for more results makes the query
+descend to shorter prefixes, shifting the whole curve to lower similarity:
+at ``k = 20`` neighbours down to Jaccard ~0.2 are usually retrieved, while
+at ``k = 5`` only those above ~0.7 are. This is exactly why over-retrieving
+and then re-ranking (see `Tips for Improving Accuracy`_ below) recovers
+accuracy -- a larger ``k`` widens the net enough to catch true neighbours a
+tighter query would miss, and exact re-ranking restores precision. Note
+that ``num_perm`` barely moves these curves: it sets the *resolution* of
+the similarity estimate, not how many candidates the query gathers, so
+``l`` and ``k`` are the effective retrieval knobs.
 
 Tips for Improving Accuracy
 ---------------------------
@@ -127,7 +197,11 @@ computations is still bounded by a constant multiple of `k`, the
 performance won't degrade too much -- however you do have to keep
 the original sets (or MinHashes) around somewhere
 (in-memory, databases, etc.) so that you
-can make references to them.
+can make references to them. The right panel of the retrieval-characteristics
+figure above shows why this works: raising the query ``k`` shifts the
+retrieval curve toward lower similarity, so a larger ``k`` recovers true
+neighbours that the tighter query would drop, and the exact re-ranking then
+discards the extra low-similarity candidates it swept in.
 
 
 Common Issues with MinHash LSH Forest

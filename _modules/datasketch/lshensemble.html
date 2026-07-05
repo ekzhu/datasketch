@@ -5,14 +5,14 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>datasketch.lshensemble &mdash; datasketch 1.10.0 documentation</title>
+  <title>datasketch.lshensemble &mdash; datasketch 2.0.0 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=03e43079" />
       <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=9edc463e" />
 
   
       <script src="../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../_static/documentation_options.js?v=1d24b1d9"></script>
+      <script src="../../_static/documentation_options.js?v=51b770b3"></script>
       <script src="../../_static/doctools.js?v=9bcbadda"></script>
       <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../_static/js/theme.js"></script>
@@ -40,6 +40,7 @@
 </div>
         </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
               <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../b-bit-minhash.html">b-bit MinHash</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../documentation.html">API Documentation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../hyperloglog.html">HyperLogLog</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../hyperloglog.html#hyperloglog-plusplus">HyperLogLog++</a></li>
@@ -333,6 +334,11 @@
             <span class="k">if</span> <span class="n">u</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
                 <span class="k">continue</span>
             <span class="n">b</span><span class="p">,</span> <span class="n">r</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_optimal_param</span><span class="p">(</span><span class="n">u</span><span class="p">,</span> <span class="n">size</span><span class="p">)</span>
+            <span class="c1"># The permutation-scheme guard lives in the inner MinHashLSH</span>
+            <span class="c1"># (_query_b calls _check_scheme_consistency), so it is checked</span>
+            <span class="c1"># lazily as this generator is iterated and only for partitions</span>
+            <span class="c1"># that have had an insert. A query reaching only empty partitions</span>
+            <span class="c1"># returns nothing regardless, so it cannot yield wrong results.</span>
             <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">index</span><span class="p">[</span><span class="n">r</span><span class="p">]</span><span class="o">.</span><span class="n">_query_b</span><span class="p">(</span><span class="n">minhash</span><span class="p">,</span> <span class="n">b</span><span class="p">):</span>
                 <span class="k">yield</span> <span class="n">key</span></div>
 

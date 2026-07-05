@@ -6,16 +6,17 @@
   <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>MinHash LSH &mdash; datasketch 1.10.0 documentation</title>
+  <title>MinHash LSH &mdash; datasketch 2.0.0 documentation</title>
       <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=03e43079" />
       <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=9edc463e" />
 
   
       <script src="_static/jquery.js?v=5d32c60e"></script>
       <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="_static/documentation_options.js?v=1d24b1d9"></script>
+      <script src="_static/documentation_options.js?v=51b770b3"></script>
       <script src="_static/doctools.js?v=9bcbadda"></script>
       <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script async="async" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
     <script src="_static/js/theme.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
@@ -43,10 +44,13 @@
 </div>
         </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
               <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="b-bit-minhash.html">b-bit MinHash</a></li>
 <li class="toctree-l1"><a class="reference internal" href="documentation.html">API Documentation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="hyperloglog.html">HyperLogLog</a></li>
 <li class="toctree-l1"><a class="reference internal" href="hyperloglog.html#hyperloglog-plusplus">HyperLogLog++</a></li>
 <li class="toctree-l1 current"><a class="current reference internal" href="#">MinHash LSH</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#benchmarks">Benchmarks</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#retrieval-characteristics-and-parameter-tuning">Retrieval characteristics and parameter tuning</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#minhash-lsh-at-scale">MinHash LSH at scale</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="#connecting-to-existing-minhash-lsh">Connecting to Existing MinHash LSH</a></li>
 </ul>
@@ -89,13 +93,13 @@
   <section id="minhash-lsh">
 <span id="id1"></span><h1>MinHash LSH<a class="headerlink" href="#minhash-lsh" title="Link to this heading"></a></h1>
 <p>Suppose you have a very large collection of
-<a class="reference external" href="https://en.wikipedia.org/wiki/Set_(mathematics)">sets</a>. Giving a
+<a class="reference external" href="https://en.wikipedia.org/wiki/Set_(mathematics)">sets</a>. Given a
 query, which is also a set, you want to find sets in your collection
-that have Jaccard similarities above certain threshold, and you want to
-do it with many other queries. To do this efficiently, you can create a
-MinHash for every set, and when a query comes, you compute the Jaccard
-similarities between the query MinHash and all the MinHash of your
-collection, and return the sets that satisfy your threshold.</p>
+that have Jaccard similarities above a certain threshold – and you want
+to answer many such queries. One way is to create a MinHash for every
+set, and at query time compute the Jaccard estimate between the query’s
+MinHash and every MinHash in the collection, returning the sets that
+meet the threshold.</p>
 <p>The said approach is still an O(n) algorithm, meaning the query cost
 increases linearly with respect to the number of sets. A popular
 alternative is to use Locality Sensitive Hashing (LSH) index. LSH can be
@@ -140,42 +144,128 @@ likely to get returned than the rest.</p>
 <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Approximate neighbours with Jaccard similarity &gt; 0.5&quot;</span><span class="p">,</span> <span class="n">result</span><span class="p">)</span>
 </pre></div>
 </div>
-<p>The Jaccard similarity threshold must be set at initialization, and
-cannot be changed. So does the number of permutation functions (<code class="docutils literal notranslate"><span class="pre">num_perm</span></code>) parameter.
-Similar to MinHash, more permutation functions improves the accuracy,
-but also increases query cost, since more processing is required as the
-MinHash gets bigger.
-I experimented with the <a class="reference external" href="https://scikit-learn.org/stable/datasets/real_world.html#the-20-newsgroups-text-dataset">20 News Group
-Dataset</a>,
-which has an average cardinality of 193 (3-shingles). The average
-recall, average precision, and 90 percentile query time vs. number of permutation
-functions
-are plotted below.
-See the <cite>benchmark</cite>
-directory in the source code repository for more experiment and
-plotting code.</p>
-<figure class="align-default">
-<img alt="MinHashLSH Benchmark" src="_images/lsh_benchmark.png" />
-</figure>
-<p>You can merge two MinHashLSH indexes to create a union index using the <code class="docutils literal notranslate"><span class="pre">merge</span></code> method. This
-makes MinHashLSH useful in parallel processing.</p>
+<p>The Jaccard similarity threshold and the number of permutation
+functions (<code class="docutils literal notranslate"><span class="pre">num_perm</span></code>) must both be set at initialization and cannot
+be changed afterwards. You can, however, merge two MinHashLSH indexes
+into a union index with the <code class="docutils literal notranslate"><span class="pre">merge</span></code> method, which makes MinHashLSH
+useful in parallel processing:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># This merges the lsh1 with lsh2.</span>
 <span class="n">lsh1</span><span class="o">.</span><span class="n">merge</span><span class="p">(</span><span class="n">lsh2</span><span class="p">)</span>
 </pre></div>
 </div>
-<p>There are other optional parameters that can be used to tune the index.
-See the documentation of <a class="reference internal" href="documentation.html#datasketch.MinHashLSH" title="datasketch.MinHashLSH"><code class="xref py py-class docutils literal notranslate"><span class="pre">datasketch.MinHashLSH</span></code></a> for details.</p>
-<p>MinHash LSH does not support Top-K queries.
-See <a class="reference internal" href="lshforest.html#minhash-lsh-forest"><span class="std std-ref">MinHash LSH Forest</span></a> for an alternative.
-In addition, Jaccard similarity may not be the best measure if your intention is to
-find sets having high intersection with the query.
-For intersection search, see <a class="reference internal" href="lshensemble.html#minhash-lsh-ensemble"><span class="std std-ref">MinHash LSH Ensemble</span></a>.</p>
+<p>MinHash LSH does not support top-k queries – see
+<a class="reference internal" href="lshforest.html#minhash-lsh-forest"><span class="std std-ref">MinHash LSH Forest</span></a> for that. And if your goal is finding sets
+with high <em>intersection</em> with the query rather than high Jaccard
+similarity, see <a class="reference internal" href="lshensemble.html#minhash-lsh-ensemble"><span class="std std-ref">MinHash LSH Ensemble</span></a>. Other optional tuning
+parameters are described in the <a class="reference internal" href="documentation.html#datasketch.MinHashLSH" title="datasketch.MinHashLSH"><code class="xref py py-class docutils literal notranslate"><span class="pre">datasketch.MinHashLSH</span></code></a> API
+documentation.</p>
+<section id="benchmarks">
+<h2>Benchmarks<a class="headerlink" href="#benchmarks" title="Link to this heading"></a></h2>
+<p>What <code class="docutils literal notranslate"><span class="pre">threshold</span></code> and <code class="docutils literal notranslate"><span class="pre">num_perm</span></code> buy depends on where a corpus
+places pairs relative to the threshold, so the benchmark below runs the
+same experiment on two synthetic corpora at opposite extremes
+(<code class="docutils literal notranslate"><span class="pre">benchmark/indexes/lsh_synthetic_benchmark.py</span></code>; queries are held out
+of the index, the linear scan thresholds the MinHash estimate of every
+indexed set, and the x-tick labels carry the <code class="docutils literal notranslate"><span class="pre">(b,</span> <span class="pre">r)</span></code> the optimizer
+chose at each <code class="docutils literal notranslate"><span class="pre">num_perm</span></code> – identical for both corpora, since the
+choice depends only on the threshold and <code class="docutils literal notranslate"><span class="pre">num_perm</span></code>):</p>
+<ul class="simple">
+<li><p>a <em>near-duplicate</em> corpus, the deduplication shape: each query has
+1–3 planted near-duplicates (Jaccard 0.6–0.95) among
+otherwise-disjoint sets, so no pair sits near the threshold of 0.5;</p></li>
+<li><p>a <em>clustering</em> corpus, the borderline-heavy shape: 10,000 heavily
+overlapping sets spread pair similarities across the whole range (506
+of the 1,000 queries have qualifying neighbours, a median of about
+3,600 each, many of them borderline).</p></li>
+</ul>
+<figure class="align-center">
+<img alt="MinHashLSH accuracy and query time on the near-duplicate corpus" src="_images/lsh_neardup_benchmark.png" />
+</figure>
+<figure class="align-center">
+<img alt="MinHashLSH accuracy and query time on the clustering corpus" src="_images/lsh_clustering_benchmark.png" />
+</figure>
+<p>The figures share axes, and the same index behaves very differently:</p>
+<ul class="simple">
+<li><p><strong>Near-duplicate corpus.</strong> Precision and recall sit in the 0.92–1.0
+band at every <code class="docutils literal notranslate"><span class="pre">num_perm</span></code>: the threshold falls in an empty stretch
+of the similarity distribution, so the soft threshold has almost
+nothing to be wrong about. Buckets are nearly empty, so queries
+return in ~0.03 ms or less – over 100x faster than the linear scan.</p></li>
+<li><p><strong>Clustering corpus.</strong> With similarity mass right at the threshold,
+the soft threshold’s errors show (LSH precision 0.69–0.77, recall
+0.69–0.84), and neither improves monotonically with <code class="docutils literal notranslate"><span class="pre">num_perm</span></code>:
+accuracy tracks the optimizer’s discrete <code class="docutils literal notranslate"><span class="pre">(b,</span> <span class="pre">r)</span></code> steps visible in
+the tick labels – each bump of <code class="docutils literal notranslate"><span class="pre">r</span></code> (at <code class="docutils literal notranslate"><span class="pre">num_perm</span></code> 96 and 192)
+shifts the retrieval curve right, trading recall for precision,
+until the growing <code class="docutils literal notranslate"><span class="pre">b</span></code> pulls it back. Buckets are crowded, so query
+time rises with the band count (0.4 ms to about 1 ms), though it
+stays about 6x under the scan – whose cost, unlike the index’s, is
+linear in the collection size.</p></li>
+</ul>
+<p>The next section explains the mechanics that produce both pictures.</p>
+</section>
+<section id="retrieval-characteristics-and-parameter-tuning">
+<h2>Retrieval characteristics and parameter tuning<a class="headerlink" href="#retrieval-characteristics-and-parameter-tuning" title="Link to this heading"></a></h2>
+<p>Internally, <a class="reference internal" href="documentation.html#datasketch.MinHashLSH" title="datasketch.MinHashLSH"><code class="xref py py-class docutils literal notranslate"><span class="pre">datasketch.MinHashLSH</span></code></a> splits each signature’s
+<code class="docutils literal notranslate"><span class="pre">num_perm</span></code> hash values into <code class="docutils literal notranslate"><span class="pre">b</span></code> <em>bands</em> of <code class="docutils literal notranslate"><span class="pre">r</span></code> values
+(<code class="docutils literal notranslate"><span class="pre">b</span> <span class="pre">*</span> <span class="pre">r</span> <span class="pre">&lt;=</span> <span class="pre">num_perm</span></code>); a stored set becomes a candidate for a query if
+it agrees on <em>all</em> <code class="docutils literal notranslate"><span class="pre">r</span></code> values of at least one band. A set whose true
+Jaccard similarity to the query is <code class="docutils literal notranslate"><span class="pre">s</span></code> is therefore returned with
+probability</p>
+<div class="math notranslate nohighlight">
+\[P(s) = 1 - (1 - s^r)^b\]</div>
+<p>an S-curve that jumps from near 0 to near 1 around a similarity
+determined by <code class="docutils literal notranslate"><span class="pre">(b,</span> <span class="pre">r)</span></code>. The constructor searches all <code class="docutils literal notranslate"><span class="pre">(b,</span> <span class="pre">r)</span></code>
+combinations to place this transition at your <code class="docutils literal notranslate"><span class="pre">threshold</span></code>, minimizing
+the weighted false-positive area below it and false-negative area above
+it. The figure below measures the actual retrieval probability with
+neighbours planted at controlled similarities (solid) against the
+<span class="math notranslate nohighlight">\(P(s)\)</span> curve for the chosen <code class="docutils literal notranslate"><span class="pre">(b,</span> <span class="pre">r)</span></code> (dashed) – they agree
+closely. See <code class="docutils literal notranslate"><span class="pre">benchmark/indexes/lsh_similarity_benchmark.py</span></code>.</p>
+<figure class="align-center" id="id3">
+<img alt="MinHashLSH retrieval probability vs. true Jaccard similarity" src="_images/lsh_characteristics.png" />
+<figcaption>
+<p><span class="caption-text">Probability that <code class="docutils literal notranslate"><span class="pre">lsh.query</span></code> returns a neighbour, as a function of
+the neighbour’s true Jaccard similarity to the query.</span><a class="headerlink" href="#id3" title="Link to this image"></a></p>
+</figcaption>
+</figure>
+<p><strong>Threshold (left panel).</strong> The optimizer trades bands for rows to move
+the transition: at <code class="docutils literal notranslate"><span class="pre">num_perm=128</span></code> it picks <code class="docutils literal notranslate"><span class="pre">(b=37,</span> <span class="pre">r=3)</span></code> for
+threshold 0.3, <code class="docutils literal notranslate"><span class="pre">(25,</span> <span class="pre">5)</span></code> for 0.5, <code class="docutils literal notranslate"><span class="pre">(14,</span> <span class="pre">9)</span></code> for 0.7 and <code class="docutils literal notranslate"><span class="pre">(5,</span> <span class="pre">25)</span></code>
+for 0.9 – fewer, longer bands are more selective. Note the curve is a
+<em>soft</em> threshold: sets slightly below it are still returned sometimes,
+and sets slightly above it are occasionally missed.</p>
+<p><strong>num_perm (middle panel).</strong> More permutations allow finer <code class="docutils literal notranslate"><span class="pre">(b,</span> <span class="pre">r)</span></code>
+choices, so the transition sharpens: at threshold 0.5, <code class="docutils literal notranslate"><span class="pre">num_perm=32</span></code>
+(<code class="docutils literal notranslate"><span class="pre">b=8,</span> <span class="pre">r=4</span></code>) still returns some sets near similarity 0.2 and misses
+some near 0.8, while <code class="docutils literal notranslate"><span class="pre">num_perm=512</span></code> (<code class="docutils literal notranslate"><span class="pre">b=73,</span> <span class="pre">r=7</span></code>) is much closer to a
+step function. The price is linear in <code class="docutils literal notranslate"><span class="pre">num_perm</span></code>: bigger signatures,
+more hash tables, and proportionally slower inserts. Query cost grows
+too in principle, but stays negligible next to a linear scan – in the
+benchmark above the LSH query time remains well under a millisecond at
+every <code class="docutils literal notranslate"><span class="pre">num_perm</span></code>.</p>
+<p><strong>weights (right panel).</strong> <code class="docutils literal notranslate"><span class="pre">weights</span> <span class="pre">=</span> <span class="pre">(false_positive_weight,</span>
+<span class="pre">false_negative_weight)</span></code> skews the optimizer. Penalizing false negatives
+(<code class="docutils literal notranslate"><span class="pre">(0.1,</span> <span class="pre">0.9)</span></code> -&gt; <code class="docutils literal notranslate"><span class="pre">b=32,</span> <span class="pre">r=4</span></code>) shifts the curve left of the threshold:
+borderline true neighbours are rarely missed, at the cost of more
+below-threshold candidates. Penalizing false positives (<code class="docutils literal notranslate"><span class="pre">(0.9,</span> <span class="pre">0.1)</span></code> -&gt;
+<code class="docutils literal notranslate"><span class="pre">b=16,</span> <span class="pre">r=8</span></code>) shifts it right: results are more precise, but borderline
+neighbours are dropped. Use the former when you post-filter results
+anyway, the latter when every returned candidate is expensive to verify.</p>
+<p>Two further notes. You can bypass the optimizer entirely with
+<code class="docutils literal notranslate"><span class="pre">params=(b,</span> <span class="pre">r)</span></code> to pin the curve yourself (<code class="docutils literal notranslate"><span class="pre">threshold</span></code> and
+<code class="docutils literal notranslate"><span class="pre">weights</span></code> are then ignored). And because <code class="docutils literal notranslate"><span class="pre">query</span></code> returns <em>candidates</em>
+– everything that collided in some band, unranked – applications that
+need the threshold enforced exactly should verify candidates against the
+query, e.g. with <code class="docutils literal notranslate"><span class="pre">MinHash.jaccard</span></code> or the exact similarity of the
+original sets; the left tail of the curves above is precisely the set of
+false candidates such a check removes.</p>
+</section>
 <section id="minhash-lsh-at-scale">
 <span id="id2"></span><h2>MinHash LSH at scale<a class="headerlink" href="#minhash-lsh-at-scale" title="Link to this heading"></a></h2>
-<p>MinHash LSH supports using Redis as the storage layer for handling large index and
-providing optional persistence as part of
-a production environment.
-The Redis storage option can be configured using:</p>
+<p>MinHash LSH supports using Redis as the storage layer for handling
+large indexes and providing optional persistence in a production
+environment. The Redis storage option can be configured using:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">datasketch</span><span class="w"> </span><span class="kn">import</span> <span class="n">MinHashLSH</span>
 
 <span class="n">lsh</span> <span class="o">=</span> <span class="n">MinHashLSH</span><span class="p">(</span>
@@ -231,7 +321,7 @@ to reduce the number of network calls during bulk insertion.</p>
 <section id="connecting-to-existing-minhash-lsh">
 <h3>Connecting to Existing MinHash LSH<a class="headerlink" href="#connecting-to-existing-minhash-lsh" title="Link to this heading"></a></h3>
 <p>If you are using an external storage layer (e.g., Redis) for your LSH, you can
-share it across multiple processes. Ther are two ways to do it:</p>
+share it across multiple processes. There are two ways to do it:</p>
 <p>The recommended way is to use “pickling”. The MinHash LSH object is serializable
 so you can call <cite>pickle</cite>:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">pickle</span>
@@ -250,7 +340,7 @@ so you can call <cite>pickle</cite>:</p>
 <p>Using pickle allows you to preserve everything you need to know about the LSH
 such as various parameter settings in a single location.</p>
 <p>Alternatively you can specify <cite>basename</cite> in the storage config when
-you first creating the LSH. For example:</p>
+first creating the LSH. For example:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># For Redis.</span>
 <span class="n">lsh</span> <span class="o">=</span> <span class="n">MinHashLSH</span><span class="p">(</span>
     <span class="n">threshold</span><span class="o">=</span><span class="mf">0.5</span><span class="p">,</span> <span class="n">num_perm</span><span class="o">=</span><span class="mi">128</span><span class="p">,</span> <span class="n">storage_config</span><span class="o">=</span><span class="p">{</span>
@@ -262,7 +352,7 @@ you first creating the LSH. For example:</p>
 
  <span class="c1"># For Cassandra.</span>
  <span class="n">lsh</span> <span class="o">=</span> <span class="n">MinHashLSH</span><span class="p">(</span>
-    <span class="n">threashold</span><span class="o">=</span><span class="mf">0.5</span><span class="p">,</span> <span class="n">num_perm</span><span class="o">=</span><span class="mi">128</span><span class="p">,</span> <span class="n">storage_config</span><span class="o">=</span><span class="p">{</span>
+    <span class="n">threshold</span><span class="o">=</span><span class="mf">0.5</span><span class="p">,</span> <span class="n">num_perm</span><span class="o">=</span><span class="mi">128</span><span class="p">,</span> <span class="n">storage_config</span><span class="o">=</span><span class="p">{</span>
         <span class="s1">&#39;type&#39;</span><span class="p">:</span> <span class="s1">&#39;cassandra&#39;</span><span class="p">,</span>
         <span class="s1">&#39;basename&#39;</span><span class="p">:</span> <span class="sa">b</span><span class="s1">&#39;unique_name&#39;</span><span class="p">,</span>
         <span class="s1">&#39;cassandra&#39;</span><span class="p">:</span> <span class="p">{</span>
@@ -289,10 +379,6 @@ as the base name, and collision is extremely unlikely.</p>
 </section>
 <section id="asynchronous-minhash-lsh-at-scale">
 <span id="minhash-lsh-async"></span><h2>Asynchronous MinHash LSH at scale<a class="headerlink" href="#asynchronous-minhash-lsh-at-scale" title="Link to this heading"></a></h2>
-<div class="admonition note">
-<p class="admonition-title">Note</p>
-<p>The module supports Python version &gt;=3.6.</p>
-</div>
 <p>This module may be useful if you want to process millions of text documents
 in streaming/batch mode using asynchronous RESTful API (for example, aiohttp)
 for clustering tasks,
@@ -368,7 +454,8 @@ processes see <a class="reference internal" href="#minhash-lsh-at-scale"><span c
 <span class="p">}</span>
 </pre></div>
 </div>
-<p>To create index for a large number of MinHashes using asynchronous MinHash LSH.</p>
+<p>To build an index over a large number of MinHashes with an asynchronous
+insertion session:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">datasketch.aio</span><span class="w"> </span><span class="kn">import</span> <span class="n">AsyncMinHashLSH</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">datasketch</span><span class="w"> </span><span class="kn">import</span> <span class="n">MinHash</span>
 
@@ -392,7 +479,7 @@ processes see <a class="reference internal" href="#minhash-lsh-at-scale"><span c
         <span class="k">await</span> <span class="n">asyncio</span><span class="o">.</span><span class="n">gather</span><span class="p">(</span><span class="o">*</span><span class="n">fs</span><span class="p">)</span>
 </pre></div>
 </div>
-<p>To bulk remove keys from LSH index using asynchronous MinHash LSH.</p>
+<p>To bulk-remove keys with an asynchronous delete session:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">datasketch.aio</span><span class="w"> </span><span class="kn">import</span> <span class="n">AsyncMinHashLSH</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">datasketch</span><span class="w"> </span><span class="kn">import</span> <span class="n">MinHash</span>
 
@@ -424,7 +511,8 @@ processes see <a class="reference internal" href="#minhash-lsh-at-scale"><span c
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">_storage</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;type&#39;</span><span class="p">:</span> <span class="s1">&#39;aioredis&#39;</span><span class="p">,</span> <span class="s1">&#39;redis&#39;</span><span class="p">:</span> <span class="p">{</span><span class="s1">&#39;host&#39;</span><span class="p">:</span> <span class="s1">&#39;127.0.0.1&#39;</span><span class="p">,</span> <span class="s1">&#39;port&#39;</span><span class="p">:</span> <span class="s1">&#39;6379&#39;</span><span class="p">}}</span>
 </pre></div>
 </div>
-<p>The <cite>redis</cite> key in <cite>_storage</cite> is passed in <cite>redis.Redis</cite> directly, which mean you can pass custom args for redis yourself.</p>
+<p>The <cite>redis</cite> key in <cite>_storage</cite> is passed to <cite>redis.Redis</cite> directly, which
+means you can pass custom Redis arguments yourself.</p>
 </section>
 <section id="common-issues-with-minhash-lsh">
 <h2>Common Issues with MinHash LSH<a class="headerlink" href="#common-issues-with-minhash-lsh" title="Link to this heading"></a></h2>
@@ -437,7 +525,6 @@ processes see <a class="reference internal" href="#minhash-lsh-at-scale"><span c
 <li><p><a class="reference external" href="https://github.com/ekzhu/datasketch/issues/207">Memory and On-disk size of LSH indexes</a></p></li>
 <li><p><a class="reference external" href="https://github.com/ekzhu/datasketch/issues/198">Distributed LSH indexes</a></p></li>
 <li><p><a class="reference external" href="https://github.com/ekzhu/datasketch/issues/180">Is the return of MinHashLSH.query() in order?</a></p></li>
-<li><p><a class="reference external" href="https://github.com/ekzhu/datasketch/issues/207">Billion-scale minhash lsh index for dedpulication</a></p></li>
 </ol>
 <p><a class="reference external" href="https://github.com/ekzhu/datasketch/issues?utf8=%E2%9C%93&amp;q=lsh">See more issues</a></p>
 </section>
