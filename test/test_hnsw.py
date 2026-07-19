@@ -4,7 +4,7 @@ import warnings
 import numpy as np
 import pytest
 
-from datasketch.hnsw import HNSW
+from datasketch.hnsw import HNSW, _Node
 from datasketch.minhash import MinHash
 
 
@@ -131,6 +131,35 @@ class TestHNSW(unittest.TestCase):
         hnsw.remove(0)
         self.assertTrue(0 not in hnsw)
         self.assertTrue(0 in hnsw2)
+
+    def test_setdefault(self):
+        # setdefault must return the point (the mapping value), matching
+        # MutableMapping semantics and its documented "-> np.ndarray" contract,
+        # not the internal _Node wrapper.
+        data = self._create_random_points(n=12)
+        hnsw = self._create_index(data[:10])
+
+        # Existing, non-deleted key: return its point without overwriting.
+        returned = hnsw.setdefault(0, data[10])
+        self.assertNotIsInstance(returned, _Node)
+        self.assertTrue(np.array_equal(returned, data[0]))
+        self.assertTrue(np.array_equal(hnsw[0], data[0]))
+
+        # Absent key: insert the default and return it.
+        returned = hnsw.setdefault(100, data[10])
+        self.assertNotIsInstance(returned, _Node)
+        self.assertTrue(np.array_equal(returned, data[10]))
+        self.assertIn(100, hnsw)
+        self.assertTrue(np.array_equal(hnsw[100], data[10]))
+
+        # Soft-removed key: reinsert the default and return it.
+        hnsw.remove(1)
+        self.assertNotIn(1, hnsw)
+        returned = hnsw.setdefault(1, data[11])
+        self.assertNotIsInstance(returned, _Node)
+        self.assertTrue(np.array_equal(returned, data[11]))
+        self.assertIn(1, hnsw)
+        self.assertTrue(np.array_equal(hnsw[1], data[11]))
 
     def test_soft_remove_and_pop_and_clean(self):
         data = self._create_random_points()

@@ -446,7 +446,7 @@ class HNSW(MutableMapping):
             raise ValueError("Default value cannot be None.")
         if key not in self._nodes or self._nodes[key].is_deleted:
             self.insert(key, default)
-        return self._nodes[key]
+        return self._nodes[key].point
 
     def insert(
         self,
