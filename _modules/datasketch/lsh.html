@@ -328,8 +328,10 @@
 <span class="sd">        of both.</span>
 
 <span class="sd">        Note:</span>
-<span class="sd">            Only num_perm, number of bands and sizes of each band is checked for equivalency of two MinHashLSH indexes.</span>
-<span class="sd">            Other initialization parameters threshold, weights, storage_config, prepickle and hash_func are not checked.</span>
+<span class="sd">            The indexes must use the same number and size of bands, key</span>
+<span class="sd">            serialization mode, band hash function, and byte-key requirements.</span>
+<span class="sd">            Threshold, weights, and storage backend may differ when those</span>
+<span class="sd">            effective index parameters are equivalent.</span>
 
 <span class="sd">        Args:</span>
 <span class="sd">            other (MinHashLSH): The other MinHashLSH.</span>
@@ -449,10 +451,18 @@
 
     <span class="k">def</span><span class="w"> </span><span class="nf">__equivalent</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">:</span> <span class="n">MinHashLSH</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Returns:</span>
-<span class="sd">        bool: If the two MinHashLSH have equal num_perm, number of bands, size of each band then two are equivalent.</span>
+<span class="sd">        bool: Whether stored keys and band hashes can be copied safely.</span>
 
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">return</span> <span class="nb">type</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="ow">is</span> <span class="nb">type</span><span class="p">(</span><span class="n">other</span><span class="p">)</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">h</span> <span class="o">==</span> <span class="n">other</span><span class="o">.</span><span class="n">h</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">b</span> <span class="o">==</span> <span class="n">other</span><span class="o">.</span><span class="n">b</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">r</span> <span class="o">==</span> <span class="n">other</span><span class="o">.</span><span class="n">r</span>
+        <span class="k">return</span> <span class="p">(</span>
+            <span class="nb">type</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="ow">is</span> <span class="nb">type</span><span class="p">(</span><span class="n">other</span><span class="p">)</span>
+            <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">h</span> <span class="o">==</span> <span class="n">other</span><span class="o">.</span><span class="n">h</span>
+            <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">b</span> <span class="o">==</span> <span class="n">other</span><span class="o">.</span><span class="n">b</span>
+            <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">r</span> <span class="o">==</span> <span class="n">other</span><span class="o">.</span><span class="n">r</span>
+            <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">prepickle</span> <span class="o">==</span> <span class="n">other</span><span class="o">.</span><span class="n">prepickle</span>
+            <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">hashfunc</span> <span class="ow">is</span> <span class="n">other</span><span class="o">.</span><span class="n">hashfunc</span>
+            <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">_require_bytes_keys</span> <span class="o">==</span> <span class="n">other</span><span class="o">.</span><span class="n">_require_bytes_keys</span>
+        <span class="p">)</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">_merge</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">:</span> <span class="n">MinHashLSH</span><span class="p">,</span> <span class="n">check_overlap</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span> <span class="n">buffer</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">__equivalent</span><span class="p">(</span><span class="n">other</span><span class="p">):</span>

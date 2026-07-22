@@ -1279,8 +1279,10 @@ if you want to avoid the overhead during insert you can set
 of both.</p>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
-<p>Only num_perm, number of bands and sizes of each band is checked for equivalency of two MinHashLSH indexes.
-Other initialization parameters threshold, weights, storage_config, prepickle and hash_func are not checked.</p>
+<p>The indexes must use the same number and size of bands, key
+serialization mode, band hash function, and byte-key requirements.
+Threshold, weights, and storage backend may differ when those
+effective index parameters are equivalent.</p>
 </div>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
