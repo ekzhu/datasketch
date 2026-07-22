@@ -194,6 +194,12 @@ class TestbBitMinHash(unittest.TestCase):
         bm1 = bBitMinHash(m1)
         self.assertTrue(bm1.jaccard(bm2) < 1.0)
 
+    def test_calc_a_uses_exponential_bucket_count(self):
+        r = 0.2
+        b = 3
+        expected = r * (1 - r) ** (2**b - 1) / (1 - (1 - r) ** (2**b))
+        self.assertAlmostEqual(bBitMinHash(self.m, b, r)._calc_a(r, b), expected)
+
     def test_bytesize(self):
         s = bBitMinHash(self.m).bytesize()
         self.assertGreaterEqual(s, 8 * 2 + 4 + 1 + self.m.hashvalues.size / 64)
