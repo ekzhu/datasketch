@@ -326,8 +326,14 @@ if cassandra is not None:
                 key blob,
                 value blob,
                 ts bigint,
-                PRIMARY KEY (key, value)
-            ) WITH CLUSTERING ORDER BY (value DESC)
+                PRIMARY KEY (key, value, ts)
+            ) WITH CLUSTERING ORDER BY (value DESC, ts ASC)
+        """
+
+        QUERY_GET_TABLE_SCHEMA = """
+            SELECT column_name, kind, position
+            FROM system_schema.columns
+            WHERE keyspace_name = ? AND table_name = ?
         """
 
         QUERY_DROP_TABLE = "DROP TABLE IF EXISTS {}"
@@ -366,11 +372,7 @@ if cassandra is not None:
             WHERE key = ? AND value  = ?
         """
 
-        QUERY_UPSERT = """
-            UPDATE {}
-            SET ts = ?
-            WHERE key = ? AND value = ?
-        """
+        QUERY_UPSERT = "INSERT INTO {} (key, value, ts) VALUES (?, ?, 0)"
 
         QUERY_INSERT = "INSERT INTO {} (key, value, ts) VALUES (?, ?, ?)"
 
@@ -406,6 +408,7 @@ if cassandra is not None:
             if cassandra_params.get("drop_tables", False):
                 self._session.execute(self.QUERY_DROP_TABLE.format(table_name))
             self._session.execute(self.QUERY_CREATE_TABLE.format(table_name))
+            self._validate_table_schema(table_name)
 
             # Prepare all the statements for this table
             self._stmt_insert = self._session.prepare(self.QUERY_INSERT.format(table_name))
@@ -416,6 +419,30 @@ if cassandra is not None:
             self._stmt_get_count = self._session.prepare(self.QUERY_GET_COUNTS.format(table_name))
             self._stmt_delete_key = self._session.prepare(self.QUERY_DELETE_KEY.format(table_name))
             self._stmt_delete_val = self._session.prepare(self.QUERY_DELETE_VAL.format(table_name))
+
+        def _validate_table_schema(self, table_name):
+            """Reject tables created with the old duplicate-collapsing key."""
+            statement = self._session.prepare(self.QUERY_GET_TABLE_SCHEMA)
+            rows = self._session.execute(
+                statement,
+                (self._session.keyspace, table_name),
+            )
+            primary_key = {
+                (row.kind, row.position): row.column_name
+                for row in rows
+                if row.kind in ("partition_key", "clustering")
+            }
+            expected = {
+                ("partition_key", 0): "key",
+                ("clustering", 0): "value",
+                ("clustering", 1): "ts",
+            }
+            if primary_key != expected:
+                raise RuntimeError(
+                    "Cassandra table %r uses an incompatible primary key. "
+                    "Rebuild the LSH table (or set drop_tables=True while rebuilding) "
+                    "so duplicate ordered values can be preserved." % table_name
+                )
 
         @property
         def buffer_size(self):
@@ -527,7 +554,10 @@ if cassandra is not None:
             :param iterable[byte|str] vals: the iterable of values
             :param boolean buffer: whether the upsert statements should be buffered
             """
-            statements_and_parameters = [(self._stmt_upsert, (self._ts(), key, val)) for val in vals]
+            # The timestamp is part of the primary key so ordered storage can
+            # preserve duplicates. Sets use the fixed timestamp in
+            # QUERY_UPSERT, making repeated (key, value) inserts idempotent.
+            statements_and_parameters = [(self._stmt_upsert, (key, val)) for val in vals]
             if buffer:
                 self._buffer(statements_and_parameters)
             else:
