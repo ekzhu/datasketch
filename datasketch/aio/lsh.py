@@ -5,7 +5,6 @@ like MongoDB (via motor) and Redis (via redis.asyncio).
 """
 
 import asyncio
-import pickle
 from itertools import chain
 from typing import Optional
 
@@ -13,6 +12,7 @@ from datasketch.aio.storage import (
     async_ordered_storage,
     async_unordered_storage,
 )
+from datasketch.key_serialization import dumps_key, loads_key
 from datasketch.lsh import _optimal_param
 from datasketch.minhash import _check_scheme_consistency
 from datasketch.storage import _random_name, unordered_storage
@@ -31,7 +31,8 @@ class AsyncMinHashLSH:
                                 If storage_config is None aiomongo storage will be used.
     :param prepickle (bool, optional): If True, all keys are pickled to bytes before
             insertion. If None, a default value is chosen based on the
-            `storage_config`.
+            `storage_config`. For safe deserialization, keys must contain only
+            primitive built-in types; custom classes are rejected.
     For example usage see :ref:`minhash_lsh_async`.
 
     Example of supported storage configuration:
@@ -260,7 +261,7 @@ class AsyncMinHashLSH:
                 "Either pass bytes keys or use prepickle=True for automatic serialization."
             )
         if self.prepickle:
-            key = pickle.dumps(key)
+            key = dumps_key(key)
 
         # `key` is already pickled at this point under prepickle=True; call the
         # storage primitive directly so we don't re-pickle through has_key().
@@ -286,13 +287,13 @@ class AsyncMinHashLSH:
         )
         candidates = frozenset(chain.from_iterable(await asyncio.gather(*fs)))
         if self.prepickle:
-            return [pickle.loads(key) for key in candidates]
+            return [loads_key(key) for key in candidates]
         return list(candidates)
 
     async def has_key(self, key):
         """See :class:`datasketch.MinHashLSH`."""
         if self.prepickle:
-            key = pickle.dumps(key)
+            key = dumps_key(key)
         return await self.keys.has_key(key)
 
     async def remove(self, key):
@@ -301,7 +302,7 @@ class AsyncMinHashLSH:
 
     async def _remove(self, key, buffer=False):
         if self.prepickle:
-            key = pickle.dumps(key)
+            key = dumps_key(key)
 
         # `key` is already pickled here; call storage primitives directly so
         # the existence check, lookup, and deletes all use the stored form.
@@ -339,7 +340,7 @@ class AsyncMinHashLSH:
                 fs.append(hashtable.get(H))
         candidates = set(chain.from_iterable(await asyncio.gather(*fs)))
         if self.prepickle:
-            return {pickle.loads(key) for key in candidates}
+            return {loads_key(key) for key in candidates}
         return candidates
 
     async def get_counts(self):
@@ -352,7 +353,7 @@ class AsyncMinHashLSH:
         # Keys in storage are pickled when prepickle is enabled, so we have to
         # pickle the query keys to match the stored representation.
         if self.prepickle:
-            keys = tuple(pickle.dumps(key) for key in keys)
+            keys = tuple(dumps_key(key) for key in keys)
         key_set = list(set(keys))
         hashtables = [unordered_storage({"type": "dict"}) for _ in range(self.b)]
         Hss = await self.keys.getmany(*key_set)

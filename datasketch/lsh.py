@@ -1,12 +1,12 @@
 from __future__ import annotations
 
-import pickle
 import struct
 from collections.abc import Hashable
 from typing import Callable, List, Optional, Union
 
 from scipy.integrate import quad as integrate
 
+from datasketch.key_serialization import dumps_key, loads_key
 from datasketch.minhash import MinHash, _check_scheme_consistency
 from datasketch.storage import (
     OrderedStorage,
@@ -77,7 +77,9 @@ class MinHashLSH:
             set this, you will be responsible for ensuring there are no key collisions.
         prepickle (Optional[bool]): If True, all keys are pickled to bytes before
             insertion. If not specified, a default value is chosen based on the
-            `storage_config`.
+            `storage_config`. For safe deserialization, keys must contain only
+            primitive built-in types such as strings, integers, floats, bytes,
+            tuples, and frozensets; custom classes are rejected.
         hashfunc (Optional[Callable[[bytes], bytes]]): If a hash function is provided it will be used to
             compress the index keys to reduce the memory footprint. This could cause a higher
             false positive rate.
@@ -345,7 +347,7 @@ class MinHashLSH:
                 "Either pass bytes keys or use prepickle=True for automatic serialization."
             )
         if self.prepickle:
-            key = pickle.dumps(key)
+            key = dumps_key(key)
         if check_duplication and key in self.keys:
             raise ValueError("The given key already exists")
         Hs = [self._H(minhash.hashvalues[start:end]) for start, end in self.hashranges]
@@ -452,7 +454,7 @@ class MinHashLSH:
             for key in hashtable.get(H):
                 candidates.add(key)
         if self.prepickle:
-            return [pickle.loads(key) for key in candidates]
+            return [loads_key(key) for key in candidates]
         return list(candidates)
 
     def add_to_query_buffer(self, minhash: Union[MinHash, WeightedMinHash]) -> None:
@@ -504,7 +506,7 @@ class MinHashLSH:
 
         candidates = set.intersection(*per_query_result_sets)
         if self.prepickle:
-            return [pickle.loads(key) for key in candidates]
+            return [loads_key(key) for key in candidates]
         return list(candidates)
 
     def __contains__(self, key: Hashable) -> bool:
@@ -516,7 +518,7 @@ class MinHashLSH:
 
         """
         if self.prepickle:
-            key = pickle.dumps(key)
+            key = dumps_key(key)
         return key in self.keys
 
     def remove(self, key: Hashable) -> None:
@@ -543,7 +545,7 @@ class MinHashLSH:
 
         """
         if self.prepickle:
-            key = pickle.dumps(key)
+            key = dumps_key(key)
         if key not in self.keys:
             raise ValueError("The given key does not exist")
         for H, hashtable in zip(self.keys[key], self.hashtables):
@@ -580,7 +582,7 @@ class MinHashLSH:
                 for key in hashtable[H]:
                     candidates.add(key)
         if self.prepickle:
-            return {pickle.loads(key) for key in candidates}
+            return {loads_key(key) for key in candidates}
         return candidates
 
     def get_counts(self) -> list[dict[Hashable, int]]:
@@ -606,7 +608,7 @@ class MinHashLSH:
             list: a list of dictionaries.
 
         """
-        key_set = [pickle.dumps(key) for key in set(keys)] if self.prepickle else list(set(keys))
+        key_set = [dumps_key(key) for key in set(keys)] if self.prepickle else list(set(keys))
         hashtables = [unordered_storage({"type": "dict"}) for _ in range(self.b)]
         Hss = self.keys.getmany(*key_set)
         for key, Hs in zip(key_set, Hss):

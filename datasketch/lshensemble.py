@@ -86,7 +86,8 @@ class MinHashLSHEnsemble:
             set this, you will be responsible for ensuring there are no key collisions.
         prepickle (Optional[bool]): If True, all keys are pickled to bytes before
             insertion. If None, a default value is chosen based on the
-            `storage_config`.
+            `storage_config`. For safe deserialization, keys must contain only
+            primitive built-in types; custom classes are rejected.
 
     Note:
         Using more partitions (`num_part`) leads to better accuracy, at the

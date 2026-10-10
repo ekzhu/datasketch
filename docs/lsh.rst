@@ -278,6 +278,12 @@ or keyspace (and thus DROP existing ones), set `drop_tables` and `drop_keyspace`
 Like the Redis counterpart, you can use insert sessions
 to reduce the number of network calls during bulk insertion.
 
+When ``prepickle=True``, backend keys are decoded with a restricted unpickler
+that cannot import global functions or classes. Keys made from primitive
+built-in types (for example strings, integers, floats, bytes, tuples, and frozensets)
+are supported; custom class instances are rejected. Existing indexes that
+used custom object keys must migrate those keys to supported built-in values.
+
 
 Connecting to Existing MinHash LSH
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -287,6 +293,12 @@ share it across multiple processes. There are two ways to do it:
 
 The recommended way is to use "pickling". The MinHash LSH object is serializable
 so you can call `pickle`:
+
+.. warning::
+
+    Only unpickle a serialized MinHash LSH object from a trusted source.
+    This is separate from the restricted decoding applied to keys returned by
+    an external storage backend.
 
 .. code:: python
 
