@@ -112,10 +112,10 @@
 
 
 <span class="k">def</span><span class="w"> </span><span class="nf">_optimal_param</span><span class="p">(</span><span class="n">threshold</span><span class="p">,</span> <span class="n">num_perm</span><span class="p">,</span> <span class="n">false_positive_weight</span><span class="p">,</span> <span class="n">false_negative_weight</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Compute the optimal `MinHashLSH` parameter that minimizes the weighted sum</span>
+<span class="w">    </span><span class="sd">"""Compute the optimal `MinHashLSH` parameter that minimizes the weighted sum</span>
 <span class="sd">    of probabilities of false positive and false negative.</span>
-<span class="sd">    &quot;&quot;&quot;</span>
-    <span class="n">min_error</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="s2">&quot;inf&quot;</span><span class="p">)</span>
+<span class="sd">    """</span>
+    <span class="n">min_error</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="s2">"inf"</span><span class="p">)</span>
     <span class="n">opt</span> <span class="o">=</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
     <span class="k">for</span> <span class="n">b</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">num_perm</span> <span class="o">+</span> <span class="mi">1</span><span class="p">):</span>
         <span class="n">max_r</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">num_perm</span> <span class="o">/</span> <span class="n">b</span><span class="p">)</span>
@@ -132,7 +132,7 @@
 <span class="k">if</span> <span class="n">pybloomfilter</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
 
     <span class="k">class</span><span class="w"> </span><span class="nc">BloomTable</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Interface to a Bloom Filter meant to model a single band of the MinHash signature matrix.</span>
+<span class="w">        </span><span class="sd">"""Interface to a Bloom Filter meant to model a single band of the MinHash signature matrix.</span>
 
 <span class="sd">        Args:</span>
 <span class="sd">                item_count (int): Number of items expected to be inserted</span>
@@ -145,13 +145,13 @@
 <span class="sd">                max_size (int): Maximum number of elements we should plan to insert</span>
 <span class="sd">                    into this Bloom filter. Upper bounds the size of the Bloom filter.</span>
 
-<span class="sd">        &quot;&quot;&quot;</span>
+<span class="sd">        """</span>
 
         <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">item_count</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">fp</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span> <span class="n">band_size</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">fname</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">r</span> <span class="o">=</span> <span class="n">band_size</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">fname</span> <span class="o">=</span> <span class="n">fname</span>
             <span class="k">if</span> <span class="n">fname</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">fname</span><span class="p">):</span>
-                <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Loading Bloom Filter at </span><span class="si">{</span><span class="n">fname</span><span class="si">}</span><span class="s2">...&quot;</span><span class="p">)</span>
+                <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Loading Bloom Filter at </span><span class="si">{</span><span class="n">fname</span><span class="si">}</span><span class="s2">..."</span><span class="p">)</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">bloom_filter</span> <span class="o">=</span> <span class="n">pybloomfilter</span><span class="o">.</span><span class="n">BloomFilter</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="n">fname</span><span class="p">)</span>
             <span class="k">else</span><span class="p">:</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">bloom_filter</span> <span class="o">=</span> <span class="n">pybloomfilter</span><span class="o">.</span><span class="n">BloomFilter</span><span class="p">(</span><span class="n">capacity</span><span class="o">=</span><span class="n">item_count</span><span class="p">,</span> <span class="n">error_rate</span><span class="o">=</span><span class="n">fp</span><span class="p">,</span> <span class="n">filename</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">fname</span><span class="p">)</span>
@@ -161,55 +161,55 @@
                 <span class="bp">self</span><span class="o">.</span><span class="n">bloom_filter</span><span class="o">.</span><span class="n">sync</span><span class="p">()</span>
             <span class="k">else</span><span class="p">:</span>
                 <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span>
-                    <span class="s2">&quot;Attempting to save in-memory Bloom filter, this is a no-op.&quot;</span><span class="p">,</span> <span class="ne">RuntimeWarning</span><span class="p">,</span> <span class="n">stacklevel</span><span class="o">=</span><span class="mi">2</span>
+                    <span class="s2">"Attempting to save in-memory Bloom filter, this is a no-op."</span><span class="p">,</span> <span class="ne">RuntimeWarning</span><span class="p">,</span> <span class="n">stacklevel</span><span class="o">=</span><span class="mi">2</span>
                 <span class="p">)</span>
 
         <span class="k">def</span><span class="w"> </span><span class="nf">assert_size</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">hashvalues</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">int</span><span class="p">]):</span>
             <span class="k">if</span> <span class="ow">not</span> <span class="nb">len</span><span class="p">(</span><span class="n">hashvalues</span><span class="p">)</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">r</span><span class="p">:</span>
                 <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span>
-                    <span class="sa">f</span><span class="s2">&quot;Invalid length for indices, </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">hashvalues</span><span class="p">)</span><span class="si">}</span><span class="s2">, expected </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">r</span><span class="si">}</span><span class="s2"> hashvalues in band&quot;</span>
+                    <span class="sa">f</span><span class="s2">"Invalid length for indices, </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">hashvalues</span><span class="p">)</span><span class="si">}</span><span class="s2">, expected </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">r</span><span class="si">}</span><span class="s2"> hashvalues in band"</span>
                 <span class="p">)</span>
 
         <span class="k">def</span><span class="w"> </span><span class="nf">_band_hash</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">hashvalues</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
             <span class="c1"># https://en.wikipedia.org/wiki/Universal_hashing#Hashing_vectors</span>
             <span class="c1"># as the hashvalues are the result of a universal hashing function,</span>
             <span class="c1"># their sum is also a universal hash function.</span>
-            <span class="c1"># Sum in uint64 regardless of the MinHash scheme&#39;s value width so</span>
+            <span class="c1"># Sum in uint64 regardless of the MinHash scheme's value width so</span>
             <span class="c1"># the result is deterministic across numpy versions and schemes.</span>
             <span class="n">x</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">hashvalues</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">uint64</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">uint64</span><span class="p">)</span>
             <span class="k">return</span> <span class="nb">int</span><span class="p">(</span><span class="n">x</span> <span class="o">%</span> <span class="n">_mersenne_prime</span><span class="p">)</span>
 
         <span class="k">def</span><span class="w"> </span><span class="nf">insert</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">hashvalues</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">int</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-<span class="w">            </span><span class="sd">&quot;&quot;&quot;Takes as input the indices for a single band and inserts them into the corresponding bit arrays.</span>
+<span class="w">            </span><span class="sd">"""Takes as input the indices for a single band and inserts them into the corresponding bit arrays.</span>
 
 <span class="sd">            Args:</span>
 <span class="sd">                    hashvalues (list[int]): The hashvalues from a single band of a MinHash object.</span>
 
-<span class="sd">            &quot;&quot;&quot;</span>
+<span class="sd">            """</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">assert_size</span><span class="p">(</span><span class="n">hashvalues</span><span class="p">)</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">bloom_filter</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_band_hash</span><span class="p">(</span><span class="n">hashvalues</span><span class="p">))</span>
 
         <span class="k">def</span><span class="w"> </span><span class="nf">query</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">hashvalues</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">int</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
-<span class="w">            </span><span class="sd">&quot;&quot;&quot;Takes as input the indices for a single band and queries them against the corresponding arrays</span>
+<span class="w">            </span><span class="sd">"""Takes as input the indices for a single band and queries them against the corresponding arrays</span>
 <span class="sd">            returns True if the each query returns True, otherwise returns False.</span>
 
 <span class="sd">            Args:</span>
 <span class="sd">                    hashvalues (list[int]): The hashvalues from a single band of a MinHash object.</span>
 
-<span class="sd">            &quot;&quot;&quot;</span>
+<span class="sd">            """</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">assert_size</span><span class="p">(</span><span class="n">hashvalues</span><span class="p">)</span>
             <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_band_hash</span><span class="p">(</span><span class="n">hashvalues</span><span class="p">)</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">bloom_filter</span>
 <span class="k">else</span><span class="p">:</span>
 
     <span class="k">class</span><span class="w"> </span><span class="nc">BloomTable</span><span class="p">:</span>
         <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">item_count</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">fp</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span> <span class="n">band_size</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">fname</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
-            <span class="k">raise</span> <span class="ne">ImportError</span><span class="p">(</span><span class="s2">&quot;Required dependency pybloomfilter is missing, did you `pip install datasketch[bloom]`?&quot;</span><span class="p">)</span>
+            <span class="k">raise</span> <span class="ne">ImportError</span><span class="p">(</span><span class="s2">"Required dependency pybloomfilter is missing, did you `pip install datasketch[bloom]`?"</span><span class="p">)</span>
 
 
 <div class="viewcode-block" id="MinHashLSHBloom">
 <a class="viewcode-back" href="../../documentation.html#datasketch.MinHashLSHBloom">[docs]</a>
 <span class="k">class</span><span class="w"> </span><span class="nc">MinHashLSHBloom</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;The :ref:`lsh_bloom` index.</span>
+<span class="w">    </span><span class="sd">"""The :ref:`lsh_bloom` index.</span>
 <span class="sd">    It supports query with `Jaccard similarity`_ threshold.</span>
 <span class="sd">    Reference: `LSHBloom paper</span>
 <span class="sd">    &lt;https://arxiv.org/abs/2411.04257&gt;`_.</span>
@@ -257,49 +257,49 @@
 
 <span class="sd">                    set1 = set(</span>
 <span class="sd">                        [</span>
-<span class="sd">                            &quot;minhash&quot;,</span>
-<span class="sd">                            &quot;is&quot;,</span>
-<span class="sd">                            &quot;a&quot;,</span>
-<span class="sd">                            &quot;probabilistic&quot;,</span>
-<span class="sd">                            &quot;data&quot;,</span>
-<span class="sd">                            &quot;structure&quot;,</span>
-<span class="sd">                            &quot;for&quot;,</span>
-<span class="sd">                            &quot;estimating&quot;,</span>
-<span class="sd">                            &quot;the&quot;,</span>
-<span class="sd">                            &quot;similarity&quot;,</span>
-<span class="sd">                            &quot;between&quot;,</span>
-<span class="sd">                            &quot;datasets&quot;,</span>
+<span class="sd">                            "minhash",</span>
+<span class="sd">                            "is",</span>
+<span class="sd">                            "a",</span>
+<span class="sd">                            "probabilistic",</span>
+<span class="sd">                            "data",</span>
+<span class="sd">                            "structure",</span>
+<span class="sd">                            "for",</span>
+<span class="sd">                            "estimating",</span>
+<span class="sd">                            "the",</span>
+<span class="sd">                            "similarity",</span>
+<span class="sd">                            "between",</span>
+<span class="sd">                            "datasets",</span>
 <span class="sd">                        ]</span>
 <span class="sd">                    )</span>
 <span class="sd">                    set2 = set(</span>
 <span class="sd">                        [</span>
-<span class="sd">                            &quot;minhash&quot;,</span>
-<span class="sd">                            &quot;is&quot;,</span>
-<span class="sd">                            &quot;a&quot;,</span>
-<span class="sd">                            &quot;probability&quot;,</span>
-<span class="sd">                            &quot;data&quot;,</span>
-<span class="sd">                            &quot;structure&quot;,</span>
-<span class="sd">                            &quot;for&quot;,</span>
-<span class="sd">                            &quot;estimating&quot;,</span>
-<span class="sd">                            &quot;the&quot;,</span>
-<span class="sd">                            &quot;similarity&quot;,</span>
-<span class="sd">                            &quot;between&quot;,</span>
-<span class="sd">                            &quot;documents&quot;,</span>
+<span class="sd">                            "minhash",</span>
+<span class="sd">                            "is",</span>
+<span class="sd">                            "a",</span>
+<span class="sd">                            "probability",</span>
+<span class="sd">                            "data",</span>
+<span class="sd">                            "structure",</span>
+<span class="sd">                            "for",</span>
+<span class="sd">                            "estimating",</span>
+<span class="sd">                            "the",</span>
+<span class="sd">                            "similarity",</span>
+<span class="sd">                            "between",</span>
+<span class="sd">                            "documents",</span>
 <span class="sd">                        ]</span>
 <span class="sd">                    )</span>
 <span class="sd">                    set3 = set(</span>
 <span class="sd">                        [</span>
-<span class="sd">                            &quot;minhash&quot;,</span>
-<span class="sd">                            &quot;is&quot;,</span>
-<span class="sd">                            &quot;probability&quot;,</span>
-<span class="sd">                            &quot;data&quot;,</span>
-<span class="sd">                            &quot;structure&quot;,</span>
-<span class="sd">                            &quot;for&quot;,</span>
-<span class="sd">                            &quot;estimating&quot;,</span>
-<span class="sd">                            &quot;the&quot;,</span>
-<span class="sd">                            &quot;similarity&quot;,</span>
-<span class="sd">                            &quot;between&quot;,</span>
-<span class="sd">                            &quot;documents&quot;,</span>
+<span class="sd">                            "minhash",</span>
+<span class="sd">                            "is",</span>
+<span class="sd">                            "probability",</span>
+<span class="sd">                            "data",</span>
+<span class="sd">                            "structure",</span>
+<span class="sd">                            "for",</span>
+<span class="sd">                            "estimating",</span>
+<span class="sd">                            "the",</span>
+<span class="sd">                            "similarity",</span>
+<span class="sd">                            "between",</span>
+<span class="sd">                            "documents",</span>
 <span class="sd">                        ]</span>
 <span class="sd">                    )</span>
 
@@ -307,21 +307,21 @@
 <span class="sd">                    m2 = MinHash(num_perm=128)</span>
 <span class="sd">                    m3 = MinHash(num_perm=128)</span>
 <span class="sd">                    for d in set1:</span>
-<span class="sd">                        m1.update(d.encode(&quot;utf8&quot;))</span>
+<span class="sd">                        m1.update(d.encode("utf8"))</span>
 <span class="sd">                    for d in set2:</span>
-<span class="sd">                        m2.update(d.encode(&quot;utf8&quot;))</span>
+<span class="sd">                        m2.update(d.encode("utf8"))</span>
 <span class="sd">                    for d in set3:</span>
-<span class="sd">                        m3.update(d.encode(&quot;utf8&quot;))</span>
+<span class="sd">                        m3.update(d.encode("utf8"))</span>
 
 <span class="sd">                    # Create LSHBloom index</span>
-<span class="sd">                    lsh = MinHashLSHBloom(threshold=0.5, num_perm=128, n=100, fp=0.0001, save_dir=&quot;./index/&quot;)</span>
+<span class="sd">                    lsh = MinHashLSHBloom(threshold=0.5, num_perm=128, n=100, fp=0.0001, save_dir="./index/")</span>
 <span class="sd">                    lsh.insert(m2)</span>
 <span class="sd">                    lsh.insert(m3)</span>
 
 <span class="sd">                    # Query whether m1 is a duplicate according to the given threshold</span>
 <span class="sd">                    is_duplicate = lsh.query(m1)</span>
 
-<span class="sd">    &quot;&quot;&quot;</span>
+<span class="sd">    """</span>
 
 <div class="viewcode-block" id="MinHashLSHBloom.__init__">
 <a class="viewcode-back" href="../../documentation.html#datasketch.MinHashLSHBloom.__init__">[docs]</a>
@@ -336,37 +336,37 @@
         <span class="n">params</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
         <span class="k">if</span> <span class="n">threshold</span> <span class="o">&gt;</span> <span class="mf">1.0</span> <span class="ow">or</span> <span class="n">threshold</span> <span class="o">&lt;</span> <span class="mf">0.0</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;threshold must be in [0.0, 1.0]&quot;</span><span class="p">)</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">"threshold must be in [0.0, 1.0]"</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">num_perm</span> <span class="o">&lt;</span> <span class="mi">2</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Too few permutation functions&quot;</span><span class="p">)</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">"Too few permutation functions"</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">n</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="n">n</span> <span class="o">&lt;=</span> <span class="mi">0</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;n for LSHBloom must be &gt;= 0&quot;</span><span class="p">)</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">"n for LSHBloom must be &gt;= 0"</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">fp</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="n">fp</span> <span class="o">&gt;=</span> <span class="mf">1.0</span> <span class="ow">or</span> <span class="n">fp</span> <span class="o">&lt;=</span> <span class="mf">0.0</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;fp must be in (0.0, 1.0)&quot;</span><span class="p">)</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">"fp must be in (0.0, 1.0)"</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">save_dir</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span>
-                <span class="s2">&quot;Creating LSHBloom index without save directory, this index will not be persisted.&quot;</span><span class="p">,</span>
+                <span class="s2">"Creating LSHBloom index without save directory, this index will not be persisted."</span><span class="p">,</span>
                 <span class="ne">RuntimeWarning</span><span class="p">,</span>
                 <span class="n">stacklevel</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span>
             <span class="p">)</span>
         <span class="k">if</span> <span class="nb">any</span><span class="p">(</span><span class="n">w</span> <span class="o">&lt;</span> <span class="mf">0.0</span> <span class="ow">or</span> <span class="n">w</span> <span class="o">&gt;</span> <span class="mf">1.0</span> <span class="k">for</span> <span class="n">w</span> <span class="ow">in</span> <span class="n">weights</span><span class="p">):</span>
-            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Weight must be in [0.0, 1.0]&quot;</span><span class="p">)</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">"Weight must be in [0.0, 1.0]"</span><span class="p">)</span>
         <span class="k">if</span> <span class="nb">sum</span><span class="p">(</span><span class="n">weights</span><span class="p">)</span> <span class="o">!=</span> <span class="mf">1.0</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Weights must sum to 1.0&quot;</span><span class="p">)</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">"Weights must sum to 1.0"</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">h</span> <span class="o">=</span> <span class="n">num_perm</span>
         <span class="k">if</span> <span class="n">params</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">b</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">r</span> <span class="o">=</span> <span class="n">params</span>
             <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">b</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">r</span> <span class="o">&gt;</span> <span class="n">num_perm</span><span class="p">:</span>
                 <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
-                    <span class="s2">&quot;The product of b and r in params is &quot;</span>
-                    <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">b</span><span class="si">}</span><span class="s2"> * </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">r</span><span class="si">}</span><span class="s2"> = </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">b</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="bp">self</span><span class="o">.</span><span class="n">r</span><span class="si">}</span><span class="s2"> -- it must be less than num_perm </span><span class="si">{</span><span class="n">num_perm</span><span class="si">}</span><span class="s2">. &quot;</span>
-                    <span class="s2">&quot;Did you forget to specify num_perm?&quot;</span>
+                    <span class="s2">"The product of b and r in params is "</span>
+                    <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">b</span><span class="si">}</span><span class="s2"> * </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">r</span><span class="si">}</span><span class="s2"> = </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">b</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="bp">self</span><span class="o">.</span><span class="n">r</span><span class="si">}</span><span class="s2"> -- it must be less than num_perm </span><span class="si">{</span><span class="n">num_perm</span><span class="si">}</span><span class="s2">. "</span>
+                    <span class="s2">"Did you forget to specify num_perm?"</span>
                 <span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="n">false_positive_weight</span><span class="p">,</span> <span class="n">false_negative_weight</span> <span class="o">=</span> <span class="n">weights</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">b</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">r</span> <span class="o">=</span> <span class="n">_optimal_param</span><span class="p">(</span><span class="n">threshold</span><span class="p">,</span> <span class="n">num_perm</span><span class="p">,</span> <span class="n">false_positive_weight</span><span class="p">,</span> <span class="n">false_negative_weight</span><span class="p">)</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">b</span> <span class="o">&lt;</span> <span class="mi">2</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;The number of bands are too small (b &lt; 2)&quot;</span><span class="p">)</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">"The number of bands are too small (b &lt; 2)"</span><span class="p">)</span>
 
         <span class="c1"># create a Bloom filter for each band in the signature matrix</span>
         <span class="k">if</span> <span class="n">save_dir</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
@@ -376,7 +376,7 @@
                 <span class="n">item_count</span><span class="o">=</span><span class="n">n</span><span class="p">,</span>
                 <span class="n">fp</span><span class="o">=</span><span class="n">fp</span><span class="p">,</span>
                 <span class="n">band_size</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">r</span><span class="p">,</span>
-                <span class="n">fname</span><span class="o">=</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">save_dir</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;band-</span><span class="si">{</span><span class="n">i</span><span class="si">}</span><span class="s2">.bf&quot;</span><span class="p">)</span> <span class="k">if</span> <span class="n">save_dir</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="kc">None</span><span class="p">,</span>
+                <span class="n">fname</span><span class="o">=</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">save_dir</span><span class="p">,</span> <span class="sa">f</span><span class="s2">"band-</span><span class="si">{</span><span class="n">i</span><span class="si">}</span><span class="s2">.bf"</span><span class="p">)</span> <span class="k">if</span> <span class="n">save_dir</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="kc">None</span><span class="p">,</span>
             <span class="p">)</span>
             <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">b</span><span class="p">)</span>
         <span class="p">]</span>
@@ -390,20 +390,20 @@
 <div class="viewcode-block" id="MinHashLSHBloom.insert">
 <a class="viewcode-back" href="../../documentation.html#datasketch.MinHashLSHBloom.insert">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">insert</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">minhash</span><span class="p">:</span> <span class="n">MinHash</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Insert the MinHash or Weighted MinHash</span>
+<span class="w">        </span><span class="sd">"""Insert the MinHash or Weighted MinHash</span>
 <span class="sd">        of a set to the index.</span>
 
 <span class="sd">        Args:</span>
 <span class="sd">                minhash (Union[MinHash, WeightedMinHash]): The MinHash of the set.</span>
 
-<span class="sd">        &quot;&quot;&quot;</span>
+<span class="sd">        """</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_insert</span><span class="p">(</span><span class="n">minhash</span><span class="p">)</span></div>
 
 
     <span class="k">def</span><span class="w"> </span><span class="nf">_insert</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">minhash</span><span class="p">:</span> <span class="n">MinHash</span><span class="p">):</span>
         <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">minhash</span><span class="p">)</span> <span class="o">!=</span> <span class="bp">self</span><span class="o">.</span><span class="n">h</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Expecting minhash with length </span><span class="si">%d</span><span class="s2">, got </span><span class="si">%d</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">h</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">minhash</span><span class="p">)))</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_minhash_scheme</span> <span class="o">=</span> <span class="n">_check_scheme_consistency</span><span class="p">(</span><span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s2">&quot;_minhash_scheme&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">),</span> <span class="n">minhash</span><span class="p">)</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">"Expecting minhash with length </span><span class="si">%d</span><span class="s2">, got </span><span class="si">%d</span><span class="s2">"</span> <span class="o">%</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">h</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">minhash</span><span class="p">)))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_minhash_scheme</span> <span class="o">=</span> <span class="n">_check_scheme_consistency</span><span class="p">(</span><span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s2">"_minhash_scheme"</span><span class="p">,</span> <span class="kc">None</span><span class="p">),</span> <span class="n">minhash</span><span class="p">)</span>
 
         <span class="n">Hs</span> <span class="o">=</span> <span class="p">[</span><span class="n">minhash</span><span class="o">.</span><span class="n">hashvalues</span><span class="p">[</span><span class="n">start</span><span class="p">:</span><span class="n">end</span><span class="p">]</span> <span class="k">for</span> <span class="n">start</span><span class="p">,</span> <span class="n">end</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">hashranges</span><span class="p">]</span>
 
@@ -413,7 +413,7 @@
 <div class="viewcode-block" id="MinHashLSHBloom.query">
 <a class="viewcode-back" href="../../documentation.html#datasketch.MinHashLSHBloom.query">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">query</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">minhash</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Given the MinHash of the query set, determine</span>
+<span class="w">        </span><span class="sd">"""Given the MinHash of the query set, determine</span>
 <span class="sd">        whether any previously inserted sets have</span>
 <span class="sd">        Jaccard similarity with the query that is</span>
 <span class="sd">        likely greater than the threshold.</span>
@@ -438,7 +438,7 @@
 <span class="sd">                        minhashes = MinHash.bulk(np.random.randint(low=0, high=30, size=(100, 10)), num_perm=128)</span>
 
 <span class="sd">                        # Create LSHBloom index.</span>
-<span class="sd">                        lsh = MinHashLSHBloom(threshold=0.5, num_perm=128, n=100, fp=0.0001, save_dir=&quot;./index/&quot;)</span>
+<span class="sd">                        lsh = MinHashLSHBloom(threshold=0.5, num_perm=128, n=100, fp=0.0001, save_dir="./index/")</span>
 <span class="sd">                        for i, m in enumerate(minhashes):</span>
 <span class="sd">                            lsh.insert(i, m)</span>
 
@@ -457,10 +457,10 @@
 <span class="sd">                guaranteed to be above 0.5 because the LSHBloom index is approximate and</span>
 <span class="sd">                the Jaccard similarity is estimated by MinHash.</span>
 
-<span class="sd">        &quot;&quot;&quot;</span>
+<span class="sd">        """</span>
         <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">minhash</span><span class="p">)</span> <span class="o">!=</span> <span class="bp">self</span><span class="o">.</span><span class="n">h</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Expecting minhash with length </span><span class="si">%d</span><span class="s2">, got </span><span class="si">%d</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">h</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">minhash</span><span class="p">)))</span>
-        <span class="n">_check_scheme_consistency</span><span class="p">(</span><span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s2">&quot;_minhash_scheme&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">),</span> <span class="n">minhash</span><span class="p">)</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">"Expecting minhash with length </span><span class="si">%d</span><span class="s2">, got </span><span class="si">%d</span><span class="s2">"</span> <span class="o">%</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">h</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">minhash</span><span class="p">)))</span>
+        <span class="n">_check_scheme_consistency</span><span class="p">(</span><span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s2">"_minhash_scheme"</span><span class="p">,</span> <span class="kc">None</span><span class="p">),</span> <span class="n">minhash</span><span class="p">)</span>
 
         <span class="c1"># if we match in any band, this is a candidate pair</span>
         <span class="k">for</span> <span class="p">(</span><span class="n">start</span><span class="p">,</span> <span class="n">end</span><span class="p">),</span> <span class="n">hashtable</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">hashranges</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">hashtables</span><span class="p">):</span>
@@ -472,7 +472,7 @@
 
 
     <span class="k">def</span><span class="w"> </span><span class="nf">sync</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Saving Bloom Index...&quot;</span><span class="p">)</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">"Saving Bloom Index..."</span><span class="p">)</span>
         <span class="k">for</span> <span class="n">table</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">hashtables</span><span class="p">:</span>
             <span class="n">table</span><span class="o">.</span><span class="n">sync</span><span class="p">()</span></div>
 

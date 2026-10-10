@@ -415,7 +415,7 @@ the <cite>hashfunc</cite> argument in the constructor.</p>
 <p>To update with a new string value (using the default SHA1 hash
 function, which requires bytes as input):</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">minhash</span> <span class="o">=</span> <span class="n">Minhash</span><span class="p">()</span>
-<span class="n">minhash</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="s2">&quot;new value&quot;</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="s2">&quot;utf-8&quot;</span><span class="p">))</span>
+<span class="n">minhash</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="s2">"new value"</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="s2">"utf-8"</span><span class="p">))</span>
 </pre></div>
 </div>
 <p>We can also use a different hash function, for example, <cite>pyfarmhash</cite>:</p>
@@ -427,7 +427,7 @@ function, which requires bytes as input):</p>
 
 
 <span class="n">minhash</span> <span class="o">=</span> <span class="n">MinHash</span><span class="p">(</span><span class="n">hashfunc</span><span class="o">=</span><span class="n">_hash_32</span><span class="p">)</span>
-<span class="n">minhash</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="s2">&quot;new value&quot;</span><span class="p">)</span>
+<span class="n">minhash</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="s2">"new value"</span><span class="p">)</span>
 </pre></div>
 </div>
 </dd></dl>
@@ -459,14 +459,14 @@ the <cite>hashfunc</cite> argument in the constructor.</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">datasketch</span><span class="w"> </span><span class="kn">import</span> <span class="n">MinHash</span>
 
 <span class="n">m</span> <span class="o">=</span> <span class="n">MinHash</span><span class="p">()</span>
-<span class="n">m</span><span class="o">.</span><span class="n">update_batch</span><span class="p">([</span><span class="n">s</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="s2">&quot;utf-8&quot;</span><span class="p">)</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="p">[</span><span class="s2">&quot;token1&quot;</span><span class="p">,</span> <span class="s2">&quot;token2&quot;</span><span class="p">]])</span>
+<span class="n">m</span><span class="o">.</span><span class="n">update_batch</span><span class="p">([</span><span class="n">s</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="s2">"utf-8"</span><span class="p">)</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="p">[</span><span class="s2">"token1"</span><span class="p">,</span> <span class="s2">"token2"</span><span class="p">]])</span>
 </pre></div>
 </div>
 <p>Using GPU mode if available:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">datasketch</span><span class="w"> </span><span class="kn">import</span> <span class="n">MinHash</span>
 
-<span class="n">m</span> <span class="o">=</span> <span class="n">MinHash</span><span class="p">(</span><span class="n">num_perm</span><span class="o">=</span><span class="mi">256</span><span class="p">,</span> <span class="n">gpu_mode</span><span class="o">=</span><span class="s2">&quot;detect&quot;</span><span class="p">)</span>
-<span class="n">m</span><span class="o">.</span><span class="n">update_batch</span><span class="p">([</span><span class="sa">b</span><span class="s2">&quot;token1&quot;</span><span class="p">,</span> <span class="sa">b</span><span class="s2">&quot;token2&quot;</span><span class="p">])</span>
+<span class="n">m</span> <span class="o">=</span> <span class="n">MinHash</span><span class="p">(</span><span class="n">num_perm</span><span class="o">=</span><span class="mi">256</span><span class="p">,</span> <span class="n">gpu_mode</span><span class="o">=</span><span class="s2">"detect"</span><span class="p">)</span>
+<span class="n">m</span><span class="o">.</span><span class="n">update_batch</span><span class="p">([</span><span class="sa">b</span><span class="s2">"token1"</span><span class="p">,</span> <span class="sa">b</span><span class="s2">"token2"</span><span class="p">])</span>
 </pre></div>
 </div>
 </dd></dl>
@@ -641,7 +641,7 @@ will be used for all minhashes.</p></li>
 <p class="rubric">Example</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">datasketch</span><span class="w"> </span><span class="kn">import</span> <span class="n">MinHash</span>
 
-<span class="n">data</span> <span class="o">=</span> <span class="p">[[</span><span class="sa">b</span><span class="s2">&quot;token1&quot;</span><span class="p">,</span> <span class="sa">b</span><span class="s2">&quot;token2&quot;</span><span class="p">,</span> <span class="sa">b</span><span class="s2">&quot;token3&quot;</span><span class="p">],</span> <span class="p">[</span><span class="sa">b</span><span class="s2">&quot;token4&quot;</span><span class="p">,</span> <span class="sa">b</span><span class="s2">&quot;token5&quot;</span><span class="p">,</span> <span class="sa">b</span><span class="s2">&quot;token6&quot;</span><span class="p">]]</span>
+<span class="n">data</span> <span class="o">=</span> <span class="p">[[</span><span class="sa">b</span><span class="s2">"token1"</span><span class="p">,</span> <span class="sa">b</span><span class="s2">"token2"</span><span class="p">,</span> <span class="sa">b</span><span class="s2">"token3"</span><span class="p">],</span> <span class="p">[</span><span class="sa">b</span><span class="s2">"token4"</span><span class="p">,</span> <span class="sa">b</span><span class="s2">"token5"</span><span class="p">,</span> <span class="sa">b</span><span class="s2">"token6"</span><span class="p">]]</span>
 <span class="n">minhashes</span> <span class="o">=</span> <span class="n">MinHash</span><span class="o">.</span><span class="n">bulk</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">num_perm</span><span class="o">=</span><span class="mi">64</span><span class="p">)</span>
 </pre></div>
 </div>
@@ -672,7 +672,7 @@ will be used for all minhashes.</p></li>
 <p class="rubric">Example</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">datasketch</span><span class="w"> </span><span class="kn">import</span> <span class="n">MinHash</span>
 
-<span class="n">data</span> <span class="o">=</span> <span class="p">[[</span><span class="sa">b</span><span class="s2">&quot;token1&quot;</span><span class="p">,</span> <span class="sa">b</span><span class="s2">&quot;token2&quot;</span><span class="p">,</span> <span class="sa">b</span><span class="s2">&quot;token3&quot;</span><span class="p">],</span> <span class="p">[</span><span class="sa">b</span><span class="s2">&quot;token4&quot;</span><span class="p">,</span> <span class="sa">b</span><span class="s2">&quot;token5&quot;</span><span class="p">,</span> <span class="sa">b</span><span class="s2">&quot;token6&quot;</span><span class="p">]]</span>
+<span class="n">data</span> <span class="o">=</span> <span class="p">[[</span><span class="sa">b</span><span class="s2">"token1"</span><span class="p">,</span> <span class="sa">b</span><span class="s2">"token2"</span><span class="p">,</span> <span class="sa">b</span><span class="s2">"token3"</span><span class="p">],</span> <span class="p">[</span><span class="sa">b</span><span class="s2">"token4"</span><span class="p">,</span> <span class="sa">b</span><span class="s2">"token5"</span><span class="p">,</span> <span class="sa">b</span><span class="s2">"token6"</span><span class="p">]]</span>
 <span class="k">for</span> <span class="n">minhash</span> <span class="ow">in</span> <span class="n">MinHash</span><span class="o">.</span><span class="n">generator</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">num_perm</span><span class="o">=</span><span class="mi">64</span><span class="p">):</span>
     <span class="c1"># do something useful</span>
     <span class="n">minhash</span>
@@ -1235,9 +1235,9 @@ optimization step:</p>
     <span class="n">threshold</span><span class="o">=</span><span class="mf">0.9</span><span class="p">,</span>
     <span class="n">num_perm</span><span class="o">=</span><span class="mi">128</span><span class="p">,</span>
     <span class="n">storage_config</span><span class="o">=</span><span class="p">{</span>
-        <span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;redis&quot;</span><span class="p">,</span>
-        <span class="s2">&quot;basename&quot;</span><span class="p">:</span> <span class="sa">b</span><span class="s2">&quot;mylsh&quot;</span><span class="p">,</span>  <span class="c1"># optional, defaults to a random string.</span>
-        <span class="s2">&quot;redis&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;host&quot;</span><span class="p">:</span> <span class="s2">&quot;localhost&quot;</span><span class="p">,</span> <span class="s2">&quot;port&quot;</span><span class="p">:</span> <span class="mi">6379</span><span class="p">},</span>
+        <span class="s2">"type"</span><span class="p">:</span> <span class="s2">"redis"</span><span class="p">,</span>
+        <span class="s2">"basename"</span><span class="p">:</span> <span class="sa">b</span><span class="s2">"mylsh"</span><span class="p">,</span>  <span class="c1"># optional, defaults to a random string.</span>
+        <span class="s2">"redis"</span><span class="p">:</span> <span class="p">{</span><span class="s2">"host"</span><span class="p">:</span> <span class="s2">"localhost"</span><span class="p">,</span> <span class="s2">"port"</span><span class="p">:</span> <span class="mi">6379</span><span class="p">},</span>
     <span class="p">},</span>
 <span class="p">)</span>
 </pre></div>
@@ -1328,8 +1328,8 @@ e         buffer_size (int): The buffer size for insert_session mode (default=50
     <span class="n">threshold</span><span class="o">=</span><span class="mf">0.5</span><span class="p">,</span>
     <span class="n">num_perm</span><span class="o">=</span><span class="mi">128</span><span class="p">,</span>
     <span class="n">storage_config</span><span class="o">=</span><span class="p">{</span>
-        <span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;redis&quot;</span><span class="p">,</span>
-        <span class="s2">&quot;redis&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;host&quot;</span><span class="p">:</span> <span class="s2">&quot;localhost&quot;</span><span class="p">,</span> <span class="s2">&quot;port&quot;</span><span class="p">:</span> <span class="mi">6379</span><span class="p">},</span>
+        <span class="s2">"type"</span><span class="p">:</span> <span class="s2">"redis"</span><span class="p">,</span>
+        <span class="s2">"redis"</span><span class="p">:</span> <span class="p">{</span><span class="s2">"host"</span><span class="p">:</span> <span class="s2">"localhost"</span><span class="p">,</span> <span class="s2">"port"</span><span class="p">:</span> <span class="mi">6379</span><span class="p">},</span>
     <span class="p">},</span>
 <span class="p">)</span>
 <span class="k">with</span> <span class="n">lsh</span><span class="o">.</span><span class="n">insertion_session</span><span class="p">()</span> <span class="k">as</span> <span class="n">session</span><span class="p">:</span>
@@ -1362,14 +1362,14 @@ e         buffer_size (int): The buffer size for insert_session mode (default=50
     <span class="n">threshold</span><span class="o">=</span><span class="mf">0.5</span><span class="p">,</span>
     <span class="n">num_perm</span><span class="o">=</span><span class="mi">128</span><span class="p">,</span>
     <span class="n">storage_config</span><span class="o">=</span><span class="p">{</span>
-        <span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;redis&quot;</span><span class="p">,</span>
-        <span class="s2">&quot;redis&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;host&quot;</span><span class="p">:</span> <span class="s2">&quot;localhost&quot;</span><span class="p">,</span> <span class="s2">&quot;port&quot;</span><span class="p">:</span> <span class="mi">6379</span><span class="p">},</span>
+        <span class="s2">"type"</span><span class="p">:</span> <span class="s2">"redis"</span><span class="p">,</span>
+        <span class="s2">"redis"</span><span class="p">:</span> <span class="p">{</span><span class="s2">"host"</span><span class="p">:</span> <span class="s2">"localhost"</span><span class="p">,</span> <span class="s2">"port"</span><span class="p">:</span> <span class="mi">6379</span><span class="p">},</span>
     <span class="p">},</span>
 <span class="p">)</span>
 
 <span class="c1"># ... insert some data ...</span>
 
-<span class="n">keys_to_delete</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;key1&quot;</span><span class="p">,</span> <span class="s2">&quot;key2&quot;</span><span class="p">,</span> <span class="s2">&quot;key3&quot;</span><span class="p">]</span>
+<span class="n">keys_to_delete</span> <span class="o">=</span> <span class="p">[</span><span class="s2">"key1"</span><span class="p">,</span> <span class="s2">"key2"</span><span class="p">,</span> <span class="s2">"key3"</span><span class="p">]</span>
 <span class="k">with</span> <span class="n">lsh</span><span class="o">.</span><span class="n">deletion_session</span><span class="p">()</span> <span class="k">as</span> <span class="n">session</span><span class="p">:</span>
     <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">keys_to_delete</span><span class="p">:</span>
         <span class="n">session</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="n">key</span><span class="p">)</span>
@@ -1573,7 +1573,7 @@ insertion. If None, a default value is chosen based on the
 </dl>
 <p>For example usage see <a class="reference internal" href="lsh.html#minhash-lsh-async"><span class="std std-ref">Asynchronous MinHash LSH at scale</span></a>.</p>
 <p>Example of supported storage configuration:</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">MONGO</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;aiomongo&quot;</span><span class="p">,</span> <span class="s2">&quot;basename&quot;</span><span class="p">:</span> <span class="s2">&quot;base_name_1&quot;</span><span class="p">,</span> <span class="s2">&quot;mongo&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;host&quot;</span><span class="p">:</span> <span class="s2">&quot;localhost&quot;</span><span class="p">,</span> <span class="s2">&quot;port&quot;</span><span class="p">:</span> <span class="mi">27017</span><span class="p">}}</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">MONGO</span> <span class="o">=</span> <span class="p">{</span><span class="s2">"type"</span><span class="p">:</span> <span class="s2">"aiomongo"</span><span class="p">,</span> <span class="s2">"basename"</span><span class="p">:</span> <span class="s2">"base_name_1"</span><span class="p">,</span> <span class="s2">"mongo"</span><span class="p">:</span> <span class="p">{</span><span class="s2">"host"</span><span class="p">:</span> <span class="s2">"localhost"</span><span class="p">,</span> <span class="s2">"port"</span><span class="p">:</span> <span class="mi">27017</span><span class="p">}}</span>
 </pre></div>
 </div>
 <div class="admonition note">
@@ -1618,14 +1618,14 @@ insertion. If None, a default value is chosen based on the
 <span class="kn">from</span><span class="w"> </span><span class="nn">datasketch</span><span class="w"> </span><span class="kn">import</span> <span class="n">MinHash</span>
 
 <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">main</span><span class="p">():</span>
-    <span class="n">storage_config</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;aiomongo&quot;</span><span class="p">,</span> <span class="s2">&quot;mongo&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;host&quot;</span><span class="p">:</span> <span class="s2">&quot;localhost&quot;</span><span class="p">,</span> <span class="s2">&quot;port&quot;</span><span class="p">:</span> <span class="mi">27017</span><span class="p">}}</span>
+    <span class="n">storage_config</span> <span class="o">=</span> <span class="p">{</span><span class="s2">"type"</span><span class="p">:</span> <span class="s2">"aiomongo"</span><span class="p">,</span> <span class="s2">"mongo"</span><span class="p">:</span> <span class="p">{</span><span class="s2">"host"</span><span class="p">:</span> <span class="s2">"localhost"</span><span class="p">,</span> <span class="s2">"port"</span><span class="p">:</span> <span class="mi">27017</span><span class="p">}}</span>
     <span class="k">async</span> <span class="k">with</span> <span class="n">AsyncMinHashLSH</span><span class="p">(</span>
         <span class="n">storage_config</span><span class="o">=</span><span class="n">storage_config</span><span class="p">,</span> <span class="n">threshold</span><span class="o">=</span><span class="mf">0.5</span><span class="p">,</span> <span class="n">num_perm</span><span class="o">=</span><span class="mi">16</span><span class="p">,</span> <span class="n">prepickle</span><span class="o">=</span><span class="kc">True</span>
     <span class="p">)</span> <span class="k">as</span> <span class="n">lsh</span><span class="p">:</span>
         <span class="k">async</span> <span class="k">with</span> <span class="n">lsh</span><span class="o">.</span><span class="n">insertion_session</span><span class="p">(</span><span class="n">batch_size</span><span class="o">=</span><span class="mi">1000</span><span class="p">)</span> <span class="k">as</span> <span class="n">session</span><span class="p">:</span>
             <span class="n">m</span> <span class="o">=</span> <span class="n">MinHash</span><span class="p">(</span><span class="n">num_perm</span><span class="o">=</span><span class="mi">16</span><span class="p">)</span>
-            <span class="n">m</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="sa">b</span><span class="s2">&quot;data&quot;</span><span class="p">)</span>
-            <span class="k">await</span> <span class="n">session</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="s2">&quot;key&quot;</span><span class="p">,</span> <span class="n">m</span><span class="p">)</span>
+            <span class="n">m</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="sa">b</span><span class="s2">"data"</span><span class="p">)</span>
+            <span class="k">await</span> <span class="n">session</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="s2">"key"</span><span class="p">,</span> <span class="n">m</span><span class="p">)</span>
 
 <span class="n">asyncio</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">main</span><span class="p">())</span>
 </pre></div>
@@ -1651,18 +1651,18 @@ from index.</p>
 <span class="kn">from</span><span class="w"> </span><span class="nn">datasketch</span><span class="w"> </span><span class="kn">import</span> <span class="n">MinHash</span>
 
 <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">main</span><span class="p">():</span>
-    <span class="n">storage_config</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;aiomongo&quot;</span><span class="p">,</span> <span class="s2">&quot;mongo&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;host&quot;</span><span class="p">:</span> <span class="s2">&quot;localhost&quot;</span><span class="p">,</span> <span class="s2">&quot;port&quot;</span><span class="p">:</span> <span class="mi">27017</span><span class="p">}}</span>
+    <span class="n">storage_config</span> <span class="o">=</span> <span class="p">{</span><span class="s2">"type"</span><span class="p">:</span> <span class="s2">"aiomongo"</span><span class="p">,</span> <span class="s2">"mongo"</span><span class="p">:</span> <span class="p">{</span><span class="s2">"host"</span><span class="p">:</span> <span class="s2">"localhost"</span><span class="p">,</span> <span class="s2">"port"</span><span class="p">:</span> <span class="mi">27017</span><span class="p">}}</span>
     <span class="k">async</span> <span class="k">with</span> <span class="n">AsyncMinHashLSH</span><span class="p">(</span>
         <span class="n">storage_config</span><span class="o">=</span><span class="n">storage_config</span><span class="p">,</span> <span class="n">threshold</span><span class="o">=</span><span class="mf">0.5</span><span class="p">,</span> <span class="n">num_perm</span><span class="o">=</span><span class="mi">16</span><span class="p">,</span> <span class="n">prepickle</span><span class="o">=</span><span class="kc">True</span>
     <span class="p">)</span> <span class="k">as</span> <span class="n">lsh</span><span class="p">:</span>
         <span class="c1"># Insert some data first</span>
         <span class="n">m</span> <span class="o">=</span> <span class="n">MinHash</span><span class="p">(</span><span class="n">num_perm</span><span class="o">=</span><span class="mi">16</span><span class="p">)</span>
-        <span class="n">m</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="sa">b</span><span class="s2">&quot;data&quot;</span><span class="p">)</span>
-        <span class="k">await</span> <span class="n">lsh</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="s2">&quot;key1&quot;</span><span class="p">,</span> <span class="n">m</span><span class="p">)</span>
+        <span class="n">m</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="sa">b</span><span class="s2">"data"</span><span class="p">)</span>
+        <span class="k">await</span> <span class="n">lsh</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="s2">"key1"</span><span class="p">,</span> <span class="n">m</span><span class="p">)</span>
 
         <span class="c1"># Delete using session</span>
         <span class="k">async</span> <span class="k">with</span> <span class="n">lsh</span><span class="o">.</span><span class="n">delete_session</span><span class="p">(</span><span class="n">batch_size</span><span class="o">=</span><span class="mi">100</span><span class="p">)</span> <span class="k">as</span> <span class="n">session</span><span class="p">:</span>
-            <span class="k">await</span> <span class="n">session</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="s2">&quot;key1&quot;</span><span class="p">)</span>
+            <span class="k">await</span> <span class="n">session</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="s2">"key1"</span><span class="p">)</span>
 
 <span class="n">asyncio</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">main</span><span class="p">())</span>
 </pre></div>
@@ -1766,49 +1766,49 @@ threshold 0.9:</p>
 
 <span class="n">set1</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span>
     <span class="p">[</span>
-        <span class="s2">&quot;minhash&quot;</span><span class="p">,</span>
-        <span class="s2">&quot;is&quot;</span><span class="p">,</span>
-        <span class="s2">&quot;a&quot;</span><span class="p">,</span>
-        <span class="s2">&quot;probabilistic&quot;</span><span class="p">,</span>
-        <span class="s2">&quot;data&quot;</span><span class="p">,</span>
-        <span class="s2">&quot;structure&quot;</span><span class="p">,</span>
-        <span class="s2">&quot;for&quot;</span><span class="p">,</span>
-        <span class="s2">&quot;estimating&quot;</span><span class="p">,</span>
-        <span class="s2">&quot;the&quot;</span><span class="p">,</span>
-        <span class="s2">&quot;similarity&quot;</span><span class="p">,</span>
-        <span class="s2">&quot;between&quot;</span><span class="p">,</span>
-        <span class="s2">&quot;datasets&quot;</span><span class="p">,</span>
+        <span class="s2">"minhash"</span><span class="p">,</span>
+        <span class="s2">"is"</span><span class="p">,</span>
+        <span class="s2">"a"</span><span class="p">,</span>
+        <span class="s2">"probabilistic"</span><span class="p">,</span>
+        <span class="s2">"data"</span><span class="p">,</span>
+        <span class="s2">"structure"</span><span class="p">,</span>
+        <span class="s2">"for"</span><span class="p">,</span>
+        <span class="s2">"estimating"</span><span class="p">,</span>
+        <span class="s2">"the"</span><span class="p">,</span>
+        <span class="s2">"similarity"</span><span class="p">,</span>
+        <span class="s2">"between"</span><span class="p">,</span>
+        <span class="s2">"datasets"</span><span class="p">,</span>
     <span class="p">]</span>
 <span class="p">)</span>
 <span class="n">set2</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span>
     <span class="p">[</span>
-        <span class="s2">&quot;minhash&quot;</span><span class="p">,</span>
-        <span class="s2">&quot;is&quot;</span><span class="p">,</span>
-        <span class="s2">&quot;a&quot;</span><span class="p">,</span>
-        <span class="s2">&quot;probability&quot;</span><span class="p">,</span>
-        <span class="s2">&quot;data&quot;</span><span class="p">,</span>
-        <span class="s2">&quot;structure&quot;</span><span class="p">,</span>
-        <span class="s2">&quot;for&quot;</span><span class="p">,</span>
-        <span class="s2">&quot;estimating&quot;</span><span class="p">,</span>
-        <span class="s2">&quot;the&quot;</span><span class="p">,</span>
-        <span class="s2">&quot;similarity&quot;</span><span class="p">,</span>
-        <span class="s2">&quot;between&quot;</span><span class="p">,</span>
-        <span class="s2">&quot;documents&quot;</span><span class="p">,</span>
+        <span class="s2">"minhash"</span><span class="p">,</span>
+        <span class="s2">"is"</span><span class="p">,</span>
+        <span class="s2">"a"</span><span class="p">,</span>
+        <span class="s2">"probability"</span><span class="p">,</span>
+        <span class="s2">"data"</span><span class="p">,</span>
+        <span class="s2">"structure"</span><span class="p">,</span>
+        <span class="s2">"for"</span><span class="p">,</span>
+        <span class="s2">"estimating"</span><span class="p">,</span>
+        <span class="s2">"the"</span><span class="p">,</span>
+        <span class="s2">"similarity"</span><span class="p">,</span>
+        <span class="s2">"between"</span><span class="p">,</span>
+        <span class="s2">"documents"</span><span class="p">,</span>
     <span class="p">]</span>
 <span class="p">)</span>
 <span class="n">set3</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span>
     <span class="p">[</span>
-        <span class="s2">&quot;minhash&quot;</span><span class="p">,</span>
-        <span class="s2">&quot;is&quot;</span><span class="p">,</span>
-        <span class="s2">&quot;probability&quot;</span><span class="p">,</span>
-        <span class="s2">&quot;data&quot;</span><span class="p">,</span>
-        <span class="s2">&quot;structure&quot;</span><span class="p">,</span>
-        <span class="s2">&quot;for&quot;</span><span class="p">,</span>
-        <span class="s2">&quot;estimating&quot;</span><span class="p">,</span>
-        <span class="s2">&quot;the&quot;</span><span class="p">,</span>
-        <span class="s2">&quot;similarity&quot;</span><span class="p">,</span>
-        <span class="s2">&quot;between&quot;</span><span class="p">,</span>
-        <span class="s2">&quot;documents&quot;</span><span class="p">,</span>
+        <span class="s2">"minhash"</span><span class="p">,</span>
+        <span class="s2">"is"</span><span class="p">,</span>
+        <span class="s2">"probability"</span><span class="p">,</span>
+        <span class="s2">"data"</span><span class="p">,</span>
+        <span class="s2">"structure"</span><span class="p">,</span>
+        <span class="s2">"for"</span><span class="p">,</span>
+        <span class="s2">"estimating"</span><span class="p">,</span>
+        <span class="s2">"the"</span><span class="p">,</span>
+        <span class="s2">"similarity"</span><span class="p">,</span>
+        <span class="s2">"between"</span><span class="p">,</span>
+        <span class="s2">"documents"</span><span class="p">,</span>
     <span class="p">]</span>
 <span class="p">)</span>
 
@@ -1816,14 +1816,14 @@ threshold 0.9:</p>
 <span class="n">m2</span> <span class="o">=</span> <span class="n">MinHash</span><span class="p">(</span><span class="n">num_perm</span><span class="o">=</span><span class="mi">128</span><span class="p">)</span>
 <span class="n">m3</span> <span class="o">=</span> <span class="n">MinHash</span><span class="p">(</span><span class="n">num_perm</span><span class="o">=</span><span class="mi">128</span><span class="p">)</span>
 <span class="k">for</span> <span class="n">d</span> <span class="ow">in</span> <span class="n">set1</span><span class="p">:</span>
-    <span class="n">m1</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">d</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="s2">&quot;utf8&quot;</span><span class="p">))</span>
+    <span class="n">m1</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">d</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="s2">"utf8"</span><span class="p">))</span>
 <span class="k">for</span> <span class="n">d</span> <span class="ow">in</span> <span class="n">set2</span><span class="p">:</span>
-    <span class="n">m2</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">d</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="s2">&quot;utf8&quot;</span><span class="p">))</span>
+    <span class="n">m2</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">d</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="s2">"utf8"</span><span class="p">))</span>
 <span class="k">for</span> <span class="n">d</span> <span class="ow">in</span> <span class="n">set3</span><span class="p">:</span>
-    <span class="n">m3</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">d</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="s2">&quot;utf8&quot;</span><span class="p">))</span>
+    <span class="n">m3</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">d</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="s2">"utf8"</span><span class="p">))</span>
 
 <span class="c1"># Create LSHBloom index</span>
-<span class="n">lsh</span> <span class="o">=</span> <span class="n">MinHashLSHBloom</span><span class="p">(</span><span class="n">threshold</span><span class="o">=</span><span class="mf">0.5</span><span class="p">,</span> <span class="n">num_perm</span><span class="o">=</span><span class="mi">128</span><span class="p">,</span> <span class="n">n</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span> <span class="n">fp</span><span class="o">=</span><span class="mf">0.0001</span><span class="p">,</span> <span class="n">save_dir</span><span class="o">=</span><span class="s2">&quot;./index/&quot;</span><span class="p">)</span>
+<span class="n">lsh</span> <span class="o">=</span> <span class="n">MinHashLSHBloom</span><span class="p">(</span><span class="n">threshold</span><span class="o">=</span><span class="mf">0.5</span><span class="p">,</span> <span class="n">num_perm</span><span class="o">=</span><span class="mi">128</span><span class="p">,</span> <span class="n">n</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span> <span class="n">fp</span><span class="o">=</span><span class="mf">0.0001</span><span class="p">,</span> <span class="n">save_dir</span><span class="o">=</span><span class="s2">"./index/"</span><span class="p">)</span>
 <span class="n">lsh</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="n">m2</span><span class="p">)</span>
 <span class="n">lsh</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="n">m3</span><span class="p">)</span>
 
@@ -1882,7 +1882,7 @@ and are thus approximate.</p>
 <span class="n">minhashes</span> <span class="o">=</span> <span class="n">MinHash</span><span class="o">.</span><span class="n">bulk</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">randint</span><span class="p">(</span><span class="n">low</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">high</span><span class="o">=</span><span class="mi">30</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="p">(</span><span class="mi">100</span><span class="p">,</span> <span class="mi">10</span><span class="p">)),</span> <span class="n">num_perm</span><span class="o">=</span><span class="mi">128</span><span class="p">)</span>
 
 <span class="c1"># Create LSHBloom index.</span>
-<span class="n">lsh</span> <span class="o">=</span> <span class="n">MinHashLSHBloom</span><span class="p">(</span><span class="n">threshold</span><span class="o">=</span><span class="mf">0.5</span><span class="p">,</span> <span class="n">num_perm</span><span class="o">=</span><span class="mi">128</span><span class="p">,</span> <span class="n">n</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span> <span class="n">fp</span><span class="o">=</span><span class="mf">0.0001</span><span class="p">,</span> <span class="n">save_dir</span><span class="o">=</span><span class="s2">&quot;./index/&quot;</span><span class="p">)</span>
+<span class="n">lsh</span> <span class="o">=</span> <span class="n">MinHashLSHBloom</span><span class="p">(</span><span class="n">threshold</span><span class="o">=</span><span class="mf">0.5</span><span class="p">,</span> <span class="n">num_perm</span><span class="o">=</span><span class="mi">128</span><span class="p">,</span> <span class="n">n</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span> <span class="n">fp</span><span class="o">=</span><span class="mf">0.0001</span><span class="p">,</span> <span class="n">save_dir</span><span class="o">=</span><span class="s2">"./index/"</span><span class="p">)</span>
 <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">m</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">minhashes</span><span class="p">):</span>
     <span class="n">lsh</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="n">m</span><span class="p">)</span>
 
@@ -2222,7 +2222,7 @@ the <cite>hashfunc</cite> argument in the constructor.</p>
 <p>To update with a new string value (using the default SHA1 hash
 function, which requires bytes as input):</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">hll</span> <span class="o">=</span> <span class="n">HyperLogLog</span><span class="p">()</span>
-<span class="n">hll</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="s2">&quot;new value&quot;</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="s2">&quot;utf-8&quot;</span><span class="p">))</span>
+<span class="n">hll</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="s2">"new value"</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="s2">"utf-8"</span><span class="p">))</span>
 </pre></div>
 </div>
 <p>We can also use a different hash function, for example, <cite>pyfarmhash</cite>:</p>
@@ -2234,7 +2234,7 @@ function, which requires bytes as input):</p>
 
 
 <span class="n">hll</span> <span class="o">=</span> <span class="n">HyperLogLog</span><span class="p">(</span><span class="n">hashfunc</span><span class="o">=</span><span class="n">_hash_32</span><span class="p">)</span>
-<span class="n">hll</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="s2">&quot;new value&quot;</span><span class="p">)</span>
+<span class="n">hll</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="s2">"new value"</span><span class="p">)</span>
 </pre></div>
 </div>
 </dd></dl>

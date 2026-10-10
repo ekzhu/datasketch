@@ -97,14 +97,14 @@
 <span class="c1"># Get the number of bits starting from the first non-zero bit to the right</span>
 <span class="n">_bit_length</span> <span class="o">=</span> <span class="k">lambda</span> <span class="n">bits</span><span class="p">:</span> <span class="n">bits</span><span class="o">.</span><span class="n">bit_length</span><span class="p">()</span>
 <span class="c1"># For &lt; Python 2.7</span>
-<span class="k">if</span> <span class="ow">not</span> <span class="nb">hasattr</span><span class="p">(</span><span class="nb">int</span><span class="p">,</span> <span class="s2">&quot;bit_length&quot;</span><span class="p">):</span>
+<span class="k">if</span> <span class="ow">not</span> <span class="nb">hasattr</span><span class="p">(</span><span class="nb">int</span><span class="p">,</span> <span class="s2">"bit_length"</span><span class="p">):</span>
     <span class="n">_bit_length</span> <span class="o">=</span> <span class="k">lambda</span> <span class="n">bits</span><span class="p">:</span> <span class="nb">len</span><span class="p">(</span><span class="nb">bin</span><span class="p">(</span><span class="n">bits</span><span class="p">))</span> <span class="o">-</span> <span class="mi">2</span> <span class="k">if</span> <span class="n">bits</span> <span class="o">&gt;</span> <span class="mi">0</span> <span class="k">else</span> <span class="mi">0</span>
 
 
 <div class="viewcode-block" id="HyperLogLog">
 <a class="viewcode-back" href="../../documentation.html#datasketch.HyperLogLog">[docs]</a>
 <span class="k">class</span><span class="w"> </span><span class="nc">HyperLogLog</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;The HyperLogLog data sketch for estimating</span>
+<span class="w">    </span><span class="sd">"""The HyperLogLog data sketch for estimating</span>
 <span class="sd">    cardinality of very large dataset in a single pass.</span>
 <span class="sd">    The original HyperLogLog is described `here</span>
 <span class="sd">    &lt;http://algo.inria.fr/flajolet/Publications/FlFuGaMe07.pdf&gt;`_.</span>
@@ -125,9 +125,9 @@
 <span class="sd">        hashobj (**deprecated**): This argument is deprecated since version</span>
 <span class="sd">            1.4.0. It is a no-op and has been replaced by `hashfunc`.</span>
 
-<span class="sd">    &quot;&quot;&quot;</span>
+<span class="sd">    """</span>
 
-    <span class="vm">__slots__</span> <span class="o">=</span> <span class="p">(</span><span class="s2">&quot;alpha&quot;</span><span class="p">,</span> <span class="s2">&quot;hashfunc&quot;</span><span class="p">,</span> <span class="s2">&quot;m&quot;</span><span class="p">,</span> <span class="s2">&quot;max_rank&quot;</span><span class="p">,</span> <span class="s2">&quot;p&quot;</span><span class="p">,</span> <span class="s2">&quot;reg&quot;</span><span class="p">)</span>
+    <span class="vm">__slots__</span> <span class="o">=</span> <span class="p">(</span><span class="s2">"alpha"</span><span class="p">,</span> <span class="s2">"hashfunc"</span><span class="p">,</span> <span class="s2">"m"</span><span class="p">,</span> <span class="s2">"max_rank"</span><span class="p">,</span> <span class="s2">"p"</span><span class="p">,</span> <span class="s2">"reg"</span><span class="p">)</span>
 
     <span class="c1"># The range of the hash values used for HyperLogLog</span>
     <span class="n">_hash_range_bit</span> <span class="o">=</span> <span class="mi">32</span>
@@ -135,7 +135,7 @@
 
     <span class="k">def</span><span class="w"> </span><span class="nf">_get_alpha</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">p</span><span class="p">):</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="p">(</span><span class="mi">4</span> <span class="o">&lt;=</span> <span class="n">p</span> <span class="o">&lt;=</span> <span class="mi">16</span><span class="p">):</span>
-            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;p=</span><span class="si">%d</span><span class="s2"> should be in range [4 : 16]&quot;</span> <span class="o">%</span> <span class="n">p</span><span class="p">)</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">"p=</span><span class="si">%d</span><span class="s2"> should be in range [4 : 16]"</span> <span class="o">%</span> <span class="n">p</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">p</span> <span class="o">==</span> <span class="mi">4</span><span class="p">:</span>
             <span class="k">return</span> <span class="mf">0.673</span>
         <span class="k">if</span> <span class="n">p</span> <span class="o">==</span> <span class="mi">5</span><span class="p">:</span>
@@ -160,24 +160,24 @@
         <span class="k">else</span><span class="p">:</span>
             <span class="c1"># Check if the register has the correct type</span>
             <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">reg</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">):</span>
-                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;The imported register must be a numpy.ndarray.&quot;</span><span class="p">)</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">"The imported register must be a numpy.ndarray."</span><span class="p">)</span>
             <span class="c1"># We have to check if the imported register has the correct length.</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">m</span> <span class="o">=</span> <span class="n">reg</span><span class="o">.</span><span class="n">size</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">p</span> <span class="o">=</span> <span class="n">_bit_length</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">m</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span>
             <span class="k">if</span> <span class="mi">1</span> <span class="o">&lt;&lt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">p</span> <span class="o">!=</span> <span class="bp">self</span><span class="o">.</span><span class="n">m</span><span class="p">:</span>
                 <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
-                    <span class="s2">&quot;The imported register has </span><span class="se">\</span>
-<span class="s2">                    incorrect size. Expect a power of 2.&quot;</span>
+                    <span class="s2">"The imported register has </span><span class="se">\</span>
+<span class="s2">                    incorrect size. Expect a power of 2."</span>
                 <span class="p">)</span>
             <span class="c1"># Generally we trust the user to import register that contains</span>
-            <span class="c1"># reasonable counter values, so we don&#39;t check for every values.</span>
+            <span class="c1"># reasonable counter values, so we don't check for every values.</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">reg</span> <span class="o">=</span> <span class="n">reg</span>
         <span class="c1"># Check the hash function.</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="nb">callable</span><span class="p">(</span><span class="n">hashfunc</span><span class="p">):</span>
-            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;The hashfunc must be a callable.&quot;</span><span class="p">)</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">"The hashfunc must be a callable."</span><span class="p">)</span>
         <span class="c1"># Check for use of hashobj and issue warning.</span>
         <span class="k">if</span> <span class="n">hashobj</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span><span class="s2">&quot;hashobj is deprecated, use hashfunc instead.&quot;</span><span class="p">,</span> <span class="ne">DeprecationWarning</span><span class="p">,</span> <span class="n">stacklevel</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+            <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span><span class="s2">"hashobj is deprecated, use hashfunc instead."</span><span class="p">,</span> <span class="ne">DeprecationWarning</span><span class="p">,</span> <span class="n">stacklevel</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">hashfunc</span> <span class="o">=</span> <span class="n">hashfunc</span>
         <span class="c1"># Common settings</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">alpha</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_alpha</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">p</span><span class="p">)</span>
@@ -187,7 +187,7 @@
 <div class="viewcode-block" id="HyperLogLog.update">
 <a class="viewcode-back" href="../../documentation.html#datasketch.HyperLogLog.update">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">update</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">b</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Update the HyperLogLog with a new data value in bytes.</span>
+<span class="w">        </span><span class="sd">"""Update the HyperLogLog with a new data value in bytes.</span>
 <span class="sd">        The value will be hashed using the hash function specified by</span>
 <span class="sd">        the `hashfunc` argument in the constructor.</span>
 
@@ -201,7 +201,7 @@
 <span class="sd">            .. code-block:: python</span>
 
 <span class="sd">                hll = HyperLogLog()</span>
-<span class="sd">                hll.update(&quot;new value&quot;.encode(&quot;utf-8&quot;))</span>
+<span class="sd">                hll.update("new value".encode("utf-8"))</span>
 
 <span class="sd">            We can also use a different hash function, for example, `pyfarmhash`:</span>
 
@@ -215,9 +215,9 @@
 
 
 <span class="sd">                hll = HyperLogLog(hashfunc=_hash_32)</span>
-<span class="sd">                hll.update(&quot;new value&quot;)</span>
+<span class="sd">                hll.update("new value")</span>
 
-<span class="sd">        &quot;&quot;&quot;</span>
+<span class="sd">        """</span>
         <span class="c1"># Digest the hash object to get the hash value</span>
         <span class="n">hv</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">hashfunc</span><span class="p">(</span><span class="n">b</span><span class="p">)</span>
         <span class="c1"># Get the index of the register using the first p bits of the hash</span>
@@ -231,20 +231,20 @@
 <div class="viewcode-block" id="HyperLogLog.count">
 <a class="viewcode-back" href="../../documentation.html#datasketch.HyperLogLog.count">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">count</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Estimate the cardinality of the data values seen so far.</span>
+<span class="w">        </span><span class="sd">"""Estimate the cardinality of the data values seen so far.</span>
 
 <span class="sd">        Returns:</span>
 <span class="sd">            float: The estimated cardinality.</span>
 
-<span class="sd">        &quot;&quot;&quot;</span>
+<span class="sd">        """</span>
         <span class="c1"># Use HyperLogLog estimation function</span>
         <span class="n">e</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">alpha</span> <span class="o">*</span> <span class="nb">float</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">m</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span> <span class="o">/</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="mf">2.0</span> <span class="o">**</span> <span class="p">(</span><span class="o">-</span><span class="bp">self</span><span class="o">.</span><span class="n">reg</span><span class="p">))</span>
         <span class="c1"># Small range correction</span>
         <span class="n">small_range_threshold</span> <span class="o">=</span> <span class="p">(</span><span class="mf">5.0</span> <span class="o">/</span> <span class="mf">2.0</span><span class="p">)</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">m</span>
         <span class="k">if</span> <span class="nb">abs</span><span class="p">(</span><span class="n">e</span> <span class="o">-</span> <span class="n">small_range_threshold</span><span class="p">)</span> <span class="o">/</span> <span class="n">small_range_threshold</span> <span class="o">&lt;</span> <span class="mf">0.15</span><span class="p">:</span>
             <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span>
-                <span class="s2">&quot;Warning: estimate is close to error correction threshold. &quot;</span>
-                <span class="s2">&quot;Output may not satisfy HyperLogLog accuracy guarantee.&quot;</span><span class="p">,</span>
+                <span class="s2">"Warning: estimate is close to error correction threshold. "</span>
+                <span class="s2">"Output may not satisfy HyperLogLog accuracy guarantee."</span><span class="p">,</span>
                 <span class="n">stacklevel</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span>
             <span class="p">)</span>
         <span class="k">if</span> <span class="n">e</span> <span class="o">&lt;=</span> <span class="n">small_range_threshold</span><span class="p">:</span>
@@ -260,17 +260,17 @@
 <div class="viewcode-block" id="HyperLogLog.merge">
 <a class="viewcode-back" href="../../documentation.html#datasketch.HyperLogLog.merge">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">merge</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">:</span> <span class="n">HyperLogLog</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Merge the other HyperLogLog with this one, making this the union of the</span>
+<span class="w">        </span><span class="sd">"""Merge the other HyperLogLog with this one, making this the union of the</span>
 <span class="sd">        two.</span>
 
 <span class="sd">        Args:</span>
 <span class="sd">            other (HyperLogLog): The other HyperLogLog to be merged.</span>
 
-<span class="sd">        &quot;&quot;&quot;</span>
+<span class="sd">        """</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">m</span> <span class="o">!=</span> <span class="n">other</span><span class="o">.</span><span class="n">m</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">p</span> <span class="o">!=</span> <span class="n">other</span><span class="o">.</span><span class="n">p</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
-                <span class="s2">&quot;Cannot merge HyperLogLog with different</span><span class="se">\</span>
-<span class="s2">                    precisions.&quot;</span>
+                <span class="s2">"Cannot merge HyperLogLog with different</span><span class="se">\</span>
+<span class="s2">                    precisions."</span>
             <span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">reg</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">maximum</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">reg</span><span class="p">,</span> <span class="n">other</span><span class="o">.</span><span class="n">reg</span><span class="p">)</span></div>
 
@@ -278,58 +278,58 @@
 <div class="viewcode-block" id="HyperLogLog.digest">
 <a class="viewcode-back" href="../../documentation.html#datasketch.HyperLogLog.digest">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">digest</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Returns:</span>
+<span class="w">        </span><span class="sd">"""Returns:</span>
 <span class="sd">        numpy.array: The current internal state.</span>
 
-<span class="sd">        &quot;&quot;&quot;</span>
+<span class="sd">        """</span>
         <span class="k">return</span> <span class="n">copy</span><span class="o">.</span><span class="n">copy</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">reg</span><span class="p">)</span></div>
 
 
 <div class="viewcode-block" id="HyperLogLog.copy">
 <a class="viewcode-back" href="../../documentation.html#datasketch.HyperLogLog.copy">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">copy</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">HyperLogLog</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Create a copy of the current HyperLogLog by exporting its state.</span>
+<span class="w">        </span><span class="sd">"""Create a copy of the current HyperLogLog by exporting its state.</span>
 
 <span class="sd">        Returns:</span>
 <span class="sd">            HyperLogLog: A copy of the current HyperLogLog.</span>
 
-<span class="sd">        &quot;&quot;&quot;</span>
+<span class="sd">        """</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="p">(</span><span class="n">reg</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">digest</span><span class="p">(),</span> <span class="n">hashfunc</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">hashfunc</span><span class="p">)</span></div>
 
 
 <div class="viewcode-block" id="HyperLogLog.is_empty">
 <a class="viewcode-back" href="../../documentation.html#datasketch.HyperLogLog.is_empty">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">is_empty</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Returns:</span>
+<span class="w">        </span><span class="sd">"""Returns:</span>
 <span class="sd">        bool: True if the current HyperLogLog is empty - at the state of just</span>
 <span class="sd">        initialized.</span>
 
-<span class="sd">        &quot;&quot;&quot;</span>
+<span class="sd">        """</span>
         <span class="k">return</span> <span class="ow">not</span> <span class="n">np</span><span class="o">.</span><span class="n">any</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">reg</span><span class="p">)</span></div>
 
 
 <div class="viewcode-block" id="HyperLogLog.clear">
 <a class="viewcode-back" href="../../documentation.html#datasketch.HyperLogLog.clear">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">clear</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Reset the current HyperLogLog to empty.&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">"""Reset the current HyperLogLog to empty."""</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">reg</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="bp">self</span><span class="o">.</span><span class="n">m</span><span class="p">,),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">int8</span><span class="p">)</span></div>
 
 
 <div class="viewcode-block" id="HyperLogLog.__len__">
 <a class="viewcode-back" href="../../documentation.html#datasketch.HyperLogLog.__len__">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="fm">__len__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Returns:</span>
+<span class="w">        </span><span class="sd">"""Returns:</span>
 <span class="sd">        int: Get the size of the HyperLogLog as the size of</span>
 <span class="sd">            `reg`.</span>
 
-<span class="sd">        &quot;&quot;&quot;</span>
+<span class="sd">        """</span>
         <span class="k">return</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">reg</span><span class="p">)</span></div>
 
 
 <div class="viewcode-block" id="HyperLogLog.__eq__">
 <a class="viewcode-back" href="../../documentation.html#datasketch.HyperLogLog.__eq__">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="fm">__eq__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">:</span> <span class="n">HyperLogLog</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Check equivalence between two HyperLogLogs.</span>
+<span class="w">        </span><span class="sd">"""Check equivalence between two HyperLogLogs.</span>
 
 <span class="sd">        Args:</span>
 <span class="sd">            other (HyperLogLog):</span>
@@ -337,7 +337,7 @@
 <span class="sd">        Returns:</span>
 <span class="sd">            bool: True if both have the same internal state.</span>
 
-<span class="sd">        &quot;&quot;&quot;</span>
+<span class="sd">        """</span>
         <span class="k">return</span> <span class="p">(</span>
             <span class="nb">type</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="ow">is</span> <span class="nb">type</span><span class="p">(</span><span class="n">other</span><span class="p">)</span>
             <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">p</span> <span class="o">==</span> <span class="n">other</span><span class="o">.</span><span class="n">p</span>
@@ -350,8 +350,8 @@
         <span class="n">rank</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">max_rank</span> <span class="o">-</span> <span class="n">_bit_length</span><span class="p">(</span><span class="n">bits</span><span class="p">)</span> <span class="o">+</span> <span class="mi">1</span>
         <span class="k">if</span> <span class="n">rank</span> <span class="o">&lt;=</span> <span class="mi">0</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
-                <span class="s2">&quot;Hash value overflow, maximum size is </span><span class="si">%d</span><span class="se">\</span>
-<span class="s2">                    bits&quot;</span>
+                <span class="s2">"Hash value overflow, maximum size is </span><span class="si">%d</span><span class="se">\</span>
+<span class="s2">                    bits"</span>
                 <span class="o">%</span> <span class="bp">self</span><span class="o">.</span><span class="n">max_rank</span>
             <span class="p">)</span>
         <span class="k">return</span> <span class="n">rank</span>
@@ -366,14 +366,14 @@
     <span class="k">def</span><span class="w"> </span><span class="nf">union</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="o">*</span><span class="n">hyperloglogs</span><span class="p">:</span> <span class="n">HyperLogLog</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">HyperLogLog</span><span class="p">:</span>
         <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">hyperloglogs</span><span class="p">)</span> <span class="o">&lt;</span> <span class="mi">2</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
-                <span class="s2">&quot;Cannot union less than 2 HyperLogLog</span><span class="se">\</span>
-<span class="s2">                    sketches&quot;</span>
+                <span class="s2">"Cannot union less than 2 HyperLogLog</span><span class="se">\</span>
+<span class="s2">                    sketches"</span>
             <span class="p">)</span>
         <span class="n">m</span> <span class="o">=</span> <span class="n">hyperloglogs</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">m</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="nb">all</span><span class="p">(</span><span class="n">h</span><span class="o">.</span><span class="n">m</span> <span class="o">==</span> <span class="n">m</span> <span class="k">for</span> <span class="n">h</span> <span class="ow">in</span> <span class="n">hyperloglogs</span><span class="p">):</span>
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
-                <span class="s2">&quot;Cannot union HyperLogLog sketches with</span><span class="se">\</span>
-<span class="s2">                    different precisions&quot;</span>
+                <span class="s2">"Cannot union HyperLogLog sketches with</span><span class="se">\</span>
+<span class="s2">                    different precisions"</span>
             <span class="p">)</span>
         <span class="n">reg</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">maximum</span><span class="o">.</span><span class="n">reduce</span><span class="p">([</span><span class="n">h</span><span class="o">.</span><span class="n">reg</span> <span class="k">for</span> <span class="n">h</span> <span class="ow">in</span> <span class="n">hyperloglogs</span><span class="p">])</span>
         <span class="k">return</span> <span class="bp">cls</span><span class="p">(</span><span class="n">reg</span><span class="o">=</span><span class="n">reg</span><span class="p">,</span> <span class="n">hashfunc</span><span class="o">=</span><span class="n">hyperloglogs</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">hashfunc</span><span class="p">)</span>
@@ -381,38 +381,38 @@
 <div class="viewcode-block" id="HyperLogLog.bytesize">
 <a class="viewcode-back" href="../../documentation.html#datasketch.HyperLogLog.bytesize">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">bytesize</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Get the size of the HyperLogLog in bytes.&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">"""Get the size of the HyperLogLog in bytes."""</span>
         <span class="c1"># Since p is no larger than 64, use 8 bits</span>
-        <span class="n">p_size</span> <span class="o">=</span> <span class="n">struct</span><span class="o">.</span><span class="n">calcsize</span><span class="p">(</span><span class="s2">&quot;B&quot;</span><span class="p">)</span>
+        <span class="n">p_size</span> <span class="o">=</span> <span class="n">struct</span><span class="o">.</span><span class="n">calcsize</span><span class="p">(</span><span class="s2">"B"</span><span class="p">)</span>
         <span class="c1"># Each register value is no larger than 64, use 8 bits</span>
         <span class="c1"># TODO: is there a way to use 5 bits instead of 8 bits</span>
         <span class="c1"># to store integer in Python?</span>
-        <span class="n">reg_val_size</span> <span class="o">=</span> <span class="n">struct</span><span class="o">.</span><span class="n">calcsize</span><span class="p">(</span><span class="s2">&quot;B&quot;</span><span class="p">)</span>
+        <span class="n">reg_val_size</span> <span class="o">=</span> <span class="n">struct</span><span class="o">.</span><span class="n">calcsize</span><span class="p">(</span><span class="s2">"B"</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">p_size</span> <span class="o">+</span> <span class="n">reg_val_size</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">m</span></div>
 
 
     <span class="k">def</span><span class="w"> </span><span class="nf">serialize</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">buf</span><span class="p">):</span>
         <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">buf</span><span class="p">)</span> <span class="o">&lt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">bytesize</span><span class="p">():</span>
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
-                <span class="s2">&quot;The buffer does not have enough space</span><span class="se">\</span>
-<span class="s2">                    for holding this HyperLogLog.&quot;</span>
+                <span class="s2">"The buffer does not have enough space</span><span class="se">\</span>
+<span class="s2">                    for holding this HyperLogLog."</span>
             <span class="p">)</span>
-        <span class="n">fmt</span> <span class="o">=</span> <span class="s2">&quot;B</span><span class="si">%d</span><span class="s2">B&quot;</span> <span class="o">%</span> <span class="bp">self</span><span class="o">.</span><span class="n">m</span>
+        <span class="n">fmt</span> <span class="o">=</span> <span class="s2">"B</span><span class="si">%d</span><span class="s2">B"</span> <span class="o">%</span> <span class="bp">self</span><span class="o">.</span><span class="n">m</span>
         <span class="n">struct</span><span class="o">.</span><span class="n">pack_into</span><span class="p">(</span><span class="n">fmt</span><span class="p">,</span> <span class="n">buf</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">p</span><span class="p">,</span> <span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">reg</span><span class="p">)</span>
 
     <span class="nd">@classmethod</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">deserialize</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">buf</span><span class="p">):</span>
-        <span class="n">size</span> <span class="o">=</span> <span class="n">struct</span><span class="o">.</span><span class="n">calcsize</span><span class="p">(</span><span class="s2">&quot;B&quot;</span><span class="p">)</span>
+        <span class="n">size</span> <span class="o">=</span> <span class="n">struct</span><span class="o">.</span><span class="n">calcsize</span><span class="p">(</span><span class="s2">"B"</span><span class="p">)</span>
         <span class="k">try</span><span class="p">:</span>
-            <span class="n">p</span> <span class="o">=</span> <span class="n">struct</span><span class="o">.</span><span class="n">unpack_from</span><span class="p">(</span><span class="s2">&quot;B&quot;</span><span class="p">,</span> <span class="n">buf</span><span class="p">,</span> <span class="mi">0</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+            <span class="n">p</span> <span class="o">=</span> <span class="n">struct</span><span class="o">.</span><span class="n">unpack_from</span><span class="p">(</span><span class="s2">"B"</span><span class="p">,</span> <span class="n">buf</span><span class="p">,</span> <span class="mi">0</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
         <span class="k">except</span> <span class="ne">TypeError</span><span class="p">:</span>
-            <span class="n">p</span> <span class="o">=</span> <span class="n">struct</span><span class="o">.</span><span class="n">unpack_from</span><span class="p">(</span><span class="s2">&quot;B&quot;</span><span class="p">,</span> <span class="nb">memoryview</span><span class="p">(</span><span class="n">buf</span><span class="p">),</span> <span class="mi">0</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+            <span class="n">p</span> <span class="o">=</span> <span class="n">struct</span><span class="o">.</span><span class="n">unpack_from</span><span class="p">(</span><span class="s2">"B"</span><span class="p">,</span> <span class="nb">memoryview</span><span class="p">(</span><span class="n">buf</span><span class="p">),</span> <span class="mi">0</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
         <span class="n">h</span> <span class="o">=</span> <span class="bp">cls</span><span class="p">(</span><span class="n">p</span><span class="p">)</span>
         <span class="n">offset</span> <span class="o">=</span> <span class="n">size</span>
         <span class="k">try</span><span class="p">:</span>
-            <span class="n">h</span><span class="o">.</span><span class="n">reg</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">struct</span><span class="o">.</span><span class="n">unpack_from</span><span class="p">(</span><span class="s2">&quot;</span><span class="si">%d</span><span class="s2">B&quot;</span> <span class="o">%</span> <span class="n">h</span><span class="o">.</span><span class="n">m</span><span class="p">,</span> <span class="n">buf</span><span class="p">,</span> <span class="n">offset</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">int8</span><span class="p">)</span>
+            <span class="n">h</span><span class="o">.</span><span class="n">reg</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">struct</span><span class="o">.</span><span class="n">unpack_from</span><span class="p">(</span><span class="s2">"</span><span class="si">%d</span><span class="s2">B"</span> <span class="o">%</span> <span class="n">h</span><span class="o">.</span><span class="n">m</span><span class="p">,</span> <span class="n">buf</span><span class="p">,</span> <span class="n">offset</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">int8</span><span class="p">)</span>
         <span class="k">except</span> <span class="ne">TypeError</span><span class="p">:</span>
-            <span class="n">h</span><span class="o">.</span><span class="n">reg</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">struct</span><span class="o">.</span><span class="n">unpack_from</span><span class="p">(</span><span class="s2">&quot;</span><span class="si">%d</span><span class="s2">B&quot;</span> <span class="o">%</span> <span class="n">h</span><span class="o">.</span><span class="n">m</span><span class="p">,</span> <span class="nb">memoryview</span><span class="p">(</span><span class="n">buf</span><span class="p">),</span> <span class="n">offset</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">int8</span><span class="p">)</span>
+            <span class="n">h</span><span class="o">.</span><span class="n">reg</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">struct</span><span class="o">.</span><span class="n">unpack_from</span><span class="p">(</span><span class="s2">"</span><span class="si">%d</span><span class="s2">B"</span> <span class="o">%</span> <span class="n">h</span><span class="o">.</span><span class="n">m</span><span class="p">,</span> <span class="nb">memoryview</span><span class="p">(</span><span class="n">buf</span><span class="p">),</span> <span class="n">offset</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">int8</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">h</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">__getstate__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
@@ -421,24 +421,24 @@
         <span class="k">return</span> <span class="n">buf</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">__setstate__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">buf</span><span class="p">):</span>
-        <span class="n">size</span> <span class="o">=</span> <span class="n">struct</span><span class="o">.</span><span class="n">calcsize</span><span class="p">(</span><span class="s2">&quot;B&quot;</span><span class="p">)</span>
+        <span class="n">size</span> <span class="o">=</span> <span class="n">struct</span><span class="o">.</span><span class="n">calcsize</span><span class="p">(</span><span class="s2">"B"</span><span class="p">)</span>
         <span class="k">try</span><span class="p">:</span>
-            <span class="n">p</span> <span class="o">=</span> <span class="n">struct</span><span class="o">.</span><span class="n">unpack_from</span><span class="p">(</span><span class="s2">&quot;B&quot;</span><span class="p">,</span> <span class="n">buf</span><span class="p">,</span> <span class="mi">0</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+            <span class="n">p</span> <span class="o">=</span> <span class="n">struct</span><span class="o">.</span><span class="n">unpack_from</span><span class="p">(</span><span class="s2">"B"</span><span class="p">,</span> <span class="n">buf</span><span class="p">,</span> <span class="mi">0</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
         <span class="k">except</span> <span class="ne">TypeError</span><span class="p">:</span>
-            <span class="n">p</span> <span class="o">=</span> <span class="n">struct</span><span class="o">.</span><span class="n">unpack_from</span><span class="p">(</span><span class="s2">&quot;B&quot;</span><span class="p">,</span> <span class="nb">memoryview</span><span class="p">(</span><span class="n">buf</span><span class="p">),</span> <span class="mi">0</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+            <span class="n">p</span> <span class="o">=</span> <span class="n">struct</span><span class="o">.</span><span class="n">unpack_from</span><span class="p">(</span><span class="s2">"B"</span><span class="p">,</span> <span class="nb">memoryview</span><span class="p">(</span><span class="n">buf</span><span class="p">),</span> <span class="mi">0</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
         <span class="bp">self</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">p</span><span class="o">=</span><span class="n">p</span><span class="p">)</span>
         <span class="n">offset</span> <span class="o">=</span> <span class="n">size</span>
         <span class="k">try</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">reg</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">struct</span><span class="o">.</span><span class="n">unpack_from</span><span class="p">(</span><span class="s2">&quot;</span><span class="si">%d</span><span class="s2">B&quot;</span> <span class="o">%</span> <span class="bp">self</span><span class="o">.</span><span class="n">m</span><span class="p">,</span> <span class="n">buf</span><span class="p">,</span> <span class="n">offset</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">int8</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">reg</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">struct</span><span class="o">.</span><span class="n">unpack_from</span><span class="p">(</span><span class="s2">"</span><span class="si">%d</span><span class="s2">B"</span> <span class="o">%</span> <span class="bp">self</span><span class="o">.</span><span class="n">m</span><span class="p">,</span> <span class="n">buf</span><span class="p">,</span> <span class="n">offset</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">int8</span><span class="p">)</span>
         <span class="k">except</span> <span class="ne">TypeError</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">reg</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">struct</span><span class="o">.</span><span class="n">unpack_from</span><span class="p">(</span><span class="s2">&quot;</span><span class="si">%d</span><span class="s2">B&quot;</span> <span class="o">%</span> <span class="bp">self</span><span class="o">.</span><span class="n">m</span><span class="p">,</span> <span class="nb">memoryview</span><span class="p">(</span><span class="n">buf</span><span class="p">),</span> <span class="n">offset</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">int8</span><span class="p">)</span></div>
+            <span class="bp">self</span><span class="o">.</span><span class="n">reg</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">struct</span><span class="o">.</span><span class="n">unpack_from</span><span class="p">(</span><span class="s2">"</span><span class="si">%d</span><span class="s2">B"</span> <span class="o">%</span> <span class="bp">self</span><span class="o">.</span><span class="n">m</span><span class="p">,</span> <span class="nb">memoryview</span><span class="p">(</span><span class="n">buf</span><span class="p">),</span> <span class="n">offset</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">int8</span><span class="p">)</span></div>
 
 
 
 <div class="viewcode-block" id="HyperLogLogPlusPlus">
 <a class="viewcode-back" href="../../documentation.html#datasketch.HyperLogLogPlusPlus">[docs]</a>
 <span class="k">class</span><span class="w"> </span><span class="nc">HyperLogLogPlusPlus</span><span class="p">(</span><span class="n">HyperLogLog</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;HyperLogLog++ is an enhanced HyperLogLog `from Google.</span>
+<span class="w">    </span><span class="sd">"""HyperLogLog++ is an enhanced HyperLogLog `from Google.</span>
 
 <span class="sd">    &lt;http://research.google.com/pubs/pub40671.html&gt;`_.</span>
 <span class="sd">    Main changes from the original HyperLogLog:</span>
@@ -460,7 +460,7 @@
 <span class="sd">        hashobj (**deprecated**): This argument is deprecated since version</span>
 <span class="sd">            1.4.0. It is a no-op and has been replaced by `hashfunc`.</span>
 
-<span class="sd">    &quot;&quot;&quot;</span>
+<span class="sd">    """</span>
 
     <span class="n">_hash_range_bit</span> <span class="o">=</span> <span class="mi">64</span>
     <span class="n">_hash_range_byte</span> <span class="o">=</span> <span class="mi">8</span>
@@ -489,7 +489,7 @@
 <div class="viewcode-block" id="HyperLogLogPlusPlus.count">
 <a class="viewcode-back" href="../../documentation.html#datasketch.HyperLogLogPlusPlus.count">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">count</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Estimate the cardinality of the data values seen so far.&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">"""Estimate the cardinality of the data values seen so far."""</span>
         <span class="n">num_zero</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">m</span> <span class="o">-</span> <span class="n">np</span><span class="o">.</span><span class="n">count_nonzero</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">reg</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">num_zero</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
             <span class="c1"># linear counting</span>

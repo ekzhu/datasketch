@@ -99,41 +99,41 @@ important difference: after adding keys you must call the <code class="docutils 
 method – keys are not searchable until then.</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">datasketch</span><span class="w"> </span><span class="kn">import</span> <span class="n">MinHashLSHForest</span><span class="p">,</span> <span class="n">MinHash</span>
 
-<span class="n">data1</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;minhash&#39;</span><span class="p">,</span> <span class="s1">&#39;is&#39;</span><span class="p">,</span> <span class="s1">&#39;a&#39;</span><span class="p">,</span> <span class="s1">&#39;probabilistic&#39;</span><span class="p">,</span> <span class="s1">&#39;data&#39;</span><span class="p">,</span> <span class="s1">&#39;structure&#39;</span><span class="p">,</span> <span class="s1">&#39;for&#39;</span><span class="p">,</span>
-        <span class="s1">&#39;estimating&#39;</span><span class="p">,</span> <span class="s1">&#39;the&#39;</span><span class="p">,</span> <span class="s1">&#39;similarity&#39;</span><span class="p">,</span> <span class="s1">&#39;between&#39;</span><span class="p">,</span> <span class="s1">&#39;datasets&#39;</span><span class="p">]</span>
-<span class="n">data2</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;minhash&#39;</span><span class="p">,</span> <span class="s1">&#39;is&#39;</span><span class="p">,</span> <span class="s1">&#39;a&#39;</span><span class="p">,</span> <span class="s1">&#39;probability&#39;</span><span class="p">,</span> <span class="s1">&#39;data&#39;</span><span class="p">,</span> <span class="s1">&#39;structure&#39;</span><span class="p">,</span> <span class="s1">&#39;for&#39;</span><span class="p">,</span>
-        <span class="s1">&#39;estimating&#39;</span><span class="p">,</span> <span class="s1">&#39;the&#39;</span><span class="p">,</span> <span class="s1">&#39;similarity&#39;</span><span class="p">,</span> <span class="s1">&#39;between&#39;</span><span class="p">,</span> <span class="s1">&#39;documents&#39;</span><span class="p">]</span>
-<span class="n">data3</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;minhash&#39;</span><span class="p">,</span> <span class="s1">&#39;is&#39;</span><span class="p">,</span> <span class="s1">&#39;probability&#39;</span><span class="p">,</span> <span class="s1">&#39;data&#39;</span><span class="p">,</span> <span class="s1">&#39;structure&#39;</span><span class="p">,</span> <span class="s1">&#39;for&#39;</span><span class="p">,</span>
-        <span class="s1">&#39;estimating&#39;</span><span class="p">,</span> <span class="s1">&#39;the&#39;</span><span class="p">,</span> <span class="s1">&#39;similarity&#39;</span><span class="p">,</span> <span class="s1">&#39;between&#39;</span><span class="p">,</span> <span class="s1">&#39;documents&#39;</span><span class="p">]</span>
+<span class="n">data1</span> <span class="o">=</span> <span class="p">[</span><span class="s1">'minhash'</span><span class="p">,</span> <span class="s1">'is'</span><span class="p">,</span> <span class="s1">'a'</span><span class="p">,</span> <span class="s1">'probabilistic'</span><span class="p">,</span> <span class="s1">'data'</span><span class="p">,</span> <span class="s1">'structure'</span><span class="p">,</span> <span class="s1">'for'</span><span class="p">,</span>
+        <span class="s1">'estimating'</span><span class="p">,</span> <span class="s1">'the'</span><span class="p">,</span> <span class="s1">'similarity'</span><span class="p">,</span> <span class="s1">'between'</span><span class="p">,</span> <span class="s1">'datasets'</span><span class="p">]</span>
+<span class="n">data2</span> <span class="o">=</span> <span class="p">[</span><span class="s1">'minhash'</span><span class="p">,</span> <span class="s1">'is'</span><span class="p">,</span> <span class="s1">'a'</span><span class="p">,</span> <span class="s1">'probability'</span><span class="p">,</span> <span class="s1">'data'</span><span class="p">,</span> <span class="s1">'structure'</span><span class="p">,</span> <span class="s1">'for'</span><span class="p">,</span>
+        <span class="s1">'estimating'</span><span class="p">,</span> <span class="s1">'the'</span><span class="p">,</span> <span class="s1">'similarity'</span><span class="p">,</span> <span class="s1">'between'</span><span class="p">,</span> <span class="s1">'documents'</span><span class="p">]</span>
+<span class="n">data3</span> <span class="o">=</span> <span class="p">[</span><span class="s1">'minhash'</span><span class="p">,</span> <span class="s1">'is'</span><span class="p">,</span> <span class="s1">'probability'</span><span class="p">,</span> <span class="s1">'data'</span><span class="p">,</span> <span class="s1">'structure'</span><span class="p">,</span> <span class="s1">'for'</span><span class="p">,</span>
+        <span class="s1">'estimating'</span><span class="p">,</span> <span class="s1">'the'</span><span class="p">,</span> <span class="s1">'similarity'</span><span class="p">,</span> <span class="s1">'between'</span><span class="p">,</span> <span class="s1">'documents'</span><span class="p">]</span>
 
 <span class="c1"># Create MinHash objects</span>
 <span class="n">m1</span> <span class="o">=</span> <span class="n">MinHash</span><span class="p">(</span><span class="n">num_perm</span><span class="o">=</span><span class="mi">128</span><span class="p">)</span>
 <span class="n">m2</span> <span class="o">=</span> <span class="n">MinHash</span><span class="p">(</span><span class="n">num_perm</span><span class="o">=</span><span class="mi">128</span><span class="p">)</span>
 <span class="n">m3</span> <span class="o">=</span> <span class="n">MinHash</span><span class="p">(</span><span class="n">num_perm</span><span class="o">=</span><span class="mi">128</span><span class="p">)</span>
 <span class="k">for</span> <span class="n">d</span> <span class="ow">in</span> <span class="n">data1</span><span class="p">:</span>
-    <span class="n">m1</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">d</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="s1">&#39;utf8&#39;</span><span class="p">))</span>
+    <span class="n">m1</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">d</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="s1">'utf8'</span><span class="p">))</span>
 <span class="k">for</span> <span class="n">d</span> <span class="ow">in</span> <span class="n">data2</span><span class="p">:</span>
-    <span class="n">m2</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">d</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="s1">&#39;utf8&#39;</span><span class="p">))</span>
+    <span class="n">m2</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">d</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="s1">'utf8'</span><span class="p">))</span>
 <span class="k">for</span> <span class="n">d</span> <span class="ow">in</span> <span class="n">data3</span><span class="p">:</span>
-    <span class="n">m3</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">d</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="s1">&#39;utf8&#39;</span><span class="p">))</span>
+    <span class="n">m3</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">d</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="s1">'utf8'</span><span class="p">))</span>
 
 <span class="c1"># Create a MinHash LSH Forest with the same num_perm parameter</span>
 <span class="n">forest</span> <span class="o">=</span> <span class="n">MinHashLSHForest</span><span class="p">(</span><span class="n">num_perm</span><span class="o">=</span><span class="mi">128</span><span class="p">)</span>
 
 <span class="c1"># Add m2 and m3 into the index</span>
-<span class="n">forest</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="s2">&quot;m2&quot;</span><span class="p">,</span> <span class="n">m2</span><span class="p">)</span>
-<span class="n">forest</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="s2">&quot;m3&quot;</span><span class="p">,</span> <span class="n">m3</span><span class="p">)</span>
+<span class="n">forest</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="s2">"m2"</span><span class="p">,</span> <span class="n">m2</span><span class="p">)</span>
+<span class="n">forest</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="s2">"m3"</span><span class="p">,</span> <span class="n">m3</span><span class="p">)</span>
 
-<span class="c1"># IMPORTANT: must call index() otherwise the keys won&#39;t be searchable</span>
+<span class="c1"># IMPORTANT: must call index() otherwise the keys won't be searchable</span>
 <span class="n">forest</span><span class="o">.</span><span class="n">index</span><span class="p">()</span>
 
 <span class="c1"># Check for membership using the key</span>
-<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;m2&quot;</span> <span class="ow">in</span> <span class="n">forest</span><span class="p">)</span>
-<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;m3&quot;</span> <span class="ow">in</span> <span class="n">forest</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">"m2"</span> <span class="ow">in</span> <span class="n">forest</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">"m3"</span> <span class="ow">in</span> <span class="n">forest</span><span class="p">)</span>
 
 <span class="c1"># Using m1 as the query, retrieve top 2 keys that have the highest Jaccard</span>
 <span class="n">result</span> <span class="o">=</span> <span class="n">forest</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">m1</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span>
-<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Top 2 candidates&quot;</span><span class="p">,</span> <span class="n">result</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">"Top 2 candidates"</span><span class="p">,</span> <span class="n">result</span><span class="p">)</span>
 </pre></div>
 </div>
 <section id="benchmarks">
@@ -247,7 +247,7 @@ from which you then take the top-k. For example:</p>
 <span class="c1"># When you query, instead of use k, use 2*k.</span>
 <span class="n">result</span> <span class="o">=</span> <span class="n">forest</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">minhash</span><span class="p">,</span> <span class="mi">2</span><span class="o">*</span><span class="n">k</span><span class="p">)</span>
 
-<span class="c1"># Let&#39;s say you store the sets in a dictionary (not a good idea for</span>
+<span class="c1"># Let's say you store the sets in a dictionary (not a good idea for</span>
 <span class="c1"># millions of sets) referenced by keys, you can use them to compute</span>
 <span class="c1"># the exact Jaccard similarities of the returned sets to your query set.</span>
 <span class="c1"># You can also use MinHashes instead.</span>

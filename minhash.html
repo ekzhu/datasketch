@@ -102,22 +102,22 @@ MinHash is introduced by Andrei Z. Broder in this
 <a class="reference external" href="http://cs.brown.edu/courses/cs253/papers/nearduplicate.pdf">paper</a>.</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">datasketch</span><span class="w"> </span><span class="kn">import</span> <span class="n">MinHash</span>
 
-<span class="n">data1</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;minhash&#39;</span><span class="p">,</span> <span class="s1">&#39;is&#39;</span><span class="p">,</span> <span class="s1">&#39;a&#39;</span><span class="p">,</span> <span class="s1">&#39;probabilistic&#39;</span><span class="p">,</span> <span class="s1">&#39;data&#39;</span><span class="p">,</span> <span class="s1">&#39;structure&#39;</span><span class="p">,</span> <span class="s1">&#39;for&#39;</span><span class="p">,</span>
-         <span class="s1">&#39;estimating&#39;</span><span class="p">,</span> <span class="s1">&#39;the&#39;</span><span class="p">,</span> <span class="s1">&#39;similarity&#39;</span><span class="p">,</span> <span class="s1">&#39;between&#39;</span><span class="p">,</span> <span class="s1">&#39;datasets&#39;</span><span class="p">]</span>
-<span class="n">data2</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;minhash&#39;</span><span class="p">,</span> <span class="s1">&#39;is&#39;</span><span class="p">,</span> <span class="s1">&#39;a&#39;</span><span class="p">,</span> <span class="s1">&#39;probability&#39;</span><span class="p">,</span> <span class="s1">&#39;data&#39;</span><span class="p">,</span> <span class="s1">&#39;structure&#39;</span><span class="p">,</span> <span class="s1">&#39;for&#39;</span><span class="p">,</span>
-         <span class="s1">&#39;estimating&#39;</span><span class="p">,</span> <span class="s1">&#39;the&#39;</span><span class="p">,</span> <span class="s1">&#39;similarity&#39;</span><span class="p">,</span> <span class="s1">&#39;between&#39;</span><span class="p">,</span> <span class="s1">&#39;documents&#39;</span><span class="p">]</span>
+<span class="n">data1</span> <span class="o">=</span> <span class="p">[</span><span class="s1">'minhash'</span><span class="p">,</span> <span class="s1">'is'</span><span class="p">,</span> <span class="s1">'a'</span><span class="p">,</span> <span class="s1">'probabilistic'</span><span class="p">,</span> <span class="s1">'data'</span><span class="p">,</span> <span class="s1">'structure'</span><span class="p">,</span> <span class="s1">'for'</span><span class="p">,</span>
+         <span class="s1">'estimating'</span><span class="p">,</span> <span class="s1">'the'</span><span class="p">,</span> <span class="s1">'similarity'</span><span class="p">,</span> <span class="s1">'between'</span><span class="p">,</span> <span class="s1">'datasets'</span><span class="p">]</span>
+<span class="n">data2</span> <span class="o">=</span> <span class="p">[</span><span class="s1">'minhash'</span><span class="p">,</span> <span class="s1">'is'</span><span class="p">,</span> <span class="s1">'a'</span><span class="p">,</span> <span class="s1">'probability'</span><span class="p">,</span> <span class="s1">'data'</span><span class="p">,</span> <span class="s1">'structure'</span><span class="p">,</span> <span class="s1">'for'</span><span class="p">,</span>
+         <span class="s1">'estimating'</span><span class="p">,</span> <span class="s1">'the'</span><span class="p">,</span> <span class="s1">'similarity'</span><span class="p">,</span> <span class="s1">'between'</span><span class="p">,</span> <span class="s1">'documents'</span><span class="p">]</span>
 
 <span class="n">m1</span><span class="p">,</span> <span class="n">m2</span> <span class="o">=</span> <span class="n">MinHash</span><span class="p">(),</span> <span class="n">MinHash</span><span class="p">()</span>
 <span class="k">for</span> <span class="n">d</span> <span class="ow">in</span> <span class="n">data1</span><span class="p">:</span>
-    <span class="n">m1</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">d</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="s1">&#39;utf8&#39;</span><span class="p">))</span>
+    <span class="n">m1</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">d</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="s1">'utf8'</span><span class="p">))</span>
 <span class="k">for</span> <span class="n">d</span> <span class="ow">in</span> <span class="n">data2</span><span class="p">:</span>
-    <span class="n">m2</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">d</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="s1">&#39;utf8&#39;</span><span class="p">))</span>
-<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Estimated Jaccard for data1 and data2 is&quot;</span><span class="p">,</span> <span class="n">m1</span><span class="o">.</span><span class="n">jaccard</span><span class="p">(</span><span class="n">m2</span><span class="p">))</span>
+    <span class="n">m2</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">d</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="s1">'utf8'</span><span class="p">))</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">"Estimated Jaccard for data1 and data2 is"</span><span class="p">,</span> <span class="n">m1</span><span class="o">.</span><span class="n">jaccard</span><span class="p">(</span><span class="n">m2</span><span class="p">))</span>
 
 <span class="n">s1</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">data1</span><span class="p">)</span>
 <span class="n">s2</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">data2</span><span class="p">)</span>
 <span class="n">actual_jaccard</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">s1</span><span class="o">.</span><span class="n">intersection</span><span class="p">(</span><span class="n">s2</span><span class="p">)))</span><span class="o">/</span><span class="nb">float</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">s1</span><span class="o">.</span><span class="n">union</span><span class="p">(</span><span class="n">s2</span><span class="p">)))</span>
-<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Actual Jaccard for data1 and data2 is&quot;</span><span class="p">,</span> <span class="n">actual_jaccard</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">"Actual Jaccard for data1 and data2 is"</span><span class="p">,</span> <span class="n">actual_jaccard</span><span class="p">)</span>
 </pre></div>
 </div>
 <p>You can adjust the accuracy by customizing the number of permutation
@@ -242,7 +242,7 @@ matters. Its default hash function is
 must return 64-bit integers.</p></li>
 </ul>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># 64-bit scheme for billion-scale sets.</span>
-<span class="n">m</span> <span class="o">=</span> <span class="n">MinHash</span><span class="p">(</span><span class="n">num_perm</span><span class="o">=</span><span class="mi">128</span><span class="p">,</span> <span class="n">scheme</span><span class="o">=</span><span class="s2">&quot;affine64&quot;</span><span class="p">)</span>
+<span class="n">m</span> <span class="o">=</span> <span class="n">MinHash</span><span class="p">(</span><span class="n">num_perm</span><span class="o">=</span><span class="mi">128</span><span class="p">,</span> <span class="n">scheme</span><span class="o">=</span><span class="s2">"affine64"</span><span class="p">)</span>
 </pre></div>
 </div>
 <p>MinHash objects created with different schemes cannot be compared, merged,
@@ -311,7 +311,7 @@ are safe.</p></li>
 <a class="reference external" href="https://docs.python.org/3/library/hashlib.html">hashlib</a> library.
 You can also change the hash function using the <code class="docutils literal notranslate"><span class="pre">hashfunc</span></code> parameter
 in the constructor.</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Let&#39;s use MurmurHash3.</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Let's use MurmurHash3.</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">mmh3</span>
 
 <span class="c1"># We need to define a new hash function that outputs an unsigned</span>
@@ -350,12 +350,12 @@ only the permutation application and min-reduction may use the GPU.</p>
 <li><p><code class="docutils literal notranslate"><span class="pre">'always'</span></code>: require GPU; raises <code class="docutils literal notranslate"><span class="pre">RuntimeError</span></code> if no CUDA device is available.</p></li>
 </ul>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Force CPU only</span>
-<span class="n">m</span> <span class="o">=</span> <span class="n">MinHash</span><span class="p">(</span><span class="n">num_perm</span><span class="o">=</span><span class="mi">256</span><span class="p">,</span> <span class="n">gpu_mode</span><span class="o">=</span><span class="s2">&quot;disable&quot;</span><span class="p">)</span>
+<span class="n">m</span> <span class="o">=</span> <span class="n">MinHash</span><span class="p">(</span><span class="n">num_perm</span><span class="o">=</span><span class="mi">256</span><span class="p">,</span> <span class="n">gpu_mode</span><span class="o">=</span><span class="s2">"disable"</span><span class="p">)</span>
 <span class="n">m</span><span class="o">.</span><span class="n">update_batch</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
 </pre></div>
 </div>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Require GPU (raises RuntimeError if no CUDA device)</span>
-<span class="n">m</span> <span class="o">=</span> <span class="n">MinHash</span><span class="p">(</span><span class="n">num_perm</span><span class="o">=</span><span class="mi">256</span><span class="p">,</span> <span class="n">gpu_mode</span><span class="o">=</span><span class="s2">&quot;always&quot;</span><span class="p">)</span>
+<span class="n">m</span> <span class="o">=</span> <span class="n">MinHash</span><span class="p">(</span><span class="n">num_perm</span><span class="o">=</span><span class="mi">256</span><span class="p">,</span> <span class="n">gpu_mode</span><span class="o">=</span><span class="s2">"always"</span><span class="p">)</span>
 <span class="n">m</span><span class="o">.</span><span class="n">update_batch</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
 </pre></div>
 </div>

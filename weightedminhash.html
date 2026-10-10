@@ -118,7 +118,7 @@ functions in MinHash) and the random seed.</p>
 <span class="n">wmg</span> <span class="o">=</span> <span class="n">WeightedMinHashGenerator</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">v1</span><span class="p">))</span>
 <span class="n">wm1</span> <span class="o">=</span> <span class="n">wmg</span><span class="o">.</span><span class="n">minhash</span><span class="p">(</span><span class="n">v1</span><span class="p">)</span> <span class="c1"># wm1 is of the type WeightedMinHash</span>
 <span class="n">wm2</span> <span class="o">=</span> <span class="n">wmg</span><span class="o">.</span><span class="n">minhash</span><span class="p">(</span><span class="n">v2</span><span class="p">)</span>
-<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Estimated Jaccard is&quot;</span><span class="p">,</span> <span class="n">wm1</span><span class="o">.</span><span class="n">jaccard</span><span class="p">(</span><span class="n">wm2</span><span class="p">))</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">"Estimated Jaccard is"</span><span class="p">,</span> <span class="n">wm1</span><span class="o">.</span><span class="n">jaccard</span><span class="p">(</span><span class="n">wm2</span><span class="p">))</span>
 </pre></div>
 </div>
 <p>It is possible to make <a class="reference internal" href="documentation.html#datasketch.WeightedMinHash" title="datasketch.WeightedMinHash"><code class="xref py py-class docutils literal notranslate"><span class="pre">datasketch.WeightedMinHash</span></code></a> have a <code class="docutils literal notranslate"><span class="pre">update</span></code> interface
@@ -149,10 +149,10 @@ can also be used to index <a class="reference internal" href="documentation.html
 
 <span class="c1"># Create weighted MinHash LSH index</span>
 <span class="n">lsh</span> <span class="o">=</span> <span class="n">MinHashLSH</span><span class="p">(</span><span class="n">threshold</span><span class="o">=</span><span class="mf">0.1</span><span class="p">,</span> <span class="n">sample_size</span><span class="o">=</span><span class="mi">5</span><span class="p">)</span>
-<span class="n">lsh</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="s2">&quot;m2&quot;</span><span class="p">,</span> <span class="n">m2</span><span class="p">)</span>
-<span class="n">lsh</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="s2">&quot;m3&quot;</span><span class="p">,</span> <span class="n">m3</span><span class="p">)</span>
+<span class="n">lsh</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="s2">"m2"</span><span class="p">,</span> <span class="n">m2</span><span class="p">)</span>
+<span class="n">lsh</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="s2">"m3"</span><span class="p">,</span> <span class="n">m3</span><span class="p">)</span>
 <span class="n">result</span> <span class="o">=</span> <span class="n">lsh</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">m1</span><span class="p">)</span>
-<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Approximate neighbours with weighted Jaccard similarity &gt; 0.1&quot;</span><span class="p">,</span> <span class="n">result</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">"Approximate neighbours with weighted Jaccard similarity &gt; 0.1"</span><span class="p">,</span> <span class="n">result</span><span class="p">)</span>
 </pre></div>
 </div>
 </section>

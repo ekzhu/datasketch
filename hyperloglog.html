@@ -88,16 +88,16 @@ memory space. HyperLogLog is first introduced in this
 Philippe Flajolet, Éric Fusy, Olivier Gandouet and Frédéric Meunier.</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">datasketch</span><span class="w"> </span><span class="kn">import</span> <span class="n">HyperLogLog</span>
 
-<span class="n">data1</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;hyperloglog&#39;</span><span class="p">,</span> <span class="s1">&#39;is&#39;</span><span class="p">,</span> <span class="s1">&#39;a&#39;</span><span class="p">,</span> <span class="s1">&#39;probabilistic&#39;</span><span class="p">,</span> <span class="s1">&#39;data&#39;</span><span class="p">,</span> <span class="s1">&#39;structure&#39;</span><span class="p">,</span> <span class="s1">&#39;for&#39;</span><span class="p">,</span>
-<span class="s1">&#39;estimating&#39;</span><span class="p">,</span> <span class="s1">&#39;the&#39;</span><span class="p">,</span> <span class="s1">&#39;cardinality&#39;</span><span class="p">,</span> <span class="s1">&#39;of&#39;</span><span class="p">,</span> <span class="s1">&#39;dataset&#39;</span><span class="p">,</span> <span class="s1">&#39;dataset&#39;</span><span class="p">,</span> <span class="s1">&#39;a&#39;</span><span class="p">]</span>
+<span class="n">data1</span> <span class="o">=</span> <span class="p">[</span><span class="s1">'hyperloglog'</span><span class="p">,</span> <span class="s1">'is'</span><span class="p">,</span> <span class="s1">'a'</span><span class="p">,</span> <span class="s1">'probabilistic'</span><span class="p">,</span> <span class="s1">'data'</span><span class="p">,</span> <span class="s1">'structure'</span><span class="p">,</span> <span class="s1">'for'</span><span class="p">,</span>
+<span class="s1">'estimating'</span><span class="p">,</span> <span class="s1">'the'</span><span class="p">,</span> <span class="s1">'cardinality'</span><span class="p">,</span> <span class="s1">'of'</span><span class="p">,</span> <span class="s1">'dataset'</span><span class="p">,</span> <span class="s1">'dataset'</span><span class="p">,</span> <span class="s1">'a'</span><span class="p">]</span>
 
 <span class="n">h</span> <span class="o">=</span> <span class="n">HyperLogLog</span><span class="p">()</span>
 <span class="k">for</span> <span class="n">d</span> <span class="ow">in</span> <span class="n">data1</span><span class="p">:</span>
-  <span class="n">h</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">d</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="s1">&#39;utf8&#39;</span><span class="p">))</span>
-<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Estimated cardinality is&quot;</span><span class="p">,</span> <span class="n">h</span><span class="o">.</span><span class="n">count</span><span class="p">())</span>
+  <span class="n">h</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">d</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="s1">'utf8'</span><span class="p">))</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">"Estimated cardinality is"</span><span class="p">,</span> <span class="n">h</span><span class="o">.</span><span class="n">count</span><span class="p">())</span>
 
 <span class="n">s1</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">data1</span><span class="p">)</span>
-<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Actual cardinality is&quot;</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">s1</span><span class="p">))</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">"Actual cardinality is"</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">s1</span><span class="p">))</span>
 </pre></div>
 </div>
 <p>As in MinHash, you can also control the accuracy of HyperLogLog by
@@ -115,7 +115,7 @@ However the memory usage is exponential to the p value.</p>
 HyperLogLog.</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">h1</span> <span class="o">=</span> <span class="n">HyperLogLog</span><span class="p">()</span>
 <span class="n">h2</span> <span class="o">=</span> <span class="n">HyperLogLog</span><span class="p">()</span>
-<span class="n">h1</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="s1">&#39;test&#39;</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="s1">&#39;utf8&#39;</span><span class="p">))</span>
+<span class="n">h1</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="s1">'test'</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="s1">'utf8'</span><span class="p">))</span>
 <span class="c1"># The makes h1 the union of h2 and the original h1.</span>
 <span class="n">h1</span><span class="o">.</span><span class="n">merge</span><span class="p">(</span><span class="n">h2</span><span class="p">)</span>
 <span class="c1"># This will return the cardinality of the union</span>
