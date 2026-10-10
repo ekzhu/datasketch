@@ -8,6 +8,10 @@ from datasketch.b_bit_minhash import bBitMinHash
 from test.utils import fake_hash_func
 
 
+def alternate_fake_hash_func(data):
+    return data + 1
+
+
 class TestMinHash(unittest.TestCase):
     def test_init(self):
         m1 = minhash.MinHash(4, 1, hashfunc=fake_hash_func)
@@ -65,6 +69,34 @@ class TestMinHash(unittest.TestCase):
         self.assertIs(u.hashfunc, fake_hash_func)
         self.assertEqual(u._gpu_mode, "detect")
         u.update(13)
+
+    def test_operations_reject_different_hash_functions(self):
+        m1 = minhash.MinHash(4, 1, hashfunc=fake_hash_func)
+        m2 = minhash.MinHash(4, 1, hashfunc=alternate_fake_hash_func)
+        with self.assertRaisesRegex(ValueError, "hash function"):
+            m1.jaccard(m2)
+        with self.assertRaisesRegex(ValueError, "hash function"):
+            m1.merge(m2)
+        with self.assertRaisesRegex(ValueError, "hash function"):
+            minhash.MinHash.union(m1, m2)
+
+    def test_operations_reject_different_explicit_permutations(self):
+        m1 = minhash.MinHash(4, 1, hashfunc=fake_hash_func)
+        permutations = m1.permutations.copy()
+        permutations[1, 0] += 1
+        m2 = minhash.MinHash(
+            4,
+            1,
+            hashfunc=fake_hash_func,
+            permutations=permutations,
+            scheme=m1.scheme,
+        )
+        with self.assertRaisesRegex(ValueError, "permutations"):
+            m1.jaccard(m2)
+        with self.assertRaisesRegex(ValueError, "permutations"):
+            m1.merge(m2)
+        with self.assertRaisesRegex(ValueError, "permutations"):
+            minhash.MinHash.union(m1, m2)
 
     def test_pickle(self):
         m = minhash.MinHash(4, 1, hashfunc=fake_hash_func)

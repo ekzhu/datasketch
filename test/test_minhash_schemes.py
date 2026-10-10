@@ -9,7 +9,13 @@ generated with datasketch 1.10.0.
 import base64
 import pickle
 import struct
+import subprocess
+import sys
 import unittest
+from functools import partial
+from pathlib import Path
+from types import FunctionType
+from unittest.mock import AsyncMock, Mock
 
 import numpy as np
 
@@ -21,13 +27,36 @@ from datasketch import (
     MinHashLSHForest,
     WeightedMinHashGenerator,
 )
+from datasketch.aio import AsyncMinHashLSH
 from datasketch.b_bit_minhash import bBitMinHash
 from datasketch.hashfunc import sha1_hash32, sha1_hash64
-from datasketch.minhash import _fmix
+from datasketch.minhash import _check_minhash_compatibility, _fmix, _hashfunc_fingerprint
 from test.utils import fake_hash_func
 
 AFFINE_SCHEMES = ("affine32", "affine64")
 ALL_SCHEMES = ("affine32", "affine64", "legacy")
+
+
+def alternate_fake_hash_func(data):
+    return data + 1
+
+
+class StatefulHash:
+    def __init__(self, offset):
+        self.offset = offset
+
+    def __call__(self, data):
+        return fake_hash_func(data) + self.offset
+
+    def hash(self, data):
+        return fake_hash_func(data) + self.offset
+
+
+def make_closure_hash(offset):
+    def closure_hash(data):
+        return fake_hash_func(data) + offset
+
+    return closure_hash
 
 # --------------------------------------------------------------------------
 # Frozen format vectors. These freeze the affine schemes' permutation
@@ -353,6 +382,103 @@ class TestLSHSchemeGuards(unittest.TestCase):
             restored.query(self._mh("legacy"))
         self.assertIn("k", restored.query(self._mh("affine32")))
 
+    def test_lsh_rejects_different_hash_function(self):
+        first = MinHash(128, hashfunc=fake_hash_func)
+        incompatible = MinHash(128, hashfunc=alternate_fake_hash_func)
+        lsh = MinHashLSH(threshold=0.5, num_perm=128)
+        lsh.insert("first", first)
+        with self.assertRaisesRegex(ValueError, "hash function"):
+            lsh.insert("second", incompatible)
+        with self.assertRaisesRegex(ValueError, "hash function"):
+            lsh.query(incompatible)
+
+        other = MinHashLSH(threshold=0.5, num_perm=128)
+        other.insert("second", incompatible)
+        with self.assertRaisesRegex(ValueError, "hash function"):
+            lsh.merge(other)
+
+    def test_hash_function_fingerprint_covers_callable_state_and_closures(self):
+        self.assertNotEqual(_hashfunc_fingerprint(StatefulHash(1)), _hashfunc_fingerprint(StatefulHash(2)))
+        self.assertNotEqual(_hashfunc_fingerprint(make_closure_hash(1)), _hashfunc_fingerprint(make_closure_hash(2)))
+
+    def test_operations_reject_different_partial_arguments_and_bound_state(self):
+        for first_hash, second_hash in [
+            (partial(pow, exp=2), partial(pow, exp=3)),
+            (StatefulHash(1).hash, StatefulHash(2).hash),
+        ]:
+            first = MinHash(16, hashfunc=first_hash)
+            second = MinHash(16, hashfunc=second_hash)
+            first.update(2)
+            second.update(2)
+            with self.assertRaisesRegex(ValueError, "hash function"):
+                first.jaccard(second)
+
+    def test_persisted_index_accepts_hash_function_from_another_installation(self):
+        relocated = FunctionType(
+            fake_hash_func.__code__.replace(co_filename="another/installation/utils.py", co_firstlineno=100),
+            fake_hash_func.__globals__,
+            fake_hash_func.__name__,
+        )
+        first = MinHash(16, hashfunc=fake_hash_func)
+        first.update(2)
+        lsh = MinHashLSH(num_perm=16, params=(4, 4))
+        lsh.insert("first", first)
+        restored = pickle.loads(pickle.dumps(lsh))
+        second = MinHash(16, hashfunc=relocated)
+        second.update(2)
+        self.assertEqual(restored.query(second), ["first"])
+
+    def test_persisted_index_accepts_builtin_partial_in_another_process(self):
+        first = MinHash(16, hashfunc=partial(pow, exp=2))
+        first.update(2)
+        lsh = MinHashLSH(num_perm=16, params=(4, 4))
+        lsh.insert("first", first)
+        probe = "\n".join([
+            "import pickle, sys",
+            "from functools import partial",
+            "from datasketch import MinHash",
+            "lsh = pickle.loads(sys.stdin.buffer.read())",
+            "query = MinHash(16, hashfunc=partial(pow, exp=2))",
+            "query.update(2)",
+            "assert lsh.query(query) == ['first']",
+        ])
+        result = subprocess.run(  # noqa: S603 - fixed probe under the current test interpreter.
+            [sys.executable, "-c", probe], input=pickle.dumps(lsh), capture_output=True,
+            cwd=Path(__file__).resolve().parents[1], check=False,
+        )
+        self.assertEqual(result.returncode, 0, result.stderr.decode())
+
+    def test_legacy_scheme_metadata_is_upgraded(self):
+        compatibility = _check_minhash_compatibility("affine32", MinHash(16, scheme="affine32"))
+        self.assertEqual(compatibility[0], "affine32")
+        self.assertIsNotNone(compatibility[1])
+        self.assertIsNotNone(compatibility[2])
+
+    def test_lsh_and_forest_reject_different_permutations(self):
+        first = MinHash(128, hashfunc=fake_hash_func)
+        permutations = first.permutations.copy()
+        permutations[1, 0] += 1
+        incompatible = MinHash(
+            128,
+            seed=first.seed,
+            hashfunc=fake_hash_func,
+            permutations=permutations,
+            scheme=first.scheme,
+        )
+
+        lsh = MinHashLSH(threshold=0.5, num_perm=128)
+        lsh.insert("first", first)
+        with self.assertRaisesRegex(ValueError, "permutations"):
+            lsh.query(incompatible)
+
+        forest = MinHashLSHForest(num_perm=128)
+        forest.add("first", first)
+        with self.assertRaisesRegex(ValueError, "permutations"):
+            forest.add("second", incompatible)
+        forest.index()
+        with self.assertRaisesRegex(ValueError, "permutations"):
+            forest.query(incompatible, 1)
+
     def test_lshforest_mixed_scheme_raises(self):
         forest = MinHashLSHForest(num_perm=128)
         forest.add("k", self._mh("affine32"))
@@ -377,6 +503,36 @@ class TestLSHSchemeGuards(unittest.TestCase):
         lsh = MinHashLSH(threshold=0.5, num_perm=128)
         lsh.insert("w1", gen.minhash(v))
         self.assertIn("w1", lsh.query(gen.minhash(v)))
+
+
+class TestAsyncLSHCompatibility(unittest.IsolatedAsyncioTestCase):
+    async def test_async_lsh_rejects_incompatible_hash_functions(self):
+        first = MinHash(16, hashfunc=fake_hash_func)
+        incompatible = MinHash(16, hashfunc=alternate_fake_hash_func)
+        lsh = AsyncMinHashLSH(
+            num_perm=16,
+            params=(4, 4),
+            storage_config={"type": "aiomongo"},
+            prepickle=False,
+        )
+        lsh.keys = Mock(
+            has_key=AsyncMock(return_value=False),
+            insert=AsyncMock(),
+        )
+        lsh.hashtables = [
+            Mock(
+                insert=AsyncMock(),
+                get=AsyncMock(return_value=[b"first"]),
+                has_key=AsyncMock(return_value=True),
+            )
+            for _ in range(lsh.b)
+        ]
+
+        await lsh._insert(b"first", first)
+        with self.assertRaisesRegex(ValueError, "hash function"):
+            await lsh.query(incompatible)
+        with self.assertRaisesRegex(ValueError, "hash function"):
+            await lsh._query_b(incompatible, lsh.b)
 
 
 class TestFrozenFormat(unittest.TestCase):

@@ -3,7 +3,7 @@ from collections.abc import Hashable
 
 import numpy as np
 
-from datasketch.minhash import MinHash, _check_scheme_consistency
+from datasketch.minhash import MinHash, _check_minhash_compatibility
 
 
 class MinHashLSHForest:
@@ -42,8 +42,9 @@ class MinHashLSHForest:
         self.keys = dict()
         # This is the sorted array implementation for the prefix trees
         self.sorted_hashtables = [[] for _ in range(self.l)]
-        # The permutation scheme of the indexed MinHash, learned on first add.
+        # MinHash construction metadata learned on first add.
         self._minhash_scheme = None
+        self._minhash_config = None
 
     def add(self, key: Hashable, minhash: MinHash) -> None:
         """Add a unique key, together
@@ -60,8 +61,10 @@ class MinHashLSHForest:
         """
         if len(minhash) < self.k * self.l:
             raise ValueError("The num_perm of MinHash out of range")
-        self._minhash_scheme = _check_scheme_consistency(
-            getattr(self, "_minhash_scheme", None), minhash)
+        known = getattr(self, "_minhash_config", getattr(self, "_minhash_scheme", None))
+        self._minhash_config = _check_minhash_compatibility(known, minhash)
+        if self._minhash_config is not None:
+            self._minhash_scheme = self._minhash_config[0]
         if key in self.keys:
             raise ValueError("The given key has already been added")
         self.keys[key] = [self._H(minhash.hashvalues[start:end])
@@ -121,7 +124,8 @@ class MinHashLSHForest:
             raise ValueError("k must be positive")
         if len(minhash) < self.k * self.l:
             raise ValueError("The num_perm of MinHash out of range")
-        _check_scheme_consistency(getattr(self, "_minhash_scheme", None), minhash)
+        known = getattr(self, "_minhash_config", getattr(self, "_minhash_scheme", None))
+        _check_minhash_compatibility(known, minhash)
         results = set()
         r = self.k
         while r > 0:

@@ -8,7 +8,7 @@ from typing import Optional
 import numpy as np
 from scipy.integrate import quad as integrate
 
-from datasketch.minhash import MinHash, _check_scheme_consistency
+from datasketch.minhash import MinHash, _check_minhash_compatibility
 
 try:
     import pybloomfilter
@@ -298,10 +298,10 @@ class MinHashLSHBloom:
             for i in range(self.b)
         ]
         self.hashranges = [(i * self.r, (i + 1) * self.r) for i in range(self.b)]
-        # The permutation scheme of the indexed MinHash, learned from the
-        # first insert. Note that an index restored from Bloom filter files
-        # re-learns the scheme on its first insert.
+        # MinHash construction metadata learned from the first insert. An
+        # index restored from Bloom filter files re-learns it.
         self._minhash_scheme: Optional[str] = None
+        self._minhash_config = None
 
     def insert(self, minhash: MinHash):
         """Insert the MinHash or Weighted MinHash
@@ -316,7 +316,10 @@ class MinHashLSHBloom:
     def _insert(self, minhash: MinHash):
         if len(minhash) != self.h:
             raise ValueError("Expecting minhash with length %d, got %d" % (self.h, len(minhash)))
-        self._minhash_scheme = _check_scheme_consistency(getattr(self, "_minhash_scheme", None), minhash)
+        known = getattr(self, "_minhash_config", getattr(self, "_minhash_scheme", None))
+        self._minhash_config = _check_minhash_compatibility(known, minhash)
+        if self._minhash_config is not None:
+            self._minhash_scheme = self._minhash_config[0]
 
         Hs = [minhash.hashvalues[start:end] for start, end in self.hashranges]
 
@@ -371,7 +374,8 @@ class MinHashLSHBloom:
         """
         if len(minhash) != self.h:
             raise ValueError("Expecting minhash with length %d, got %d" % (self.h, len(minhash)))
-        _check_scheme_consistency(getattr(self, "_minhash_scheme", None), minhash)
+        known = getattr(self, "_minhash_config", getattr(self, "_minhash_scheme", None))
+        _check_minhash_compatibility(known, minhash)
 
         # if we match in any band, this is a candidate pair
         for (start, end), hashtable in zip(self.hashranges, self.hashtables):

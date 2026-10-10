@@ -7,7 +7,7 @@ from typing import Callable, List, Optional, Union
 
 from scipy.integrate import quad as integrate
 
-from datasketch.minhash import MinHash, _check_scheme_consistency
+from datasketch.minhash import MinHash, _check_minhash_compatibility
 from datasketch.storage import (
     OrderedStorage,
     UnorderedStorage,
@@ -198,10 +198,10 @@ class MinHashLSH:
         ]
         self.hashranges = [(i * self.r, (i + 1) * self.r) for i in range(self.b)]
         self.keys: OrderedStorage = ordered_storage(storage_config, name=b"".join([basename, b"_keys"]))
-        # The permutation scheme of the indexed MinHash, learned from the
-        # first insert. Note that an index attached to pre-existing external
-        # storage (e.g. Redis) re-learns the scheme on its first insert.
+        # MinHash construction metadata learned from the first insert. An
+        # index attached to pre-existing external storage re-learns it.
         self._minhash_scheme: Optional[str] = None
+        self._minhash_config = None
 
     @property
     def buffer_size(self) -> int:
@@ -338,7 +338,10 @@ class MinHashLSH:
     ):
         if len(minhash) != self.h:
             raise ValueError("Expecting minhash with length %d, got %d" % (self.h, len(minhash)))
-        self._minhash_scheme = _check_scheme_consistency(getattr(self, "_minhash_scheme", None), minhash)
+        known = getattr(self, "_minhash_config", getattr(self, "_minhash_scheme", None))
+        self._minhash_config = _check_minhash_compatibility(known, minhash)
+        if self._minhash_config is not None:
+            self._minhash_scheme = self._minhash_config[0]
         if self._require_bytes_keys and not isinstance(key, bytes):
             raise TypeError(
                 f"prepickle=False requires bytes keys for non-dict storage, got {type(key).__name__}. "
@@ -370,16 +373,14 @@ class MinHashLSH:
 
     def _merge(self, other: MinHashLSH, check_overlap: bool = False, buffer: bool = False) -> None:
         if self.__equivalent(other):
-            known, other_known = getattr(self, "_minhash_scheme", None), getattr(other, "_minhash_scheme", None)
-            if known is not None and other_known is not None and known != other_known:
-                raise ValueError(
-                    "Cannot merge MinHashLSH indexed with MinHash scheme %r into one indexed with scheme %r"
-                    % (other_known, known)
-                )
+            known = getattr(self, "_minhash_config", getattr(self, "_minhash_scheme", None))
+            other_known = getattr(other, "_minhash_config", getattr(other, "_minhash_scheme", None))
+            merged_config = _check_minhash_compatibility(known, other_known)
             if check_overlap and set(self.keys).intersection(set(other.keys)):
                 raise ValueError("The keys are overlapping, duplicate key exists.")
-            if known is None:
-                self._minhash_scheme = other_known
+            self._minhash_config = merged_config
+            if merged_config is not None:
+                self._minhash_scheme = merged_config[0]
             for key in other.keys:
                 Hs = other.keys.get(key)
                 self.keys.insert(key, *Hs, buffer=buffer)
@@ -445,7 +446,8 @@ class MinHashLSH:
         """
         if len(minhash) != self.h:
             raise ValueError("Expecting minhash with length %d, got %d" % (self.h, len(minhash)))
-        _check_scheme_consistency(getattr(self, "_minhash_scheme", None), minhash)
+        known = getattr(self, "_minhash_config", getattr(self, "_minhash_scheme", None))
+        _check_minhash_compatibility(known, minhash)
         candidates = set()
         for (start, end), hashtable in zip(self.hashranges, self.hashtables):
             H = self._H(minhash.hashvalues[start:end])
@@ -472,7 +474,8 @@ class MinHashLSH:
         """
         if len(minhash) != self.h:
             raise ValueError("Expecting minhash with length %d, got %d" % (self.h, len(minhash)))
-        _check_scheme_consistency(getattr(self, "_minhash_scheme", None), minhash)
+        known = getattr(self, "_minhash_config", getattr(self, "_minhash_scheme", None))
+        _check_minhash_compatibility(known, minhash)
         for (start, end), hashtable in zip(self.hashranges, self.hashtables):
             H = self._H(minhash.hashvalues[start:end])
             hashtable.add_to_select_buffer([H])
@@ -570,7 +573,8 @@ class MinHashLSH:
     def _query_b(self, minhash, b):
         if len(minhash) != self.h:
             raise ValueError("Expecting minhash with length %d, got %d" % (self.h, len(minhash)))
-        _check_scheme_consistency(getattr(self, "_minhash_scheme", None), minhash)
+        known = getattr(self, "_minhash_config", getattr(self, "_minhash_scheme", None))
+        _check_minhash_compatibility(known, minhash)
         if b > len(self.hashtables):
             raise ValueError("b must be less or equal to the number of hash tables")
         candidates = set()
