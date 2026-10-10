@@ -17,6 +17,19 @@ def jaccard_distance(x, y):
 
 
 class TestHNSW(unittest.TestCase):
+    def test_setdefault_returns_the_stored_point(self):
+        point, other = self._create_random_points(n=2)
+        index = self._create_index([point])
+
+        self.assertIs(index.setdefault(0, other), index[0])
+        self.assertTrue(np.array_equal(index[0], point))
+        self.assertIs(index.setdefault(1, other), index[1])
+        self.assertTrue(np.array_equal(index[1], other))
+
+        index.remove(1)
+        self.assertIs(index.setdefault(1, point), index[1])
+        self.assertTrue(np.array_equal(index[1], point))
+
     def _create_random_points(self, n=100, dim=10):
         return np.random.rand(n, dim)
 
