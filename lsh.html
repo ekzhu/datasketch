@@ -291,6 +291,22 @@ inconsistency.</p>
 <p>MinHash LSH also supports a Cassandra cluster as a storage layer. Using a long-term
 storage for your LSH addresses all use cases where the application needs to continuously update
 the LSH object (for example when you use MinHash LSH to incrementally cluster documents).</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>On Python 3.12 and newer, a Cassandra driver installation without a working
+event loop can raise <code class="docutils literal notranslate"><span class="pre">Unable</span> <span class="pre">to</span> <span class="pre">load</span> <span class="pre">a</span> <span class="pre">default</span> <span class="pre">connection</span> <span class="pre">class</span></code> when
+importing <code class="docutils literal notranslate"><span class="pre">datasketch</span></code>. Python no longer includes <code class="docutils literal notranslate"><span class="pre">asyncore</span></code>. For the
+Cassandra 3.x driver, one supported option is to install its compatibility
+package in the same Python environment:</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">python -m pip install pyasyncore</span>
+<span class="go">python -c "from cassandra.cluster import Cluster"</span>
+</pre></div>
+</div>
+<p>The import checks driver loading; it does not connect to a Cassandra cluster.
+Alternatively, use a driver installation with working <code class="docutils literal notranslate"><span class="pre">libev</span></code> support.
+See the <a class="reference external" href="https://github.com/apache/cassandra-python-driver/blob/trunk/docs/installation.rst#supported-event-loops">driver’s supported event loops</a>
+for installation guidance.</p>
+</div>
 <p>The Cassandra storage option can be configured as follows:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">datasketch</span><span class="w"> </span><span class="kn">import</span> <span class="n">MinHashLSH</span>
 
