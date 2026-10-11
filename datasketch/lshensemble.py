@@ -198,7 +198,8 @@ class MinHashLSHEnsemble:
                 and ``size`` is the size or number of unique items in the set.
 
         Raises:
-            ValueError: If the index is not empty or ``entries`` is empty.
+            ValueError: If the index is not empty, ``entries`` is empty,
+                or a set size is not positive.
 
         """
         if not self.is_empty():
@@ -210,6 +211,8 @@ class MinHashLSHEnsemble:
                     raise ValueError("Set size must be positive")
                 queue.append((key, minhash, size))
             entries = list(queue)
+        elif any(size <= 0 for _, _, size in entries):
+            raise ValueError("Set size must be positive")
         if len(entries) == 0:
             raise ValueError("entries is empty")
         # Create optimal partitions.
