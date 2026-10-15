@@ -175,7 +175,8 @@ class WeightedMinHashGenerator:
         Returns:
             list[Union[WeightedMinHash, None]] - A list of length X.shape[0].
             Each element is either a :class:`WeightedMinHash` instance or None
-            (if the original row in X is empty).
+            (if the original row in X is empty). Zero weights are ignored,
+            including explicitly stored zeros in sparse matrices.
 
         """
         # Input validation
@@ -190,11 +191,14 @@ class WeightedMinHashGenerator:
 
         # Clean up X
         X = sp.sparse.csr_matrix(X, dtype=np.float32, copy=True)
+        X.eliminate_zeros()
         X.sort_indices()
 
         num_docs = X.shape[0]
 
         all_hashvalues = [None for _ in range(num_docs)]
+        if X.nnz == 0:
+            return all_hashvalues
 
         # Grab nonzero index information
         ridx, cidx = X.nonzero()
