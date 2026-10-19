@@ -1,6 +1,7 @@
 import pickle
 import struct
 import unittest
+import warnings
 from unittest.mock import patch
 
 import numpy as np
@@ -132,12 +133,39 @@ class TestHyperLogLogSpecific(unittest.TestCase):
         self.assertTrue(mock_method.called)
 
     def test_hyperloglog_small_card_est(self):
+        # Linear counting is only used when at least one register is zero.
         reg = np.array([1 for i in range(1 << 4)], dtype=np.int8)
+        reg[0] = 0
         with patch.object(HyperLogLog, "_linearcounting") as mock_method:
             mock_method.return_value = 0
             h = HyperLogLog(reg=reg)
             h.count()
         self.assertTrue(mock_method.called)
+
+    def test_hyperloglog_small_range_no_zero_register(self):
+        # The raw estimate is at or below 2.5 * m but no register is zero, so
+        # linear counting must be skipped and the raw estimate returned.
+        reg = np.ones(1 << 4, dtype=np.int8)
+        h = HyperLogLog(reg=reg)
+        raw = h.alpha * float(h.m**2) / np.sum(2.0 ** (-h.reg))
+        self.assertLessEqual(raw, 2.5 * h.m)
+        with patch.object(HyperLogLog, "_linearcounting") as mock_method:
+            result = h.count()
+        self.assertFalse(mock_method.called)
+        self.assertAlmostEqual(result, raw)
+
+    def test_hyperloglog_small_range_no_zero_register_natural_data(self):
+        # With p=4 and 34 distinct items (default hash function) every register
+        # is non-zero while the raw estimate is below 2.5 * m.
+        h = HyperLogLog(p=4)
+        for i in range(34):
+            h.update(("4-59-%d" % i).encode())
+        self.assertEqual(np.count_nonzero(h.reg), h.m)
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore")
+            result = h.count()
+        self.assertGreater(result, 0)
+        self.assertLessEqual(result, 2.5 * h.m)
 
 
 class TestHyperLogLogPlusPlus(TestHyperLogLog):

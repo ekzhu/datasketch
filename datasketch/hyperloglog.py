@@ -160,7 +160,10 @@ class HyperLogLog:
             )
         if e <= small_range_threshold:
             num_zero = self.m - np.count_nonzero(self.reg)
-            return self._linearcounting(num_zero)
+            # Linear counting is only defined when at least one register is zero;
+            # otherwise the raw estimate is used (Flajolet et al., 2007, Figure 3).
+            if num_zero > 0:
+                return self._linearcounting(num_zero)
         # Normal range, no correction
         if e <= (1.0 / 30.0) * (1 << 32):
             return e
