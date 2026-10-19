@@ -388,6 +388,7 @@ class HNSW(MutableMapping):
             m=self._m,
             ef_construction=self._ef_construction,
             m0=self._m0,
+            reversed_edges=self._layer_class is _LayerWithReversedEdges,
         )
         new_index._nodes = OrderedDict((key, node.copy()) for key, node in self._nodes.items())
         new_index._graphs = [layer.copy() for layer in self._graphs]
