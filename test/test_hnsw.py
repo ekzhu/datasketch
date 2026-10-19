@@ -16,6 +16,33 @@ def jaccard_distance(x, y):
     return 1.0 - float(len(np.intersect1d(x, y, assume_unique=False))) / float(len(np.union1d(x, y)))
 
 
+@pytest.mark.parametrize("reversed_edges", [False, True])
+@pytest.mark.parametrize("initial_state", ["empty", "populated", "cleared"])
+def test_copy_preserves_reversed_edges_when_inserting(reversed_edges, initial_state):
+    original = HNSW(l2_distance, reversed_edges=reversed_edges, seed=42)
+    if initial_state != "empty":
+        original.insert(0, np.array([0.0, 0.0]), level=0)
+    if initial_state == "cleared":
+        original.clear()
+    copied = original.copy()
+
+    for index in (original, copied):
+        index.insert(1, np.array([1.0, 0.0]), level=1)
+        index.insert(2, np.array([2.0, 0.0]), level=2)
+    assert original == copied
+    assert original.query(np.array([1.0, 0.0]), k=2) == copied.query(np.array([1.0, 0.0]), k=2)
+
+    for index in (original, copied):
+        index.remove(1, hard=True)
+    assert original == copied
+    assert 1 not in copied
+
+    for index in (original, copied):
+        index.clear()
+        index.insert(3, np.array([3.0, 0.0]), level=0)
+    assert original == copied
+
+
 class TestHNSW(unittest.TestCase):
     def test_setdefault_returns_the_stored_point(self):
         point, other = self._create_random_points(n=2)
