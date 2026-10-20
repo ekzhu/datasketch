@@ -39,6 +39,7 @@ DO_TEST_CASSANDRA = os.environ.get("DO_TEST_CASSANDRA") == "true"
 )
 def test_cassandra_schema_validation_and_set_upsert():
     client = object.__new__(storage_module.CassandraClient)
+    client.storage_kind = "ordered"
     client._session = Mock(keyspace="lsh_test")
     client._session.prepare.return_value = "prepared-schema-query"
     client._session.execute.return_value = [
@@ -49,6 +50,7 @@ def test_cassandra_schema_validation_and_set_upsert():
     ]
 
     client._validate_table_schema("lsh_table")
+    assert client.schema_version == 2
     client._session.prepare.assert_called_once_with(client.QUERY_GET_TABLE_SCHEMA)
     client._session.execute.assert_called_once_with(
         "prepared-schema-query",
@@ -59,8 +61,15 @@ def test_cassandra_schema_validation_and_set_upsert():
         SimpleNamespace(kind="partition_key", position=0, column_name="key"),
         SimpleNamespace(kind="clustering", position=0, column_name="value"),
     ]
-    with pytest.raises(RuntimeError, match="incompatible primary key"):
+    with pytest.warns(RuntimeWarning, match="legacy schema version 1"):
         client._validate_table_schema("legacy_table")
+    assert client.schema_version == 1
+
+    client._session.execute.return_value = [
+        SimpleNamespace(kind="partition_key", position=0, column_name="unexpected"),
+    ]
+    with pytest.raises(RuntimeError, match="incompatible primary key"):
+        client._validate_table_schema("unknown_table")
 
     client._stmt_upsert = "set-upsert"
     client._execute = Mock()
@@ -80,6 +89,76 @@ def test_cassandra_schema_validation_and_set_upsert():
     ):
         storage_module.CassandraClient({}, b"table", 100)
     validate_schema.assert_called_once_with("lsh_table")
+
+
+@pytest.mark.skipif(not hasattr(storage_module, "CassandraClient"), reason="cassandra-driver is unavailable")
+@pytest.mark.parametrize("storage_kind", ["ordered", "unordered"])
+@pytest.mark.parametrize("schema_version", [1, 2])
+def test_cassandra_opens_legacy_and_current_tables(storage_kind, schema_version):
+    session = Mock(keyspace="example")
+    rows = [
+        SimpleNamespace(kind="partition_key", position=0, column_name="key"),
+        SimpleNamespace(kind="clustering", position=0, column_name="value"),
+    ]
+    if schema_version == 2:
+        rows.append(SimpleNamespace(kind="clustering", position=1, column_name="ts"))
+    session.execute.return_value = rows
+    with patch.object(storage_module.CassandraSharedSession, "get_session", return_value=session):
+        if storage_kind == "ordered" and schema_version == 1:
+            with pytest.warns(RuntimeWarning, match="fresh basename"):
+                client = storage_module.CassandraClient({}, b"example", 100, storage_kind)
+        else:
+            client = storage_module.CassandraClient({}, b"example", 100, storage_kind)
+    assert client.schema_version == schema_version
+    assert client.storage_kind == storage_kind
+    create = session.execute.call_args_list[0].args[0]
+    if storage_kind == "ordered":
+        assert "PRIMARY KEY (key, value, ts)" in create
+    else:
+        assert "PRIMARY KEY (key, value)" in create
+    assert "DROP TABLE" not in create
+
+
+@pytest.mark.skipif(not hasattr(storage_module, "CassandraClient"), reason="cassandra-driver is unavailable")
+@pytest.mark.parametrize("storage_kind", ["ordered", "unordered"])
+def test_cassandra_storage_passes_its_kind_to_the_client(storage_kind):
+    storage_class = (
+        storage_module.CassandraListStorage if storage_kind == "ordered" else storage_module.CassandraSetStorage
+    )
+    with patch.object(storage_module, "CassandraClient") as client:
+        storage_class({"type": "cassandra", "cassandra": {}}, name=b"example", buffer_size=100)
+    client.assert_called_once_with({}, b"example", 100, storage_kind)
+
+
+@pytest.mark.skipif(not DO_TEST_CASSANDRA, reason="DO_TEST_CASSANDRA not set")
+def test_cassandra_legacy_ordering_and_new_storage_semantics():
+    config = {
+        **STORAGE_CONFIG_CASSANDRA,
+        "cassandra": {**STORAGE_CONFIG_CASSANDRA["cassandra"], "drop_tables": False},
+    }
+    session = storage_module.CassandraSharedSession.get_session(**config["cassandra"])
+    names = [b"compatlegacy", b"compatordered", b"compatset"]
+    try:
+        for name in names:
+            session.execute(storage_module.CassandraClient.QUERY_DROP_TABLE.format("lsh_" + name.decode("ascii")))
+        session.execute(storage_module.CassandraClient.QUERY_CREATE_TABLE.format("lsh_compatlegacy"))
+        with pytest.warns(RuntimeWarning, match="legacy schema version 1"):
+            legacy = storage_module.CassandraListStorage(config, name=names[0])
+        legacy.insert(b"key", b"same", b"same")
+        assert legacy.get(b"key") == [b"same"]
+
+        ordered = storage_module.CassandraListStorage(config, name=names[1])
+        ordered.insert(b"key", b"same", b"same")
+        assert ordered.get(b"key") == [b"same", b"same"]
+
+        bucket = storage_module.CassandraSetStorage(config, name=names[2])
+        bucket.insert(b"key", b"same", b"same")
+        bucket.insert(b"key", b"same")
+        assert bucket.get(b"key") == {b"same"}
+        assert bucket.itemcounts()[b"key"] == 1
+    finally:
+        for name in names:
+            session.execute(storage_module.CassandraClient.QUERY_DROP_TABLE.format("lsh_" + name.decode("ascii")))
 
 
 def _clear_redis_keys(pattern="lsh_test*"):
