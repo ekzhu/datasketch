@@ -2,6 +2,7 @@ import pickle
 import unittest
 
 import numpy as np
+import pytest
 
 from datasketch import minhash
 from datasketch.b_bit_minhash import bBitMinHash
@@ -134,6 +135,25 @@ class TestMinHash(unittest.TestCase):
         m2, m3 = minhash.MinHash.bulk(b, **kwargs)
         self.assertTrue(np.array_equal(m1.hashvalues, m2.hashvalues))
         self.assertTrue(np.array_equal(m1.hashvalues, m3.hashvalues))
+
+
+@pytest.mark.parametrize("scheme", ["legacy", "affine32", "affine64"])
+@pytest.mark.parametrize("lengths", [(1, 128), (4, 8)])
+def test_bbit_jaccard_requires_equal_lengths(scheme, lengths):
+    first, second = [bBitMinHash(minhash.MinHash(num_perm=n, scheme=scheme)) for n in lengths]
+    for left, right in [(first, second), (second, first)]:
+        with pytest.raises(ValueError):
+            left.jaccard(right)
+
+
+@pytest.mark.parametrize("scheme", ["legacy", "affine32", "affine64"])
+@pytest.mark.parametrize("num_perm", [1, 128])
+def test_bbit_jaccard_equal_length_controls(scheme, num_perm):
+    sketch = minhash.MinHash(num_perm=num_perm, scheme=scheme)
+    sketch.update_batch([b"first", b"second"])
+    first, second = bBitMinHash(sketch), bBitMinHash(sketch.copy())
+    assert first.jaccard(second) == 1.0
+    assert second.jaccard(first) == 1.0
 
 
 class TestbBitMinHash(unittest.TestCase):
