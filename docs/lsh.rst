@@ -278,6 +278,54 @@ or keyspace (and thus DROP existing ones), set `drop_tables` and `drop_keyspace`
 Like the Redis counterpart, you can use insert sessions
 to reduce the number of network calls during bulk insertion.
 
+When ``prepickle=True``, backend keys are decoded with a restricted unpickler
+that cannot import global functions or classes. Keys made from primitive
+built-in types (for example strings, integers, floats, bytes, tuples, and frozensets)
+are supported; custom class instances are rejected. Existing indexes that
+used custom object keys must migrate those keys to supported built-in values.
+
+Compatibility also depends on the pickle protocol used by an existing index:
+
+.. list-table:: Backend key compatibility
+    :header-rows: 1
+
+    * - Key type
+      - Protocols 0–2
+      - Protocol 3
+      - Protocols 4–5
+    * - ``None``, ``bool``, ``int``, ``float``, ``str``
+      - Supported
+      - Supported
+      - Supported
+    * - ``bytes``
+      - Requires migration
+      - Supported
+      - Supported
+    * - ``frozenset``
+      - Requires migration
+      - Requires migration
+      - Supported
+    * - Custom class instances
+      - Rejected
+      - Rejected
+      - Rejected
+
+Tuples are supported when every member is supported by the stored protocol;
+the same member restriction applies to frozensets. Older representations of
+bytes and frozensets use global construction opcodes, which remain forbidden
+even though the resulting types are built-in. New inserts use Python's default
+pickle protocol.
+
+To migrate, create an index with a fresh backend ``basename`` and
+``prepickle=True``, then insert supported keys and their MinHashes again from
+trusted source data. Recompute sketches from the original records when they
+are not retained separately. Convert custom object keys to stable built-in
+identifiers before insertion. Verify queries against the rebuilt index before
+switching applications to its namespace; retain the old index until that
+verification is complete. Merely opening the old index does not rewrite its
+stored keys. Do not use unrestricted ``pickle.loads`` on backend payloads to
+bypass a decoding failure.
+
 
 Connecting to Existing MinHash LSH
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -287,6 +335,12 @@ share it across multiple processes. There are two ways to do it:
 
 The recommended way is to use "pickling". The MinHash LSH object is serializable
 so you can call `pickle`:
+
+.. warning::
+
+    Only unpickle a serialized MinHash LSH object from a trusted source.
+    This is separate from the restricted decoding applied to keys returned by
+    an external storage backend.
 
 .. code:: python
 

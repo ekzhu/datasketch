@@ -1,13 +1,29 @@
+import io
 import pickle
 import unittest
-from unittest.mock import patch
+from unittest.mock import AsyncMock, Mock, patch
 
 import mockredis
 import numpy as np
 
+from datasketch.aio import AsyncMinHashLSH
+from datasketch.key_serialization import _RestrictedUnpickler, dumps_key, loads_key
 from datasketch.lsh import MinHashLSH
 from datasketch.minhash import MinHash
 from datasketch.weighted_minhash import WeightedMinHashGenerator
+
+backend_payload_executed = False
+
+
+def execute_backend_payload():
+    global backend_payload_executed
+    backend_payload_executed = True
+    return "compromised"
+
+
+class UnsafeKey:
+    def __reduce__(self):
+        return execute_backend_payload, ()
 
 
 def fake_redis(**kwargs):
@@ -96,6 +112,97 @@ class TestMinHashLSH(unittest.TestCase):
 
         m3 = MinHash(18)
         self.assertRaises(ValueError, lsh.query, m3)
+
+    def test_prepickle_round_trips_primitive_builtin_keys(self):
+        lsh = MinHashLSH(threshold=0.5, num_perm=16, prepickle=True)
+        minhash = MinHash(16)
+        minhash.update(b"value")
+        keys = ["string", 42, b"bytes", ("tuple", 3), frozenset({"set", 4}), None]
+        for key in keys:
+            lsh.insert(key, minhash)
+
+        self.assertEqual(set(lsh.query(minhash)), set(keys))
+
+    def test_prepickle_rejects_custom_key_types_before_insert(self):
+        global backend_payload_executed
+        backend_payload_executed = False
+        lsh = MinHashLSH(threshold=0.5, num_perm=16, prepickle=True)
+        minhash = MinHash(16)
+        minhash.update(b"value")
+
+        with self.assertRaisesRegex(TypeError, "primitive built-in types"):
+            lsh.insert(UnsafeKey(), minhash)
+
+        self.assertFalse(backend_payload_executed)
+        self.assertEqual(len(lsh.keys), 0)
+
+    def test_query_rejects_executable_pickle_from_backend(self):
+        global backend_payload_executed
+        backend_payload_executed = False
+        lsh = MinHashLSH(threshold=0.5, num_perm=16, prepickle=True)
+        minhash = MinHash(16)
+        minhash.update(b"value")
+        lsh.insert("safe", minhash)
+
+        start, end = lsh.hashranges[0]
+        band_hash = lsh._H(minhash.hashvalues[start:end])
+        lsh.hashtables[0].insert(band_hash, pickle.dumps(UnsafeKey()))
+
+        with self.assertRaisesRegex(pickle.UnpicklingError, "forbidden"):
+            lsh.query(minhash)
+        self.assertFalse(backend_payload_executed)
+
+    def test_restricted_key_loader_defensive_errors(self):
+        unpickler = _RestrictedUnpickler(io.BytesIO(b""))
+        with self.assertRaisesRegex(pickle.UnpicklingError, "builtins.str"):
+            unpickler.find_class("builtins", "str")
+        with self.assertRaisesRegex(pickle.UnpicklingError, "persistent IDs"):
+            unpickler.persistent_load("backend-reference")
+
+        with self.assertRaisesRegex(pickle.UnpicklingError, "invalid serialized"):
+            loads_key(b"not a pickle")
+        with self.assertRaisesRegex(pickle.UnpicklingError, "not hashable"):
+            loads_key(pickle.dumps(["list"]))
+        with self.assertRaisesRegex(TypeError, "must be hashable"):
+            dumps_key(["list"])
+
+    def test_restricted_key_loader_protocol_compatibility(self):
+        keys = [
+            (None, 0),
+            (True, 0),
+            (2**80, 0),
+            (3.5, 0),
+            ("résumé", 0),
+            (("tuple", 3), 0),
+            (b"bytes", 3),
+            (("tuple", b"bytes"), 3),
+            (frozenset({"set", 4}), 4),
+            (("tuple", frozenset({b"bytes"})), 4),
+        ]
+        for protocol in range(pickle.HIGHEST_PROTOCOL + 1):
+            for key, minimum_protocol in keys:
+                with self.subTest(protocol=protocol, key=key):
+                    payload = pickle.dumps(key, protocol=protocol)
+                    if protocol < minimum_protocol:
+                        with self.assertRaisesRegex(pickle.UnpicklingError, "forbidden"):
+                            loads_key(payload)
+                    else:
+                        self.assertEqual(loads_key(payload), key)
+
+    def test_prepickle_rejects_structurally_unhashable_tuple(self):
+        key = ([],)
+        with self.assertRaisesRegex(TypeError, "must be hashable"):
+            dumps_key(key)
+        with self.assertRaisesRegex(pickle.UnpicklingError, "not hashable"):
+            loads_key(pickle.dumps(key))
+
+    def test_get_subset_counts_with_prepickled_key(self):
+        lsh = MinHashLSH(threshold=0.5, num_perm=16, prepickle=True)
+        minhash = MinHash(16)
+        minhash.update(b"value")
+        lsh.insert("safe", minhash)
+
+        self.assertEqual(lsh.get_subset_counts("safe"), lsh.get_counts())
 
     def test_query_buffer(self):
         lsh = MinHashLSH(threshold=0.5, num_perm=16)
@@ -579,6 +686,68 @@ class TestWeightedMinHashLSH(unittest.TestCase):
         self.assertTrue("a" in result)
         result = lsh2.query(m2)
         self.assertTrue("b" in result)
+
+
+class TestAsyncMinHashLSHKeySerialization(unittest.IsolatedAsyncioTestCase):
+    async def test_query_rejects_executable_pickle_from_backend(self):
+        global backend_payload_executed
+        backend_payload_executed = False
+        minhash = MinHash(16)
+        minhash.update(b"value")
+        lsh = AsyncMinHashLSH(
+            num_perm=16,
+            params=(4, 4),
+            storage_config={"type": "aiomongo"},
+            prepickle=True,
+        )
+        payload = pickle.dumps(UnsafeKey())
+        lsh.hashtables = [Mock(get=AsyncMock(return_value=[payload])) for _ in range(lsh.b)]
+
+        with self.assertRaisesRegex(pickle.UnpicklingError, "forbidden"):
+            await lsh.query(minhash)
+        self.assertFalse(backend_payload_executed)
+        for hashtable in lsh.hashtables:
+            hashtable.get.assert_awaited_once()
+
+    async def test_prepickle_paths_use_restricted_serialization(self):
+        minhash = MinHash(16)
+        minhash.update(b"value")
+        lsh = AsyncMinHashLSH(
+            num_perm=16,
+            params=(4, 4),
+            storage_config={"type": "aiomongo"},
+            prepickle=True,
+        )
+        serialized_key = dumps_key("safe")
+        band_hashes = [lsh._H(minhash.hashvalues[start:end]) for start, end in lsh.hashranges]
+        lsh.keys = Mock(
+            has_key=AsyncMock(return_value=True),
+            insert=AsyncMock(),
+            get=AsyncMock(return_value=band_hashes),
+            getmany=AsyncMock(return_value=[band_hashes]),
+            remove=AsyncMock(),
+        )
+        lsh.hashtables = [
+            Mock(
+                insert=AsyncMock(),
+                get=AsyncMock(return_value=[serialized_key]),
+                has_key=AsyncMock(return_value=True),
+                remove_val=AsyncMock(),
+                remove=AsyncMock(),
+            )
+            for _ in range(lsh.b)
+        ]
+
+        await lsh._insert("safe", minhash, check_duplication=False)
+        self.assertEqual(await lsh.query(minhash), ["safe"])
+        self.assertTrue(await lsh.has_key("safe"))
+        self.assertEqual(await lsh._query_b(minhash, lsh.b), {"safe"})
+        self.assertEqual(len(await lsh.get_subset_counts("safe")), lsh.b)
+
+        for hashtable in lsh.hashtables:
+            hashtable.get.return_value = []
+        await lsh.remove("safe")
+        lsh.keys.remove.assert_awaited_once_with(serialized_key, buffer=False)
 
 
 if __name__ == "__main__":
