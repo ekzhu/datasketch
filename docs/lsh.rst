@@ -228,6 +228,25 @@ MinHash LSH also supports a Cassandra cluster as a storage layer. Using a long-t
 storage for your LSH addresses all use cases where the application needs to continuously update
 the LSH object (for example when you use MinHash LSH to incrementally cluster documents).
 
+.. note::
+
+    On Python 3.12 and newer, a Cassandra driver installation without a working
+    event loop can raise ``Unable to load a default connection class`` when
+    importing ``datasketch``. Python no longer includes ``asyncore``. For the
+    Cassandra 3.x driver, one supported option is to install its compatibility
+    package in the same Python environment:
+
+    .. code:: console
+
+        python -m pip install pyasyncore
+        python -c "from cassandra.cluster import Cluster"
+
+    The import checks driver loading; it does not connect to a Cassandra cluster.
+    Alternatively, use a driver installation with working ``libev`` support.
+    See the `driver's supported event loops
+    <https://github.com/apache/cassandra-python-driver/blob/trunk/docs/installation.rst#supported-event-loops>`_
+    for installation guidance.
+
 The Cassandra storage option can be configured as follows:
 
 .. code:: python
