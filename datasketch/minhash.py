@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import copy
+import hashlib
 import warnings
 from collections.abc import Generator, Iterable
 from typing import TYPE_CHECKING, Callable, Optional, Union
@@ -108,26 +109,101 @@ def _fmix(hv, width: int):
     return hv ^ (hv >> s3)
 
 
-def _check_scheme_consistency(known: Optional[str], minhash) -> Optional[str]:
-    """Check the permutation scheme of a MinHash given to an LSH index
-    against the scheme of the MinHash previously given to it, and return
-    the scheme the index should remember.
+def _permutations_fingerprint(permutations) -> str:
+    """Return a compact fingerprint of a MinHash permutation matrix."""
+    values = np.ascontiguousarray(permutations)
+    digest = hashlib.sha256()
+    digest.update(values.dtype.str.encode("ascii"))
+    digest.update(repr(values.shape).encode("ascii"))
+    digest.update(values.tobytes())
+    return digest.hexdigest()
 
-    Hash values carry no trace of the scheme that produced them, so mixing
-    schemes in one index silently returns wrong results instead of failing;
-    this check makes it fail. Sketch types without a scheme attribute
-    (WeightedMinHash) are exempt.
+
+class _HashfuncIdentity:
+    """Compare an unidentified custom callable by object identity only."""
+
+    def __init__(self, hashfunc: Callable):
+        self.hashfunc = hashfunc
+
+    def __eq__(self, other):
+        return isinstance(other, _HashfuncIdentity) and self.hashfunc is other.hashfunc
+
+
+def _hashfunc_fingerprint(hashfunc: Callable, hashfunc_id: Optional[str] = None):
+    """Return an explicit compatibility identifier or the callable identity.
+
+    Custom identifiers assert equivalent hashing behavior; arbitrary Python
+    callable semantics cannot be inferred from bytecode or instance state.
     """
+    if hashfunc_id is not None:
+        return ("custom", hashfunc_id)
+    if hashfunc is sha1_hash32:
+        return ("builtin", "sha1_hash32")
+    if hashfunc is sha1_hash64:
+        return ("builtin", "sha1_hash64")
+    return _HashfuncIdentity(hashfunc)
+
+
+def _minhash_compatibility(minhash):
+    """Return the comparable MinHash construction metadata, when available."""
     scheme = getattr(minhash, "scheme", None)
     if scheme is None:
+        # WeightedMinHash has no permutation scheme and remains exempt.
+        return None
+    cached = getattr(minhash, "_compatibility", None)
+    if cached is not None:
+        return cached
+    permutations = getattr(minhash, "permutations", None)
+    hashfunc = getattr(minhash, "hashfunc", None)
+    compatibility = (
+        scheme,
+        _permutations_fingerprint(permutations) if permutations is not None else None,
+        _hashfunc_fingerprint(hashfunc, getattr(minhash, "hashfunc_id", None)) if hashfunc is not None else None,
+    )
+    if permutations is not None or hashfunc is not None:
+        minhash._compatibility = compatibility
+    return compatibility
+
+
+def _check_minhash_compatibility(known, minhash):
+    """Check MinHash construction metadata against metadata already known.
+
+    LSH indexes use this to prevent mixing sketches made with different
+    permutation matrices or hash functions. A legacy string value is accepted
+    for indexes pickled before the richer compatibility metadata was added.
+
+    Hash values carry no trace of the scheme that produced them, so mixing
+    incompatible sketches silently returns wrong results instead of failing.
+    Sketch types without a scheme attribute (WeightedMinHash) are exempt.
+    """
+    if isinstance(known, str):
+        known = (known, None, None)
+    if isinstance(minhash, str):
+        candidate = (minhash, None, None)
+    elif isinstance(minhash, tuple) and len(minhash) == 3:
+        candidate = minhash
+    else:
+        candidate = _minhash_compatibility(minhash)
+    if candidate is None:
         return known
     if known is None:
-        return scheme
-    if scheme != known:
+        return candidate
+    known_scheme, known_permutations, known_hashfunc = known
+    scheme, permutations, hashfunc = candidate
+    if scheme != known_scheme:
         raise ValueError(
-            "MinHash scheme %r does not match scheme %r of the MinHash previously given to this index" % (scheme, known)
+            "MinHash scheme %r does not match scheme %r of the MinHash previously given to this index"
+            % (scheme, known_scheme)
         )
-    return known
+    if known_permutations is not None and permutations is not None and permutations != known_permutations:
+        raise ValueError("MinHash permutations do not match those of the MinHash previously given to this index")
+    if known_hashfunc is not None and hashfunc is not None and hashfunc != known_hashfunc:
+        raise ValueError("MinHash hash function does not match that of the MinHash previously given to this index")
+    return (
+        known_scheme,
+        known_permutations if known_permutations is not None else permutations,
+        known_hashfunc if known_hashfunc is not None else hashfunc,
+    )
 
 
 _GPU_OK_CACHE: Optional[bool] = None
@@ -173,6 +249,13 @@ class MinHash:
             or :func:`datasketch.hashfunc.sha1_hash64`).
             Users can use `farmhash` for better performance.
             See the example in :meth:`update`.
+        hashfunc_id (Optional[str]): A stable identifier asserting that custom
+            hash functions produce the same outputs for the same inputs.
+            Without an identifier, custom functions must be the same callable
+            object. Use an identifier for equivalent callables constructed
+            separately or used with persisted indexes. The caller is
+            responsible for changing the identifier when hashing behavior
+            changes. Built-in SHA1 hash functions have automatic identifiers.
         hashobj (**deprecated**): This argument is deprecated since version
             1.4.0. It is a no-op and has been replaced by `hashfunc`.
         hashvalues (Optional[Iterable]): The hash values is
@@ -255,6 +338,7 @@ class MinHash:
         hashvalues: Optional[ArrayLike] = None,
         permutations: Optional[Union[tuple[ArrayLike, ArrayLike], ArrayLike]] = None,
         scheme: Optional[Literal["affine32", "affine64", "legacy"]] = None,
+        hashfunc_id: Optional[str] = None,
     ) -> None:
         if scheme is None:
             # Hash values and permutation parameters carry no trace of the
@@ -290,6 +374,9 @@ class MinHash:
         if not callable(hashfunc):
             raise ValueError("The hashfunc must be a callable.")
         self.hashfunc = hashfunc
+        if hashfunc_id is not None and not isinstance(hashfunc_id, str):
+            raise ValueError("hashfunc_id must be a string or None")
+        self.hashfunc_id = hashfunc_id
         # Check for use of hashobj and issue warning.
         if hashobj is not None:
             warnings.warn("hashobj is deprecated, use hashfunc instead.", DeprecationWarning, stacklevel=2)
@@ -305,6 +392,7 @@ class MinHash:
             self.permutations = self._init_permutations(num_perm)
         if len(self) != len(self.permutations[0]):
             raise ValueError("Numbers of hash values and permutations mismatch")
+        _minhash_compatibility(self)
 
         # GPU state
         self._gpu_mode: Literal["disable", "detect", "always"] = gpu_mode
@@ -550,7 +638,8 @@ class MinHash:
         Raises:
             ValueError: If the two MinHashes have different numbers of
                 permutation functions, different seeds, or different
-                permutation schemes.
+                permutation schemes, permutation parameters, or hash
+                functions.
 
         """
         if getattr(other, "scheme", None) != self.scheme:
@@ -565,6 +654,7 @@ class MinHash:
             raise ValueError(
                 "Cannot compute Jaccard given MinHash with different numbers of permutation functions"
             )
+        _check_minhash_compatibility(_minhash_compatibility(self), other)
         return float(np.count_nonzero(self.hashvalues == other.hashvalues)) / float(len(self))
 
     def count(self) -> float:
@@ -588,7 +678,8 @@ class MinHash:
         Raises:
             ValueError: If the two MinHashes have different numbers of
                 permutation functions, different seeds, or different
-                permutation schemes.
+                permutation schemes, permutation parameters, or hash
+                functions.
 
         """
         if getattr(other, "scheme", None) != self.scheme:
@@ -603,6 +694,7 @@ class MinHash:
             raise ValueError(
                 "Cannot merge MinHash with different numbers of permutation functions"
             )
+        _check_minhash_compatibility(_minhash_compatibility(self), other)
         self.hashvalues = np.minimum(other.hashvalues, self.hashvalues)
 
     def digest(self) -> np.ndarray:
@@ -638,6 +730,7 @@ class MinHash:
             permutations=self.permutations,
             gpu_mode=self._gpu_mode,
             scheme=self.scheme,
+            hashfunc_id=getattr(self, "hashfunc_id", None),
         )
 
     def __len__(self) -> int:
@@ -649,13 +742,14 @@ class MinHash:
 
     def __eq__(self, other: MinHash) -> bool:
         """Returns:
-        bool: If their schemes, seeds and hash values are all equal then two are equivalent.
+        bool: If their construction metadata and hash values are all equal then two are equivalent.
 
         """
         return (
             type(self) is type(other)
             and self.scheme == other.scheme
             and self.seed == other.seed
+            and _minhash_compatibility(self) == _minhash_compatibility(other)
             and np.array_equal(self.hashvalues, other.hashvalues)
         )
 
@@ -674,7 +768,8 @@ class MinHash:
             ValueError: If the number of MinHash objects passed as arguments is less than 2,
                 or if the MinHash objects passed as arguments have different seeds,
                 different numbers of permutation functions, or different
-                permutation schemes.
+                permutation schemes, permutation parameters, or hash
+                functions.
 
         Example:
 
@@ -702,6 +797,9 @@ class MinHash:
             raise ValueError(
                 "The unioning MinHash must have the same seed, number of permutation functions and scheme"
             )
+        compatibility = _minhash_compatibility(mhs[0])
+        for minhash in mhs[1:]:
+            _check_minhash_compatibility(compatibility, minhash)
         hashvalues = np.minimum.reduce([m.hashvalues for m in mhs])
         permutations = mhs[0].permutations
         return cls(
@@ -712,6 +810,7 @@ class MinHash:
             permutations=permutations,
             gpu_mode=mhs[0]._gpu_mode,
             scheme=scheme,
+            hashfunc_id=getattr(mhs[0], "hashfunc_id", None),
         )
 
     @classmethod

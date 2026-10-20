@@ -245,8 +245,8 @@ class MinHashLSHEnsemble:
             if u is None:
                 continue
             b, r = self._get_optimal_param(u, size)
-            # The permutation-scheme guard lives in the inner MinHashLSH
-            # (_query_b calls _check_scheme_consistency), so it is checked
+            # The MinHash compatibility guard lives in the inner MinHashLSH,
+            # so it is checked
             # lazily as this generator is iterated and only for partitions
             # that have had an insert. A query reaching only empty partitions
             # returns nothing regardless, so it cannot yield wrong results.
