@@ -265,6 +265,48 @@ built-in types (for example strings, integers, floats, bytes, tuples, and frozen
 are supported; custom class instances are rejected. Existing indexes that
 used custom object keys must migrate those keys to supported built-in values.
 
+Compatibility also depends on the pickle protocol used by an existing index:
+
+.. list-table:: Backend key compatibility
+    :header-rows: 1
+
+    * - Key type
+      - Protocols 0–2
+      - Protocol 3
+      - Protocols 4–5
+    * - ``None``, ``bool``, ``int``, ``float``, ``str``
+      - Supported
+      - Supported
+      - Supported
+    * - ``bytes``
+      - Requires migration
+      - Supported
+      - Supported
+    * - ``frozenset``
+      - Requires migration
+      - Requires migration
+      - Supported
+    * - Custom class instances
+      - Rejected
+      - Rejected
+      - Rejected
+
+Tuples are supported when every member is supported by the stored protocol;
+the same member restriction applies to frozensets. Older representations of
+bytes and frozensets use global construction opcodes, which remain forbidden
+even though the resulting types are built-in. New inserts use Python's default
+pickle protocol.
+
+To migrate, create an index with a fresh backend ``basename`` and
+``prepickle=True``, then insert supported keys and their MinHashes again from
+trusted source data. Recompute sketches from the original records when they
+are not retained separately. Convert custom object keys to stable built-in
+identifiers before insertion. Verify queries against the rebuilt index before
+switching applications to its namespace; retain the old index until that
+verification is complete. Merely opening the old index does not rewrite its
+stored keys. Do not use unrestricted ``pickle.loads`` on backend payloads to
+bypass a decoding failure.
+
 
 Connecting to Existing MinHash LSH
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

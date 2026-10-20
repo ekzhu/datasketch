@@ -166,6 +166,29 @@ class TestMinHashLSH(unittest.TestCase):
         with self.assertRaisesRegex(TypeError, "must be hashable"):
             dumps_key(["list"])
 
+    def test_restricted_key_loader_protocol_compatibility(self):
+        keys = [
+            (None, 0),
+            (True, 0),
+            (2**80, 0),
+            (3.5, 0),
+            ("résumé", 0),
+            (("tuple", 3), 0),
+            (b"bytes", 3),
+            (("tuple", b"bytes"), 3),
+            (frozenset({"set", 4}), 4),
+            (("tuple", frozenset({b"bytes"})), 4),
+        ]
+        for protocol in range(pickle.HIGHEST_PROTOCOL + 1):
+            for key, minimum_protocol in keys:
+                with self.subTest(protocol=protocol, key=key):
+                    payload = pickle.dumps(key, protocol=protocol)
+                    if protocol < minimum_protocol:
+                        with self.assertRaisesRegex(pickle.UnpicklingError, "forbidden"):
+                            loads_key(payload)
+                    else:
+                        self.assertEqual(loads_key(payload), key)
+
     def test_prepickle_rejects_structurally_unhashable_tuple(self):
         key = ([],)
         with self.assertRaisesRegex(TypeError, "must be hashable"):
@@ -666,6 +689,26 @@ class TestWeightedMinHashLSH(unittest.TestCase):
 
 
 class TestAsyncMinHashLSHKeySerialization(unittest.IsolatedAsyncioTestCase):
+    async def test_query_rejects_executable_pickle_from_backend(self):
+        global backend_payload_executed
+        backend_payload_executed = False
+        minhash = MinHash(16)
+        minhash.update(b"value")
+        lsh = AsyncMinHashLSH(
+            num_perm=16,
+            params=(4, 4),
+            storage_config={"type": "aiomongo"},
+            prepickle=True,
+        )
+        payload = pickle.dumps(UnsafeKey())
+        lsh.hashtables = [Mock(get=AsyncMock(return_value=[payload])) for _ in range(lsh.b)]
+
+        with self.assertRaisesRegex(pickle.UnpicklingError, "forbidden"):
+            await lsh.query(minhash)
+        self.assertFalse(backend_payload_executed)
+        for hashtable in lsh.hashtables:
+            hashtable.get.assert_awaited_once()
+
     async def test_prepickle_paths_use_restricted_serialization(self):
         minhash = MinHash(16)
         minhash.update(b"value")
