@@ -15,7 +15,7 @@ import unittest
 from functools import partial
 from pathlib import Path
 from types import FunctionType
-from unittest.mock import AsyncMock, Mock
+from unittest.mock import AsyncMock, Mock, patch
 
 import numpy as np
 
@@ -49,6 +49,16 @@ class StatefulHash:
         return fake_hash_func(data) + self.offset
 
     def hash(self, data):
+        return fake_hash_func(data) + self.offset
+
+
+class SlottedHash:
+    __slots__ = ("offset",)
+
+    def __init__(self, offset):
+        self.offset = offset
+
+    def __call__(self, data):
         return fake_hash_func(data) + self.offset
 
 
@@ -374,6 +384,17 @@ class TestLSHSchemeGuards(unittest.TestCase):
         with self.assertRaises(ValueError):
             c.insert("z", self._mh("legacy"))
 
+    def test_legacy_indexes_cannot_bypass_the_merge_scheme_check(self):
+        first = MinHashLSH(num_perm=128)
+        first.insert("affine", self._mh("affine32"))
+        second = MinHashLSH(num_perm=128)
+        second.insert("legacy", self._mh("legacy"))
+        del first._minhash_config
+        del second._minhash_config
+        for destination, source in [(first, second), (second, first)]:
+            with self.assertRaisesRegex(ValueError, "scheme"):
+                destination.merge(source)
+
     def test_lsh_pickle_preserves_learned_scheme(self):
         lsh = MinHashLSH(threshold=0.5, num_perm=128)
         lsh.insert("k", self._mh("affine32"))
@@ -397,9 +418,47 @@ class TestLSHSchemeGuards(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "hash function"):
             lsh.merge(other)
 
-    def test_hash_function_fingerprint_covers_callable_state_and_closures(self):
+    def test_custom_callable_identities_are_distinct_without_an_explicit_id(self):
         self.assertNotEqual(_hashfunc_fingerprint(StatefulHash(1)), _hashfunc_fingerprint(StatefulHash(2)))
         self.assertNotEqual(_hashfunc_fingerprint(make_closure_hash(1)), _hashfunc_fingerprint(make_closure_hash(2)))
+
+    def test_custom_callable_slots_do_not_bypass_compatibility(self):
+        first = MinHash(16, hashfunc=SlottedHash(1))
+        second = MinHash(16, hashfunc=SlottedHash(2))
+        first.update(2)
+        second.update(2)
+        with self.assertRaisesRegex(ValueError, "hash function"):
+            first.jaccard(second)
+
+    def test_explicit_hash_identifier_ignores_incidental_callable_representation(self):
+        first_hash = StatefulHash(1)
+        first_hash.label = "example"
+        second_hash = StatefulHash.__new__(StatefulHash)
+        second_hash.label = "example"
+        second_hash.offset = 1
+        first = MinHash(16, hashfunc=first_hash, hashfunc_id="example-offset-one-v1")
+        second = MinHash(16, hashfunc=second_hash, hashfunc_id="example-offset-one-v1")
+        first.update(2)
+        second.update(2)
+        self.assertEqual(first.jaccard(second), 1.0)
+        self.assertEqual(first.copy(), first)
+        self.assertEqual(MinHash.union(first, second), first)
+        self.assertEqual(pickle.loads(pickle.dumps(first)).jaccard(second), 1.0)
+        second = MinHash(16, hashfunc=second_hash, hashfunc_id="another-hash-v1")
+        with self.assertRaisesRegex(ValueError, "hash function"):
+            first.jaccard(second)
+
+    def test_compatibility_checks_reuse_construction_metadata(self):
+        first = MinHash(16)
+        second = MinHash(16)
+        index = MinHashLSH(num_perm=16, params=(4, 4))
+        index.insert("first", first)
+        with (
+            patch("datasketch.minhash._permutations_fingerprint", side_effect=AssertionError("rehashed permutations")),
+            patch("datasketch.minhash._hashfunc_fingerprint", side_effect=AssertionError("rehashed callable")),
+        ):
+            self.assertEqual(first.jaccard(second), 1.0)
+            self.assertEqual(index.query(second), ["first"])
 
     def test_operations_reject_different_partial_arguments_and_bound_state(self):
         for first_hash, second_hash in [
@@ -419,17 +478,17 @@ class TestLSHSchemeGuards(unittest.TestCase):
             fake_hash_func.__globals__,
             fake_hash_func.__name__,
         )
-        first = MinHash(16, hashfunc=fake_hash_func)
+        first = MinHash(16, hashfunc=fake_hash_func, hashfunc_id="example-identity-v1")
         first.update(2)
         lsh = MinHashLSH(num_perm=16, params=(4, 4))
         lsh.insert("first", first)
         restored = pickle.loads(pickle.dumps(lsh))
-        second = MinHash(16, hashfunc=relocated)
+        second = MinHash(16, hashfunc=relocated, hashfunc_id="example-identity-v1")
         second.update(2)
         self.assertEqual(restored.query(second), ["first"])
 
     def test_persisted_index_accepts_builtin_partial_in_another_process(self):
-        first = MinHash(16, hashfunc=partial(pow, exp=2))
+        first = MinHash(16, hashfunc=partial(pow, exp=2), hashfunc_id="example-square-v1")
         first.update(2)
         lsh = MinHashLSH(num_perm=16, params=(4, 4))
         lsh.insert("first", first)
@@ -438,7 +497,7 @@ class TestLSHSchemeGuards(unittest.TestCase):
             "from functools import partial",
             "from datasketch import MinHash",
             "lsh = pickle.loads(sys.stdin.buffer.read())",
-            "query = MinHash(16, hashfunc=partial(pow, exp=2))",
+            "query = MinHash(16, hashfunc=partial(pow, exp=2), hashfunc_id='example-square-v1')",
             "query.update(2)",
             "assert lsh.query(query) == ['first']",
         ])

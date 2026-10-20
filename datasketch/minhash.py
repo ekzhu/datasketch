@@ -2,11 +2,8 @@ from __future__ import annotations
 
 import copy
 import hashlib
-import marshal
 import warnings
 from collections.abc import Generator, Iterable
-from functools import partial
-from types import CodeType, MethodType
 from typing import TYPE_CHECKING, Callable, Optional, Union
 
 try:
@@ -122,47 +119,29 @@ def _permutations_fingerprint(permutations) -> str:
     return digest.hexdigest()
 
 
-def _location_independent_code(code: CodeType) -> CodeType:
-    return code.replace(
-        co_filename="",
-        co_firstlineno=0,
-        co_consts=tuple(
-            _location_independent_code(value) if isinstance(value, CodeType) else value for value in code.co_consts
-        ),
-    )
+class _HashfuncIdentity:
+    """Compare an unidentified custom callable by object identity only."""
+
+    def __init__(self, hashfunc: Callable):
+        self.hashfunc = hashfunc
+
+    def __eq__(self, other):
+        return isinstance(other, _HashfuncIdentity) and self.hashfunc is other.hashfunc
 
 
-def _hashfunc_fingerprint(hashfunc: Callable) -> str:
-    """Return a stable-enough fingerprint for a hash callable.
+def _hashfunc_fingerprint(hashfunc: Callable, hashfunc_id: Optional[str] = None):
+    """Return an explicit compatibility identifier or the callable identity.
 
-    Python functions include their bytecode, defaults, and closure values;
-    callable objects additionally include their instance state. This is a
-    compatibility guard, not a serialization format or security boundary.
+    Custom identifiers assert equivalent hashing behavior; arbitrary Python
+    callable semantics cannot be inferred from bytecode or instance state.
     """
-    digest = hashlib.sha256()
-    callable_type = type(hashfunc)
-    parts = (
-        getattr(hashfunc, "__module__", callable_type.__module__),
-        getattr(hashfunc, "__qualname__", callable_type.__qualname__),
-    )
-    digest.update(repr(parts).encode("utf-8"))
-    if isinstance(hashfunc, partial):
-        digest.update(_hashfunc_fingerprint(hashfunc.func).encode("ascii"))
-        digest.update(repr((hashfunc.args, sorted(hashfunc.keywords.items()))).encode("utf-8"))
-    code = getattr(hashfunc, "__code__", None)
-    if code is None and callable(hashfunc):
-        code = getattr(hashfunc.__call__, "__code__", None)
-    if code is not None:
-        digest.update(marshal.dumps(_location_independent_code(code)))
-    digest.update(repr(getattr(hashfunc, "__defaults__", None)).encode("utf-8"))
-    digest.update(repr(getattr(hashfunc, "__kwdefaults__", None)).encode("utf-8"))
-    closure = getattr(hashfunc, "__closure__", None)
-    if closure is not None:
-        digest.update(repr(tuple(cell.cell_contents for cell in closure)).encode("utf-8"))
-    digest.update(repr(getattr(hashfunc, "__dict__", None)).encode("utf-8"))
-    if isinstance(hashfunc, MethodType):
-        digest.update(repr(getattr(hashfunc.__self__, "__dict__", None)).encode("utf-8"))
-    return digest.hexdigest()
+    if hashfunc_id is not None:
+        return ("custom", hashfunc_id)
+    if hashfunc is sha1_hash32:
+        return ("builtin", "sha1_hash32")
+    if hashfunc is sha1_hash64:
+        return ("builtin", "sha1_hash64")
+    return _HashfuncIdentity(hashfunc)
 
 
 def _minhash_compatibility(minhash):
@@ -171,13 +150,19 @@ def _minhash_compatibility(minhash):
     if scheme is None:
         # WeightedMinHash has no permutation scheme and remains exempt.
         return None
+    cached = getattr(minhash, "_compatibility", None)
+    if cached is not None:
+        return cached
     permutations = getattr(minhash, "permutations", None)
     hashfunc = getattr(minhash, "hashfunc", None)
-    return (
+    compatibility = (
         scheme,
         _permutations_fingerprint(permutations) if permutations is not None else None,
-        _hashfunc_fingerprint(hashfunc) if hashfunc is not None else None,
+        _hashfunc_fingerprint(hashfunc, getattr(minhash, "hashfunc_id", None)) if hashfunc is not None else None,
     )
+    if permutations is not None or hashfunc is not None:
+        minhash._compatibility = compatibility
+    return compatibility
 
 
 def _check_minhash_compatibility(known, minhash):
@@ -193,7 +178,12 @@ def _check_minhash_compatibility(known, minhash):
     """
     if isinstance(known, str):
         known = (known, None, None)
-    candidate = minhash if isinstance(minhash, tuple) and len(minhash) == 3 else _minhash_compatibility(minhash)
+    if isinstance(minhash, str):
+        candidate = (minhash, None, None)
+    elif isinstance(minhash, tuple) and len(minhash) == 3:
+        candidate = minhash
+    else:
+        candidate = _minhash_compatibility(minhash)
     if candidate is None:
         return known
     if known is None:
@@ -259,6 +249,13 @@ class MinHash:
             or :func:`datasketch.hashfunc.sha1_hash64`).
             Users can use `farmhash` for better performance.
             See the example in :meth:`update`.
+        hashfunc_id (Optional[str]): A stable identifier asserting that custom
+            hash functions produce the same outputs for the same inputs.
+            Without an identifier, custom functions must be the same callable
+            object. Use an identifier for equivalent callables constructed
+            separately or used with persisted indexes. The caller is
+            responsible for changing the identifier when hashing behavior
+            changes. Built-in SHA1 hash functions have automatic identifiers.
         hashobj (**deprecated**): This argument is deprecated since version
             1.4.0. It is a no-op and has been replaced by `hashfunc`.
         hashvalues (Optional[Iterable]): The hash values is
@@ -341,6 +338,7 @@ class MinHash:
         hashvalues: Optional[ArrayLike] = None,
         permutations: Optional[Union[tuple[ArrayLike, ArrayLike], ArrayLike]] = None,
         scheme: Optional[Literal["affine32", "affine64", "legacy"]] = None,
+        hashfunc_id: Optional[str] = None,
     ) -> None:
         if scheme is None:
             # Hash values and permutation parameters carry no trace of the
@@ -376,6 +374,9 @@ class MinHash:
         if not callable(hashfunc):
             raise ValueError("The hashfunc must be a callable.")
         self.hashfunc = hashfunc
+        if hashfunc_id is not None and not isinstance(hashfunc_id, str):
+            raise ValueError("hashfunc_id must be a string or None")
+        self.hashfunc_id = hashfunc_id
         # Check for use of hashobj and issue warning.
         if hashobj is not None:
             warnings.warn("hashobj is deprecated, use hashfunc instead.", DeprecationWarning, stacklevel=2)
@@ -391,6 +392,7 @@ class MinHash:
             self.permutations = self._init_permutations(num_perm)
         if len(self) != len(self.permutations[0]):
             raise ValueError("Numbers of hash values and permutations mismatch")
+        _minhash_compatibility(self)
 
         # GPU state
         self._gpu_mode: Literal["disable", "detect", "always"] = gpu_mode
@@ -728,6 +730,7 @@ class MinHash:
             permutations=self.permutations,
             gpu_mode=self._gpu_mode,
             scheme=self.scheme,
+            hashfunc_id=getattr(self, "hashfunc_id", None),
         )
 
     def __len__(self) -> int:
@@ -807,6 +810,7 @@ class MinHash:
             permutations=permutations,
             gpu_mode=mhs[0]._gpu_mode,
             scheme=scheme,
+            hashfunc_id=getattr(mhs[0], "hashfunc_id", None),
         )
 
     @classmethod

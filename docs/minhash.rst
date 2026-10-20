@@ -330,6 +330,40 @@ as ``num_perm`` grows -- which is where the speedup over CPU comes from.
    as batch size increases. Small batches are often CPU-favorable due to
    transfer overhead; larger batches benefit from GPU parallelism.
 
+Construction compatibility
+--------------------------
+
+MinHash comparisons and LSH indexes check the permutation scheme, permutation
+parameters, and hash function when that metadata is available. Legacy indexes
+that retained only their scheme still reject merges with a different scheme.
+LeanMinHash and older serialized indexes do not retain all construction
+metadata, so those checks cannot establish complete compatibility for them.
+
+The built-in SHA1 hash functions have automatic compatibility identifiers.
+For custom functions, pass a stable ``hashfunc_id`` when separately constructed
+callables must work together, including across processes or persisted indexes:
+
+.. code:: python
+
+    first = MinHash(hashfunc=my_hash, hashfunc_id="example-hash-v1")
+    second = MinHash(hashfunc=equivalent_hash, hashfunc_id="example-hash-v1")
+
+The identifier is your assertion that both functions return the same integer
+for every supported input. Include algorithm version, seed, encoding, and
+other behavior-changing settings in that assertion; change the identifier
+when any of those change. Reusing an identifier for incompatible functions can
+silently produce incorrect similarities. Datasketch does not infer semantic
+equivalence from Python bytecode, source formatting, instance dictionaries,
+or slots. Without an explicit identifier, custom functions must be the same
+callable object; separately loaded callable instances may therefore require
+an identifier even if their implementation is equivalent.
+
+Construction metadata is cached. Keep the hash function and its state,
+``hashfunc_id``, seed, scheme, and permutation parameters unchanged for the
+lifetime of a sketch. Construct new sketches and rebuild the index from source
+data when changing those settings. Updating or merging hash values remains
+supported, and ``copy`` and ``union`` preserve the custom identifier.
+
 Common Issues with MinHash
 --------------------------
 
