@@ -17,6 +17,41 @@ def jaccard_distance(x, y):
 
 
 class TestHNSW(unittest.TestCase):
+    def test_pop_explicit_defaults_for_absent_points(self):
+        points = self._create_random_points(n=3)
+        index = self._create_index(points)
+        index.remove(1)
+        keys = list(index)
+        results = index.query(points[0], k=2)
+        for hard in [False, True]:
+            for key in [99, 1]:
+                for default in [None, points[0], object()]:
+                    self.assertIs(index.pop(key, default, hard=hard), default)
+                    self.assertEqual(list(index), keys)
+                    self.assertEqual(index.query(points[0], k=2), results)
+        self.assertTrue(index._nodes[1].is_deleted)
+
+    def test_pop_without_default_raises_for_absent_points(self):
+        points = self._create_random_points(n=3)
+        index = self._create_index(points)
+        index.remove(1)
+        for hard in [False, True]:
+            for key in [99, 1]:
+                with self.assertRaises(KeyError) as error:
+                    index.pop(key, hard=hard)
+                self.assertEqual(error.exception.args, (key,))
+        self.assertEqual(len(index), 2)
+
+    def test_pop_existing_point_with_none_default(self):
+        points = self._create_random_points(n=3)
+        for hard in [False, True]:
+            index = self._create_index(points)
+            stored = index[0]
+            self.assertIs(index.pop(0, None, hard=hard), stored)
+            self.assertNotIn(0, index)
+            self.assertEqual(len(index), 2)
+            self.assertEqual(len(index.query(points[1], k=2)), 2)
+
     def test_setdefault_returns_the_stored_point(self):
         point, other = self._create_random_points(n=2)
         index = self._create_index([point])
