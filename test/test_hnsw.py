@@ -16,6 +16,64 @@ def jaccard_distance(x, y):
     return 1.0 - float(len(np.intersect1d(x, y, assume_unique=False))) / float(len(np.union1d(x, y)))
 
 
+@pytest.fixture(params=["mixed", "opaque", "integer"])
+def hashable_keys(request):
+    if request.param == "mixed":
+        return ["first", 1, ("third",)]
+    if request.param == "opaque":
+        return [object(), object(), object()]
+    return [0, 1, 2]
+
+
+@pytest.mark.parametrize("reversed_edges", [False, True])
+def test_hnsw_hashable_keys_with_duplicate_points(hashable_keys, reversed_edges):
+    index = HNSW(l2_distance, m=4, seed=12, reversed_edges=reversed_edges)
+    point = np.zeros(2)
+    for key in hashable_keys:
+        index.insert(key, point, level=1)
+    assert {key for key, _ in index.query(point, k=3)} == set(hashable_keys)
+    assert all(distance == 0 for _, distance in index.query(point, k=None))
+    index.insert(hashable_keys[1], point)
+    index.remove(hashable_keys[0], hard=True)
+    assert {key for key, _ in index.query(point, k=None)} == set(hashable_keys[1:])
+    index.remove(hashable_keys[1])
+    assert index.query(point, k=1) == [(hashable_keys[2], 0)]
+
+
+@pytest.mark.parametrize("reversed_edges", [False, True])
+def test_hnsw_hashable_keys_with_equal_query_distances(hashable_keys, reversed_edges):
+    index = HNSW(l2_distance, m=4, seed=12, reversed_edges=reversed_edges)
+    for key, coordinate in zip(hashable_keys, [-2.0, 2.0, 5.0]):
+        index.insert(key, np.array([coordinate]), level=0)
+    for k in [2, None]:
+        results = index.query(np.zeros(1), k=k)
+        expected_keys = hashable_keys[:2] if k == 2 else hashable_keys
+        assert {key for key, _ in results} == set(expected_keys)
+        for key, distance in results:
+            assert distance == float(np.linalg.norm(index[key]))
+
+
+@pytest.mark.parametrize("reversed_edges", [False, True])
+def test_hnsw_hashable_keys_with_soft_deleted_ties(hashable_keys, reversed_edges):
+    index = HNSW(l2_distance, m=4, seed=12, reversed_edges=reversed_edges)
+    for key, coordinate in zip(hashable_keys, [-2.0, 2.0, 5.0]):
+        index.insert(key, np.array([coordinate]), level=1)
+    index.remove(hashable_keys[0])
+    index.remove(hashable_keys[1])
+    assert index.query(np.zeros(1), k=1) == [(hashable_keys[2], 5.0)]
+
+
+@pytest.mark.parametrize("reversed_edges", [False, True])
+def test_hnsw_pruning_hashable_keys_at_equal_distance(hashable_keys, reversed_edges):
+    index = HNSW(l2_distance, m=4, seed=12, reversed_edges=reversed_edges)
+    for key, coordinate in zip(hashable_keys, [-2.0, 2.0, 5.0]):
+        index.insert(key, np.array([coordinate]), level=0)
+    candidates = [(2.0, key) for key in hashable_keys[:2]]
+    selected = index._heuristic_prune(candidates, max_size=2)
+    assert {key for _, key in selected} == set(hashable_keys[:2])
+    assert [distance for distance, _ in selected] == [2.0, 2.0]
+
+
 class TestHNSW(unittest.TestCase):
     def test_setdefault_returns_the_stored_point(self):
         point, other = self._create_random_points(n=2)
