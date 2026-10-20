@@ -4,12 +4,18 @@ import heapq
 from collections import OrderedDict
 from collections.abc import Hashable, Iterable, Iterator, Mapping, MutableMapping
 from typing import (
+    Any,
     Callable,
     Optional,
+    TypeVar,
     Union,
+    overload,
 )
 
 import numpy as np
+
+_MISSING = object()
+_T = TypeVar("_T")
 
 
 class _Layer:
@@ -329,13 +335,20 @@ class HNSW(MutableMapping):
         """Return an iterator of the index points that were not soft-removed."""
         return (node.point for node in self._nodes.values() if not node.is_deleted)
 
-    def pop(self, key: Hashable, default: Optional[np.ndarray] = None, hard: bool = False) -> np.ndarray:
+    @overload
+    def pop(self, key: Hashable, *, hard: bool = False) -> np.ndarray: ...
+
+    @overload
+    def pop(self, key: Hashable, default: _T, hard: bool = False) -> Union[np.ndarray, _T]: ...
+
+    def pop(self, key: Hashable, default: Any = _MISSING, hard: bool = False) -> Any:
         """If key is in the index, remove it and return its associated point,
         else return default. If default is not given and key is not in the index
-        or it was soft-removed, raise KeyError.
+        or it was soft-removed, raise KeyError. An explicitly supplied None is
+        returned like any other default.
         """
         if key not in self:
-            if default is None:
+            if default is _MISSING:
                 raise KeyError(key)
             return default
         point = self._nodes[key].point
