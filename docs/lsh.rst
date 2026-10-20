@@ -278,6 +278,40 @@ or keyspace (and thus DROP existing ones), set `drop_tables` and `drop_keyspace`
 Like the Redis counterpart, you can use insert sessions
 to reduce the number of network calls during bulk insertion.
 
+New Cassandra ordered/key tables use schema version 2, with primary key
+``(key, value, ts)``, so repeated band values keep their positions. Unordered
+bucket tables retain schema version 1, with primary key ``(key, value)``, and
+repeated inserts retain set semantics. The client detects the schema when
+opening a table; upgrading does not drop or rewrite existing tables.
+
+Existing ordered tables with schema version 1 remain readable and writable,
+and emit a warning because duplicate values still collapse. This can leave
+stale bucket entries when deleting a sketch, including an empty MinHash whose
+bands contain identical bytes. Opening a legacy index does not correct this
+limitation.
+
+To opt into duplicate-safe storage, rebuild from trusted source sketches or
+original records using a fresh ``basename`` and the same LSH parameters:
+
+.. code:: python
+
+    rebuild_config = dict(storage_config, basename=b"lshrebuilt")
+    rebuild_config["cassandra"] = dict(
+        storage_config["cassandra"], drop_tables=False, drop_keyspace=False
+    )
+    rebuilt = MinHashLSH(
+        threshold=0.8, num_perm=128, storage_config=rebuild_config, prepickle=False
+    )
+    for key, minhash in trusted_source_sketches:
+        rebuilt.insert(key, minhash)
+
+Verify queries and deletions on the rebuilt index before switching applications
+to its basename. Keep the old namespace until verification completes. Copying
+legacy ordered rows cannot recover duplicate occurrences or positions that
+were already lost; recompute sketches from trusted source data when they are
+not retained separately. Do not enable ``drop_tables`` or ``drop_keyspace``
+merely to open an existing index after upgrading.
+
 
 Connecting to Existing MinHash LSH
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

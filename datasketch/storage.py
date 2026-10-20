@@ -5,6 +5,7 @@ import operator
 import os
 import random
 import string
+import warnings
 from abc import ABC, abstractmethod
 from collections import defaultdict
 
@@ -330,6 +331,21 @@ if cassandra is not None:
             ) WITH CLUSTERING ORDER BY (value DESC)
         """
 
+        QUERY_CREATE_ORDERED_TABLE = """
+            CREATE TABLE IF NOT EXISTS {}  (
+                key blob,
+                value blob,
+                ts bigint,
+                PRIMARY KEY (key, value, ts)
+            ) WITH CLUSTERING ORDER BY (value DESC, ts ASC)
+        """
+
+        QUERY_GET_TABLE_SCHEMA = """
+            SELECT column_name, kind, position
+            FROM system_schema.columns
+            WHERE keyspace_name = ? AND table_name = ?
+        """
+
         QUERY_DROP_TABLE = "DROP TABLE IF EXISTS {}"
 
         QUERY_GET_KEYS = """
@@ -366,15 +382,11 @@ if cassandra is not None:
             WHERE key = ? AND value  = ?
         """
 
-        QUERY_UPSERT = """
-            UPDATE {}
-            SET ts = ?
-            WHERE key = ? AND value = ?
-        """
+        QUERY_UPSERT = "INSERT INTO {} (key, value, ts) VALUES (?, ?, 0)"
 
         QUERY_INSERT = "INSERT INTO {} (key, value, ts) VALUES (?, ?, ?)"
 
-        def __init__(self, cassandra_params, name, buffer_size):
+        def __init__(self, cassandra_params, name, buffer_size, storage_kind="ordered"):
             """Constructor.
 
             :param dict[str, any] cassandra_params: Cassandra parameters
@@ -382,6 +394,7 @@ if cassandra is not None:
             :param int buffer_size: the buffer size
             """
             self._buffer_size = buffer_size
+            self.storage_kind = storage_kind
             self._session = CassandraSharedSession.get_session(**cassandra_params)
             # This timestamp generator allows us to sort different values for the same key
             self._ts = c_cluster.MonotonicTimestampGenerator()
@@ -405,7 +418,9 @@ if cassandra is not None:
             # Drop the table if are instructed to do so
             if cassandra_params.get("drop_tables", False):
                 self._session.execute(self.QUERY_DROP_TABLE.format(table_name))
-            self._session.execute(self.QUERY_CREATE_TABLE.format(table_name))
+            create_table = self.QUERY_CREATE_ORDERED_TABLE if storage_kind == "ordered" else self.QUERY_CREATE_TABLE
+            self._session.execute(create_table.format(table_name))
+            self._validate_table_schema(table_name)
 
             # Prepare all the statements for this table
             self._stmt_insert = self._session.prepare(self.QUERY_INSERT.format(table_name))
@@ -416,6 +431,41 @@ if cassandra is not None:
             self._stmt_get_count = self._session.prepare(self.QUERY_GET_COUNTS.format(table_name))
             self._stmt_delete_key = self._session.prepare(self.QUERY_DELETE_KEY.format(table_name))
             self._stmt_delete_val = self._session.prepare(self.QUERY_DELETE_VAL.format(table_name))
+
+        def _validate_table_schema(self, table_name):
+            """Detect legacy and duplicate-preserving tables without rebuilding them."""
+            statement = self._session.prepare(self.QUERY_GET_TABLE_SCHEMA)
+            rows = self._session.execute(
+                statement,
+                (self._session.keyspace, table_name),
+            )
+            primary_key = {
+                (row.kind, row.position): row.column_name
+                for row in rows
+                if row.kind in ("partition_key", "clustering")
+            }
+            legacy = {
+                ("partition_key", 0): "key",
+                ("clustering", 0): "value",
+            }
+            ordered = {**legacy, ("clustering", 1): "ts"}
+            if primary_key == legacy:
+                self.schema_version = 1
+                if self.storage_kind == "ordered":
+                    warnings.warn(
+                        "Cassandra ordered table %r uses legacy schema version 1, which collapses duplicate "
+                        "values and can leave stale LSH bucket entries on deletion. Rebuild from trusted "
+                        "source sketches or records into a fresh basename to preserve duplicates." % table_name,
+                        RuntimeWarning,
+                        stacklevel=3,
+                    )
+            elif primary_key == ordered:
+                self.schema_version = 2
+            else:
+                raise RuntimeError(
+                    "Cassandra table %r uses an incompatible primary key. "
+                    "Expected a legacy (key, value) or ordered (key, value, ts) table." % table_name
+                )
 
         @property
         def buffer_size(self):
@@ -527,7 +577,10 @@ if cassandra is not None:
             :param iterable[byte|str] vals: the iterable of values
             :param boolean buffer: whether the upsert statements should be buffered
             """
-            statements_and_parameters = [(self._stmt_upsert, (self._ts(), key, val)) for val in vals]
+            # The timestamp is part of the primary key so ordered storage can
+            # preserve duplicates. Sets use the fixed timestamp in
+            # QUERY_UPSERT, making repeated (key, value) inserts idempotent.
+            statements_and_parameters = [(self._stmt_upsert, (key, val)) for val in vals]
             if buffer:
                 self._buffer(statements_and_parameters)
             else:
@@ -658,6 +711,7 @@ if cassandra is not None:
         """
 
         DEFAULT_BUFFER_SIZE = 5000
+        _storage_kind = "ordered"
 
         def __init__(self, config, name=None, buffer_size=None):
             """Constructor.
@@ -687,7 +741,7 @@ if cassandra is not None:
             cassandra_param = self._parse_config(self._config["cassandra"])
             self._name = name if name else _random_name(11).decode("utf-8")
             self._buffer_size = buffer_size
-            self._client = CassandraClient(cassandra_param, name, self._buffer_size)
+            self._client = CassandraClient(cassandra_param, name, self._buffer_size, self._storage_kind)
 
         @staticmethod
         def _parse_config(config):
@@ -802,9 +856,11 @@ if cassandra is not None:
     class CassandraSetStorage(UnorderedStorage, CassandraListStorage):
         """OrderedStorage storage implementation using Cassandra as backend.
 
-        Note: since we are interested in keeping duplicates or ordered data, we upsert the data
+        Note: since we are not interested in keeping duplicates or ordered data, we upsert the data
             ignoring what the timestamp actually means.
         """
+
+        _storage_kind = "unordered"
 
         def get(self, key):
             """Implement interface and override super-class."""
