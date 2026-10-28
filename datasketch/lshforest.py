@@ -37,8 +37,7 @@ class MinHashLSHForest:
         # Maximum depth of the prefix tree
         self.k = int(num_perm / l)
         self.hashtables = [defaultdict(list) for _ in range(self.l)]
-        self.hashranges = [(i * self.k, (i + 1) * self.k)
-                           for i in range(self.l)]
+        self.hashranges = [(i * self.k, (i + 1) * self.k) for i in range(self.l)]
         self.keys = dict()
         # This is the sorted array implementation for the prefix trees
         self.sorted_hashtables = [[] for _ in range(self.l)]
@@ -60,12 +59,10 @@ class MinHashLSHForest:
         """
         if len(minhash) < self.k * self.l:
             raise ValueError("The num_perm of MinHash out of range")
-        self._minhash_scheme = _check_scheme_consistency(
-            getattr(self, "_minhash_scheme", None), minhash)
+        self._minhash_scheme = _check_scheme_consistency(getattr(self, "_minhash_scheme", None), minhash)
         if key in self.keys:
             raise ValueError("The given key has already been added")
-        self.keys[key] = [self._H(minhash.hashvalues[start:end])
-                          for start, end in self.hashranges]
+        self.keys[key] = [self._H(minhash.hashvalues[start:end]) for start, end in self.hashranges]
         for H, hashtable in zip(self.keys[key], self.hashtables):
             hashtable[H].append(key)
 
@@ -79,13 +76,11 @@ class MinHashLSHForest:
         if r > self.k or r <= 0 or b > self.l or b <= 0:
             raise ValueError("parameter outside range")
         # Generate prefixes of concatenated hash values
-        hps = [self._H(minhash.hashvalues[start: start + r])
-               for start, _ in self.hashranges]
+        hps = [self._H(minhash.hashvalues[start : start + r]) for start, _ in self.hashranges]
         # Set the prefix length for look-ups in the sorted hash values list
         prefix_size = len(hps[0])
         for ht, hp, hashtable in zip(self.sorted_hashtables, hps, self.hashtables):
-            i = self._binary_search(
-                len(ht), lambda x, ht=ht, hp=hp: ht[x][:prefix_size] >= hp)
+            i = self._binary_search(len(ht), lambda x, ht=ht, hp=hp: ht[x][:prefix_size] >= hp)
             if i < len(ht) and ht[i][:prefix_size] == hp:
                 j = i
                 while j < len(ht) and ht[j][:prefix_size] == hp:
@@ -133,9 +128,11 @@ class MinHashLSHForest:
         return list(results)
 
     def get_minhash_hashvalues(self, key: Hashable) -> np.ndarray:
-        """Returns the hashvalues from the MinHash object that corresponds to the given key in the LSHForest,
-        if it exists. This is useful for when we want to reconstruct the original MinHash
-        object to manually check the Jaccard Similarity for the top-k results from a query.
+        """Return the hash values for a key in the LSHForest.
+
+        The returned array can reconstruct a MinHash or WeightedMinHash
+        for Jaccard similarity checks on query results. WeightedMinHash values
+        stored as 64-bit integer pairs are returned with shape ``(self.k * self.l, 2)``.
 
         Args:
             key (Hashable): The key whose MinHash hashvalues we want to retrieve.
@@ -146,32 +143,32 @@ class MinHashLSHForest:
         """
         byteslist = self.keys.get(key, None)
         if byteslist is None:
-            raise KeyError(
-                f"The provided key does not exist in the LSHForest: {key}")
+            raise KeyError(f"The provided key does not exist in the LSHForest: {key}")
         # Each stored segment packs self.k hash values; derive the value byte
         # width from the segment size (4 for the "affine32" MinHash scheme,
-        # 8 for "affine64" and "legacy"). Validate before trusting it, so
+        # 8 for "affine64" and "legacy", 16 for WeightedMinHash integer pairs).
+        # Validate before trusting it, so
         # corrupted or truncated storage raises instead of being silently
         # reinterpreted with the wrong width.
         segment_size = len(byteslist[0])
         bytes_per_value, remainder = divmod(segment_size, self.k)
-        if remainder != 0 or bytes_per_value not in (4, 8):
+        if remainder != 0 or bytes_per_value not in (4, 8, 16):
             raise ValueError(
                 "Stored hash segment of %d bytes is not %d values of a "
-                "supported width (4 or 8 bytes)" % (segment_size, self.k)
+                "supported width (4, 8 or 16 bytes)" % (segment_size, self.k)
             )
         if any(len(item) != segment_size for item in byteslist):
             raise ValueError("Stored hash segments have inconsistent sizes")
-        dtype = np.uint32 if bytes_per_value == 4 else np.uint64
+        dtype = {4: np.uint32, 8: np.uint64, 16: np.int64}[bytes_per_value]
         values_per_segment = segment_size // np.dtype(dtype).itemsize
-        hashvalues = np.empty(
-            len(byteslist) * values_per_segment, dtype=dtype)
+        hashvalues = np.empty(len(byteslist) * values_per_segment, dtype=dtype)
         for index, item in enumerate(byteslist):
             # unswap the bytes, as their representation is flipped during storage
             hv_segment = np.frombuffer(item, dtype=dtype).byteswap()
             curr_index = index * values_per_segment
-            hashvalues[curr_index: curr_index +
-                       values_per_segment] = hv_segment
+            hashvalues[curr_index : curr_index + values_per_segment] = hv_segment
+        if bytes_per_value == 16:
+            return hashvalues.reshape(-1, 2)
         return hashvalues
 
     def _binary_search(self, n, func):
