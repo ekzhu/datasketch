@@ -1,5 +1,6 @@
 import pickle
 import unittest
+from array import array
 
 import numpy as np
 
@@ -187,6 +188,41 @@ class TestLeanMinHash(unittest.TestCase):
         d = dict()
         d[lm1] = True
         self.assertTrue(d[lm2])
+
+    def test_serialize_multibyte_buffer(self):
+        for scheme in ("legacy", "affine32", "affine64"):
+            lm = LeanMinHash(seed=1, hashvalues=[1, 2, 3, 4], scheme=scheme)
+            for byteorder in "@=<>!":
+                size = lm.bytesize(byteorder)
+                expected = bytearray(size)
+                lm.serialize(expected, byteorder)
+                for kind in ("array", "memoryview", "bytearray"):
+                    with self.subTest(scheme=scheme, byteorder=byteorder, kind=kind):
+                        itemsize = array("I").itemsize
+                        backing = array("I", [0] * ((size + itemsize - 1) // itemsize))
+                        buf = backing if kind == "array" else memoryview(backing)
+                        if kind == "bytearray":
+                            buf = bytearray(size)
+                        lm.serialize(buf, byteorder)
+                        self.assertEqual(memoryview(buf).cast("B")[:size], expected)
+                        restored = LeanMinHash.deserialize(buf, byteorder)
+                        self.assertEqual(restored, lm)
+
+    def test_serialize_insufficient_buffer_bytes(self):
+        for scheme in ("legacy", "affine32", "affine64"):
+            lm = LeanMinHash(seed=1, hashvalues=[1, 2, 3, 4], scheme=scheme)
+            for byteorder in "@=<>!":
+                size = lm.bytesize(byteorder)
+                for kind in ("array", "memoryview", "bytearray"):
+                    with self.subTest(scheme=scheme, byteorder=byteorder, kind=kind):
+                        backing = array("I", [0] * ((size - 1) // array("I").itemsize))
+                        buf = backing if kind == "array" else memoryview(backing)
+                        if kind == "bytearray":
+                            buf = bytearray(size - 1)
+                        before = bytes(buf)
+                        with self.assertRaisesRegex(ValueError, "not have enough space"):
+                            lm.serialize(buf, byteorder)
+                        self.assertEqual(bytes(buf), before)
 
 
 if __name__ == "__main__":

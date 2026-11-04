@@ -246,7 +246,7 @@ class LeanMinHash(MinHash):
         .. _`byteorder`: https://docs.python.org/3/library/struct.html
 
         """
-        if len(buf) < self.bytesize(byteorder):
+        if memoryview(buf).nbytes < self.bytesize(byteorder):
             raise ValueError(
                 "The buffer does not have enough space for holding this MinHash."
             )
