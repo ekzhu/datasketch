@@ -15,7 +15,13 @@ from datasketch.aio.storage import (
 )
 from datasketch.lsh import _optimal_param
 from datasketch.minhash import _check_scheme_consistency
-from datasketch.storage import _random_name, unordered_storage
+from datasketch.storage import (
+    _BUCKET_NAME_SUFFIX,
+    _KEYS_NAME_SUFFIX,
+    _RANDOM_NAME_LENGTH,
+    _random_name,
+    unordered_storage,
+)
 
 
 class AsyncMinHashLSH:
@@ -57,7 +63,7 @@ class AsyncMinHashLSH:
         if storage_config is None:
             storage_config = {"type": "aiomongo", "mongo": {"host": "localhost", "port": 27017}}
         self._storage_config = storage_config.copy()
-        self._storage_config["basename"] = self._storage_config.get("basename", _random_name(11))
+        self._storage_config["basename"] = self._storage_config.get("basename", _random_name(_RANDOM_NAME_LENGTH))
         self._basename = self._storage_config["basename"]
         self._batch_size = 10000
         self._threshold = threshold
@@ -147,19 +153,20 @@ class AsyncMinHashLSH:
 
     async def _create_storages(self):
         if self._storage_config["type"] == "aioredis":
-            name_ordered = b"".join([self._basename, b"_keys"])
+            name_ordered = b"".join([self._basename, _KEYS_NAME_SUFFIX])
             fs = (
                 async_unordered_storage(
                     config=self._storage_config,
-                    name=b"".join([self._basename, b"_bucket_", bytes([i])]),
+                    name=b"".join([self._basename, _BUCKET_NAME_SUFFIX, bytes([i])]),
                 )
                 for i in range(self.b)
             )
         else:
-            name_ordered = "".join([self._basename.decode("utf-8"), "_keys"])
+            name_ordered = "".join([self._basename.decode("utf-8"), _KEYS_NAME_SUFFIX.decode("utf-8")])
             fs = (
                 async_unordered_storage(
-                    config=self._storage_config, name="".join([self._basename.decode("utf-8"), "_bucket_", str(i)])
+                    config=self._storage_config,
+                    name="".join([self._basename.decode("utf-8"), _BUCKET_NAME_SUFFIX.decode("utf-8"), str(i)]),
                 )
                 for i in range(self.b)
             )

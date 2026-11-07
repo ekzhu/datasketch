@@ -9,6 +9,10 @@ from scipy.integrate import quad as integrate
 
 from datasketch.minhash import MinHash, _check_scheme_consistency
 from datasketch.storage import (
+    _BUCKET_NAME_SUFFIX,
+    _DEFAULT_BUFFER_SIZE,
+    _KEYS_NAME_SUFFIX,
+    _RANDOM_NAME_LENGTH,
     OrderedStorage,
     UnorderedStorage,
     _random_name,
@@ -155,7 +159,7 @@ class MinHashLSH:
         hashfunc: Optional[Callable[[bytes], bytes]] = None,
     ) -> None:
         storage_config = storage_config if storage_config else {"type": "dict"}
-        self._buffer_size = 50000
+        self._buffer_size = _DEFAULT_BUFFER_SIZE
         if threshold > 1.0 or threshold < 0.0:
             raise ValueError("threshold must be in [0.0, 1.0]")
         if num_perm < 2:
@@ -188,16 +192,16 @@ class MinHashLSH:
         else:
             self._H = self._byteswap
 
-        basename = storage_config.get("basename", _random_name(11))
+        basename = storage_config.get("basename", _random_name(_RANDOM_NAME_LENGTH))
         self.hashtables: List[UnorderedStorage] = [
             unordered_storage(
                 storage_config,
-                name=b"".join([basename, b"_bucket_", struct.pack(">H", i)]),
+                name=b"".join([basename, _BUCKET_NAME_SUFFIX, struct.pack(">H", i)]),
             )
             for i in range(self.b)
         ]
         self.hashranges = [(i * self.r, (i + 1) * self.r) for i in range(self.b)]
-        self.keys: OrderedStorage = ordered_storage(storage_config, name=b"".join([basename, b"_keys"]))
+        self.keys: OrderedStorage = ordered_storage(storage_config, name=b"".join([basename, _KEYS_NAME_SUFFIX]))
         # The permutation scheme of the indexed MinHash, learned from the
         # first insert. Note that an index attached to pre-existing external
         # storage (e.g. Redis) re-learns the scheme on its first insert.
@@ -256,7 +260,7 @@ class MinHashLSH:
         """
         self._merge(other, check_overlap=check_overlap, buffer=False)
 
-    def insertion_session(self, buffer_size: int = 50000) -> MinHashLSHInsertionSession:
+    def insertion_session(self, buffer_size: int = _DEFAULT_BUFFER_SIZE) -> MinHashLSHInsertionSession:
         """Create a context manager for fast insertion into this index.
 
         Args:
@@ -294,7 +298,7 @@ class MinHashLSH:
         """
         return MinHashLSHInsertionSession(self, buffer_size=buffer_size)
 
-    def deletion_session(self, buffer_size: int = 50000) -> MinHashLSHDeletionSession:
+    def deletion_session(self, buffer_size: int = _DEFAULT_BUFFER_SIZE) -> MinHashLSHDeletionSession:
         """Create a context manager for fast deletion from this index.
 
         Args:

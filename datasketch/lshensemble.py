@@ -9,7 +9,7 @@ import numpy as np
 from datasketch.lsh import MinHashLSH, integrate
 from datasketch.lshensemble_partition import optimal_partitions
 from datasketch.minhash import MinHash
-from datasketch.storage import _random_name
+from datasketch.storage import _RANDOM_NAME_LENGTH, _random_name
 
 logger = logging.getLogger(__name__)
 
@@ -133,7 +133,7 @@ class MinHashLSHEnsemble:
         rs = self._init_optimal_params(weights)
         # Initialize multiple LSH indexes for each partition
         storage_config = storage_config if storage_config else {"type": "dict"}
-        basename = storage_config.get("basename", _random_name(11))
+        basename = storage_config.get("basename", _random_name(_RANDOM_NAME_LENGTH))
         self.indexes = [
             dict(
                 (

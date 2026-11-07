@@ -8,6 +8,12 @@ import string
 from abc import ABC, abstractmethod
 from collections import defaultdict
 
+_DEFAULT_BUFFER_SIZE = 50000
+_RANDOM_NAME_LENGTH = 11
+_BUCKET_NAME_MARKER = b"bucket"
+_BUCKET_NAME_SUFFIX = b"_" + _BUCKET_NAME_MARKER + b"_"
+_KEYS_NAME_SUFFIX = b"_keys"
+
 try:
     import redis
 except ImportError:
@@ -170,7 +176,7 @@ class Storage(ABC):
 
     @property
     def buffer_size(self) -> int:
-        return getattr(self, "_buffer_size", 50000)
+        return getattr(self, "_buffer_size", _DEFAULT_BUFFER_SIZE)
 
     @buffer_size.setter
     def buffer_size(self, value: int):
@@ -397,9 +403,9 @@ if cassandra is not None:
 
             # Both bucket tables and keys tables use byte strings as keys and values.
             # Since prepickle=False requires bytes, we use one Cassandra table for both types.
-            if b"bucket" in name:
+            if _BUCKET_NAME_MARKER in name:
                 basename, _, ret = name.split(b"_", 2)
-                name = basename + b"_bucket_" + binascii.hexlify(ret)
+                name = basename + _BUCKET_NAME_SUFFIX + binascii.hexlify(ret)
             table_name = "lsh_" + name.decode("ascii")
 
             # Drop the table if are instructed to do so
@@ -685,7 +691,7 @@ if cassandra is not None:
             if buffer_size is None:
                 buffer_size = CassandraStorage.DEFAULT_BUFFER_SIZE
             cassandra_param = self._parse_config(self._config["cassandra"])
-            self._name = name if name else _random_name(11).decode("utf-8")
+            self._name = name if name else _random_name(_RANDOM_NAME_LENGTH).decode("utf-8")
             self._buffer_size = buffer_size
             self._client = CassandraClient(cassandra_param, name, self._buffer_size)
 
@@ -876,7 +882,7 @@ if redis is not None:
 
         def __init__(self, config, name=None):
             self.config = config
-            self._buffer_size = 50000
+            self._buffer_size = _DEFAULT_BUFFER_SIZE
             redis_param = self._parse_config(self.config["redis"])
             self._redis = redis.Redis(**redis_param)
             redis_buffer_param = self._parse_config(self.config.get("redis_buffer", {}))
@@ -887,7 +893,7 @@ if redis is not None:
                 buffer_size=self._buffer_size,
             )
             if name is None:
-                name = _random_name(11)
+                name = _random_name(_RANDOM_NAME_LENGTH)
             self._name = name
 
         @property
