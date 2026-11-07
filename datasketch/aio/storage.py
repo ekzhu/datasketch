@@ -10,7 +10,14 @@ import os
 from abc import ABCMeta
 from itertools import chain
 
-from datasketch.storage import OrderedStorage, Storage, UnorderedStorage, _random_name
+from datasketch.storage import (
+    _DEFAULT_BUFFER_SIZE,
+    _RANDOM_NAME_LENGTH,
+    OrderedStorage,
+    Storage,
+    UnorderedStorage,
+    _random_name,
+)
 
 # RedisStorage is only available when redis package is installed (optional dependency)
 # Import it conditionally to avoid ImportError when redis is not installed
@@ -154,7 +161,7 @@ if motor is not None and ReturnDocument is not None:
             self._config = config
             self._mongo_param = self._parse_config(self._config["mongo"])
 
-            self._name = name if name else _random_name(11).decode("utf-8")
+            self._name = name if name else _random_name(_RANDOM_NAME_LENGTH).decode("utf-8")
             if "collection_name" in self.mongo_param:
                 self._collection_name = self.mongo_param["collection_name"]
             elif "collection_prefix" in self.mongo_param:
@@ -336,7 +343,7 @@ if redis is not None and RedisStorage is not None:
         def __init__(self, config, name=None):
             super(AsyncRedisStorage, self).__init__(config, name)
             self.config = config
-            self._buffer_size = 50000
+            self._buffer_size = _DEFAULT_BUFFER_SIZE
             redis_param = self._parse_config(self.config["redis"])
             self._redis = redis.Redis(**redis_param)
             redis_buffer_param = self._parse_config(self.config.get("redis_buffer", {}))
