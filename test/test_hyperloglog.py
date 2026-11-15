@@ -25,6 +25,18 @@ class TestHyperLogLog(unittest.TestCase):
         h2 = self._class(p=4, hashfunc=fake_hash_func)
         self.assertEqual(h.p, h2.p)
 
+    def test_count_from_unsigned_reg(self):
+        original = self._class(p=10)
+        for value in range(10000):
+            original.update(str(value).encode())
+
+        reg = np.frombuffer(original.digest().tobytes(), dtype=np.uint8)
+        restored = self._class(reg=reg)
+
+        self.assertEqual(restored.count(), original.count())
+        self.assertEqual(reg.dtype, np.uint8)
+        np.testing.assert_array_equal(reg, original.reg)
+
     def test_is_empty(self):
         h = self._class()
         self.assertTrue(h.is_empty())
