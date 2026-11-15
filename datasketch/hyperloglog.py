@@ -148,8 +148,8 @@ class HyperLogLog:
             float: The estimated cardinality.
 
         """
-        # Use HyperLogLog estimation function
-        e = self.alpha * float(self.m**2) / np.sum(2.0 ** (-self.reg))
+        # Cast before negation so unsigned imported registers do not wrap.
+        e = self.alpha * float(self.m**2) / np.sum(2.0 ** (-self.reg.astype(np.float64)))
         # Small range correction
         small_range_threshold = (5.0 / 2.0) * self.m
         if abs(e - small_range_threshold) / small_range_threshold < 0.15:
@@ -374,8 +374,8 @@ class HyperLogLogPlusPlus(HyperLogLog):
             lc = self._linearcounting(num_zero)
             if lc <= self._get_threshold(self.p):
                 return lc
-        # Use HyperLogLog estimation function
-        e = self.alpha * float(self.m**2) / np.sum(2.0 ** (-self.reg))
+        # Cast before negation so unsigned imported registers do not wrap.
+        e = self.alpha * float(self.m**2) / np.sum(2.0 ** (-self.reg.astype(np.float64)))
         if e <= 5 * self.m:
             return e - self._estimate_bias(e, self.p)
         return e
