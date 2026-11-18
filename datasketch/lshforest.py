@@ -1,5 +1,7 @@
 from collections import defaultdict
 from collections.abc import Hashable
+from operator import index
+from typing import Optional
 
 import numpy as np
 
@@ -131,6 +133,37 @@ class MinHashLSHForest:
                     return list(results)
             r -= 1
         return list(results)
+
+    def query_ranked(
+        self, minhash: MinHash, k: int, *, num_candidates: Optional[int] = None
+    ) -> list[tuple[Hashable, float]]:
+        """Return up to k (key, estimated Jaccard similarity) pairs, highest first.
+
+        Rerank the keys returned by :meth:`query` using the sketch rows stored
+        in the forest. Set ``num_candidates`` to control the search budget
+        (default: twice k). Ties may be returned in any order.
+
+        Only indexed rows contribute to the estimate: if the sketch length
+        is not divisible by the number of trees, trailing rows are ignored.
+        As with :meth:`query`, sketches must use the same seed and format.
+        """
+        k = index(k)
+        if k <= 0:
+            raise ValueError("k must be positive")
+        num_candidates = 2 * k if num_candidates is None else index(num_candidates)
+        if num_candidates < k:
+            raise ValueError("num_candidates must be at least k")
+
+        candidates = self.query(minhash, num_candidates)
+        rows = minhash.hashvalues[:self.k * self.l]
+        # One sample of a weighted MinHash is a pair; compare the whole row.
+        row_dtype = np.dtype("V%d" % (rows.nbytes // len(rows)))
+        query_rows = np.frombuffer(self._H(rows), dtype=row_dtype)
+        scores = []
+        for key in candidates:
+            stored_rows = np.frombuffer(b"".join(self.keys[key]), dtype=row_dtype)
+            scores.append((key, float(np.mean(stored_rows == query_rows))))
+        return sorted(scores, key=lambda item: item[1], reverse=True)[:k]
 
     def get_minhash_hashvalues(self, key: Hashable) -> np.ndarray:
         """Returns the hashvalues from the MinHash object that corresponds to the given key in the LSHForest,

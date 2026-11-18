@@ -55,6 +55,16 @@ method -- keys are not searchable until then.
     result = forest.query(m1, 2)
     print("Top 2 candidates", result)
 
+To get similarity estimates with the keys, use ``query_ranked``. It
+compares the candidates' indexed sketch rows, so you can discard the
+original sketches after indexing. A larger candidate budget lets more
+keys compete for the final places.
+
+.. code:: python
+
+    for key, similarity in forest.query_ranked(m1, 2, num_candidates=8):
+        print(key, similarity)
+
 Benchmarks
 ----------
 
