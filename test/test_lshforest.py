@@ -3,7 +3,7 @@ import unittest
 
 import numpy as np
 
-from datasketch import WeightedMinHashGenerator
+from datasketch import WeightedMinHash, WeightedMinHashGenerator
 from datasketch.lshforest import MinHashLSHForest
 from datasketch.minhash import MinHash
 
@@ -63,6 +63,27 @@ class TestMinHashLSHForest(unittest.TestCase):
             results = forest.query(data[key], 10)
             self.assertIn(key, results)
 
+    def test_query_ranked(self):
+        for scheme in ("affine32", "affine64", "legacy"):
+            forest = MinHashLSHForest(num_perm=7, l=2)
+
+            def sketch(rows):
+                return MinHash(hashvalues=np.array(rows), scheme=scheme)
+
+            query = sketch([1, 2, 3, 4, 5, 6, 7])
+            forest.add("first", sketch([1, 2, 3, 8, 8, 8, 7]))
+            forest.add(2, sketch([1, 2, 8, 4, 5, 6, 8]))
+            self.assertEqual(forest.query_ranked(query, 1), [])
+            forest.index()
+            self.assertEqual(forest.query_ranked(query, 1, num_candidates=1), [("first", 0.5)])
+            self.assertEqual(forest.query_ranked(query, 1), [(2, 5 / 6)])
+            self.assertEqual(forest.query_ranked(query, 4, num_candidates=4),
+                             [(2, 5 / 6), ("first", 0.5)])
+            with self.assertRaises(ValueError):
+                forest.query_ranked(query, 0)
+            with self.assertRaises(ValueError):
+                forest.query_ranked(query, 2, num_candidates=1)
+
     def test_get_minhash_hashvalues(self):
         forest, data = self._setup()
         for key in data:
@@ -101,6 +122,16 @@ class TestMinHashLSHForest(unittest.TestCase):
 
 
 class TestWeightedMinHashLSHForest(unittest.TestCase):
+    def test_ranked_scores_compare_both_components(self):
+        query = WeightedMinHash(1, np.array([[2, 1], [3, -1], [1, 0], [4, 0]]))
+        other = WeightedMinHash(1, np.array([[2, 1], [3, 0], [2, 0], [4, 0]]))
+        forest = MinHashLSHForest(num_perm=4, l=2)
+        forest.add("other", other)
+        forest.add(1, query)
+        forest.index()
+        self.assertEqual(forest.query_ranked(query, 2),
+                         [(1, 1.0), ("other", query.jaccard(other))])
+
     def _setup(self):
         freqs = np.random.randint(1, 100, (100, 100))
         data = {}
